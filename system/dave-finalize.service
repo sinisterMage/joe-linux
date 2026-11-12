@@ -1,0 +1,20 @@
+# Applies a prepared upgrade while the system shuts down. The unit is always
+# active so that it has a stop job; the stop job does nothing unless an upgrade
+# is pending. Ordering follows ostree-finalize-staged.service: the stop job
+# runs while local file systems are still mounted.
+[Unit]
+Description=Apply a prepared joe Linux upgrade at shutdown
+DefaultDependencies=no
+RequiresMountsFor=/efi /var
+After=local-fs.target systemd-journal-flush.service
+Before=basic.target final.target
+Conflicts=final.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/true
+ExecStop=/usr/bin/dave finalize
+TimeoutStopSec=5min
+StandardOutput=journal+console
+StandardError=journal+console

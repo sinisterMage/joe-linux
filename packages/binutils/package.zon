@@ -1,0 +1,14 @@
+.{
+    .name = "binutils",
+    .version = "2.47",
+    .release = 1,
+    .description = "Linker, assembler and other tools for object files",
+    .license = "GPL-3.0-or-later AND LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://sourceware.org/pub/binutils/releases/binutils-2.47.tar.xz", .sha256 = "154ab23b60070e8f27013c22977f1129425d67d1e8acd6e13010e617811e4cff" },
+    },
+    // gprofng also needs libstdc++ (gcc) at run time. Not listed: gcc depends on
+    // binutils, and binutils is built first.
+    .depends = .{ "glibc", "zlib", "zstd" },
+    .build_depends = .{"pkgconf"},
+}

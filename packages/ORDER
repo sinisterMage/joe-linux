@@ -1,0 +1,70 @@
+# Build order, one package per line, following Linux From Scratch chapter 8.
+# "build-only" packages are built but not installed into the build root.
+linux-api-headers
+iana-etc
+glibc
+zlib
+bzip2
+xz
+zstd
+file
+readline
+m4
+bc
+flex
+ninja
+pkgconf
+binutils
+gmp
+mpfr
+mpc
+attr
+acl
+libcap
+libxcrypt
+shadow
+gawk
+gcc
+ncurses
+bash
+sed
+gettext
+bison
+grep
+libtool
+gperf
+expat
+less
+perl
+autoconf
+automake
+elfutils
+libffi
+python
+flit-core
+packaging
+wheel
+setuptools
+meson
+kmod
+coreutils
+diffutils
+findutils
+gzip
+iproute2
+make
+patch
+tar
+markupsafe
+jinja2
+pyelftools
+joe-release
+systemd
+dbus
+procps-ng
+util-linux
+btrfs-progs
+linux build-only
+joe-filesystem build-only
+dave build-only
+joe-base build-only

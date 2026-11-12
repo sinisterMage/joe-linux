@@ -1,0 +1,7 @@
+.{
+    .name = "joe-release",
+    .version = "0.1",
+    .release = 1,
+    .description = "joe Linux release identification",
+    .license = "MIT",
+}

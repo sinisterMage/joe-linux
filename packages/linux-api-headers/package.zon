@@ -1,0 +1,10 @@
+.{
+    .name = "linux-api-headers",
+    .version = "7.3.1",
+    .release = 1,
+    .description = "Kernel headers for building user-space programs",
+    .license = "GPL-2.0-only WITH Linux-syscall-note",
+    .sources = .{
+        .{ .url = "https://www.kernel.org/pub/linux/kernel/v7.x/linux-7.3.1.tar.xz", .sha256 = "fa595aad93734f829c963c2a90ef7c3673224fd7fdae7b49406e397cde2de231" },
+    },
+}
