@@ -255,3 +255,12 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   the build machine, because joe does not package Zig yet.
 - HTTPS repositories, virtual packages (`provides`), and changing the kernel on
   a running system (use `dave upgrade`).
+
+## Licence
+
+joe Linux's own code is under the [MIT License](LICENSE). The security module
+is GPL-2.0-only, as part of the kernel, and the patches to bash, Python and
+GNOME Settings are under those projects' licences. The recipes follow Linux
+From Scratch and Beyond LFS. [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
+has the details, including what to know before distributing an image built
+from these recipes.
