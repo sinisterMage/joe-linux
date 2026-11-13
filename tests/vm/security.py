@@ -61,7 +61,7 @@ def main():
     repo = Repo("vm-repo-security")
     probe = build_probe()
     probe_package(repo, "probe-all", probe, ["all"])
-    probe_package(repo, "probe-none", probe, [])
+    probe_package(repo, "probe-none", probe, ["none"])
     probe_package(repo, "probe-declared", probe, PROBE_DECLARED)
     repo.index()
 

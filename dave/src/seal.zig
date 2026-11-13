@@ -214,14 +214,17 @@ pub fn capabilityName(number: usize) ?[]const u8 {
 }
 
 /// Translates one declaration as written in a recipe into the form the kernel
-/// reads, or returns null if it is not a valid declaration.
+/// reads, or returns null if it is not a valid declaration. `none` is valid
+/// and translates to nothing: it states that a program needs no privilege.
 ///
-///   all | net | mount | module | ptrace | bpf
+///   all | net | mount | module | ptrace | bpf | root-ipc | none
 ///   cap:<name> | cap:*
 ///   write:<absolute path prefix> | write:*
 ///   exec:<absolute path> | exec:*
+///   undeclared                      (written by dave, not by recipes)
 fn canonicalOperation(arena: Allocator, op: []const u8) Allocator.Error!?[]const u8 {
-    for ([_][]const u8{ "all", "net", "mount", "module", "ptrace", "bpf", "cap:*", "write:*", "exec:*" }) |simple| {
+    if (std.mem.eql(u8, op, "none")) return "";
+    for ([_][]const u8{ "all", "net", "mount", "module", "ptrace", "bpf", "root-ipc", "cap:*", "write:*", "exec:*", undeclared }) |simple| {
         if (std.mem.eql(u8, op, simple)) return op;
     }
     if (std.mem.indexOfAny(u8, op, "\n\x00") != null) return null;
@@ -233,9 +236,15 @@ fn canonicalOperation(arena: Allocator, op: []const u8) Allocator.Error!?[]const
     return null;
 }
 
+/// What a file that no declaration covers is sealed as. The security module
+/// gives such a program no authority of its own: run by a process holding
+/// `all` it inherits `all`, and otherwise it is reported and, in strict mode,
+/// refused everything.
+pub const undeclared = "undeclared";
+
 /// The declaration text sealed into `path`: the operations of the first entry
 /// of the package's `operations` that names the file, or else of the entry
-/// that names no files (the package default), or else nothing.
+/// that names no files (the package default), or else `undeclared`.
 pub fn operationsText(arena: Allocator, operations: []const manifest_mod.Operations, path: []const u8) (Allocator.Error || error{InvalidOperation})![]const u8 {
     var chosen: ?manifest_mod.Operations = null;
     for (operations) |entry| {
@@ -251,11 +260,12 @@ pub fn operationsText(arena: Allocator, operations: []const manifest_mod.Operati
         }
         if (chosen != null and chosen.?.programs.len != 0) break;
     }
-    const entry = chosen orelse return "";
+    const entry = chosen orelse return undeclared;
     var out: Io.Writer.Allocating = .init(arena);
-    for (entry.allow, 0..) |op, i| {
+    for (entry.allow) |op| {
         const text = (try canonicalOperation(arena, op)) orelse return error.InvalidOperation;
-        if (i > 0) out.writer.writeByte('\n') catch return error.OutOfMemory;
+        if (text.len == 0) continue;
+        if (out.written().len > 0) out.writer.writeByte('\n') catch return error.OutOfMemory;
         out.writer.writeAll(text) catch return error.OutOfMemory;
     }
     if (out.written().len > max_ops_len) return error.InvalidOperation;
@@ -468,8 +478,12 @@ test "declarations are translated and chosen per program" {
     try testing.expectEqualStrings("mount\ncap:21\nwrite:/etc/mtab", try operationsText(arena, &ops, "usr/bin/mount"));
     try testing.expectEqualStrings("mount\ncap:21\nwrite:/etc/mtab", try operationsText(arena, &ops, "usr/bin/umount"));
     try testing.expectEqualStrings("net", try operationsText(arena, &ops, "usr/bin/other"));
-    try testing.expectEqualStrings("", try operationsText(arena, &.{}, "usr/bin/other"));
-    try testing.expectEqualStrings("", try operationsText(arena, &.{.{ .programs = &.{"usr/bin/x"}, .allow = &.{"all"} }}, "usr/bin/y"));
+    // A file nothing names is undeclared; `none` declares no privilege at all.
+    try testing.expectEqualStrings("undeclared", try operationsText(arena, &.{}, "usr/bin/other"));
+    try testing.expectEqualStrings("undeclared", try operationsText(arena, &.{.{ .programs = &.{"usr/bin/x"}, .allow = &.{"all"} }}, "usr/bin/y"));
+    try testing.expectEqualStrings("", try operationsText(arena, &.{.{ .allow = &.{"none"} }}, "usr/bin/y"));
+    try testing.expectEqualStrings("", try operationsText(arena, &.{.{ .programs = &.{"usr/bin/x"}, .allow = &.{} }}, "usr/bin/x"));
+    try testing.expectEqualStrings("root-ipc\ncap:7", try operationsText(arena, &.{.{ .allow = &.{ "root-ipc", "none", "cap:setuid" } }}, "x"));
 
     try testing.expectError(error.InvalidOperation, operationsText(arena, &.{.{ .allow = &.{"cap:not_a_capability"} }}, "x"));
     try testing.expectError(error.InvalidOperation, operationsText(arena, &.{.{ .allow = &.{"write:relative/path"} }}, "x"));

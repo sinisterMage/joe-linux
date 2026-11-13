@@ -71,7 +71,8 @@ const usage =
     \\  --overwrite      Replace files that exist but belong to no package
     \\  --code-key FILE  Seal the files of the package being built with this key
     \\  --allow OP        An operation the package declares (pack), or the
-    \\                    declaration for recipes that make none (build)
+    \\                    declaration for recipes that make none (build); without
+    \\                    it, programs nothing declares are sealed `undeclared`
     \\
 ;
 

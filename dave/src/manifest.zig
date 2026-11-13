@@ -42,8 +42,9 @@ pub const Operations = struct {
     /// Paths of the programs this entry is for; empty means every file of the
     /// package that no other entry names.
     programs: []const []const u8 = &.{},
-    /// `all`, `net`, `mount`, `module`, `ptrace`, `bpf`, `cap:<name>`,
-    /// `write:<path prefix>`, `exec:<path>`; `*` stands for any in the last three.
+    /// `all`, `net`, `mount`, `module`, `ptrace`, `bpf`, `root-ipc`, `none`,
+    /// `cap:<name>`, `write:<path prefix>`, `exec:<path>`; `*` stands for any
+    /// in the last three. A file no entry covers is `undeclared`.
     allow: []const []const u8 = &.{},
 };
 

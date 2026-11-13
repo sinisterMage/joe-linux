@@ -9,9 +9,10 @@
 #
 # Resumable: a package whose file already exists in the repository is skipped.
 #
-# Every file is sealed with the code-signing key. A recipe that declares no
-# operations is sealed as declaring `all`: its programs have not been studied
-# yet. `grep -L operations packages/*/package.zon` lists what remains.
+# Every file is sealed with the code-signing key. A program its recipe does
+# not declare is sealed as `undeclared`: it has no authority of its own (see
+# packages/linux/joe-lsm/joe.c). `dave repo audit build/repo` lists the
+# privileged programs that still need a declaration.
 set -euo pipefail
 
 top=$(cd "$(dirname "$0")/.." && pwd)
@@ -66,7 +67,7 @@ while read -r name flag; do
         started=$SECONDS
         if ! "$dave" build "$recipe" --buildroot "$root" --sources "$top/build/src" \
             --work "$top/build/work" --out "$repo" --code-key "$keys/joe-code.key" \
-            --allow all >/dev/null; then
+            >/dev/null; then
             echo "--- last lines of $top/build/work/$name/build.log" >&2
             tail -n 40 "$top/build/work/$name/build.log" >&2 || true
             exit 1

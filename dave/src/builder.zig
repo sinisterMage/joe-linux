@@ -92,9 +92,9 @@ pub const Options = struct {
     keep_work: bool = false,
     /// Seal every file of the package with this code-signing key.
     code_key: ?seal.SigningKey = null,
-    /// The declaration given to a recipe that makes none. A package whose
-    /// programs have not been studied yet is sealed as declaring this, so the
-    /// set of such packages is exactly the recipes without `operations`.
+    /// The declaration given to a recipe that makes none. Empty by default,
+    /// so that programs nothing declares are sealed `undeclared`
+    /// (`seal.operationsText`).
     default_allow: []const []const u8 = &.{},
 };
 
