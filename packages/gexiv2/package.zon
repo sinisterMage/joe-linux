@@ -1,0 +1,12 @@
+.{
+    .name = "gexiv2",
+    .version = "0.16.2",
+    .release = 1,
+    .description = "GObject wrapper around the Exiv2 image metadata library",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gexiv2/0.16/gexiv2-0.16.2.tar.xz", .sha256 = "aad9e240fdffbe85e390f46ee0a567e251baea5c29c3d8690260388683dc8d0a" },
+    },
+    .depends = .{ "glibc", "gcc", "glib", "exiv2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala" },
+}

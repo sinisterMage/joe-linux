@@ -29,8 +29,22 @@ pub const File = struct {
     config: bool = false,
     /// File capabilities, as the raw `security.capability` value in hex.
     caps: ?[]const u8 = null,
-    /// Reserved for the security model: fs-verity digest of the contents.
+    /// Lower-case hex fs-verity digest of the contents (sealed files).
     verity: ?[]const u8 = null,
+    /// Lower-case hex signature binding `verity` to the operations the
+    /// package declares for this file; see seal.zig.
+    seal: ?[]const u8 = null,
+};
+
+/// What privileged programs of a package declare they do. The security module
+/// holds each program to its declaration.
+pub const Operations = struct {
+    /// Paths of the programs this entry is for; empty means every file of the
+    /// package that no other entry names.
+    programs: []const []const u8 = &.{},
+    /// `all`, `net`, `mount`, `module`, `ptrace`, `bpf`, `cap:<name>`,
+    /// `write:<path prefix>`, `exec:<path>`; `*` stands for any in the last three.
+    allow: []const []const u8 = &.{},
 };
 
 pub const Manifest = struct {
@@ -43,9 +57,7 @@ pub const Manifest = struct {
     /// Each entry is `name` or `name constraint`, e.g. `glibc >=2.44`.
     depends: []const []const u8 = &.{},
     conflicts: []const []const u8 = &.{},
-    /// Reserved for the security model: operations this package's privileged
-    /// programs declare.
-    operations: []const []const u8 = &.{},
+    operations: []const Operations = &.{},
     files: []const File = &.{},
 
     pub const ParseError = Allocator.Error || error{InvalidManifest};

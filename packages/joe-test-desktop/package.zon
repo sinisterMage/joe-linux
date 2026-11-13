@@ -1,0 +1,9 @@
+.{
+    .name = "joe-test-desktop",
+    .version = "0.1",
+    .release = 1,
+    .description = "A ready-made user for test and demonstration desktop images only",
+    .license = "MIT",
+    .build_only = true,
+    .depends = .{ "joe-desktop", "joe-test-console" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "gjs",
+    .version = "1.90.1",
+    .release = 1,
+    .description = "JavaScript bindings for GNOME, built on SpiderMonkey and GObject introspection",
+    .license = "MIT AND LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gjs/1.90/gjs-1.90.1.tar.xz", .sha256 = "05ceaa80f48e3782e5c44938572fad863e02b8c4a6c55657a99aa81db8ce9efa" },
+    },
+    // cairo is built with Xlib surfaces, so libgjs links cairo-xlib (libx11).
+    .depends = .{ "glibc", "gcc", "glib", "spidermonkey", "cairo", "libffi", "readline", "libx11" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

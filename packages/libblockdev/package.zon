@@ -1,0 +1,12 @@
+.{
+    .name = "libblockdev",
+    .version = "3.5.0",
+    .release = 1,
+    .description = "Library for manipulating block devices, with one plugin per technology",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/storaged-project/libblockdev/releases/download/3.5.0/libblockdev-3.5.0.tar.gz", .sha256 = "bccd30e6b5d11504de60d9889ff6a2a25b07a4ec8f04070f2387e168301b3e3a" },
+    },
+    .depends = .{ "glibc", "glib", "systemd", "kmod", "util-linux", "e2fsprogs", "cryptsetup", "keyutils", "libnvme", "libatasmart", "libbytesize" },
+    .build_depends = .{ "pkgconf", "python", "gettext" },
+}

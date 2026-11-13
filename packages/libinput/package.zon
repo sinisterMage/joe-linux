@@ -1,0 +1,13 @@
+.{
+    .name = "libinput",
+    .version = "1.32.0",
+    .release = 1,
+    .description = "Input device handling library for Wayland compositors and the X server",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.32.0/libinput-1.32.0.tar.gz", .sha256 = "7dd6c1ca964c86eb6810ccd6639cda634e68bdca43bf3afec39e94e942fac8d4" },
+    },
+    // systemd: libudev.
+    .depends = .{ "glibc", "libevdev", "libwacom", "lua", "mtdev", "systemd" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

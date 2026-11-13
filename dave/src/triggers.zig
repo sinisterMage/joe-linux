@@ -19,6 +19,10 @@ pub const Trigger = struct {
     paths: []const []const u8,
     /// Program and arguments; the program is an absolute path inside the root.
     exec: []const []const u8,
+    /// A trigger whose failure does not fail the transaction. For work that
+    /// the system repeats by itself at boot and that cannot always succeed
+    /// where a root is being assembled without privileges.
+    optional: bool = false,
 };
 
 /// Loads every trigger definition present in `root`, in file-name order.
@@ -89,7 +93,7 @@ pub fn run(arena: Allocator, io: Io, triggers: []const Trigger, options: RunOpti
         try argv.appendSlice(arena, t.exec);
         var child = try std.process.spawn(io, .{ .argv = argv.items, .stdin = .ignore });
         const term = try child.wait(io);
-        if (!term.success()) return error.TriggerFailed;
+        if (!term.success() and !t.optional) return error.TriggerFailed;
     }
 }
 

@@ -1,0 +1,14 @@
+.{
+    .name = "libportal",
+    .version = "0.9.1",
+    .release = 1,
+    .description = "GIO-style asynchronous API for the Flatpak portals, with GTK 3 and GTK 4 helpers",
+    .license = "LGPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://github.com/flatpak/libportal/releases/download/0.9.1/libportal-0.9.1.tar.xz", .sha256 = "de801ee349ed3c255a9af3c01b1a401fab5b3fc1c35eb2fd7dfb35d4b8194d7f" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/libportal-0.9.1-qt6.9_fixes-1.patch", .sha256 = "52fa427c47cf92edcb4f3d800e6f1232dbcb6251dc897954c96ec1db8668d271" },
+    },
+    .depends = .{ "glibc", "glib", "gtk3", "gtk4" },
+    // glib provides g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala" },
+}

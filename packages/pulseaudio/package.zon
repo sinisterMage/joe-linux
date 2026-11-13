@@ -1,0 +1,13 @@
+.{
+    .name = "pulseaudio",
+    .version = "17.0",
+    .release = 1,
+    .description = "PulseAudio client libraries (libpulse) and tools; the sound server itself is pipewire",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://www.freedesktop.org/software/pulseaudio/releases/pulseaudio-17.0.tar.xz", .sha256 = "053794d6671a3e397d849e478a80b82a63cb9d8ca296bd35b73317bb5ceb87b5" },
+    },
+    .depends = .{ "glibc", "libsndfile", "glib", "dbus", "systemd", "libcap" },
+    // m4 generates the CMake package files.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "m4" },
+}

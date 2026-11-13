@@ -80,7 +80,8 @@ mkfs.btrfs -q -f -L joe \
 # Kernels are stored under a name derived from their contents and are never
 # overwritten, so a boot entry can never end up pointing at a different kernel.
 khash=$(sha256sum "$kernel" | cut -c1-16)
-cmdline="root=PARTUUID=$root_uuid rootfstype=btrfs rootflags=subvol=joe/deploy/1 rw rootwait panic=10"
+# loglevel=4: errors and worse reach the console; the rest is in the journal.
+cmdline="root=PARTUUID=$root_uuid rootfstype=btrfs rootflags=subvol=joe/deploy/1 rw rootwait panic=10 loglevel=4"
 [[ -n $extra_cmdline ]] && cmdline="$cmdline $extra_cmdline"
 
 esp=$work/esp

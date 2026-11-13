@@ -1,0 +1,13 @@
+.{
+    .name = "shared-mime-info",
+    .version = "2.5.1",
+    .release = 1,
+    .description = "The freedesktop.org MIME type database and update-mime-database",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/xdg/shared-mime-info/-/archive/2.5.1/shared-mime-info-2.5.1.tar.gz", .sha256 = "ea248ea157b7fa0165f4fe282c84919fa84c3f175553642f229c8f1ab7539128" },
+    },
+    // update-mime-database is C++ (libstdc++ from gcc).
+    .depends = .{ "glibc", "gcc", "glib", "libxml2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

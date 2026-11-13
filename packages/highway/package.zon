@@ -1,0 +1,12 @@
+.{
+    .name = "highway",
+    .version = "1.4.0",
+    .release = 1,
+    .description = "C++ library providing portable SIMD/vector intrinsics",
+    .license = "Apache-2.0 OR BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/google/highway/archive/1.4.0/highway-1.4.0.tar.gz", .sha256 = "e72241ac9524bb653ae52ced768b508045d4438726a303f10181a38f764a453c" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

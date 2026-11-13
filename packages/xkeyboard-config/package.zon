@@ -1,0 +1,11 @@
+.{
+    .name = "xkeyboard-config",
+    .version = "2.49",
+    .release = 1,
+    .description = "X keyboard configuration database",
+    .license = "MIT AND MIT-open-group AND X11 AND HPND AND HPND-sell-variant",
+    .sources = .{
+        .{ .url = "https://anduin.linuxfromscratch.org/BLFS/xkeyboard/xkeyboard-config-2.49.tar.xz", .sha256 = "c49cb51f26d6c3061d329fd2771ce429fe6de20eba295f4e3abd8950252ac845" },
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "libxslt", "python" },
+}

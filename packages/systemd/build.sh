@@ -23,11 +23,11 @@ build() {
         -D firstboot=false \
         -D install-tests=false \
         -D ldconfig=false \
-        -D sysusers=false \
         -D rpmmacrosdir=no \
         -D homed=disabled \
         -D man=disabled \
-        -D pamconfdir=no \
+        -D pam=enabled \
+        -D pamconfdir=/etc/pam.d \
         -D dev-kvm-mode=0660 \
         -D nobody-group=nogroup \
         -D sysupdate=disabled \
@@ -39,4 +39,50 @@ build() {
 package() {
     cd build
     DESTDIR="$DESTDIR" ninja install
+
+    # Packages have no install scripts. These triggers do, once per
+    # transaction, what such scripts would: create the accounts and the files
+    # under /var that newly installed packages declare, and rebuild the
+    # hardware database.
+    install -dm755 "$DESTDIR/usr/lib/dave/triggers"
+    cat > "$DESTDIR/usr/lib/dave/triggers/11-sysusers.zon" << "EOF"
+.{
+    .name = "system accounts",
+    .paths = .{"usr/lib/sysusers.d/"},
+    .exec = .{"/usr/bin/systemd-sysusers"},
+}
+EOF
+    cat > "$DESTDIR/usr/lib/dave/triggers/12-tmpfiles.zon" << "EOF"
+.{
+    .name = "declared files and directories",
+    // Repeated at every boot by systemd-tmpfiles-setup.service, and unable to
+    // set owners where an image is assembled in a user namespace.
+    .optional = true,
+    .paths = .{"usr/lib/tmpfiles.d/"},
+    .exec = .{ "/usr/bin/systemd-tmpfiles", "--create", "--exclude-prefix=/dev", "--exclude-prefix=/proc", "--exclude-prefix=/sys", "--exclude-prefix=/run" },
+}
+EOF
+    cat > "$DESTDIR/usr/lib/dave/triggers/13-hwdb.zon" << "EOF"
+.{
+    .name = "hardware database",
+    .paths = .{"usr/lib/udev/hwdb.d/"},
+    .exec = .{ "/usr/bin/systemd-hwdb", "--usr", "update" },
+}
+EOF
+
+    # The PAM stack of the per-user service manager (Beyond LFS, "systemd").
+    install -dm755 "$DESTDIR/etc/pam.d"
+    cat > "$DESTDIR/etc/pam.d/systemd-user" << "EOF"
+account  required    pam_access.so
+account  include     system-account
+
+session  required    pam_env.so
+session  required    pam_limits.so
+session  required    pam_loginuid.so
+session  optional    pam_keyinit.so force revoke
+session  optional    pam_systemd.so
+
+auth     required    pam_deny.so
+password required    pam_deny.so
+EOF
 }

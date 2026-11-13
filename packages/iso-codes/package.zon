@@ -1,0 +1,13 @@
+.{
+    .name = "iso-codes",
+    .version = "4.20.1",
+    .release = 1,
+    .description = "Lists of country, language, script and currency names with their translations",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://salsa.debian.org/iso-codes-team/iso-codes/-/archive/v4.20.1/iso-codes-v4.20.1.tar.gz", .sha256 = "2d7d9f6084ab9ce6c534ce71a3dd5144b6e474f3c97616459a88f73f44a64bff" },
+    },
+    // python runs the scripts that generate the XML files, gettext compiles
+    // the translations.
+    .build_depends = .{ "meson", "ninja", "python", "gettext" },
+}

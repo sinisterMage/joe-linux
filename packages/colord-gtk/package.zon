@@ -1,0 +1,13 @@
+.{
+    .name = "colord-gtk",
+    .version = "0.3.1",
+    .release = 1,
+    .description = "GTK 3 and GTK 4 support library for colord",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.freedesktop.org/software/colord/releases/colord-gtk-0.3.1.tar.xz", .sha256 = "c176b889b75630a17f4e3d7ef24c09a3e12368e633496087459c8b53ac3a122d" },
+    },
+    .depends = .{ "glibc", "glib", "colord", "gtk3", "gtk4" },
+    // glib provides g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala", "gettext" },
+}

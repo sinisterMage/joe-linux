@@ -1,0 +1,15 @@
+.{
+    .name = "freetype",
+    .version = "2.15.0",
+    .release = 1,
+    .description = "TrueType, OpenType and bitmap font rendering library",
+    .license = "FTL OR GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/freetype/freetype-2.15.0.tar.xz", .sha256 = "93cd47eb719c325107f2d3cf087d06299e944c3b48a40b55537302304dea1dd5" },
+    },
+    // HarfBuzz is deliberately absent: it is not linked, only dlopen()ed at
+    // run time if it is installed (see build.sh), so there is no cycle with
+    // harfbuzz, which itself depends on freetype.
+    .depends = .{ "glibc", "zlib", "bzip2", "libpng", "brotli" },
+    .build_depends = .{"pkgconf"},
+}

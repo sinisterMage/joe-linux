@@ -1,0 +1,14 @@
+.{
+    .name = "gnome-text-editor",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME Text Editor",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-text-editor/51/gnome-text-editor-51.0.tar.xz", .sha256 = "2b76e6da1506346c54b36ba1a3aeedcd28f4cb7d6a8793d217f209456c92dd4c" },
+    },
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "gtksourceview5", "libspelling", "editorconfig-core-c", "cairo", "pango" },
+    // itstool translates the help pages; appstream provides the gettext
+    // rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "appstream" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "pycairo",
+    .version = "1.29.2",
+    .release = 1,
+    .description = "Python bindings for cairo",
+    .license = "LGPL-2.1-only OR MPL-1.1",
+    .sources = .{
+        .{ .url = "https://github.com/pygobject/pycairo/releases/download/v1.29.2/pycairo-1.29.2.tar.gz", .sha256 = "3e69fff74fe64f5ba2dfa31f67c6bdf26413342574047437d2ac520d35e9a489" },
+    },
+    .depends = .{ "glibc", "python", "cairo" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

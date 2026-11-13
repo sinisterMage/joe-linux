@@ -1,0 +1,16 @@
+.{
+    .name = "gnome-online-accounts",
+    .version = "3.58.1",
+    .release = 1,
+    .description = "Single sign-on framework for GNOME: Google, Microsoft 365, Nextcloud, WebDAV, IMAP and SMTP accounts",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-online-accounts/3.58/gnome-online-accounts-3.58.1.tar.xz", .sha256 = "9ec1900cc51409c2067c07c828c10be06fe3bf68d2999bb72d7d5ed325ed9bbc" },
+    },
+    // The book lists Gcr-4 as required; meson.build only asks for it together
+    // with Kerberos, which is switched off as in the book.
+    .depends = .{ "glibc", "glib", "dbus", "json-glib", "libsecret", "libsoup", "libxml2", "librest", "gtk4", "libadwaita" },
+    // glib provides g-ir-scanner and gdbus-codegen. libxslt and the DocBook
+    // stylesheets are for the manual page.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala", "gettext", "libxslt", "docbook-xsl-nons", "docbook-xml" },
+}

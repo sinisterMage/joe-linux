@@ -1,0 +1,15 @@
+.{
+    .name = "mesa",
+    .version = "26.2.3",
+    .release = 1,
+    .description = "OpenGL, OpenGL ES, EGL and GBM implementation with software and virtual-machine drivers",
+    .license = "MIT AND BSD-3-Clause AND SGI-B-2.0",
+    .sources = .{
+        .{ .url = "https://mesa.freedesktop.org/archive/mesa-26.2.3.tar.xz", .sha256 = "1628058a8d2c0615975de5a15ab7bbb9638c50000b5bed9456ff423ea034a81f" },
+    },
+    // gcc: libstdc++. libxfixes is not linked, but gl.pc requires it. The X
+    // extension libraries Mesa talks to through xcb (glx, dri3, present, shm,
+    // sync, xfixes, randr) are all part of libxcb.
+    .depends = .{ "glibc", "gcc", "llvm", "libdrm", "expat", "zlib", "zstd", "libx11", "libxext", "libxfixes", "libxcb", "libxshmfence", "libxxf86vm", "wayland" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "bison", "flex", "mako", "packaging", "python", "pyyaml", "wayland-protocols", "xorgproto" },
+}

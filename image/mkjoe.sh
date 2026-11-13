@@ -1,12 +1,15 @@
 #!/bin/bash
 # Builds a bootable joe Linux image entirely from joe's own packages.
 #
-#   mkjoe.sh [--test] --repo NAME,DIR,URL,PUBLIC_KEY [--repo ...] OUT_IMAGE PACKAGE...
+#   mkjoe.sh [--test] [--overlay DIR] [--root-size SIZE]
+#            --repo NAME,DIR,URL,PUBLIC_KEY [--repo ...] OUT_IMAGE PACKAGE...
 #
 # Each repository is read from DIR while the image is built and configured as
-# URL in the installed system. --test adds what the automated tests need and
-# nothing a real installation should have: root logs in on the serial console
-# without a password.
+# URL in the installed system. --test also installs joe-test-console, which
+# the automated tests need and no real installation should have: root logs in
+# on the serial console without a password, and accounts created by test
+# packages get the password "joe". --overlay copies a directory tree over the
+# installed system, for configuration a particular image needs.
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -17,11 +20,15 @@ if [[ $(id -u) -ne 0 ]]; then
 fi
 
 test_image=0
+overlay=
+root_size=8G
 repos=()
 while [[ $# -gt 0 ]]; do
     case $1 in
         --test) test_image=1; shift ;;
         --repo) repos+=("$2"); shift 2 ;;
+        --overlay) overlay=$2; shift 2 ;;
+        --root-size) root_size=$2; shift 2 ;;
         *) break ;;
     esac
 done
@@ -53,27 +60,23 @@ for spec in "${repos[@]}"; do
 done
 
 # The whole system is one dave transaction into an empty directory.
+packages=("$@")
+[[ $test_image -eq 1 ]] && packages+=(joe-test-console)
 write_repos dir
-"$dave" --root "$rootfs" install "$@"
+if [[ $test_image -eq 1 ]]; then
+    # systemd-sysusers, run as a trigger, takes passwords for the accounts it
+    # creates from credentials.
+    credentials=$(mktemp -d)
+    printf joe > "$credentials/passwd.plaintext-password.joe"
+    export CREDENTIALS_DIRECTORY=$credentials
+fi
+"$dave" --root "$rootfs" install "${packages[@]}"
+[[ -z ${credentials:-} ]] || rm -rf "$credentials"
+[[ -z $overlay ]] || cp -a --no-preserve=ownership "$overlay/." "$rootfs/"
 write_repos url
 rm -rf "$rootfs/var/cache/dave"
-
-if [[ $test_image -eq 1 ]]; then
-    mkdir -p "$rootfs/etc/systemd/system/serial-getty@ttyS0.service.d"
-    cat > "$rootfs/etc/systemd/system/serial-getty@ttyS0.service.d/autologin.conf" <<'EOT'
-[Service]
-ExecStart=
-ExecStart=-/usr/sbin/agetty --autologin root --noclear --keep-baud 115200 %I dumb
-EOT
-    cat > "$rootfs/root/.bash_profile" <<'EOT'
-export PS1='joe# '
-export TERM=dumb
-unset PROMPT_COMMAND
-bind 'set enable-bracketed-paste off' 2>/dev/null
-EOT
-fi
 
 kernel=$(ls "$rootfs"/usr/lib/modules/*/vmlinuz | sort -V | tail -n 1)
 "$here/mkimage.sh" --rootfs "$rootfs" --kernel "$kernel" \
     --sdboot "$rootfs/usr/lib/systemd/boot/efi/systemd-bootx64.efi" \
-    --out "$out" --cmdline "console=ttyS0,115200"
+    --out "$out" --root-size "$root_size" --cmdline "console=ttyS0,115200"

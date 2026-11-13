@@ -1,0 +1,12 @@
+.{
+    .name = "fmt",
+    .version = "12.2.1",
+    .release = 1,
+    .description = "Formatting library for C++, an alternative to printf and iostreams",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/fmtlib/fmt/archive/12.2.1/fmt-12.2.1.tar.gz", .sha256 = "449374d74f31b67796dece454d59b93e6f1538efcce0e9ac78000c98142c139e" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

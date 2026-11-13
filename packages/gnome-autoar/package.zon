@@ -1,0 +1,12 @@
+.{
+    .name = "gnome-autoar",
+    .version = "0.5.2",
+    .release = 1,
+    .description = "Library for automatic archive creation and extraction on top of libarchive",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-autoar/0.5/gnome-autoar-0.5.2.tar.xz", .sha256 = "6c20bd16c87aba15869e56444424481f632ac302989a203e8ce4dcc73dea33a5" },
+    },
+    .depends = .{ "glibc", "glib", "libarchive" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala" },
+}

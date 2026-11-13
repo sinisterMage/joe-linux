@@ -1,0 +1,14 @@
+.{
+    .name = "libsoup",
+    .version = "3.8.1",
+    .release = 1,
+    .description = "HTTP client and server library for GNOME (libsoup 3)",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libsoup/3.8/libsoup-3.8.1.tar.xz", .sha256 = "5013dcef9136f6f861e6529fca578af50c1f52a39219027fb5aff652d1371a04" },
+    },
+    // glib-networking is needed at run time: it is GIO's TLS backend.
+    .depends = .{ "glibc", "glib", "glib-networking", "libpsl", "nghttp2", "sqlite", "brotli", "zlib", "zstd" },
+    // glib provides g-ir-scanner, vala provides vapigen.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "vala" },
+}

@@ -6,6 +6,7 @@ import subprocess
 
 TOP = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DAVE = os.path.join(TOP, "dave", "zig-out", "bin", "dave")
+CODE_KEY = os.path.join(TOP, "build", "keys", "joe-code.key")
 PORT = 8642
 # QEMU's user-mode network presents the host as 10.0.2.2.
 GUEST_HOST = "10.0.2.2"
@@ -38,7 +39,7 @@ class Repo:
     def public_key(self):
         return self.key + ".pub"
 
-    def package(self, name, version, files, depends=()):
+    def package(self, name, version, files, depends=(), allow=()):
         """files: {path: content} or {path: (content, mode)}."""
         stage = os.path.join(self.stage, f"{name}-{version}")
         for path, spec in files.items():
@@ -48,9 +49,18 @@ class Repo:
             with open(full, "w") as f:
                 f.write(content)
             os.chmod(full, mode)
+        self.pack_tree(name, version, stage, depends, allow)
+
+    def pack_tree(self, name, version, stage, depends=(), allow=()):
+        """Packs an existing directory tree."""
         cmd = [DAVE, "pack", "--name", name, "--version", version, "--out", self.path]
         for d in depends:
             cmd += ["--depends", d]
+        for op in allow:
+            cmd += ["--allow", op]
+        # Sealed with the key joe's kernel trusts, when the distribution has been built.
+        if os.path.exists(CODE_KEY):
+            cmd += ["--code-key", CODE_KEY]
         subprocess.run(cmd + [stage], check=True, stdout=subprocess.DEVNULL)
 
     def index(self):

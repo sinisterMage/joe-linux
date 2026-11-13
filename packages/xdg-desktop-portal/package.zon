@@ -1,0 +1,18 @@
+.{
+    .name = "xdg-desktop-portal",
+    .version = "1.22.1",
+    .release = 1,
+    .description = "Desktop integration portals for sandboxed and ordinary applications",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/flatpak/xdg-desktop-portal/releases/download/1.22.1/xdg-desktop-portal-1.22.1.tar.xz", .sha256 = "d4879ddb3d65ff1a8f19187497e6f13dc5d267bcac404a5d501218be355753d3" },
+    },
+    // gst-plugins-base provides gstreamer-pbutils (sound validation).
+    // bubblewrap sandboxes the image and sound validators; fuse3 also
+    // provides fusermount3 for the document portal; dbus: every portal is a
+    // session bus service. A backend (xdg-desktop-portal-gnome or
+    // xdg-desktop-portal-gtk) is needed at run time; those depend on this.
+    .depends = .{ "glibc", "glib", "json-glib", "fuse3", "gdk-pixbuf", "gstreamer", "gst-plugins-base", "pipewire", "geoclue", "libgudev", "systemd", "bubblewrap", "dbus" },
+    // docutils provides rst2man for the manual pages; glib gdbus-codegen.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "docutils" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "libpng",
+    .version = "1.6.59",
+    .release = 1,
+    .description = "Library for reading and writing PNG images, with animated PNG support",
+    .license = "libpng-2.0",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/libpng/libpng-1.6.59.tar.xz", .sha256 = "d80dd2a38a37f803cb9b6ac7b14bd6e74ddc3b654780a8380bdf93523fdb4389" },
+        // The book's recommended APNG patch; it is the 1.6.58 patch, which
+        // the book applies to 1.6.59 as well.
+        .{ .url = "https://downloads.sourceforge.net/sourceforge/libpng-apng/libpng-1.6.58-apng.patch.gz", .sha256 = "eee7dea22ed502868017971c86c63c4ed1e6085de0baebfdcc3d3322f00f3eb0" },
+    },
+    .depends = .{ "glibc", "zlib" },
+}

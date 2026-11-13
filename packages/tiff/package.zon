@@ -1,0 +1,13 @@
+.{
+    .name = "tiff",
+    .version = "4.7.2",
+    .release = 1,
+    .description = "Library and tools for the Tag Image File Format",
+    .license = "libtiff",
+    .sources = .{
+        .{ .url = "https://download.osgeo.org/libtiff/tiff-4.7.2.tar.gz", .sha256 = "672bd7d10aee4606171afb864f3570b83340f6a33e2c186dc0512f7145ffdf6a" },
+    },
+    // libtiffxx needs libstdc++ (gcc).
+    .depends = .{ "glibc", "gcc", "zlib", "xz", "zstd", "libjpeg-turbo" },
+    .build_depends = .{ "cmake", "ninja" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "libdisplay-info",
+    .version = "0.4.0",
+    .release = 1,
+    .description = "EDID and DisplayID parsing library",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.4.0/downloads/libdisplay-info-0.4.0.tar.xz", .sha256 = "43b180baa143e2035654759d84e2b2f5ee77d5fe817c423838c7fe59c0d68459" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "meson", "ninja", "pkgconf", "hwdata", "python" },
+}

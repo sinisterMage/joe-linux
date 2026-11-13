@@ -5,9 +5,11 @@ The guest is expected to log root in automatically on ttyS0 with the prompt
 scenario can be read afterwards.
 """
 
+import json
 import os
 import re
 import select
+import socket
 import shutil
 import subprocess
 import time
@@ -29,7 +31,7 @@ class CommandFailed(Exception):
 
 
 class VM:
-    def __init__(self, base_image, name, memory="2G", cpus=4, extra_args=()):
+    def __init__(self, base_image, name, memory="2G", cpus=4, extra_args=(), display=False):
         self.workdir = os.path.join(TOP, "build", "images", "vm-" + name)
         shutil.rmtree(self.workdir, ignore_errors=True)
         os.makedirs(self.workdir)
@@ -43,6 +45,10 @@ class VM:
         self.memory = memory
         self.cpus = cpus
         self.extra_args = list(extra_args)
+        # With a display, the guest gets a virtio GPU and input devices, and
+        # QEMU's control socket is opened so that screenshots can be taken.
+        self.display = display
+        self.qmp_path = os.path.join(self.workdir, "qmp.sock")
         self.proc = None
         self.buffer = b""
 
@@ -59,6 +65,11 @@ class VM:
             "-netdev", "user,id=n0", "-device", "virtio-net-pci,netdev=n0",
             "-display", "none", "-monitor", "none", "-serial", "stdio",
         ] + self.extra_args
+        if self.display:
+            args += [
+                "-device", "virtio-vga", "-device", "virtio-keyboard-pci", "-device", "virtio-tablet-pci",
+                "-qmp", f"unix:{self.qmp_path},server=on,wait=off",
+            ]
         self.proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         os.set_blocking(self.proc.stdout.fileno(), False)
         self.buffer = b""
@@ -152,6 +163,28 @@ class VM:
         self.kill()
         self.start()
         self.wait_boot(timeout)
+
+    def screenshot(self, path):
+        """Saves what the guest's display shows as a PNG file."""
+        sock = socket.socket(socket.AF_UNIX)
+        sock.settimeout(30)
+        sock.connect(self.qmp_path)
+        stream = sock.makefile("rw")
+
+        def command(name, **arguments):
+            stream.write(json.dumps({"execute": name, "arguments": arguments}) + "\n")
+            stream.flush()
+            while True:
+                reply = json.loads(stream.readline())
+                if "return" in reply or "error" in reply:
+                    return reply
+
+        json.loads(stream.readline())  # greeting
+        command("qmp_capabilities")
+        reply = command("screendump", filename=path, format="png")
+        sock.close()
+        if "error" in reply:
+            raise RuntimeError(f"screenshot failed: {reply['error']}")
 
     # -- conveniences -------------------------------------------------------
 

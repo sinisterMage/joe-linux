@@ -1,0 +1,13 @@
+.{
+    .name = "libxmlb",
+    .version = "0.3.30",
+    .release = 1,
+    .description = "Library for querying compressed binary XML blobs",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/hughsie/libxmlb/releases/download/0.3.30/libxmlb-0.3.30.tar.xz", .sha256 = "2cb894b873aac5fc9e9b6228d4e795f7236d16e429ed2de8f95179a131be3a68" },
+    },
+    .depends = .{ "glibc", "glib", "xz", "zstd" },
+    // glib provides g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

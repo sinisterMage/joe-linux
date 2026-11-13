@@ -1,0 +1,14 @@
+.{
+    .name = "xdg-desktop-portal-gtk",
+    .version = "1.15.3",
+    .release = 1,
+    .description = "GTK 3 backend for xdg-desktop-portal",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/flatpak/xdg-desktop-portal-gtk/releases/download/1.15.3/xdg-desktop-portal-gtk-1.15.3.tar.xz", .sha256 = "47a3743d2419a8601e691db37e85bb5fac5ae4b26842177065cd5f22ada23b37" },
+    },
+    // gnome-desktop provides gnome-desktop-3.0 for the wallpaper portal.
+    .depends = .{ "glibc", "glib", "gtk3", "xdg-desktop-portal", "gnome-desktop", "gsettings-desktop-schemas", "fontconfig", "dbus" },
+    // glib provides gdbus-codegen and glib-compile-resources.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext" },
+}

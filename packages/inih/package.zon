@@ -1,0 +1,12 @@
+.{
+    .name = "inih",
+    .version = "r63",
+    .release = 1,
+    .description = "Simple .INI file parser in C, with the INIReader C++ wrapper",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/benhoyt/inih/archive/r63/inih-r63.tar.gz", .sha256 = "5d7967de62c5bfdc4f9f5ab06ce44c9e498bae021c7dac5792c0696e76aa9963" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "meson", "ninja" },
+}

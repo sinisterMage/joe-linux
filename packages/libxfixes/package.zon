@@ -1,0 +1,12 @@
+.{
+    .name = "libxfixes",
+    .version = "6.0.2",
+    .release = 1,
+    .description = "Xlib interface to the XFIXES extension",
+    .license = "MIT AND HPND-sell-variant",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libXfixes-6.0.2.tar.xz", .sha256 = "39f115d72d9c5f8111e4684164d3d68cc1fd21f9b27ff2401b08fddfc0f409ba" },
+    },
+    .depends = .{ "glibc", "libx11", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros" },
+}

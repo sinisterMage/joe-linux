@@ -1,0 +1,12 @@
+.{
+    .name = "perl-file-sharedir",
+    .version = "1.118",
+    .release = 1,
+    .description = "Perl module to locate per-distribution and per-module shared files",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/File-ShareDir-1.118.tar.gz", .sha256 = "3bb2a20ba35df958dc0a4f2306fc05d903d8b8c4de3c8beefce17739d281c958" },
+    },
+    .depends = .{ "perl", "perl-class-inspector" },
+    .build_depends = .{"perl-file-sharedir-install"},
+}

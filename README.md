@@ -1,8 +1,8 @@
 # joe Linux
 
 An independent Linux distribution whose goal is to be as boring as possible for
-the person using it. Two things about it are new; everything else is ordinary
-(glibc, systemd, a usr-merged file system, and in time GNOME).
+the person using it. Three things about it are new; everything else is ordinary
+(glibc, systemd, a usr-merged file system, GNOME).
 
 1. **Transactional upgrades on a system that is not immutable.** An upgrade is
    applied to a btrfs snapshot and takes effect on reboot. If the new system
@@ -10,16 +10,24 @@ the person using it. Two things about it are new; everything else is ordinary
    running root stays an ordinary writable file system.
 2. **dave**, a package manager written in Zig with a PubGrub solver, designed
    around that update model from the start.
+3. **A security model for root.** A privileged process runs only code that the
+   distribution has signed, cannot generate code at run time, and is held to
+   the operations its program declares. One kernel security module enforces it.
 
 The idea of snapshot-based upgrades without immutability comes from
 [Arch-silverblue](https://github.com/sinisterMage/Arch-silverblue).
 
 ## Status
 
-A first milestone: joe Linux 0.1 is a console system of 68 packages built from
-source that boots in a virtual machine, and whose upgrade, rollback and
-recovery behaviour is exercised end to end by `make test-joe`. It is not ready
-to install on a real computer; see [Not done yet](#not-done-yet).
+joe Linux builds from source into two systems that boot in a virtual machine:
+
+- a **console system** of about 70 packages, whose upgrade, rollback and
+  recovery behaviour is exercised end to end by `make test-joe`;
+- a **GNOME desktop** of about 320 packages: GDM, GNOME Shell on Wayland,
+  Terminal, Files, Text Editor and Settings, checked by `make test-desktop`
+  with the security module both logging and enforcing.
+
+It is not ready to install on a real computer; see [Not done yet](#not-done-yet).
 
 ## How it behaves
 
@@ -77,7 +85,41 @@ signed index carries the SHA-256 of every package. Packages have no install
 scripts: a package may declare a trigger (rebuild the linker cache when
 libraries change), and that is all.
 
+**Seals.** Every packaged file that is not configuration is *sealed* when it
+is installed: fs-verity makes its contents immutable and gives the kernel a
+digest of them, and an extended attribute carries a signature over that digest
+together with the operations the package declares for the file. The public
+half of the signing key is compiled into the kernel. A sealed file can be
+replaced or deleted, never modified.
+
+**What the security module does.** It concerns privileged processes only: any
+user id of 0, or any capability, in the initial user namespace. Ordinary users
+are not affected.
+
+1. *Sealed code only.* The program, every library it maps, every kernel module
+   it loads and every script it runs must be sealed. bash and Python ask the
+   module before reading a script file; commands typed at a prompt and `-c`
+   strings are not files and are allowed.
+2. *No code made at run time.* No anonymous executable memory, no writable
+   executable mappings, no making modified memory executable. A just-in-time
+   compiler cannot work under these rules, so none can run as root.
+3. *Declared operations.* A recipe states what its privileged programs do:
+   which capabilities, whether the network, where they write, what they run.
+
+   ```zon
+   .operations = .{
+       .{ .programs = .{"usr/bin/mount"}, .allow = .{ "mount", "cap:sys_admin" } },
+   },
+   ```
+
+   The declaration is part of what is signed, and the module refuses the rest.
+
+The module logs by default and enforces when booted with `joe=enforce`. One
+consequence worth knowing: a root shell does not read `/etc/profile` or
+`~/.bashrc`, because files you can edit are not sealed.
+
 The details are in the source, which is commented for readers:
+[packages/linux/joe-lsm/joe.c](packages/linux/joe-lsm/joe.c), [dave/src/seal.zig](dave/src/seal.zig),
 [dave/src/deploy.zig](dave/src/deploy.zig), [dave/src/boot.zig](dave/src/boot.zig),
 [dave/src/txn.zig](dave/src/txn.zig), [dave/src/solver/pubgrub.zig](dave/src/solver/pubgrub.zig).
 
@@ -103,14 +145,24 @@ make packages              every recipe in packages/, into build/repo
 make image                 a bootable image, build/images/joe.img
 make run                   boot it in QEMU on this terminal (leave with Ctrl-A X)
 make test-joe              the same deployment tests on that image
+make test-security         the security module's three rules
 ```
 
-The image made by `make image` logs root in on the serial console without a
-password. That is for demonstration only: there is no installer yet that could
-set one.
+```
+make desktop-image         a GNOME image, build/images/joe-desktop.img
+make run-desktop           boot it in a QEMU window (user joe, password joe)
+make test-desktop          session and applications, logging and enforcing
+```
 
-The bootstrap follows Linux From Scratch (systemd, development branch) with the
-same package versions. Recipes are described in [packages/README.md](packages/README.md).
+Building the desktop packages takes several hours the first time; LLVM, Rust
+and SpiderMonkey are the long ones.
+
+These are demonstration images: root is logged in on the serial console
+without a password, and the desktop image has a ready-made user. There is no
+installer yet that could set accounts up properly.
+
+The bootstrap follows Linux From Scratch, and the desktop Beyond Linux From
+Scratch (systemd, development branches), with the same package versions. Recipes are described in [packages/README.md](packages/README.md).
 
 ## Layout
 
@@ -125,21 +177,30 @@ same package versions. Recipes are described in [packages/README.md](packages/RE
 
 ## Not done yet
 
-- **GNOME** and everything a desktop needs; the base is a console system.
+- **Declarations for real packages.** The mechanism of rule 3 is tested, but
+  almost every package is still sealed as declaring `all`, because its
+  programs have not been studied. `grep -L operations packages/*/package.zon`
+  lists them. Until that list is short, rule 3 constrains little in practice.
+- **The rest of the trust chain.** Kernel modules are checked by the module
+  but not by the kernel's own signature enforcement; there is no kernel
+  lockdown and no Secure Boot, so root can still replace the kernel or its
+  command line. There is no way yet to sign software built on the machine.
+  Interpreters other than bash and Python (awk, sed, perl) do not ask before
+  running a script.
 - **Real hardware.** The kernel boots without an initramfs, which is enough for
   virtual machines and simple disks but not for encrypted or multi-device roots.
-  There is no installer; images are assembled on the build machine.
+  Wireless is off. There is no installer; images are assembled on the build
+  machine.
+- **Desktop gaps.** No web browser, printing, Bluetooth or mobile broadband;
+  Settings is built without those three panels. No first-run setup, so no way
+  to create your own user. No graphical front end to dave.
 - **Split packages.** A package is everything its upstream installs, so the
   base image carries the compiler because programs need its run-time libraries.
 - **Builds are not isolated from each other.** Every recipe builds in one
-  shared build root, in a fixed order, as Linux From Scratch does. A fresh,
-  minimal build root per package, chosen by the solver, comes later.
-- **System accounts** are a static `/etc/passwd`, not `sysusers.d`.
+  shared build root. A fresh, minimal build root per package, chosen by the
+  solver, comes later. Five packages fetch Rust crates from the network while
+  building, and Rust itself starts from its upstream's prebuilt compiler.
 - **Building dave inside joe.** dave is a static binary cross-built by Zig on
   the build machine, because joe does not package Zig yet.
-- **The security model**: only signed, ahead-of-time compiled code may run as
-  root, enforced by a kernel security module, with each privileged program
-  limited to operations it declares. The package format reserves the fields it
-  needs; nothing enforces it yet.
 - HTTPS repositories, virtual packages (`provides`), and changing the kernel on
   a running system (use `dave upgrade`).

@@ -1,0 +1,12 @@
+.{
+    .name = "libfs",
+    .version = "1.0.10",
+    .release = 1,
+    .description = "X Font Service client library",
+    .license = "MIT-open-group AND HPND-sell-variant",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libFS-1.0.10.tar.xz", .sha256 = "9babbd3c86069c98563da044045fdc0ece4ec0c93dcdd2c68aa74eb34b4f3b77" },
+    },
+    .depends = .{ "glibc", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros", "xtrans" },
+}

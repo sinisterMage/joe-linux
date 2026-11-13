@@ -1,0 +1,12 @@
+.{
+    .name = "gstreamer",
+    .version = "1.28.9",
+    .release = 1,
+    .description = "Streaming media framework: core library, base elements and tools",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.28.9.tar.xz", .sha256 = "6dbf744f583131a34845cc641e803843766a9ba80ce00378a9043fd6d8d5fb38" },
+    },
+    .depends = .{ "glibc", "glib" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "flex", "bison", "gettext", "python" },
+}

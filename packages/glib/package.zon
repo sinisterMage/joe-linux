@@ -1,0 +1,21 @@
+.{
+    .name = "glib",
+    .version = "2.90.1",
+    .release = 1,
+    .description = "Low-level core library for GNOME, with GObject Introspection",
+    .license = "LGPL-2.1-or-later AND LGPL-2.0-or-later AND GPL-2.0-or-later AND MIT",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/glib/2.90/glib-2.90.1.tar.xz", .sha256 = "93c941aa17d5eb1d53fe838365f29a8b4e539c222a256d974ec8f30fc413e396" },
+        // Built in between the two passes of glib, as the book does on the
+        // same page; this recipe ships both.
+        .{ .url = "https://download.gnome.org/sources/gobject-introspection/1.86/gobject-introspection-1.86.0.tar.xz", .sha256 = "920d1a3fcedeadc32acff95c2e203b319039dd4b4a08dd1a2dfd283d19c0b9ae" },
+    },
+    // libgio links libmount (util-linux) and zlib, gresource links libelf
+    // (elfutils). gdbus-codegen, glib-mkenums, glib-genmarshal and
+    // g-ir-scanner are Python programs; g-ir-scanner imports distutils, which
+    // setuptools provides, and runs the C compiler and pkg-config.
+    .depends = .{ "glibc", "libffi", "pcre2", "zlib", "util-linux", "elfutils", "python", "setuptools", "gcc", "pkgconf" },
+    // docutils: rst2man for the manual pages. flex and bison: the
+    // g-ir-scanner source parser.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "docutils", "flex", "bison" },
+}

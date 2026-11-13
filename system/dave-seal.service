@@ -1,0 +1,18 @@
+# An image is assembled without privileges, which is not enough to seal its
+# files (fs-verity and the seal attribute need the real root). This does it on
+# the first boot of such an image and never again: deployments made later by
+# dave are sealed as they are created, and inherit the marker.
+[Unit]
+Description=Seal the files of a newly installed joe Linux system
+DefaultDependencies=no
+After=systemd-remount-fs.service
+Before=sysinit.target shutdown.target
+Conflicts=shutdown.target
+ConditionPathExists=!/usr/lib/dave/sealed
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/dave seal
+StandardOutput=journal+console
+StandardError=journal+console

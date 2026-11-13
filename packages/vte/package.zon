@@ -1,0 +1,20 @@
+.{
+    .name = "vte",
+    .version = "0.84.1",
+    .release = 1,
+    .description = "Terminal emulator widget for GTK 3 and GTK 4",
+    .license = "LGPL-3.0-or-later AND GPL-3.0-or-later AND MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/GNOME/vte/-/archive/0.84.1/vte-0.84.1.tar.gz", .sha256 = "9f73468982a339cd1eb942beb7d348a5564c9ed48473ad1690c791f8474916ec" },
+    },
+    // at-spi2-core provides atk for the GTK 3 widget's accessibility.
+    .depends = .{
+        "glibc",        "gcc",     "glib", "gtk3",   "gtk4",  "pango", "cairo",   "gdk-pixbuf",
+        "graphene",     "fribidi", "icu",  "gnutls", "pcre2", "lz4",   "systemd", "simdutf",
+        "at-spi2-core",
+    },
+    // fast_float is header-only and fmt is used header-only on purpose (see
+    // meson.build); without the three C++ libraries meson would try to clone
+    // them with git. glib provides g-ir-scanner and glib-compile-resources.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala", "gettext", "fast_float", "fmt", "libxml2" },
+}

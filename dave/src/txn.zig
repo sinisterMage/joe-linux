@@ -15,6 +15,7 @@ const manifest_mod = @import("manifest.zig");
 const Manifest = manifest_mod.Manifest;
 const archive = @import("archive.zig");
 const db = @import("db.zig");
+const seal = @import("seal.zig");
 
 pub const PackageFile = struct {
     dir: Io.Dir,
@@ -30,6 +31,10 @@ pub const Plan = struct {
     /// refusing. Used when a root built by other means is first brought under
     /// dave's management, as during the distribution's own bootstrap.
     overwrite_unowned: bool = false,
+    /// Seal files as they are installed, where the manifest carries a seal.
+    seal: bool = true,
+    /// The attribute seals are stored in; only tests use another.
+    seal_attribute: [*:0]const u8 = seal.xattr_name,
 };
 
 pub const Change = struct {
@@ -44,6 +49,12 @@ pub const Result = struct {
     notes: []const []const u8,
     /// Every path created, replaced or removed; used to select triggers.
     changed_paths: []const []const u8,
+    /// Files installed with a seal in place.
+    sealed: usize = 0,
+    /// Files that have a seal in their manifest but could not be sealed here
+    /// (no fs-verity, or no privilege to write the attribute). `dave seal`
+    /// finishes the job once it can.
+    unsealed: usize = 0,
 };
 
 /// Filled in with a human-readable reason when `apply` fails.
@@ -71,6 +82,10 @@ const Txn = struct {
     notes: std.ArrayList([]const u8) = .empty,
     changed: std.ArrayList([]const u8) = .empty,
     overwrite: bool = false,
+    seal: bool = true,
+    seal_attribute: [*:0]const u8 = seal.xattr_name,
+    sealed: usize = 0,
+    unsealed: usize = 0,
 
     fn fail(t: *Txn, err: anyerror, comptime fmt: []const u8, args: anytype) anyerror {
         t.diag.message = std.fmt.allocPrint(t.arena, fmt, args) catch "";
@@ -271,8 +286,24 @@ const Txn = struct {
             if (f.caps) |caps_hex| try setCapabilities(file, caps_hex);
         }
         try t.applyOwner(tmp, f);
+        // Sealed under its temporary name, so the file is never visible
+        // unsealed at its real path.
+        if (t.seal) try t.sealFile(m, f, tmp);
         t.root.rename(tmp, t.root, path, t.io) catch |err|
             return t.fail(err, "{s}: cannot place {s}", .{ m.name, path });
+    }
+
+    fn sealFile(t: *Txn, m: Manifest, f: manifest_mod.File, on_disk: []const u8) !void {
+        const signature = seal.parseSignature(f.seal orelse return) orelse
+            return t.fail(error.InvalidPackage, "{s}: {s} has a malformed seal", .{ m.name, f.path });
+        const ops = seal.operationsText(t.arena, m.operations, f.path) catch
+            return t.fail(error.InvalidPackage, "{s}: invalid operations declaration", .{m.name});
+        const value = try seal.attribute(t.arena, ops, signature);
+        switch (seal.apply(t.io, t.root, on_disk, value, t.seal_attribute) catch |err|
+            return t.fail(err, "{s}: cannot seal {s}", .{ m.name, f.path })) {
+            .sealed => t.sealed += 1,
+            .not_possible => t.unsealed += 1,
+        }
     }
 
     /// Deletes what a departing package version owned and nothing now owns.
@@ -324,7 +355,16 @@ fn setCapabilities(file: Io.File, caps_hex: []const u8) !void {
 }
 
 pub fn apply(gpa: Allocator, arena: Allocator, io: Io, root: Io.Dir, plan: Plan, diag: *Diagnostic) !Result {
-    var t: Txn = .{ .gpa = gpa, .arena = arena, .io = io, .root = root, .diag = diag, .overwrite = plan.overwrite_unowned };
+    var t: Txn = .{
+        .gpa = gpa,
+        .arena = arena,
+        .io = io,
+        .root = root,
+        .diag = diag,
+        .overwrite = plan.overwrite_unowned,
+        .seal = plan.seal,
+        .seal_attribute = plan.seal_attribute,
+    };
 
     const installed = try db.load(arena, io, root);
     var installed_by_name: std.StringHashMapUnmanaged(Manifest) = .empty;
@@ -379,7 +419,13 @@ pub fn apply(gpa: Allocator, arena: Allocator, io: Io, root: Io.Dir, plan: Plan,
     for (incoming) |m| try db.put(arena, io, root, m);
     _ = linux.syncfs(root.handle);
 
-    return .{ .changes = changes.items, .notes = t.notes.items, .changed_paths = t.changed.items };
+    return .{
+        .changes = changes.items,
+        .notes = t.notes.items,
+        .changed_paths = t.changed.items,
+        .sealed = t.sealed,
+        .unsealed = t.unsealed,
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -563,6 +609,51 @@ test "overwrite takes over files that belong to no package" {
     try testing.expectEqualStrings("packaged config", try fx.read("etc/tool.conf"));
     try testing.expect(!fx.exists("etc/tool.conf.davenew"));
     try testing.expectEqual(@as(usize, 1), (try db.load(fx.arena(), io, fx.root)).len);
+}
+
+test "files are sealed as they are installed" {
+    var fx: Fixture = undefined;
+    try fx.init();
+    defer fx.deinit();
+    const io = testing.io;
+    const a = fx.arena();
+
+    try fx.tmp.dir.createDirPath(io, "stage-sealed/usr/bin");
+    try fx.tmp.dir.createDirPath(io, "stage-sealed/etc");
+    var stage = try fx.tmp.dir.openDir(io, "stage-sealed", .{ .iterate = true });
+    defer stage.close(io);
+    try stage.writeFile(io, .{ .sub_path = "usr/bin/tool", .data = "the program" });
+    try stage.writeFile(io, .{ .sub_path = "etc/tool.conf", .data = "editable" });
+    const key = try seal.SigningKey.parse(&seal.generateKey(io).secret_hex);
+    const name = try archive.pack(a, io, .{
+        .meta = .{ .name = "tool", .version = "1-r1", .operations = &.{.{ .allow = &.{ "net", "cap:net_admin" } }} },
+        .src = stage,
+        .out_dir = fx.tmp.dir,
+        .code_key = key,
+    });
+
+    // Tests cannot write security.* attributes, so they use the user namespace.
+    const attr = "user.joe-test";
+    const result = try fx.run(.{ .install = &.{.{ .dir = fx.tmp.dir, .sub_path = name }}, .seal_attribute = attr });
+    if (result.sealed == 0) return error.SkipZigTest; // no fs-verity on this file system
+    try testing.expectEqual(@as(usize, 1), result.sealed);
+    try testing.expectEqual(@as(usize, 0), result.unsealed);
+
+    const m = (try db.load(a, io, fx.root))[0];
+    var tool: ?manifest_mod.File = null;
+    for (m.files) |f| {
+        if (std.mem.eql(u8, f.path, "usr/bin/tool")) tool = f;
+        // Configuration is never sealed: it has to stay editable.
+        if (std.mem.eql(u8, f.path, "etc/tool.conf")) try testing.expect(f.seal == null);
+    }
+    const value = try seal.attribute(a, "net\ncap:12", seal.parseSignature(tool.?.seal.?).?);
+    try testing.expect(seal.isApplied(io, fx.root, "usr/bin/tool", seal.parseDigest(tool.?.verity.?).?, value, attr));
+    try testing.expect(try seal.verify(a, &key.publicHex(), seal.parseDigest(tool.?.verity.?).?, "net\ncap:12", seal.parseSignature(tool.?.seal.?).?));
+    // The sealed program can be replaced or removed, but not modified in place.
+    try testing.expect(std.meta.isError(fx.root.openFile(io, "usr/bin/tool", .{ .mode = .read_write })));
+    try fx.root.writeFile(io, .{ .sub_path = "etc/tool.conf", .data = "edited" });
+    _ = try fx.run(.{ .remove = &.{"tool"} });
+    try testing.expect(!fx.exists("usr/bin/tool"));
 }
 
 test "locally edited configuration is preserved" {

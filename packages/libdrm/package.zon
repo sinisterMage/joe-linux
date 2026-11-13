@@ -1,0 +1,13 @@
+.{
+    .name = "libdrm",
+    .version = "2.4.134",
+    .release = 1,
+    .description = "Userspace interface to the kernel Direct Rendering Manager",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://dri.freedesktop.org/libdrm/libdrm-2.4.134.tar.xz", .sha256 = "ac5e74d157830eb8bee44c6a6bf3ad49774ef0dd2a72bdad74a8f20308b52a95" },
+    },
+    // systemd: with udev=true the device nodes are expected from udev.
+    .depends = .{ "glibc", "libpciaccess", "systemd" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

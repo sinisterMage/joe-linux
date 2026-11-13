@@ -1,0 +1,20 @@
+.{
+    .name = "ibus",
+    .version = "1.5.35",
+    .release = 1,
+    .description = "Intelligent Input Bus: the input method daemon and library that GNOME Shell drives",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/ibus/ibus/archive/1.5.35/ibus-1.5.35.tar.gz", .sha256 = "d98ec4c004b4e8badeb9a198539eaedffae4b41d538767cc04479bbc560cba77" },
+    },
+    // dconf: ibus-daemon will not start without its configuration service,
+    // ibus-dconf. iso-codes and xkeyboard-config are read to generate the
+    // list of keyboard layouts of the simple engine. The units installed
+    // are systemd user units. With pygobject present the build also
+    // installs the IBus override for Python, and there is no switch for
+    // that, so it is listed to make the result the same every time.
+    .depends = .{ "glibc", "glib", "dbus", "dconf", "iso-codes", "xkeyboard-config", "systemd", "python", "pygobject" },
+    // The archive is a git snapshot: the build system has to be generated,
+    // and the command line tool and the simple engine are written in Vala.
+    .build_depends = .{ "autoconf", "automake", "libtool", "gettext", "pkgconf", "make", "vala" },
+}

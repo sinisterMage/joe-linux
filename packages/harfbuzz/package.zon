@@ -1,0 +1,16 @@
+.{
+    .name = "harfbuzz",
+    .version = "15.1.0",
+    .release = 1,
+    .description = "OpenType text shaping engine",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/harfbuzz/harfbuzz/releases/download/15.1.0/harfbuzz-15.1.0.tar.xz", .sha256 = "0fc7c565443a5f4be7da65ac5ee5bd737d9b158dc908708b7689a0a5796b0c8d" },
+    },
+    // freetype is built without harfbuzz, so this dependency has no way
+    // back. libharfbuzz-icu links ICU, libharfbuzz-raster libpng,
+    // libharfbuzz-vector zlib.
+    .depends = .{ "glibc", "gcc", "freetype", "glib", "icu", "libpng", "zlib" },
+    // glib provides g-ir-scanner for HarfBuzz-0.0.gir.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

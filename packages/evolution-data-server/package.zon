@@ -1,0 +1,19 @@
+.{
+    .name = "evolution-data-server",
+    .version = "3.62.1",
+    .release = 1,
+    .description = "Backends and libraries for contacts, calendars, tasks and mail (libecal, libebook, camel)",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/evolution-data-server/3.62/evolution-data-server-3.62.1.tar.xz", .sha256 = "b75c823445d7d30bca797eee929809e8d389abbb8d471f68ae2af60972779f26" },
+    },
+    // util-linux provides libuuid; libcanberra the libcanberra-gtk3 used by
+    // evolution-alarm-notify.
+    .depends = .{
+        "glibc",   "glib",      "libical", "libsecret",             "nss",         "nspr",        "sqlite",
+        "libsoup", "json-glib", "libxml2", "icu",                   "zlib",        "util-linux",  "krb5",
+        "gtk3",    "gtk4",      "pango",   "gnome-online-accounts", "libgweather", "libcanberra",
+    },
+    // glib provides g-ir-scanner, glib-mkenums and gdbus-codegen.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "python", "gperf", "vala", "gettext" },
+}

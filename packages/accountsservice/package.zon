@@ -1,0 +1,12 @@
+.{
+    .name = "accountsservice",
+    .version = "26.27.3",
+    .release = 1,
+    .description = "D-Bus service for querying and changing user account information",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/accountsservice/accountsservice/-/archive/26.27.3/accountsservice-26.27.3.tar.bz2", .sha256 = "77e26080fd644df3e339fef561bb77f901e43557dc73e620afb6c10789b9a9e8" },
+    },
+    .depends = .{ "glibc", "glib", "polkit", "json-c", "libxcrypt", "systemd", "dbus", "shadow" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext" },
+}

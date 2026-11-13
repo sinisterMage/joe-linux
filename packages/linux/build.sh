@@ -3,12 +3,15 @@ NOSTRIP=1
 
 prepare() {
     make mrproper
+    # The joe security module lives in this recipe, not in a kernel fork.
+    /recipe/joe-lsm/install.sh /recipe/joe-lsm
     make x86_64_defconfig
     scripts/kconfig/merge_config.sh -m .config /recipe/joe.config
     make olddefconfig
     # Fail now, not at boot, if an option the boot path depends on was dropped.
     local opt
-    for opt in EFI_STUB BTRFS_FS VIRTIO_BLK BLK_DEV_NVME SATA_AHCI VFAT_FS EFIVAR_FS DEVTMPFS_MOUNT AUTOFS_FS; do
+    for opt in EFI_STUB BTRFS_FS VIRTIO_BLK BLK_DEV_NVME SATA_AHCI VFAT_FS EFIVAR_FS DEVTMPFS_MOUNT AUTOFS_FS \
+        SECURITY_JOE FS_VERITY CRYPTO_ECDSA; do
         grep -q "^CONFIG_$opt=y" .config || { echo "CONFIG_$opt is not built in" >&2; return 1; }
     done
 }

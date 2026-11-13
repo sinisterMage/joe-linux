@@ -1,0 +1,12 @@
+.{
+    .name = "wireplumber",
+    .version = "0.5.19",
+    .release = 1,
+    .description = "Session and policy manager for PipeWire",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.19/wireplumber-0.5.19.tar.bz2", .sha256 = "e743070200e3788b8a46b5cd35438170dea4458302cfa3bb04ab4a9495ad14a4" },
+    },
+    .depends = .{ "glibc", "glib", "pipewire", "lua", "systemd" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "python" },
+}

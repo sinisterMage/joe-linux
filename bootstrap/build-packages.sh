@@ -1,5 +1,6 @@
 #!/bin/bash
-# Builds every recipe in packages/ORDER with `dave build`, publishing the
+# Builds every recipe, in the order given by bootstrap/order.py, with
+# `dave build`, publishing the
 # packages to build/repo and installing each one into the build root so the
 # next recipe builds against it. This is where the temporary tools of stages 1
 # and 2 are replaced, one by one, by real joe Linux packages.
@@ -7,6 +8,10 @@
 #   build-packages.sh [PACKAGE...]    build only the named packages (in order)
 #
 # Resumable: a package whose file already exists in the repository is skipped.
+#
+# Every file is sealed with the code-signing key. A recipe that declares no
+# operations is sealed as declaring `all`: its programs have not been studied
+# yet. `grep -L operations packages/*/package.zon` lists what remains.
 set -euo pipefail
 
 top=$(cd "$(dirname "$0")/.." && pwd)
@@ -17,9 +22,19 @@ dave=$top/dave/zig-out/bin/dave
 
 if [[ $(id -u) -ne 0 ]]; then
     [[ -e $top/build/bootstrap/done/cleanup ]] || { echo "run stage1.sh and stage2.sh first" >&2; exit 1; }
+    "$top/bootstrap/order.py" "$@" >/dev/null
     (cd "$top/dave" && zig build -Doptimize=ReleaseSafe)
     mkdir -p "$keys" "$repo"
     [[ -e $keys/joe.key ]] || "$dave" key generate "$keys/joe" >/dev/null
+    # The code-signing key seals every file of every package; its public half
+    # is compiled into the kernel's security module.
+    [[ -e $keys/joe-code.key ]] || "$dave" key generate-code "$keys/joe-code" >/dev/null
+    {
+        echo "/* Generated from the code-signing public key by bootstrap/build-packages.sh. */"
+        echo "static const u8 joe_keys[][65] = {"
+        printf '\t{ %s },\n' "$(sed 's/../0x&, /g; s/, $//' "$keys/joe-code.pub")"
+        echo "};"
+    } > "$top/packages/linux/joe-lsm/joe_keys.h"
     # The dave recipe packages the binary just built and the units in system/.
     mkdir -p "$top/packages/dave/files"
     cp "$dave" "$top"/system/* "$top/packages/dave/files/"
@@ -39,10 +54,8 @@ field() { # field <recipe dir> <name>: a top-level value from package.zon
     sed -n "s/^ *\.$2 = \"\{0,1\}\([^\",]*\)\"\{0,1\},.*/\1/p" "$1/package.zon" | head -n 1
 }
 
-wanted=("$@")
 while read -r name flag; do
-    [[ -z $name || $name == \#* ]] && continue
-    if [[ ${#wanted[@]} -gt 0 ]] && [[ ! " ${wanted[*]} " == *" $name "* ]]; then continue; fi
+    [[ -z $name ]] && continue
     recipe=$top/packages/$name
     [[ -e $recipe/package.zon ]] || { echo "no recipe for $name" >&2; exit 1; }
     version=$(field "$recipe" version)-r$(field "$recipe" release)
@@ -52,7 +65,8 @@ while read -r name flag; do
         echo "==> building $name $version"
         started=$SECONDS
         if ! "$dave" build "$recipe" --buildroot "$root" --sources "$top/build/src" \
-            --work "$top/build/work" --out "$repo" >/dev/null; then
+            --work "$top/build/work" --out "$repo" --code-key "$keys/joe-code.key" \
+            --allow all >/dev/null; then
             echo "--- last lines of $top/build/work/$name/build.log" >&2
             tail -n 40 "$top/build/work/$name/build.log" >&2 || true
             exit 1
@@ -66,6 +80,6 @@ while read -r name flag; do
         echo "    installing $name $version into the build root"
         "$dave" --root "$root" --overwrite install "$name=$version" >/dev/null
     fi
-done < "$top/packages/ORDER"
+done < <("$top/bootstrap/order.py" "$@")
 
 echo "all packages built: $repo"

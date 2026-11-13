@@ -1,0 +1,14 @@
+.{
+    .name = "libjxl",
+    .version = "0.12.0",
+    .release = 1,
+    .description = "Reference implementation of the JPEG XL image format",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/libjxl/libjxl/archive/v0.12.0/libjxl-0.12.0.tar.gz", .sha256 = "03e9be69a30be4011f559da75328b6d7cea8ad921fabfbd551ce10bf45cdc992" },
+    },
+    // giflib, libjpeg-turbo and libpng are used by the cjxl and djxl tools
+    // (libjxl_extras) to read and write those formats.
+    .depends = .{ "glibc", "gcc", "brotli", "highway", "lcms2", "giflib", "libjpeg-turbo", "libpng", "zlib" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

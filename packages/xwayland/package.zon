@@ -1,0 +1,15 @@
+.{
+    .name = "xwayland",
+    .version = "24.1.15",
+    .release = 1,
+    .description = "X server that runs as a Wayland client",
+    .license = "MIT AND MIT-open-group AND X11 AND HPND AND HPND-sell-variant AND SGI-B-2.0 AND BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/xserver/xwayland-24.1.15.tar.xz", .sha256 = "7311b4bcda22cfc19cb99680eb1c35cfc1ea885981310639f0429fe2948c122e" },
+    },
+    // xkbcomp is run by the server to compile keymaps from xkeyboard-config.
+    // systemd: libsystemd is linked when found (there is no option for it).
+    // libx11 is only looked up by the build; nothing links against it.
+    .depends = .{ "glibc", "pixman", "libxfont2", "libxkbfile", "libxau", "libxdmcp", "libxshmfence", "libxcvt", "libdrm", "libepoxy", "mesa", "wayland", "libei", "libtirpc", "nettle", "systemd", "xkbcomp", "xkeyboard-config" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "font-util", "libx11", "wayland-protocols", "xorgproto", "xtrans" },
+}

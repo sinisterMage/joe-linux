@@ -1,0 +1,12 @@
+.{
+    .name = "wayland",
+    .version = "1.26.0",
+    .release = 1,
+    .description = "Wayland display protocol libraries and the wayland-scanner code generator",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/wayland/wayland/-/releases/1.26.0/downloads/wayland-1.26.0.tar.xz", .sha256 = "64176eaa46e4969903e286f8e5ef8331affc17fdf03ac9b58381d2b23162b7a3" },
+    },
+    .depends = .{ "glibc", "libffi", "expat", "libxml2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

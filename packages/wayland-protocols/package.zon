@@ -1,0 +1,13 @@
+.{
+    .name = "wayland-protocols",
+    .version = "1.49",
+    .release = 1,
+    .description = "Wayland protocol definitions that extend the core protocol",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.49/downloads/wayland-protocols-1.49.tar.xz", .sha256 = "ec4c8f74942d6dff7ace8b4ce4764f0ef9ff618a935d974ea77edee2ad240b14" },
+    },
+    // Whatever uses these protocol files runs wayland-scanner on them.
+    .depends = .{"wayland"},
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

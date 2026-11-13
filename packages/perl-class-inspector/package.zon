@@ -1,0 +1,11 @@
+.{
+    .name = "perl-class-inspector",
+    .version = "1.36",
+    .release = 1,
+    .description = "Perl module to get information about a class and its structure",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/P/PL/PLICEASE/Class-Inspector-1.36.tar.gz", .sha256 = "cc295d23a472687c24489d58226ead23b9fdc2588e522f0b5f0747741700694e" },
+    },
+    .depends = .{"perl"},
+}

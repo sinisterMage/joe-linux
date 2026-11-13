@@ -1,0 +1,12 @@
+.{
+    .name = "opus",
+    .version = "1.6.1",
+    .release = 1,
+    .description = "Lossy audio codec for interactive speech and music over the Internet",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://downloads.xiph.org/releases/opus/opus-1.6.1.tar.gz", .sha256 = "6ffcb593207be92584df15b32466ed64bbec99109f007c82205f0194572411a1" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

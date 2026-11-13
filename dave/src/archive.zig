@@ -15,6 +15,7 @@ const zstd = std.compress.zstd;
 const Sha256 = std.crypto.hash.sha2.Sha256;
 const manifest_mod = @import("manifest.zig");
 const Manifest = manifest_mod.Manifest;
+const seal = @import("seal.zig");
 
 pub const manifest_member = "manifest.zon";
 pub const payload_prefix = "files/";
@@ -103,6 +104,10 @@ pub const PackOptions = struct {
     src: Io.Dir,
     out_dir: Io.Dir,
     zstd_level: u8 = 19,
+    /// When set, every regular file that is not configuration gets a seal:
+    /// its fs-verity digest and the package's declared operations for it,
+    /// signed with this key.
+    code_key: ?seal.SigningKey = null,
 };
 
 const Staged = struct {
@@ -161,6 +166,16 @@ pub fn pack(arena: Allocator, io: Io, options: PackOptions) ![]const u8 {
             gop.value_ptr.* = s.file.path;
             const digest = try hashFile(io, options.src, s.file.path);
             s.file.sha256 = try arena.dupe(u8, &digest);
+            if (options.code_key) |key| {
+                // Configuration stays editable, so it cannot be sealed.
+                if (!s.file.config) {
+                    const verity = try seal.verityDigestOfFile(io, options.src, s.file.path);
+                    const ops = try seal.operationsText(arena, options.meta.operations, s.file.path);
+                    const signature = try key.sign(arena, verity, ops);
+                    s.file.verity = try arena.dupe(u8, &std.fmt.bytesToHex(verity, .lower));
+                    s.file.seal = try arena.dupe(u8, &std.fmt.bytesToHex(signature, .lower));
+                }
+            }
         }
     }
 

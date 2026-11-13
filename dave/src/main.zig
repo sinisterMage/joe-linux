@@ -20,6 +20,7 @@ pub const boot = @import("boot.zig");
 pub const triggers = @import("triggers.zig");
 pub const deploy = @import("deploy.zig");
 pub const builder = @import("builder.zig");
+pub const seal = @import("seal.zig");
 
 /// Indexes are signed and packages are checked against the signed index, so
 /// transport security adds nothing dave relies on; leaving TLS out keeps the
@@ -32,6 +33,7 @@ const lock_path = "/run/dave/lock";
 const esp_path = "/efi";
 const system_cache = "/var/cache/dave";
 const boot_check_hooks = "etc/dave/boot-check.d";
+const sealed_marker = "usr/lib/dave/sealed";
 
 const usage =
     \\Usage: dave <command> [options]
@@ -57,7 +59,9 @@ const usage =
     \\                                               Build a package from a recipe
     \\  pack --name N --version V --out DIR <tree>   Make a package from a directory
     \\  repo index <dir> [--key FILE]                Write and sign a repository index
-    \\  key generate <basename>                      Create a signing key pair
+    \\  key generate <basename>                      Create a repository signing key pair
+    \\  key generate-code <basename>                 Create a code-signing key pair
+    \\  seal                                         Seal installed files that are not yet sealed
     \\
     \\Options
     \\  --root DIR       Operate on the system installed at DIR instead of /
@@ -65,6 +69,9 @@ const usage =
     \\  --dry-run        Show what would be done and stop
     \\  --no-triggers    Do not run package triggers
     \\  --overwrite      Replace files that exist but belong to no package
+    \\  --code-key FILE  Seal the files of the package being built with this key
+    \\  --allow OP        An operation the package declares (pack), or the
+    \\                    declaration for recipes that make none (build)
     \\
 ;
 
@@ -86,6 +93,8 @@ const Options = struct {
     license: []const u8 = "",
     out: ?[]const u8 = null,
     key: ?[]const u8 = null,
+    code_key: ?[]const u8 = null,
+    allow: std.ArrayList([]const u8) = .empty,
     depends: std.ArrayList([]const u8) = .empty,
     conflicts: std.ArrayList([]const u8) = .empty,
     positional: std.ArrayList([]const u8) = .empty,
@@ -161,6 +170,10 @@ const App = struct {
                     app.opts.out = value;
                 } else if (std.mem.eql(u8, arg, "--key")) {
                     app.opts.key = value;
+                } else if (std.mem.eql(u8, arg, "--code-key")) {
+                    app.opts.code_key = value;
+                } else if (std.mem.eql(u8, arg, "--allow")) {
+                    try app.opts.allow.append(app.arena, value);
                 } else if (std.mem.eql(u8, arg, "--depends")) {
                     try app.opts.depends.append(app.arena, value);
                 } else if (std.mem.eql(u8, arg, "--conflicts")) {
@@ -201,6 +214,7 @@ const App = struct {
         if (std.mem.eql(u8, cmd, "pack")) return app.cmdPack(rest);
         if (std.mem.eql(u8, cmd, "repo")) return app.cmdRepo(rest);
         if (std.mem.eql(u8, cmd, "key")) return app.cmdKey(rest);
+        if (std.mem.eql(u8, cmd, "seal")) return app.cmdSeal();
         return app.fail("unknown command '{s}'; run 'dave help'", .{cmd});
     }
 
@@ -389,6 +403,8 @@ const App = struct {
             return app.fail("the transaction failed: {t}", .{e});
         };
         for (result.notes) |n| try app.say("note: {s}", .{n});
+        if (result.unsealed > 0 and app.runningDeployment() != null)
+            try app.say("note: {d} file(s) could not be sealed here; run 'dave seal'", .{result.unsealed});
         if (app.opts.no_triggers) return;
         const wanted = try triggers.matching(app.arena, try triggers.load(app.arena, app.io, ctx.root), result.changed_paths);
         const live = std.mem.eql(u8, app.opts.root, "/");
@@ -737,6 +753,12 @@ const App = struct {
         return std.fs.path.join(app.arena, &.{ cwd, path });
     }
 
+    fn codeKey(app: *App) !?seal.SigningKey {
+        const path = app.opts.code_key orelse return null;
+        const text = app.readAbsolute(path) orelse return app.fail("cannot read code-signing key {s}", .{path});
+        return seal.SigningKey.parse(text) catch app.fail("{s} is not a code-signing key", .{path});
+    }
+
     fn cmdBuild(app: *App, args: []const []const u8) !void {
         if (args.len != 1) return app.fail("give one recipe directory", .{});
         const recipe_dir = try app.absolute(args[0]);
@@ -754,6 +776,8 @@ const App = struct {
             .driver = driver,
             .jobs = std.Thread.getCpuCount() catch 1,
             .keep_work = app.opts.keep_work,
+            .code_key = try app.codeKey(),
+            .default_allow = app.opts.allow.items,
         }, &diag) catch |e| {
             if (diag.message.len > 0) return app.fail("{s}", .{diag.message});
             return app.fail("cannot build {s}: {t}", .{ args[0], e });
@@ -783,9 +807,11 @@ const App = struct {
                 .license = app.opts.license,
                 .depends = app.opts.depends.items,
                 .conflicts = app.opts.conflicts.items,
+                .operations = if (app.opts.allow.items.len > 0) &.{.{ .allow = app.opts.allow.items }} else &.{},
             },
             .src = src,
             .out_dir = out_dir,
+            .code_key = try app.codeKey(),
         }) catch |e| return app.fail("cannot pack {s}: {t}", .{ args[0], e });
         try app.say("{s}/{s}", .{ out_path, file });
     }
@@ -802,16 +828,73 @@ const App = struct {
     }
 
     fn cmdKey(app: *App, args: []const []const u8) !void {
-        if (args.len != 2 or !std.mem.eql(u8, args[0], "generate")) return app.fail("usage: dave key generate <basename>", .{});
-        const key = repo.generateKey(app.io);
+        if (args.len != 2) return app.fail("usage: dave key generate|generate-code <basename>", .{});
+        const code = std.mem.eql(u8, args[0], "generate-code");
+        if (!code and !std.mem.eql(u8, args[0], "generate")) return app.fail("usage: dave key generate|generate-code <basename>", .{});
         const secret_path = try std.fmt.allocPrint(app.arena, "{s}.key", .{args[1]});
         const public_path = try std.fmt.allocPrint(app.arena, "{s}.pub", .{args[1]});
+        var secret: []const u8 = undefined;
+        var public: []const u8 = undefined;
+        if (code) {
+            const key = seal.generateKey(app.io);
+            secret = try app.arena.dupe(u8, &key.secret_hex);
+            public = try app.arena.dupe(u8, &key.public_hex);
+        } else {
+            const key = repo.generateKey(app.io);
+            secret = try app.arena.dupe(u8, &key.secret_hex);
+            public = try app.arena.dupe(u8, &key.public_hex);
+        }
         const cwd = Io.Dir.cwd();
-        cwd.writeFile(app.io, .{ .sub_path = secret_path, .data = &key.secret_hex, .flags = .{ .exclusive = true, .permissions = .fromMode(0o600) } }) catch |e|
+        cwd.writeFile(app.io, .{ .sub_path = secret_path, .data = secret, .flags = .{ .exclusive = true, .permissions = .fromMode(0o600) } }) catch |e|
             return app.fail("cannot write {s}: {t}", .{ secret_path, e });
-        cwd.writeFile(app.io, .{ .sub_path = public_path, .data = &key.public_hex }) catch |e|
+        cwd.writeFile(app.io, .{ .sub_path = public_path, .data = public }) catch |e|
             return app.fail("cannot write {s}: {t}", .{ public_path, e });
-        try app.say("Wrote {s} (keep secret) and {s} (install into {s}/).", .{ secret_path, public_path, repo.keys_path });
+        if (code) {
+            try app.say("Wrote {s} (keep secret) and {s} (built into the kernel).", .{ secret_path, public_path });
+        } else {
+            try app.say("Wrote {s} (keep secret) and {s} (install into {s}/).", .{ secret_path, public_path, repo.keys_path });
+        }
+    }
+
+    /// Seals every installed file whose manifest carries a seal and which is
+    /// not sealed yet. An image assembled without privileges cannot seal its
+    /// files, so this runs on its first boot; afterwards it finds nothing to do.
+    fn cmdSeal(app: *App) !void {
+        const root = try app.openDir(app.opts.root);
+        const installed = db.load(app.arena, app.io, root) catch |e| return app.fail("the package database is unreadable: {t}", .{e});
+        var done: usize = 0;
+        var already: usize = 0;
+        var modified: usize = 0;
+        var impossible: usize = 0;
+        for (installed) |m| {
+            for (m.files) |f| {
+                const signature = seal.parseSignature(f.seal orelse continue) orelse continue;
+                const verity = seal.parseDigest(f.verity orelse continue) orelse continue;
+                const ops = seal.operationsText(app.arena, m.operations, f.path) catch continue;
+                const value = try seal.attribute(app.arena, ops, signature);
+                if (seal.isApplied(app.io, root, f.path, verity, value, seal.xattr_name)) {
+                    already += 1;
+                    continue;
+                }
+                // Sealing fixes the contents for good, so only seal what the
+                // package actually shipped.
+                const actual = seal.verityDigestOfFile(app.io, root, f.path) catch continue;
+                if (!std.mem.eql(u8, &actual, &verity)) {
+                    modified += 1;
+                    continue;
+                }
+                switch (seal.apply(app.io, root, f.path, value, seal.xattr_name) catch |e|
+                    return app.fail("cannot seal {s}: {t}", .{ f.path, e })) {
+                    .sealed => done += 1,
+                    .not_possible => impossible += 1,
+                }
+            }
+        }
+        try app.say("Sealed {d} file(s); {d} were already sealed.", .{ done, already });
+        if (modified > 0) try app.say("{d} file(s) differ from what their package shipped and were left unsealed.", .{modified});
+        if (impossible > 0) return app.fail("{d} file(s) could not be sealed: the file system lacks fs-verity or this is not root", .{impossible});
+        // Tells dave-seal.service that this root needs no further pass.
+        root.writeFile(app.io, .{ .sub_path = sealed_marker, .data = "" }) catch {};
     }
 
     /// `dave --chroot-exec <dir> <program> [args...]`: used to run triggers
@@ -819,6 +902,21 @@ const App = struct {
     fn chrootExec(app: *App, args: []const []const u8) !void {
         if (args.len < 2) return app.fail("--chroot-exec needs a directory and a program", .{});
         const dir = try app.arena.dupeSentinel(u8, args[0], 0);
+
+        // Programs expect /proc, /dev and /sys. They are bound into the root
+        // inside a mount namespace of this process's own, so nothing outlives
+        // the trigger and the host's mount table is never touched. If the
+        // namespace cannot be made, the program simply runs without them.
+        const CLONE_NEWNS = 0x00020000;
+        if (linux.errno(linux.unshare(CLONE_NEWNS)) == .SUCCESS) {
+            _ = linux.mount(null, "/", null, linux.MS.REC | linux.MS.PRIVATE, 0);
+            for ([_][]const u8{ "proc", "dev", "sys" }) |name| {
+                const source = try std.fmt.allocPrintSentinel(app.arena, "/{s}", .{name}, 0);
+                const target = try std.fmt.allocPrintSentinel(app.arena, "{s}/{s}", .{ args[0], name }, 0);
+                _ = linux.mount(source, target, null, linux.MS.BIND | linux.MS.REC, 0);
+            }
+        }
+
         if (linux.errno(linux.chroot(dir)) != .SUCCESS) return app.fail("cannot chroot to {s}", .{args[0]});
         if (linux.errno(linux.chdir("/")) != .SUCCESS) return app.fail("cannot enter {s}", .{args[0]});
         const e = std.process.replace(app.io, .{ .argv = args[1..] });

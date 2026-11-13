@@ -1,0 +1,12 @@
+.{
+    .name = "libxvmc",
+    .version = "1.0.15",
+    .release = 1,
+    .description = "Xlib interface to the X Video Motion Compensation extension",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libXvMC-1.0.15.tar.xz", .sha256 = "4f518afde3d7fd435346af7b368d2f73517f3d5f82647c962caf3f7bb8ff7078" },
+    },
+    .depends = .{ "glibc", "libx11", "libxext", "libxv", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros" },
+}

@@ -1,0 +1,8 @@
+.{
+    .name = "joe-test-console",
+    .version = "0.1",
+    .release = 1,
+    .description = "Passwordless root on the serial console, for test and demonstration images only",
+    .license = "MIT",
+    .depends = .{ "systemd", "util-linux", "bash" },
+}

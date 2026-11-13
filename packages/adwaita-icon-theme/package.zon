@@ -1,0 +1,14 @@
+.{
+    .name = "adwaita-icon-theme",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME icon and cursor theme",
+    .license = "LGPL-3.0-only OR CC-BY-SA-3.0",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/adwaita-icon-theme/51/adwaita-icon-theme-51.0.tar.xz", .sha256 = "ba561cf3c96305a47179fa5605856ad695c9238ea07f7093aebd9ba80c4e323b" },
+    },
+    // Run time only: the theme inherits from hicolor and most icons are SVG,
+    // which librsvg renders. GTK is deliberately absent, see build.sh.
+    .depends = .{ "hicolor-icon-theme", "librsvg" },
+    .build_depends = .{ "meson", "ninja", "python" },
+}

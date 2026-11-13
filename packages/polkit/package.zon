@@ -1,0 +1,12 @@
+.{
+    .name = "polkit",
+    .version = "128",
+    .release = 1,
+    .description = "Authorization manager that lets unprivileged programs talk to privileged ones",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/polkit-org/polkit/archive/128/polkit-128.tar.gz", .sha256 = "6edb06bf1448e49e428f9597a97af6a05d62146dd0b58f86eeaebcee3f5ecfaa" },
+    },
+    .depends = .{ "glibc", "glib", "expat", "duktape", "linux-pam", "systemd", "dbus" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

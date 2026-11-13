@@ -1,3 +1,8 @@
+prepare() {
+    # A privileged Python runs only sealed code files; see the patch's header.
+    patch -Np1 -i /recipe/joe-sealed-code.patch
+}
+
 build() {
     # Profile-guided optimisation (--enable-optimizations) runs part of the test
     # suite during the build, which is slow and not reliable in the build

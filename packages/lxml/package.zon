@@ -1,0 +1,13 @@
+.{
+    .name = "lxml",
+    .version = "6.1.3",
+    .release = 1,
+    .description = "Python bindings for libxml2 and libxslt",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/l/lxml/lxml-6.1.3.tar.gz", .sha256 = "45222d94ddd511536f3b2f7d9deae3b2339b4ce0f075f1ca25703b07cad9dd21" },
+    },
+    .depends = .{ "glibc", "python", "libxml2", "libxslt", "zlib" },
+    // setup.py finds libxml2 and libxslt with pkg-config.
+    .build_depends = .{ "python", "setuptools", "wheel", "pkgconf" },
+}

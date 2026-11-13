@@ -1,0 +1,12 @@
+.{
+    .name = "startup-notification",
+    .version = "0.12",
+    .release = 1,
+    .description = "Library for tracking application startup",
+    .license = "LGPL-2.0-or-later AND MIT",
+    .sources = .{
+        .{ .url = "https://www.freedesktop.org/software/startup-notification/releases/startup-notification-0.12.tar.gz", .sha256 = "3c391f7e930c583095045cd2d10eb73a64f085c7fde9d260f2652c7cb3cfbe4a" },
+    },
+    .depends = .{ "glibc", "libx11", "libxcb", "xcb-util" },
+    .build_depends = .{"pkgconf"},
+}

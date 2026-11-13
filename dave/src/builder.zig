@@ -11,6 +11,7 @@ const Io = std.Io;
 const Allocator = std.mem.Allocator;
 const manifest_mod = @import("manifest.zig");
 const archive = @import("archive.zig");
+const seal = @import("seal.zig");
 const Version = @import("solver/version.zig").Version;
 const Range = @import("solver/range.zig").Range;
 
@@ -44,6 +45,14 @@ pub const Recipe = struct {
     conflicts: []const []const u8 = &.{},
     /// Packages that must be in the build root; used to order builds.
     build_depends: []const []const u8 = &.{},
+    /// What the package's privileged programs declare they do; see
+    /// `manifest.Operations`. Sealed into every file when the package is signed.
+    operations: []const manifest_mod.Operations = &.{},
+    /// Let the build reach the network. Builds are offline by default, so
+    /// that a package is made only from its declared, checksummed sources.
+    /// The exception exists for build systems that fetch their own
+    /// dependencies (cargo) until those can be vendored as sources.
+    network: bool = false,
 
     pub fn parse(arena: Allocator, text: []const u8) !Recipe {
         const r = manifest_mod.parseZon(Recipe, arena, text) catch return error.InvalidRecipe;
@@ -57,6 +66,10 @@ pub const Recipe = struct {
         }
         for (r.depends) |d| _ = Range.parse(arena, manifest_mod.splitDependency(d).constraint) catch return error.InvalidRecipe;
         for (r.conflicts) |d| _ = Range.parse(arena, manifest_mod.splitDependency(d).constraint) catch return error.InvalidRecipe;
+        for (r.operations) |entry| {
+            _ = seal.operationsText(arena, &.{.{ .allow = entry.allow }}, "") catch return error.InvalidRecipe;
+            for (entry.programs) |p| if (!manifest_mod.validPath(std.mem.trimStart(u8, p, "/"))) return error.InvalidRecipe;
+        }
         return r;
     }
 
@@ -77,6 +90,12 @@ pub const Options = struct {
     jobs: usize,
     /// Leave the work directory in place for inspection.
     keep_work: bool = false,
+    /// Seal every file of the package with this code-signing key.
+    code_key: ?seal.SigningKey = null,
+    /// The declaration given to a recipe that makes none. A package whose
+    /// programs have not been studied yet is sealed as declaring this, so the
+    /// set of such packages is exactly the recipes without `operations`.
+    default_allow: []const []const u8 = &.{},
 };
 
 pub const Diagnostic = struct {
@@ -154,7 +173,7 @@ pub fn build(arena: Allocator, io: Io, options: Options, diag: *Diagnostic) ![]c
     try argv.appendSlice(arena, &.{
         "bwrap",
         "--unshare-user", "--uid",           "0",                "--gid",        "0",
-        "--cap-add",      "ALL",             "--unshare-net",    "--unshare-ipc", "--unshare-uts",
+        "--cap-add",      "ALL",             "--unshare-ipc",    "--unshare-uts",
         "--hostname",     "joe-build",       "--die-with-parent",
         "--bind",         options.build_root, "/",
         "--dev",          "/dev",            "--proc",           "/proc",
@@ -181,6 +200,17 @@ pub fn build(arena: Allocator, io: Io, options: Options, diag: *Diagnostic) ![]c
         "--chdir",        "/build",
         "/usr/bin/bash",  "/driver.sh",
     });
+
+    if (recipe.network) {
+        // Name resolution inside the sandbox uses the build machine's
+        // resolver. Mounts apply in order, so this goes after the root itself.
+        const after_root = for (argv.items, 0..) |arg, i| {
+            if (std.mem.eql(u8, arg, "--dev")) break i;
+        } else unreachable;
+        try argv.insertSlice(arena, after_root, &.{ "--ro-bind", "/etc/resolv.conf", "/etc/resolv.conf" });
+    } else {
+        try argv.insert(arena, 1, "--unshare-net");
+    }
 
     const log_path = try std.fs.path.join(arena, &.{ work, "build.log" });
     var log = try cwd.createFile(io, log_path, .{});
@@ -210,9 +240,14 @@ pub fn build(arena: Allocator, io: Io, options: Options, diag: *Diagnostic) ![]c
             .license = recipe.license,
             .depends = recipe.depends,
             .conflicts = recipe.conflicts,
+            .operations = if (recipe.operations.len > 0 or options.default_allow.len == 0)
+                recipe.operations
+            else
+                &.{.{ .allow = options.default_allow }},
         },
         .src = dest,
         .out_dir = out,
+        .code_key = options.code_key,
     });
     if (!options.keep_work) cwd.deleteTree(io, work) catch {};
     return file;

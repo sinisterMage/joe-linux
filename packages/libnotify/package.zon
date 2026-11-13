@@ -1,0 +1,12 @@
+.{
+    .name = "libnotify",
+    .version = "0.8.9",
+    .release = 1,
+    .description = "Library for sending desktop notifications to a notification daemon",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libnotify/0.8/libnotify-0.8.9.tar.xz", .sha256 = "c906bb084027ea512f94a60fbfc0cc8d4f17e4b4d525bed370d07a6d8714c923" },
+    },
+    .depends = .{ "glibc", "glib", "gdk-pixbuf" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

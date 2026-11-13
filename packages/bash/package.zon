@@ -1,7 +1,7 @@
 .{
     .name = "bash",
     .version = "5.3",
-    .release = 1,
+    .release = 3,
     .description = "The GNU Bourne-Again shell",
     .license = "GPL-3.0-or-later",
     .sources = .{

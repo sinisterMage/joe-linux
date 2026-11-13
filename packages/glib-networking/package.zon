@@ -1,0 +1,15 @@
+.{
+    .name = "glib-networking",
+    .version = "2.90.1",
+    .release = 1,
+    .description = "TLS and proxy support modules for GIO",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/glib-networking/2.90/glib-networking-2.90.1.tar.xz", .sha256 = "ea95636590098355a05e3027579dba1a9a950b05e456b2488ea03d82e4b6c18a" },
+    },
+    // gsettings-desktop-schemas: the GNOME proxy module reads the
+    // org.gnome.system.proxy schemas. make-ca: the certificate store GnuTLS
+    // verifies against.
+    .depends = .{ "glibc", "glib", "gnutls", "gsettings-desktop-schemas", "make-ca" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

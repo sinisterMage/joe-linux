@@ -1,0 +1,32 @@
+.{
+    .name = "gtk3",
+    .version = "3.24.52",
+    .release = 1,
+    .description = "GTK 3 widget toolkit",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.52.tar.xz", .sha256 = "80931fa472a77b9a164f6740e3c0b444fac6770054632d35a7ff9d679e5e7b9f" },
+    },
+    // at-spi2-core provides atk and atk-bridge. The icon themes and
+    // shared-mime-info are used at run time only: Adwaita is the default icon
+    // theme and hicolor the fallback every theme inherits from.
+    .depends = .{
+        "glibc",              "glib",       "cairo",            "pango",
+        "fribidi",            "harfbuzz",   "gdk-pixbuf",       "libepoxy",
+        "at-spi2-core",       "fontconfig", "freetype",         "libxkbcommon",
+        "wayland",            "libx11",     "libxext",          "libxrender",
+        "libxi",              "libxrandr",  "libxcursor",       "libxfixes",
+        "libxcomposite",      "libxdamage", "libxinerama",      "libcloudproviders",
+        "tinysparql",         "iso-codes",  "shared-mime-info", "hicolor-icon-theme",
+        "adwaita-icon-theme",
+    },
+    // glib provides g-ir-scanner, glib-compile-resources and gdbus-codegen;
+    // wayland provides wayland-scanner. libxslt and the DocBook stylesheets
+    // are for the manual pages; libxml2 provides the xmllint that
+    // glib-compile-resources runs.
+    .build_depends = .{
+        "meson",             "ninja",     "pkgconf", "python",           "gettext",
+        "wayland-protocols", "xorgproto", "libxslt", "docbook-xsl-nons", "docbook-xml",
+        "libxml2",
+    },
+}

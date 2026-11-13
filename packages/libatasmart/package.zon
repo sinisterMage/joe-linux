@@ -1,0 +1,12 @@
+.{
+    .name = "libatasmart",
+    .version = "0.19",
+    .release = 1,
+    .description = "Library for reading and parsing ATA S.M.A.R.T. data",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://0pointer.de/public/libatasmart-0.19.tar.xz", .sha256 = "61f0ea345f63d28ab2ff0dc352c22271661b66bf09642db3a4049ac9dbdb0f8d" },
+    },
+    .depends = .{ "glibc", "systemd" },
+    .build_depends = .{"pkgconf"},
+}

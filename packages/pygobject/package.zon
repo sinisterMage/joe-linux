@@ -1,0 +1,13 @@
+.{
+    .name = "pygobject",
+    .version = "3.58.1",
+    .release = 1,
+    .description = "Python bindings for GObject and GObject Introspection",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/pygobject/3.58/pygobject-3.58.1.tar.gz", .sha256 = "4c80598ade17fbaa7798e01a25d0bf29ce109740786026a074c5c62bb3e79d23" },
+    },
+    // gi._gi_cairo links cairo and uses pycairo's C API.
+    .depends = .{ "glibc", "python", "glib", "libffi", "cairo", "pycairo" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

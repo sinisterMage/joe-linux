@@ -1,0 +1,12 @@
+.{
+    .name = "libxi",
+    .version = "1.8.4",
+    .release = 1,
+    .description = "Xlib interface to the X Input extension",
+    .license = "MIT AND MIT-open-group AND HPND AND HPND-sell-variant",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libXi-1.8.4.tar.xz", .sha256 = "ddd6057b89a91903bc2f884d55c8467440906945e482c36547260dff28661afc" },
+    },
+    .depends = .{ "glibc", "libx11", "libxext", "libxfixes", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros" },
+}

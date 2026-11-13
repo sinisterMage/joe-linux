@@ -1,0 +1,12 @@
+.{
+    .name = "libxfont2",
+    .version = "2.0.9",
+    .release = 1,
+    .description = "X font handling library for X servers and font utilities",
+    .license = "MIT AND MIT-open-group AND HPND AND HPND-sell-variant AND BSD-4-Clause-UC AND BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libXfont2-2.0.9.tar.xz", .sha256 = "f042a370666815e7b941e9b7019024755bd1c6c2954afbfa515af378251799e2" },
+    },
+    .depends = .{ "glibc", "freetype", "libfontenc", "zlib", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros", "xtrans" },
+}

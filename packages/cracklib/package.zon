@@ -1,0 +1,13 @@
+.{
+    .name = "cracklib",
+    .version = "2.10.4",
+    .release = 1,
+    .description = "Library and dictionary for checking the strength of passwords",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/cracklib/cracklib/releases/download/v2.10.4/cracklib-2.10.4.tar.xz", .sha256 = "503573391cfea3e1fca0b7ea0011c887f87f49cf2a97db9a54f92094e604b82b" },
+        .{ .url = "https://github.com/cracklib/cracklib/releases/download/v2.10.4/cracklib-words-2.10.4.xz", .sha256 = "b3d1e0e0ae9bc7ffed65c0042d7c68bdb903368aa6b918f94572453c6ea874dc" },
+    },
+    .depends = .{ "glibc", "zlib", "python" },
+    .build_depends = .{"gettext"},
+}

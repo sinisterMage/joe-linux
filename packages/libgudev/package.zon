@@ -1,0 +1,14 @@
+.{
+    .name = "libgudev",
+    .version = "238",
+    .release = 1,
+    .description = "GObject bindings for libudev",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz", .sha256 = "61266ab1afc9d73dbc60a8b2af73e99d2fdff47d99544d085760e4fa667b5dd1" },
+    },
+    // libudev is part of systemd.
+    .depends = .{ "glibc", "glib", "systemd" },
+    // glib provides g-ir-scanner, vala provides vapigen.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala" },
+}

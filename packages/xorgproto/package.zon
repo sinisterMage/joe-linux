@@ -1,0 +1,11 @@
+.{
+    .name = "xorgproto",
+    .version = "2026.1",
+    .release = 1,
+    .description = "X Window System protocol headers",
+    .license = "MIT AND X11 AND HPND AND HPND-sell-variant AND SGI-B-2.0 AND BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://xorg.freedesktop.org/archive/individual/proto/xorgproto-2026.1.tar.xz", .sha256 = "f9bfe4a9ed8c8ab9d2a3b0d49797f046052dadd06b7a8b45dbffaffb137e8290" },
+    },
+    .build_depends = .{ "meson", "ninja", "util-macros" },
+}

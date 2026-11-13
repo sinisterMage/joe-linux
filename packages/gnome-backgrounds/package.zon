@@ -1,0 +1,15 @@
+.{
+    .name = "gnome-backgrounds",
+    .version = "51.0.1",
+    .release = 1,
+    .description = "Default wallpapers for the GNOME desktop",
+    .license = "CC-BY-SA-3.0",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-backgrounds/51/gnome-backgrounds-51.0.1.tar.xz", .sha256 = "ec50534d7749be0e1503c5504f826c61d1460d2b41cb84518fa6b2f5547d1e1e" },
+    },
+    // Data only, but most of the pictures, the default one included, are
+    // JPEG XL: showing them needs glycin's JPEG XL loader, which is built
+    // on libjxl.
+    .depends = .{ "glycin", "libjxl" },
+    .build_depends = .{ "meson", "ninja", "gettext" },
+}

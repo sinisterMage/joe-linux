@@ -1,0 +1,20 @@
+.{
+    .name = "cargo-c",
+    .version = "0.10.26",
+    .release = 1,
+    .description = "Cargo subcommands to build and install C-ABI compatible libraries from Rust crates",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/lu-zero/cargo-c/archive/v0.10.26/cargo-c-0.10.26.tar.gz", .sha256 = "57700786539a322a50f1848332e3465bf15efa5af2fd8b6113f36cbfce46c830" },
+        // The lock file upstream publishes with the release; the source
+        // archive has none. The book gives no checksum for it.
+        .{ .url = "https://github.com/lu-zero/cargo-c/releases/download/v0.10.26/Cargo.lock", .sha256 = "d3cb865d40625de197b71fa591f1f24c0593b5a24b46b7c126eae7fecf7be315", .file = "cargo-c-0.10.26-Cargo.lock" },
+    },
+    // cargo downloads the crates cargo-c depends on from crates.io; they
+    // are not vendored yet.
+    .network = true,
+    // Like cargo itself: libcurl, OpenSSL, SQLite and zlib from the system,
+    // libgcc_s (gcc) for unwinding. The programs run cargo and rustc.
+    .depends = .{ "glibc", "gcc", "rust", "curl", "openssl", "sqlite", "zlib" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

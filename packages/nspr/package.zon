@@ -1,0 +1,11 @@
+.{
+    .name = "nspr",
+    .version = "4.40",
+    .release = 1,
+    .description = "Netscape Portable Runtime: platform abstraction for NSS and Mozilla software",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://archive.mozilla.org/pub/nspr/releases/v4.40/src/nspr-4.40.tar.gz", .sha256 = "c0c1884c627f3db7a783f7c7314c695226b2043696791d15519e7e0578c19bdc" },
+    },
+    .depends = .{"glibc"},
+}

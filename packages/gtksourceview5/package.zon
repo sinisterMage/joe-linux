@@ -1,0 +1,13 @@
+.{
+    .name = "gtksourceview5",
+    .version = "5.22.0",
+    .release = 1,
+    .description = "Source code editing widget for GTK 4",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gtksourceview/5.22/gtksourceview-5.22.0.tar.xz", .sha256 = "3ebce33c781e65590a450ecd3ffade480d8e3135b52ee996f1620d6c7dffbbff" },
+    },
+    .depends = .{ "glibc", "glib", "gtk4", "pango", "cairo", "gdk-pixbuf", "graphene", "fontconfig", "fribidi", "libxml2", "pcre2" },
+    // glib provides g-ir-scanner and glib-compile-resources.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala", "gettext" },
+}

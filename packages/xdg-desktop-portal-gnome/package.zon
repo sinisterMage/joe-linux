@@ -1,0 +1,21 @@
+.{
+    .name = "xdg-desktop-portal-gnome",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME backend for xdg-desktop-portal",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/xdg-desktop-portal-gnome/51/xdg-desktop-portal-gnome-51.0.tar.xz", .sha256 = "ec228b305091b649c16c690e102aa1d66fc10e9834888d51e411913c82c1430d" },
+    },
+    // gnome-desktop provides gnome-desktop-4 and gnome-bg-4.
+    // xdg-desktop-portal-gtk serves, at run time, the portals this backend
+    // does not implement.
+    .depends = .{
+        "glibc",      "glib",    "gtk4",   "libadwaita", "gnome-desktop",      "gsettings-desktop-schemas",
+        "fontconfig", "wayland", "libx11", "systemd",    "xdg-desktop-portal", "xdg-desktop-portal-gtk",
+        "dbus",
+    },
+    // glib provides gdbus-codegen and glib-compile-resources; wayland
+    // wayland-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext" },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "gnome-terminal",
+    .version = "3.60.0",
+    .release = 1,
+    .description = "GNOME terminal emulator",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/GNOME/gnome-terminal/-/archive/3.60.0/gnome-terminal-3.60.0.tar.gz", .sha256 = "6c006523d2c21282fd62c64fc44f63546aaa216e66eb439b8129af68db11df7c" },
+    },
+    // vte must provide vte-2.91, its GTK 3 library. util-linux is libuuid.
+    // nautilus is linked by the "Open in Terminal" extension
+    // (libnautilus-extension). dconf stores the profiles at run time.
+    .depends = .{ "glibc", "gcc", "glib", "gtk3", "vte", "libhandy", "pcre2", "util-linux", "libx11", "gsettings-desktop-schemas", "dconf", "nautilus" },
+    // xsltproc (libxslt) preprocesses the menu definitions; itstool merges
+    // the translations into the AppStream files.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "libxslt", "python" },
+}

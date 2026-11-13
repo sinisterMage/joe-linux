@@ -1,0 +1,12 @@
+.{
+    .name = "cairo",
+    .version = "1.18.6",
+    .release = 1,
+    .description = "2D graphics library with support for multiple output devices",
+    .license = "LGPL-2.1-only OR MPL-1.1",
+    .sources = .{
+        .{ .url = "https://www.cairographics.org/releases/cairo-1.18.6.tar.xz", .sha256 = "1c767308174337a74694da0f3ec069c271452163a1ef4540964c50c301f157d4" },
+    },
+    .depends = .{ "glibc", "pixman", "libpng", "zlib", "freetype", "fontconfig", "glib", "libx11", "libxext", "libxrender", "libxcb" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

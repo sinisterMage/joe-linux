@@ -1,0 +1,12 @@
+.{
+    .name = "libx11",
+    .version = "1.8.14",
+    .release = 1,
+    .description = "Core X11 client library (Xlib)",
+    .license = "MIT AND MIT-open-group AND X11 AND HPND AND HPND-sell-variant",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libX11-1.8.14.tar.xz", .sha256 = "bbc78c46217174655c2b32b138ad119f3ac15f50808b4d0b3a2677a4b1afc950" },
+    },
+    .depends = .{ "glibc", "libxcb", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros", "xtrans" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "libei",
+    .version = "1.6.0",
+    .release = 1,
+    .description = "Emulated input libraries: libei for clients, libeis for servers and liboeffis for portal access",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/libinput/libei/-/archive/1.6.0/libei-1.6.0.tar.bz2", .sha256 = "5ed6078fa63afd554cc04b1001675615da0ed8fe23b80492ab63403140b5a830" },
+    },
+    // systemd: libsystemd (sd-bus) for liboeffis.
+    .depends = .{ "glibc", "libevdev", "libxkbcommon", "systemd" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "jinja2", "python" },
+}

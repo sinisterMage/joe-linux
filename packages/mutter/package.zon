@@ -1,0 +1,67 @@
+.{
+    .name = "mutter",
+    .version = "51.1",
+    .release = 1,
+    .description = "Wayland compositor and window manager library that GNOME Shell is built on",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/mutter/51/mutter-51.1.tar.xz", .sha256 = "0d311d87901dbcb94518fb89304febe30852ce5d8a4befa9f87e85c68eceefde" },
+    },
+    // The X libraries are for the X11 window manager half that serves
+    // Xwayland clients; mutter 51 has no X11 session of its own. gtk4 is
+    // linked by mutter-x11-frames. xwayland is started at run time and its
+    // pkg-config file is read at build time. gdctl is a Python program using
+    // GLib through pygobject.
+    // gnome-settings-daemon, which the book lists, is a run-time relation
+    // only (its settings schemas and D-Bus services) and is deliberately not
+    // listed, so that neither has to be built before the other; gnome-shell
+    // depends on both. If it happens to be installed, meson merely adds its
+    // pkg-config file to libmutter's private requirements.
+    .depends = .{
+        "glibc",
+        "glib",
+        "graphene",
+        "pixman",
+        "cairo",
+        "pango",
+        "harfbuzz",
+        "fribidi",
+        "gsettings-desktop-schemas",
+        "gtk4",
+        "at-spi2-core",
+        "colord",
+        "lcms2",
+        "gnome-desktop",
+        "libcanberra",
+        "libei",
+        "libdisplay-info",
+        "libdrm",
+        "mesa",
+        "wayland",
+        "libinput",
+        "libwacom",
+        "libgudev",
+        "systemd",
+        "pipewire",
+        "libxkbcommon",
+        "xkeyboard-config",
+        "startup-notification",
+        "xwayland",
+        "libx11",
+        "libxcb",
+        "libxau",
+        "libxcomposite",
+        "libxcursor",
+        "libxdamage",
+        "libxext",
+        "libxfixes",
+        "libxi",
+        "libxinerama",
+        "libxrandr",
+        "python",
+        "pygobject",
+    },
+    // libxcvt provides cvt, which generates the table of default modes;
+    // docutils provides rst2man for two manual pages.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "wayland-protocols", "xorgproto", "libxcvt", "docutils" },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "itstool",
+    .version = "2.0.7",
+    .release = 1,
+    .description = "Extracts messages from XML files into PO files and merges translations back, using ITS rules",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/itstool/itstool/archive/2.0.7/itstool-2.0.7.tar.gz", .sha256 = "fba78a37dc3535e4686c7f57407b97d03c676e3a57beac5fb2315162b0cc3176" },
+        // Ports itstool from the libxml2 Python bindings, which libxml2 no
+        // longer builds, to lxml.
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/itstool-2.0.7-lxml-1.patch", .sha256 = "035a0d22bd1cf37a00357ebc096454e1eb8594f3ea54f8122e8e76fdced0cbec" },
+    },
+    .depends = .{ "python", "lxml", "docbook-xml" },
+    // The tarball is a git snapshot: autogen.sh runs autoreconf. configure
+    // checks that python can import lxml.
+    .build_depends = .{ "autoconf", "automake", "python", "lxml" },
+}

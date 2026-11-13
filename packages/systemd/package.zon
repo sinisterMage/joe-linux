@@ -1,12 +1,12 @@
 .{
     .name = "systemd",
     .version = "262.1",
-    .release = 1,
+    .release = 4,
     .description = "System and service manager, with udev and the systemd-boot boot loader",
     .license = "LGPL-2.1-or-later",
     .sources = .{
         .{ .url = "https://github.com/systemd/systemd/archive/v262.1/systemd-262.1.tar.gz", .sha256 = "100fc873b848b9b0297d8a705e8e2ed326256c8483d9960ee1ffe264c8a5c3e3" },
     },
-    .depends = .{ "glibc", "libcap", "libxcrypt", "acl", "kmod", "zstd", "xz", "zlib", "bash" },
+    .depends = .{ "glibc", "libcap", "libxcrypt", "acl", "kmod", "zstd", "xz", "zlib", "bash", "linux-pam" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gperf", "python", "jinja2", "pyelftools", "joe-release" },
 }

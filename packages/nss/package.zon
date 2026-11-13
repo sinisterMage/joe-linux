@@ -1,0 +1,13 @@
+.{
+    .name = "nss",
+    .version = "3.133",
+    .release = 1,
+    .description = "Network Security Services: Mozilla's TLS, S/MIME and certificate libraries and tools",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://archive.mozilla.org/pub/security/nss/releases/NSS_3_133_RTM/src/nss-3.133.tar.gz", .sha256 = "4d752526b9846a1d962588cfbd09b7cc2a4f6a4effbd9157d58a30e8a2573065" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/nss-standalone-1.patch", .sha256 = "87bb1af0b11fd41311b9899187f6e4b3fca9940651123c7bc836ec7497d2da84" },
+    },
+    .depends = .{ "glibc", "nspr", "sqlite", "zlib", "p11-kit" },
+    .build_depends = .{"perl"},
+}

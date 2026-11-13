@@ -1,0 +1,12 @@
+.{
+    .name = "simdutf",
+    .version = "9.3.3",
+    .release = 1,
+    .description = "Unicode validation and transcoding using SIMD instructions",
+    .license = "Apache-2.0 OR MIT",
+    .sources = .{
+        .{ .url = "https://github.com/simdutf/simdutf/archive/v9.3.3/simdutf-9.3.3.tar.gz", .sha256 = "441e374e8629bd8469f6d5cde9f0fa17ef3ad158aeb077791606d8aa73b565ef" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

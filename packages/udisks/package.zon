@@ -1,0 +1,12 @@
+.{
+    .name = "udisks",
+    .version = "2.11.2",
+    .release = 1,
+    .description = "D-Bus service and tools for querying and manipulating storage devices",
+    .license = "GPL-2.0-or-later AND LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/storaged-project/udisks/releases/download/udisks-2.11.2/udisks-2.11.2.tar.bz2", .sha256 = "18630a8aad806bea0bc626ce97e71e50ec82c742956ac1c834a4275f8f22207b" },
+    },
+    .depends = .{ "glibc", "glib", "polkit", "libgudev", "libblockdev", "util-linux", "acl", "systemd", "dbus" },
+    .build_depends = .{ "pkgconf", "gettext" },
+}

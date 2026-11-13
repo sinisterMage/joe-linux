@@ -5,7 +5,8 @@
 DAVE := dave/zig-out/bin/dave
 
 .PHONY: help dave test test-cli scaffold test-boot-contract test-deployments \
-        bootstrap packages image run test-joe clean
+        bootstrap packages image run test-joe test-security \
+        desktop-image run-desktop test-desktop clean
 
 help:
 	@echo "dave"
@@ -22,6 +23,12 @@ help:
 	@echo "  make image                bootable image at build/images/joe.img"
 	@echo "  make run                  boot that image in QEMU on this terminal"
 	@echo "  make test-joe             the deployment tests on that image"
+	@echo "  make test-security        the security module's rules, in a VM"
+	@echo ""
+	@echo "the desktop (several more hours to build the first time)"
+	@echo "  make desktop-image        bootable GNOME image at build/images/joe-desktop.img"
+	@echo "  make run-desktop          boot it in a QEMU window (user joe, password joe)"
+	@echo "  make test-desktop         session and applications, with and without enforcement"
 
 $(DAVE): $(wildcard dave/src/*.zig dave/src/solver/*.zig) dave/build.zig
 	cd dave && zig build -Doptimize=ReleaseSafe
@@ -85,6 +92,24 @@ run:
 
 test-joe: build/host-tools/bin/mcopy $(DAVE)
 	python3 tests/vm/deployments.py --joe
+
+test-security: build/host-tools/bin/mcopy $(DAVE)
+	python3 tests/vm/security.py
+
+# Like `image`, a demonstration image: it has a ready-made user (joe, password
+# joe) who is logged in automatically.
+desktop-image: build/host-tools/bin/mcopy
+	mkdir -p build/images build/joe/desktop-overlay/etc/gdm
+	printf '[daemon]\nAutomaticLoginEnable=True\nAutomaticLogin=joe\n' > build/joe/desktop-overlay/etc/gdm/custom.conf
+	image/mkjoe.sh --test --overlay build/joe/desktop-overlay --root-size 16G \
+	    --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/keys/joe.pub \
+	    build/images/joe-desktop.img joe-desktop joe-test-desktop
+
+run-desktop:
+	image/run.sh --desktop
+
+test-desktop: build/host-tools/bin/mcopy $(DAVE)
+	python3 tests/vm/desktop.py
 
 clean:
 	rm -rf dave/.zig-cache dave/zig-out build/cli-test build/work

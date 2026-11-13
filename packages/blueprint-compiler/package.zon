@@ -1,0 +1,15 @@
+.{
+    .name = "blueprint-compiler",
+    .version = "0.22.2",
+    .release = 1,
+    .description = "Compiler for Blueprint, a markup language for GTK user interfaces",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/blueprint-compiler/0.22/blueprint-compiler-0.22.2.tar.xz", .sha256 = "231d72efbac931c235ac3e022fe94982095c20d88721d9a8dcf60152f2017e07" },
+    },
+    // A Python program that reads typelibs through pygobject (GIRepository,
+    // from glib). The typelibs of the toolkit being targeted (GTK 4,
+    // libadwaita) come with whatever package uses it to build.
+    .depends = .{ "python", "pygobject", "glib" },
+    .build_depends = .{ "meson", "ninja" },
+}

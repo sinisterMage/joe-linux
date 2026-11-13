@@ -1,0 +1,15 @@
+.{
+    .name = "gnome-session",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME session manager: starts the desktop as a systemd user session",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-session/51/gnome-session-51.0.tar.xz", .sha256 = "5195c4f60542a953ab6ebd288f3785b8e7746292d8c167e0c99d353438a184d1" },
+    },
+    // The session it starts (org.gnome.Shell@user.service and the
+    // gnome-settings-daemon targets) belongs to gnome-shell, which depends
+    // on this package; listing it here would be a cycle.
+    .depends = .{ "glibc", "glib", "gnome-desktop", "gsettings-desktop-schemas", "systemd", "dbus" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "libhandy",
+    .version = "1.8.3",
+    .release = 1,
+    .description = "Adaptive widgets for GTK 3 applications",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libhandy/1.8/libhandy-1.8.3.tar.xz", .sha256 = "05b497229073ff557f10b326e074c5066f8743a302d4820ab97bcb5cd2dab087" },
+    },
+    .depends = .{ "glibc", "glib", "gtk3", "fribidi" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "vala" },
+}

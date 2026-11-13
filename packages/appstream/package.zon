@@ -1,0 +1,16 @@
+.{
+    .name = "appstream",
+    .version = "1.2.3",
+    .release = 1,
+    .description = "Library and tools for reading and writing software component metadata",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.freedesktop.org/software/appstream/releases/AppStream-1.2.3.tar.xz", .sha256 = "8daa01a4d66c73f036aa92af9bf76abfe8408eaa76fcda6ca54fa8ef5b93ed17" },
+    },
+    // libsystemd for the systemd support; libwayland-client is opened at
+    // run time only if present, so wayland is needed for its headers alone.
+    .depends = .{ "glibc", "glib", "curl", "libxml2", "libfyaml", "libxmlb", "zstd", "systemd" },
+    // itstool merges the translations into the metainfo file; glib provides
+    // g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "itstool", "gperf", "wayland" },
+}

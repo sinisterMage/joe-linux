@@ -1,0 +1,12 @@
+.{
+    .name = "libxdamage",
+    .version = "1.1.7",
+    .release = 1,
+    .description = "Xlib interface to the DAMAGE extension",
+    .license = "HPND-sell-variant",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libXdamage-1.1.7.tar.xz", .sha256 = "127067f521d3ee467b97bcb145aeba1078e2454d448e8748eb984d5b397bde24" },
+    },
+    .depends = .{ "glibc", "libx11", "libxfixes", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros" },
+}

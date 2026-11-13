@@ -1,0 +1,17 @@
+.{
+    .name = "at-spi2-core",
+    .version = "2.62.1",
+    .release = 1,
+    .description = "Assistive Technology Service Provider Interface, with ATK and the ATK bridge",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/at-spi2-core/2.62/at-spi2-core-2.62.1.tar.xz", .sha256 = "cca6b6a86e4389d89b370288761ce2385ddeceb10c4412da78689bc30c88af2d" },
+    },
+    // gsettings-desktop-schemas is needed at run time (the
+    // org.gnome.desktop.a11y schemas). libxres is looked for without an
+    // option to switch it off, so it is listed to keep the result the same
+    // whatever the build root holds.
+    .depends = .{ "glibc", "glib", "dbus", "libxml2", "libx11", "libxtst", "libxi", "libxres", "gsettings-desktop-schemas" },
+    // glib provides g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext" },
+}

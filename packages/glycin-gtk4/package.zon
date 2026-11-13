@@ -1,0 +1,15 @@
+.{
+    .name = "glycin-gtk4",
+    .version = "2.2.6",
+    .release = 1,
+    .description = "GTK 4 companion library of glycin: images as GdkTexture",
+    .license = "MPL-2.0 OR LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.6.tar.xz", .sha256 = "6a114aa1117ec2d7bd578c8cefd235d993304dedfd1a62575dc31be9a146b791" },
+    },
+    // cargo downloads the crates from crates.io; the tarball does not
+    // vendor them.
+    .network = true,
+    .depends = .{ "glibc", "gcc", "glib", "glycin", "gtk4", "fontconfig", "libseccomp" },
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "vala" },
+}

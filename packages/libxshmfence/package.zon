@@ -1,0 +1,12 @@
+.{
+    .name = "libxshmfence",
+    .version = "1.3.3",
+    .release = 1,
+    .description = "Shared-memory fences for synchronising the X server with DRI3 clients",
+    .license = "HPND-sell-variant AND MIT",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libxshmfence-1.3.3.tar.xz", .sha256 = "d4a4df096aba96fea02c029ee3a44e11a47eb7f7213c1a729be83e85ec3fde10" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "pkgconf", "util-macros", "xorgproto" },
+}

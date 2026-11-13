@@ -1,0 +1,12 @@
+.{
+    .name = "libxrandr",
+    .version = "1.5.5",
+    .release = 1,
+    .description = "Xlib interface to the Resize and Rotate (RandR) extension",
+    .license = "MIT AND HPND-sell-variant",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libXrandr-1.5.5.tar.xz", .sha256 = "72b922c2e765434e9e9f0960148070bd4504b288263e2868a4ccce1b7cf2767a" },
+    },
+    .depends = .{ "glibc", "libx11", "libxext", "libxrender", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros" },
+}

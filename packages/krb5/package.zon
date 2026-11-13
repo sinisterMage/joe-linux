@@ -1,0 +1,15 @@
+.{
+    .name = "krb5",
+    .version = "1.22.2",
+    .release = 1,
+    .description = "MIT Kerberos V5 libraries and client programs",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://kerberos.org/dist/krb5/1.22/krb5-1.22.2.tar.gz", .sha256 = "3243ffbc8ea4d4ac22ddc7dd2a1dc54c57874c40648b60ff97009763554eaf13" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/mitkrb-1.22.2-upstream_fix-1.patch", .sha256 = "91bed46e7c59b4bc27df659c13abd4514e456293717720e8545d7f8acad00a97" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/mitkrb-1.22.2-security_fix-1.patch", .sha256 = "fcab4e4117667f4ffde3733b00c47ea3da12a9a5355e6aa6e2b124a9543e6181" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/mitkrb-1.22.2-openssl_4_fixes-1.patch", .sha256 = "703f634a0731a0355079211593491f3e175acfce237ed92b97cd04bd1e21bcc1" },
+    },
+    .depends = .{ "glibc", "openssl", "e2fsprogs", "keyutils" },
+    .build_depends = .{ "pkgconf", "perl", "bison", "gettext" },
+}

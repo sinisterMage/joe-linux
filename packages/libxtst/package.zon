@@ -1,0 +1,12 @@
+.{
+    .name = "libxtst",
+    .version = "1.2.6",
+    .release = 1,
+    .description = "Xlib interfaces to the XTEST and RECORD extensions",
+    .license = "MIT-open-group AND X11 AND HPND-sell-variant",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libXtst-1.2.6.tar.xz", .sha256 = "f94f0b37c07d80d877f3eda2c2405cc7e62aa9842f6310354aa349e3d66a4fe5" },
+    },
+    .depends = .{ "glibc", "libx11", "libxext", "libxi", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros" },
+}

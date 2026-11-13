@@ -1,0 +1,13 @@
+.{
+    .name = "libxau",
+    .version = "1.0.12",
+    .release = 1,
+    .description = "X authorization file management library",
+    .license = "MIT-open-group",
+    .sources = .{
+        .{ .url = "https://www.x.org/pub/individual/lib/libXau-1.0.12.tar.xz", .sha256 = "74d0e4dfa3d39ad8939e99bda37f5967aba528211076828464d2777d477fc0fb" },
+    },
+    // xorgproto: xau.pc requires xproto, so everything compiling against this needs it.
+    .depends = .{ "glibc", "xorgproto" },
+    .build_depends = .{ "pkgconf", "util-macros" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "exiv2",
+    .version = "0.28.9",
+    .release = 1,
+    .description = "Library and command line tool for Exif, IPTC and XMP image metadata",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/Exiv2/exiv2/archive/v0.28.9/exiv2-0.28.9.tar.gz", .sha256 = "700b76b97695b2fab4ef8c79619c68ae57d09e0c130724791cafbd39e0eb4aef" },
+    },
+    .depends = .{ "glibc", "gcc", "zlib", "expat", "brotli", "curl", "inih" },
+    .build_depends = .{ "cmake", "ninja" },
+}

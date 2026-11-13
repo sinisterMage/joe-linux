@@ -1,0 +1,392 @@
+joe Linux: build GNOME Settings without CUPS, gnome-bluetooth and ModemManager
+
+gnome-control-center 51.1 requires all three unconditionally:
+
+    cups_dep = dependency('cups', version : '>= 1.4', required: false)
+    assert(cups_dep.found(), 'CUPS 1.4 or newer not found')
+    mm_dep =  dependency('mm-glib', version: '>= 0.7')
+    gnome_bluetooth_dep = dependency('gnome-bluetooth-ui-3.0')
+
+and has no option to do without them. None of the three exists in joe
+Linux, so this patch
+
+  - drops the Printers, Bluetooth and Mobile Network (wwan) panels from the
+    build (panels/meson.build, shell/cc-panel-loader.c) together with the
+    dependency checks that only they need;
+  - takes mobile broadband devices out of the Network panel, which is the
+    only other user of libmm-glib: net-device-mobile.c is no longer built
+    and cc-network-panel.c no longer talks to ModemManager. Wired, Wi-Fi,
+    VPN and proxy settings are untouched;
+  - leaves BUILD_WWAN and BUILD_BLUETOOTH undefined, which is what the
+    remaining sources (the panel loader, the default applications page)
+    already check.
+
+diff -Naur gcc-a/meson.build gcc-b/meson.build
+--- gcc-a/meson.build	2026-10-12 13:00:43.000000000 +0300
++++ gcc-b/meson.build	2026-11-12 20:39:47.363078164 +0200
+@@ -270,31 +270,6 @@
+                description: 'Define if langinfo.h supports _NL_TIME_FIRST_WEEKDAY')
+ endif
+ 
+-# Check for CUPS 1.4 or newer
+-cups_dep = dependency('cups', version : '>= 1.4', required: false)
+-assert(cups_dep.found(), 'CUPS 1.4 or newer not found')
+-
+-# https://bugzilla.gnome.org/show_bug.cgi?id=696766
+-cups_cflags = []
+-if cups_dep.version().version_compare('>= 1.6')
+-  cups_cflags += '-D_PPD_DEPRECATED='
+-endif
+-
+-# cups headers
+-check_headers = [
+-  ['HAVE_CUPS_CUPS_H', 'cups/cups.h'],
+-  ['HAVE_CUPS_PPD_H', 'cups/ppd.h']
+-]
+-
+-foreach header: check_headers
+-  assert(cc.has_header(header[1], args: cups_cflags), 'CUPS headers not found: ' + header[1])
+-endforeach
+-
+-config_h.set10('HAVE_CUPS_HTTPCONNECT2',
+-               cc.has_function('httpConnect2', dependencies: cups_dep),
+-               description: 'Define if httpConnect2() is available in CUPS')
+-
+-
+ # IBus support
+ enable_ibus = get_option('ibus')
+ if enable_ibus
+@@ -348,29 +323,23 @@
+              description: 'Whether SSH socket activation is enabled')
+ 
+ if host_is_linux
+-  # ModemManager
+-  mm_dep =  dependency('mm-glib', version: '>= 0.7')
+   # NetworkManager
+   network_manager_deps = [
+     dependency('libnm', version: '>= 1.52.0'),
+     dependency('libnma-gtk4', version: '>= 1.10.2'),
+     gnome_qr_gtk_dep,
+-    mm_dep,
+   ]
+ endif
+ config_h.set('BUILD_NETWORK', host_is_linux,
+              description: 'Define to 1 to build the Network panel')
+ config_h.set('HAVE_NETWORK_MANAGER', host_is_linux,
+              description: 'Define to 1 if NetworkManager is available')
+-config_h.set('BUILD_WWAN', host_is_linux,
++config_h.set('BUILD_WWAN', false,
+              description: 'Define to 1 to build the WWan panel')
+-config_h.set('HAVE_WWAN', host_is_linux,
++config_h.set('HAVE_WWAN', false,
+              description: 'Define to 1 if WWan is available')
+ 
+ if host_is_linux_not_s390
+-  # gnome-bluetooth
+-  gnome_bluetooth_dep = dependency('gnome-bluetooth-ui-3.0')
+-
+   libwacom_dep = dependency('libwacom', version: '>= 1.4')
+ 
+   wacom_deps = [
+@@ -380,9 +349,9 @@
+   message('Bluetooth and Wacom panels will not be built (no USB support on this platform)')
+   message('Thunderbolt panel will not be built (not supported on this platform)')
+ endif
+-config_h.set('BUILD_BLUETOOTH', host_is_linux_not_s390,
++config_h.set('BUILD_BLUETOOTH', false,
+              description: 'Define to 1 to build the Bluetooth panel')
+-config_h.set('HAVE_BLUETOOTH', host_is_linux_not_s390,
++config_h.set('HAVE_BLUETOOTH', false,
+              description: 'Define to 1 if bluetooth support is available')
+ config_h.set('BUILD_WACOM', host_is_linux_not_s390,
+              description: 'Define to 1 to build the Wacom panel')
+@@ -441,7 +410,7 @@
+ )
+ 
+ summary({
+-    'GNOME Bluetooth': host_is_linux_not_s390,
++    'GNOME Bluetooth': false,
+     'NetworkManager': host_is_linux,
+     'Wacom': host_is_linux_not_s390,
+   },
+diff -Naur gcc-a/panels/applications/meson.build gcc-b/panels/applications/meson.build
+--- gcc-a/panels/applications/meson.build	2026-10-12 13:00:43.000000000 +0300
++++ gcc-b/panels/applications/meson.build	2026-11-12 20:39:47.363118431 +0200
+@@ -62,10 +62,6 @@
+ 
+ deps = common_deps + [keyboard_shortcuts_dep]
+ 
+-if host_is_linux
+-  deps += mm_dep
+-endif
+-
+ if enable_snap
+   deps += [ json_glib_dep, libsoup_dep ]
+   sources += [ 'cc-snap-row.c', 'cc-snapd-client.c' ]
+diff -Naur gcc-a/panels/meson.build gcc-b/panels/meson.build
+--- gcc-a/panels/meson.build	2026-10-12 13:00:43.000000000 +0300
++++ gcc-b/panels/meson.build	2026-11-12 20:39:47.363103473 +0200
+@@ -14,7 +14,6 @@
+   'notifications',
+   'online-accounts',
+   'power',
+-  'printers',
+   'privacy',
+   'search',
+   'sharing',
+@@ -22,7 +21,6 @@
+   'system',
+   'universal-access',
+   'wellbeing',
+-  'wwan',
+ ]
+ 
+ if host_is_linux
+@@ -31,7 +29,6 @@
+ 
+ if host_is_linux_not_s390
+   panels += [
+-    'bluetooth',
+     'wacom'
+   ]
+ endif
+diff -Naur gcc-a/panels/network/cc-network-panel.c gcc-b/panels/network/cc-network-panel.c
+--- gcc-a/panels/network/cc-network-panel.c	2026-10-12 13:00:43.000000000 +0300
++++ gcc-b/panels/network/cc-network-panel.c	2026-11-12 20:40:01.919894417 +0200
+@@ -34,7 +34,6 @@
+ #include "cc-net-proxy-page.h"
+ #include "net-device-bluetooth.h"
+ #include "net-device-ethernet.h"
+-#include "net-device-mobile.h"
+ #include "net-device-wifi.h"
+ #include "net-vpn.h"
+ 
+@@ -43,8 +42,6 @@
+ #include "connection-editor/net-connection-editor.h"
+ #include "network-dialogs.h"
+ 
+-#include <libmm-glib.h>
+-
+ typedef enum {
+     OPERATION_NULL,
+     OPERATION_SHOW_DEVICE,
+@@ -56,12 +53,10 @@
+ 
+     GPtrArray *bluetooth_devices;
+     GPtrArray *ethernet_devices;
+-    GPtrArray *mobile_devices;
+     GPtrArray *vpns;
+     GHashTable *nm_device_to_device;
+ 
+     NMClient *client;
+-    MMManager *modem_manager;
+     gboolean updating_device;
+ 
+     /* widgets */
+@@ -199,11 +194,9 @@
+     CcNetworkPanel *self = CC_NETWORK_PANEL (object);
+ 
+     g_clear_object (&self->client);
+-    g_clear_object (&self->modem_manager);
+ 
+     g_clear_pointer (&self->bluetooth_devices, g_ptr_array_unref);
+     g_clear_pointer (&self->ethernet_devices, g_ptr_array_unref);
+-    g_clear_pointer (&self->mobile_devices, g_ptr_array_unref);
+     g_clear_pointer (&self->vpns, g_ptr_array_unref);
+     g_clear_pointer (&self->nm_device_to_device, g_hash_table_destroy);
+ 
+@@ -248,11 +241,6 @@
+         g_ptr_array_add (ndarray, device);
+         g_ptr_array_add (nmdarray, net_device_ethernet_get_device (device));
+     }
+-    for (i = 0; i < self->mobile_devices->len; i++) {
+-        NetDeviceMobile *device = g_ptr_array_index (self->mobile_devices, i);
+-        g_ptr_array_add (ndarray, device);
+-        g_ptr_array_add (nmdarray, net_device_mobile_get_device (device));
+-    }
+ 
+     if (ndarray->len == 0)
+         return;
+@@ -268,8 +256,6 @@
+                                            nm_device_bt_get_name (NM_DEVICE_BT (nm_devices[i])));
+         else if (NET_IS_DEVICE_ETHERNET (devices[i]))
+             adw_preferences_group_set_title (ADW_PREFERENCES_GROUP (devices[i]), titles[i]);
+-        else if (NET_IS_DEVICE_MOBILE (devices[i]))
+-            net_device_mobile_set_title (NET_DEVICE_MOBILE (devices[i]), titles[i]);
+     }
+ }
+ 
+@@ -330,11 +316,6 @@
+         if (handle_argv_for_device (self, net_device_ethernet_get_device (device)))
+             return;
+     }
+-    for (i = 0; i < self->mobile_devices->len; i++) {
+-        NetDeviceMobile *device = g_ptr_array_index (self->mobile_devices, i);
+-        if (handle_argv_for_device (self, net_device_mobile_get_device (device)))
+-            return;
+-    }
+     for (i = 0; i < self->vpns->len; i++) {
+         NetVpn *vpn = g_ptr_array_index (self->vpns, i);
+         if (handle_argv_for_connection (self, net_vpn_get_connection (vpn)))
+@@ -350,35 +331,12 @@
+     gtk_widget_set_visible (self->container_bluetooth, self->bluetooth_devices->len > 0);
+ }
+ 
+-static gboolean
+-wwan_panel_supports_modem (GDBusObject *object)
+-{
+-    MMObject *mm_object;
+-    MMModem *modem;
+-    MMModemCapability capability, supported_capabilities;
+-
+-    g_assert (G_IS_DBUS_OBJECT (object));
+-
+-    supported_capabilities = MM_MODEM_CAPABILITY_GSM_UMTS | MM_MODEM_CAPABILITY_LTE;
+-#if MM_CHECK_VERSION(1, 14, 0)
+-    supported_capabilities |= MM_MODEM_CAPABILITY_5GNR;
+-#endif
+-
+-    mm_object = MM_OBJECT (object);
+-    modem = mm_object_get_modem (mm_object);
+-    capability = mm_modem_get_current_capabilities (modem);
+-
+-    return capability & supported_capabilities;
+-}
+-
+ static void
+ panel_add_device (CcNetworkPanel *self, NMDevice *device)
+ {
+     NMDeviceType type;
+     NetDeviceEthernet *device_ethernet;
+-    NetDeviceMobile *device_mobile;
+     NetDeviceBluetooth *device_bluetooth;
+-    g_autoptr(GDBusObject) modem_object = NULL;
+ 
+     /* does already exist */
+     if (g_hash_table_lookup (self->nm_device_to_device, device) != NULL)
+@@ -397,31 +355,6 @@
+         g_ptr_array_add (self->ethernet_devices, device_ethernet);
+         g_hash_table_insert (self->nm_device_to_device, device, device_ethernet);
+         break;
+-    case NM_DEVICE_TYPE_MODEM:
+-        if (g_str_has_prefix (nm_device_get_udi (device), "/org/freedesktop/ModemManager1/Modem/")) {
+-            if (self->modem_manager == NULL) {
+-                g_warning ("Cannot grab information for modem at %s: No ModemManager support",
+-                           nm_device_get_udi (device));
+-                return;
+-            }
+-
+-            modem_object = g_dbus_object_manager_get_object (G_DBUS_OBJECT_MANAGER (self->modem_manager),
+-                                                             nm_device_get_udi (device));
+-            if (modem_object == NULL) {
+-                g_warning ("Cannot grab information for modem at %s: Not found", nm_device_get_udi (device));
+-                return;
+-            }
+-
+-            /* This will be handled by cellular panel */
+-            if (wwan_panel_supports_modem (modem_object))
+-                return;
+-        }
+-
+-        device_mobile = net_device_mobile_new (self->client, device, modem_object);
+-        gtk_box_append (GTK_BOX (self->box_wired), GTK_WIDGET (device_mobile));
+-        g_ptr_array_add (self->mobile_devices, device_mobile);
+-        g_hash_table_insert (self->nm_device_to_device, device, device_mobile);
+-        break;
+     case NM_DEVICE_TYPE_BT:
+         device_bluetooth = net_device_bluetooth_new (self->client, device);
+         gtk_list_box_append (GTK_LIST_BOX (self->box_bluetooth), GTK_WIDGET (device_bluetooth));
+@@ -456,7 +389,6 @@
+ 
+     g_ptr_array_remove (self->bluetooth_devices, net_device);
+     g_ptr_array_remove (self->ethernet_devices, net_device);
+-    g_ptr_array_remove (self->mobile_devices, net_device);
+     g_hash_table_remove (self->nm_device_to_device, device);
+ 
+     if (nm_device_get_device_type (device) == NM_DEVICE_TYPE_BT)
+@@ -702,8 +634,6 @@
+ static void
+ cc_network_panel_init (CcNetworkPanel *self)
+ {
+-    g_autoptr(GDBusConnection) system_bus = NULL;
+-    g_autoptr(GError) error = NULL;
+     const GPtrArray *connections;
+     guint i;
+ 
+@@ -713,7 +643,6 @@
+ 
+     self->bluetooth_devices = g_ptr_array_new ();
+     self->ethernet_devices = g_ptr_array_new ();
+-    self->mobile_devices = g_ptr_array_new ();
+     self->vpns = g_ptr_array_new ();
+     self->nm_device_to_device = g_hash_table_new (g_direct_hash, g_direct_equal);
+ 
+@@ -734,16 +663,6 @@
+     g_signal_connect_object (self->client, "device-added", G_CALLBACK (device_added_cb), self, G_CONNECT_SWAPPED);
+     g_signal_connect_object (self->client, "device-removed", G_CALLBACK (device_removed_cb), self, G_CONNECT_SWAPPED);
+ 
+-    /* Setup ModemManager client */
+-    system_bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+-    if (system_bus == NULL) {
+-        g_warning ("Error connecting to system D-Bus: %s", error->message);
+-    } else {
+-        self->modem_manager = mm_manager_new_sync (system_bus, G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE, NULL, &error);
+-        if (self->modem_manager == NULL)
+-            g_warning ("Error connecting to ModemManager: %s", error->message);
+-    }
+-
+     /* add remote settings such as VPN settings as virtual devices */
+     g_signal_connect_object (self->client, NM_CLIENT_CONNECTION_ADDED, G_CALLBACK (add_connection), self,
+                              G_CONNECT_SWAPPED);
+diff -Naur gcc-a/panels/network/cc-wifi-hotspot-dialog.c gcc-b/panels/network/cc-wifi-hotspot-dialog.c
+--- gcc-a/panels/network/cc-wifi-hotspot-dialog.c	2026-10-12 13:00:43.000000000 +0300
++++ gcc-b/panels/network/cc-wifi-hotspot-dialog.c	2026-11-12 20:39:47.363181111 +0200
+@@ -27,7 +27,6 @@
+ 
+ #include <config.h>
+ #include <glib/gi18n.h>
+-#include <libmm-glib.h>
+ 
+ #include "cc-network-resources.h"
+ #include "cc-wifi-hotspot-dialog.h"
+diff -Naur gcc-a/panels/network/meson.build gcc-b/panels/network/meson.build
+--- gcc-a/panels/network/meson.build	2026-10-12 13:00:43.000000000 +0300
++++ gcc-b/panels/network/meson.build	2026-11-12 20:39:47.363130224 +0200
+@@ -63,7 +63,6 @@
+   'cc-wifi-hotspot-dialog.c',
+   'net-device-bluetooth.c',
+   'net-device-ethernet.c',
+-  'net-device-mobile.c',
+   'net-device-wifi.c',
+   'net-vpn.c',
+   'network-dialogs.c',
+diff -Naur gcc-a/panels/network/network.gresource.xml gcc-b/panels/network/network.gresource.xml
+--- gcc-a/panels/network/network.gresource.xml	2026-10-12 13:00:43.000000000 +0300
++++ gcc-b/panels/network/network.gresource.xml	2026-11-12 20:39:47.363141575 +0200
+@@ -10,7 +10,6 @@
+     <file preprocess="xml-stripblanks">network-bluetooth.ui</file>
+     <file preprocess="xml-stripblanks">network-vpn.ui</file>
+     <file preprocess="xml-stripblanks">network-wifi.ui</file>
+-    <file preprocess="xml-stripblanks">network-mobile.ui</file>
+     <file preprocess="xml-stripblanks">network-ethernet.ui</file>
+ 
+     <!-- Wi-Fi panel -->
+diff -Naur gcc-a/shell/cc-panel-loader.c gcc-b/shell/cc-panel-loader.c
+--- gcc-a/shell/cc-panel-loader.c	2026-10-12 13:00:43.000000000 +0300
++++ gcc-b/shell/cc-panel-loader.c	2026-11-12 20:39:47.363214495 +0200
+@@ -49,7 +49,6 @@
+ extern GType cc_notifications_panel_get_type (void);
+ extern GType cc_online_accounts_panel_get_type (void);
+ extern GType cc_power_panel_get_type (void);
+-extern GType cc_printers_panel_get_type (void);
+ extern GType cc_privacy_panel_get_type (void);
+ extern GType cc_search_panel_get_type (void);
+ extern GType cc_sharing_panel_get_type (void);
+@@ -102,7 +101,6 @@
+     PANEL_TYPE ("notifications", cc_notifications_panel_get_type, NULL),
+     PANEL_TYPE ("online-accounts", cc_online_accounts_panel_get_type, NULL),
+     PANEL_TYPE ("power", cc_power_panel_get_type, NULL),
+-    PANEL_TYPE ("printers", cc_printers_panel_get_type, NULL),
+     PANEL_TYPE ("privacy", cc_privacy_panel_get_type, NULL),
+     PANEL_TYPE ("search", cc_search_panel_get_type, NULL),
+     PANEL_TYPE ("sharing", cc_sharing_panel_get_type, cc_sharing_panel_static_init_func),

@@ -1,0 +1,15 @@
+.{
+    .name = "docbook-xml",
+    .version = "4.5",
+    .release = 1,
+    .description = "DocBook XML 4.5 document type definitions, and the system XML catalog",
+    .license = "DocBook-XML",
+    .sources = .{
+        .{ .url = "https://archive.docbook.org/xml/4.5/docbook-xml-4.5.zip", .sha256 = "4e4e037a2b83c98c6c94818390d4bdd3f6e10f6ec62dd79188594e26190dc7b4" },
+    },
+    // The catalogs are read by libxml2.
+    .depends = .{"libxml2"},
+    // python unpacks the zip file (there is no unzip); xmlcatalog, from
+    // libxml2, writes the catalogs.
+    .build_depends = .{ "python", "libxml2" },
+}

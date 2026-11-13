@@ -1,0 +1,12 @@
+.{
+    .name = "xcb-util-cursor",
+    .version = "0.1.6",
+    .release = 1,
+    .description = "XCB port of libXcursor",
+    .license = "X11",
+    .sources = .{
+        .{ .url = "https://xorg.freedesktop.org/archive/individual/lib/xcb-util-cursor-0.1.6.tar.xz", .sha256 = "fdeb8bd127873519be5cc70dcd0d3b5d33b667877200f9925a59fdcad8f7a933" },
+    },
+    .depends = .{ "glibc", "libxcb", "xcb-util-image", "xcb-util-renderutil" },
+    .build_depends = .{ "m4", "pkgconf", "util-macros" },
+}

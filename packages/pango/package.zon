@@ -1,0 +1,13 @@
+.{
+    .name = "pango",
+    .version = "1.58.2",
+    .release = 1,
+    .description = "Library for layout and rendering of internationalized text",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/pango/1.58/pango-1.58.2.tar.xz", .sha256 = "342385b6ca3b7c73455d7c80a13b7dbe4489e00bc3bd4c5bd6ed4dce421e374a" },
+    },
+    .depends = .{ "glibc", "glib", "harfbuzz", "fribidi", "fontconfig", "freetype", "cairo", "libxft", "libxrender", "libx11" },
+    // glib provides g-ir-scanner; docutils provides rst2man for pango-view(1).
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "docutils" },
+}

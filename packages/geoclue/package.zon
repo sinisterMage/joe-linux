@@ -1,0 +1,12 @@
+.{
+    .name = "geoclue",
+    .version = "2.8.2",
+    .release = 1,
+    .description = "D-Bus service that provides location information",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/geoclue/geoclue/-/archive/2.8.2/geoclue-2.8.2.tar.bz2", .sha256 = "d4d65933b704d4c8d4ca9747dc511b883e35099abe534c8560f2aab3017e4cd4" },
+    },
+    .depends = .{ "glibc", "glib", "json-glib", "libsoup", "libnotify", "systemd", "dbus" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "vala" },
+}

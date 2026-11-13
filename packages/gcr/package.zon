@@ -1,0 +1,14 @@
+.{
+    .name = "gcr",
+    .version = "3.41.2",
+    .release = 1,
+    .description = "Certificate and key libraries and viewer for GTK 3 (gcr-3, gck-1)",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gcr/3.41/gcr-3.41.2.tar.xz", .sha256 = "bad10f3c553a0e1854649ab59c5b2434da22ca1a54ae6138f1f53961567e1ab7" },
+    },
+    .depends = .{ "glibc", "glib", "libgcrypt", "p11-kit", "gtk3", "pango", "cairo", "gdk-pixbuf" },
+    // glib provides g-ir-scanner and glib-compile-resources; libxml2 the
+    // xmllint that glib-compile-resources runs.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala", "gettext", "libxml2" },
+}

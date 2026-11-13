@@ -1,0 +1,18 @@
+.{
+    .name = "librsvg",
+    .version = "2.63.4",
+    .release = 1,
+    .description = "Library and tools for rendering SVG files with cairo",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/librsvg/2.63/librsvg-2.63.4.tar.xz", .sha256 = "31f07d9350dad3f8964fd613c31309ac160fdef13dfac59df6fd082de78d6e8f" },
+    },
+    // cargo downloads the crates librsvg depends on from crates.io; the
+    // tarball does not vendor them.
+    .network = true,
+    // libgcc_s (gcc) for unwinding.
+    .depends = .{ "glibc", "gcc", "glib", "cairo", "pango", "harfbuzz", "freetype", "fontconfig", "libxml2", "gdk-pixbuf" },
+    // cargo-c provides cargo-cbuild; glib provides g-ir-scanner; docutils
+    // provides rst2man for rsvg-convert(1).
+    .build_depends = .{ "rust", "cargo-c", "meson", "ninja", "pkgconf", "python", "vala", "docutils" },
+}

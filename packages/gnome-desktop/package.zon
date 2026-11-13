@@ -1,0 +1,20 @@
+.{
+    .name = "gnome-desktop",
+    .version = "51.0",
+    .release = 1,
+    .description = "Shared GNOME desktop libraries: backgrounds, thumbnails, XKB and locale information, wall clock",
+    .license = "GPL-2.0-or-later AND LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-desktop/51/gnome-desktop-51.0.tar.xz", .sha256 = "9ebeb9f1769d3c310caeadd921ab34c8f264b92937740518b3bc859a579a6912" },
+    },
+    // bubblewrap is run for every thumbnailer, with a libseccomp filter.
+    // libxkbcommon provides xkbregistry; xkeyboard-config and iso-codes are
+    // read at run time.
+    .depends = .{
+        "glibc",   "glib",       "gtk3",                      "gtk4",             "gdk-pixbuf",   "cairo",
+        "pango",   "fontconfig", "gsettings-desktop-schemas", "xkeyboard-config", "libxkbcommon", "iso-codes",
+        "systemd", "libseccomp", "bubblewrap",
+    },
+    // glib provides g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext" },
+}

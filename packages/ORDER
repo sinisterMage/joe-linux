@@ -22,7 +22,6 @@ attr
 acl
 libcap
 libxcrypt
-shadow
 gawk
 gcc
 ncurses
@@ -40,12 +39,16 @@ autoconf
 automake
 elfutils
 libffi
+openssl
+sqlite
 python
 flit-core
 packaging
 wheel
 setuptools
 meson
+linux-pam
+shadow
 kmod
 coreutils
 diffutils

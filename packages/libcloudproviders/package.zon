@@ -1,0 +1,12 @@
+.{
+    .name = "libcloudproviders",
+    .version = "0.3.6",
+    .release = 1,
+    .description = "D-Bus API that lets cloud storage clients integrate with file managers",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libcloudproviders/0.3/libcloudproviders-0.3.6.tar.xz", .sha256 = "3b75110b3a4fdef4c5c5a440e48701fe054d2ae061d156c89136bb5ba05e74b7" },
+    },
+    .depends = .{ "glibc", "glib" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala" },
+}

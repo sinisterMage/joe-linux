@@ -1,0 +1,34 @@
+.{
+    .name = "gtk4",
+    .version = "4.24.1",
+    .release = 1,
+    .description = "GTK 4 widget toolkit",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gtk/4.24/gtk-4.24.1.tar.xz", .sha256 = "e98abe720e16129c8c0f50761dee0a2e9ae2478055e31018f6cf977fcf6513e9" },
+    },
+    // gst-plugins-bad provides libgstplay, gst-plugins-base libgstgl and
+    // libgstallocators; gst-plugins-good holds the WebM demuxer GTK promises
+    // to applications. Used at run time only: mesa (the GL renderer, loaded
+    // through libepoxy), librsvg (SVG icons), the icon themes and
+    // shared-mime-info.
+    .depends = .{
+        "glibc",             "glib",             "cairo",              "pango",
+        "fribidi",           "harfbuzz",         "gdk-pixbuf",         "graphene",
+        "libepoxy",          "libpng",           "libjpeg-turbo",      "tiff",
+        "fontconfig",        "libxkbcommon",     "wayland",            "libx11",
+        "libxext",           "libxrender",       "libxi",              "libxrandr",
+        "libxcursor",        "libxfixes",        "libxdamage",         "libxinerama",
+        "gstreamer",         "gst-plugins-base", "gst-plugins-bad",    "gst-plugins-good",
+        "libcloudproviders", "tinysparql",       "iso-codes",          "mesa",
+        "librsvg",           "shared-mime-info", "hicolor-icon-theme", "adwaita-icon-theme",
+    },
+    // glib provides g-ir-scanner and glib-compile-resources; wayland provides
+    // wayland-scanner. Only the headers of libdrm are used (dmabuf formats).
+    // pygobject is what the book lists as required for the build; libxml2
+    // provides the xmllint that glib-compile-resources runs.
+    .build_depends = .{
+        "meson",             "ninja",     "pkgconf", "python",  "pygobject", "gettext",
+        "wayland-protocols", "xorgproto", "libdrm",  "libxml2",
+    },
+}

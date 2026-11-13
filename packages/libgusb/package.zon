@@ -1,0 +1,12 @@
+.{
+    .name = "libgusb",
+    .version = "0.4.9",
+    .release = 1,
+    .description = "GObject wrapper for libusb",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/hughsie/libgusb/releases/download/0.4.9/libgusb-0.4.9.tar.xz", .sha256 = "9df5ef301d6a4b361002aa52cce1165a87a89744055879bdbab31e7e86f1e846" },
+    },
+    .depends = .{ "glibc", "glib", "json-glib", "libusb", "hwdata" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "python", "packaging" },
+}

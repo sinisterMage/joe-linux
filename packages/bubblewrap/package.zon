@@ -1,0 +1,13 @@
+.{
+    .name = "bubblewrap",
+    .version = "0.13.1",
+    .release = 1,
+    .description = "Unprivileged sandboxing tool based on Linux namespaces",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/containers/bubblewrap/releases/download/v0.13.1/bubblewrap-0.13.1.tar.xz", .sha256 = "0e85c8702248b8dd64144f594147553650cdd0e4c951690345faace79c217c4d" },
+    },
+    .depends = .{ "glibc", "libcap" },
+    // meson.build looks for python3 even when the tests are not built.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

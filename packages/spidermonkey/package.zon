@@ -1,0 +1,18 @@
+.{
+    .name = "spidermonkey",
+    .version = "140.17.0",
+    .release = 1,
+    .description = "Mozilla's JavaScript and WebAssembly engine, built from the Firefox ESR sources",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://archive.mozilla.org/pub/firefox/releases/140.17.0esr/source/firefox-140.17.0esr.source.tar.xz", .sha256 = "4d6ed3b18b2069c55bab12d8ba95da6013ac0b036d8a031df8b9f39a25d05c33" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/spidermonkey-140.17.0-python_3.14_fixes-1.patch", .sha256 = "24183878004982be0d7d87af2daa49a36d327a279b0abcf222c0c99e805e2ed7" },
+    },
+    // libmozjs is C++ (libstdc++ and libgcc_s from gcc); the js140 shell
+    // uses readline. NSPR is not used: the engine carries its own emulation.
+    .depends = .{ "glibc", "gcc", "icu", "zlib", "readline" },
+    // The crates are vendored in the tarball (third_party/rust) and mach is
+    // told to use only the Python modules vendored next to them, so the
+    // build needs no network.
+    .build_depends = .{ "rust", "cbindgen", "llvm", "python", "which", "pkgconf", "m4", "perl", "make" },
+}

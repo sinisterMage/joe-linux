@@ -43,6 +43,7 @@ systemd-timesync:x:78:78:systemd Time Synchronization:/:/usr/bin/false
 systemd-coredump:x:79:79:systemd Core Dumper:/:/usr/bin/false
 uuidd:x:80:80:UUID Generation Daemon User:/dev/null:/usr/bin/false
 systemd-oom:x:81:81:systemd Out Of Memory Daemon:/:/usr/bin/false
+systemd-imds:x:82:82:systemd Instance Metadata:/:/usr/bin/false
 nobody:x:65534:65534:Unprivileged User:/dev/null:/usr/bin/false
 EOT
     cat > etc/group <<'EOT'
@@ -77,6 +78,7 @@ systemd-timesync:x:78:
 systemd-coredump:x:79:
 uuidd:x:80:
 systemd-oom:x:81:
+systemd-imds:x:82:
 wheel:x:97:
 users:x:999:
 nogroup:x:65534:
@@ -86,14 +88,36 @@ EOT
     awk -F: '{ print $1 ":!::" }' etc/group > etc/gshadow
     chmod 0600 etc/shadow etc/gshadow
 
-    cat > etc/profile <<'EOT'
+    # The login profile is a sealed file: a root shell reads only sealed
+    # scripts, so the system's own settings cannot live in editable /etc.
+    # What the administrator adds in /etc is read for every other user.
+    install -d usr/lib/joe/profile.d etc/profile.d
+    cat > usr/lib/joe/profile <<'EOT'
 export PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin
 umask 022
 if [ "${PS1-}" ]; then PS1='\u@\h:\w\$ '; fi
-for script in /etc/profile.d/*.sh; do
+# Settings shipped by packages: sealed, so read for every user.
+for script in /usr/lib/joe/profile.d/*.sh; do
     [ -r "$script" ] && . "$script"
 done
 unset script
+if [ "$(id -u)" -ne 0 ]; then
+    [ -r /etc/profile ] && . /etc/profile
+    for script in /etc/profile.d/*.sh; do
+        [ -r "$script" ] && . "$script"
+    done
+    unset script
+fi
 EOT
-    install -d etc/profile.d
+    # The same for interactive shells that are not login shells.
+    cat > usr/lib/joe/bashrc <<'EOT'
+PS1='\u@\h:\w\$ '
+if [ "$(id -u)" -ne 0 ] && [ -r /etc/bashrc ]; then . /etc/bashrc; fi
+EOT
+    cat > etc/profile <<'EOT'
+# Settings for login shells go here, or in files named /etc/profile.d/*.sh.
+#
+# These files are read for ordinary users only. A root shell reads only
+# sealed scripts, and files you can edit are not sealed.
+EOT
 }

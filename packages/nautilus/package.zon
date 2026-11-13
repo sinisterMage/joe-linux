@@ -1,0 +1,15 @@
+.{
+    .name = "nautilus",
+    .version = "51.1",
+    .release = 2,
+    .description = "GNOME Files, the file manager",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/nautilus/51/nautilus-51.1.tar.xz", .sha256 = "a703bc152d18d161d9dab957e2390a36e6246bb5c24de7b15c9624fcfa2f2816" },
+    },
+    // gexiv2, gdk-pixbuf and gst-plugins-base (gstreamer-tag, -pbutils) are
+    // linked by the image and audio/video properties extensions; wayland and
+    // libx11 by the bundled libgxdp.
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "glycin", "glycin-gtk4", "gnome-autoar", "gnome-desktop", "gsettings-desktop-schemas", "libportal", "tinysparql", "icu", "libcloudproviders", "gexiv2", "gdk-pixbuf", "gstreamer", "gst-plugins-base", "wayland", "libx11", "adwaita-icon-theme", "localsearch" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "python", "blueprint-compiler" },
+}

@@ -1,0 +1,15 @@
+.{
+    .name = "dconf",
+    .version = "51.0",
+    .release = 1,
+    .description = "Low-level configuration system, the GSettings backend of GNOME",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/dconf/51/dconf-51.0.tar.xz", .sha256 = "e65c1b7867f836faad9f9ee04acf5c5a6cae2bbc784833fe093207e0cb590248" },
+    },
+    // dconf-service is started by D-Bus activation or as a systemd user unit.
+    .depends = .{ "glibc", "glib", "dbus" },
+    // vala provides vapigen; xsltproc (libxslt) and the DocBook stylesheets
+    // build the manual pages.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala", "libxslt", "docbook-xml", "docbook-xsl-nons" },
+}

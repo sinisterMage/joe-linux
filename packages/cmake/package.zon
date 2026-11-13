@@ -1,0 +1,12 @@
+.{
+    .name = "cmake",
+    .version = "4.4.5",
+    .release = 1,
+    .description = "Cross-platform build system generator, with ctest and cpack",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://cmake.org/files/v4.4/cmake-4.4.5.tar.gz", .sha256 = "a0c54c88abb8078dd8eccadb717fc6bb194bf18e7d44c86309910288886e04e2" },
+    },
+    .depends = .{ "glibc", "gcc", "curl", "libarchive", "libuv", "nghttp2", "expat", "zlib", "bzip2", "xz", "zstd", "ncurses" },
+    .build_depends = .{"pkgconf"},
+}

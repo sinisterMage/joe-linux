@@ -1,0 +1,36 @@
+.{
+    .name = "gnome-settings-daemon",
+    .version = "51.1",
+    .release = 1,
+    .description = "Session services that apply GNOME settings: power, media keys, colour, date and time, XSettings",
+    .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-settings-daemon/51/gnome-settings-daemon-51.1.tar.xz", .sha256 = "e7de8d30ae2d63c7a9a21f8f0247219275cbc1d7f5ed09205e4a47642666f6ae" },
+    },
+    // pulseaudio is the client library only (libpulse); the sound server
+    // is pipewire. libx11 and libxfixes are for the XSettings service that
+    // serves Xwayland clients.
+    .depends = .{
+        "glibc",
+        "glib",
+        "gsettings-desktop-schemas",
+        "gnome-desktop",
+        "geocode-glib",
+        "geoclue",
+        "libgweather",
+        "libcanberra",
+        "libnotify",
+        "pulseaudio",
+        "alsa-lib",
+        "polkit",
+        "upower",
+        "systemd",
+        "libgudev",
+        "networkmanager",
+        "colord",
+        "fontconfig",
+        "libx11",
+        "libxfixes",
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

@@ -1,0 +1,16 @@
+.{
+    .name = "llvm",
+    .version = "23.1.0",
+    .release = 1,
+    .description = "LLVM compiler infrastructure, with the Clang C/C++ compiler and compiler-rt",
+    .license = "Apache-2.0 WITH LLVM-exception",
+    .sources = .{
+        .{ .url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.0/llvm-project-23.1.0.src.tar.xz", .sha256 = "ab1f0e3ec52448c33e8782eaf0422504b87c7b016b22514653ee0d8fcee479ff" },
+    },
+    // clang uses gcc's libstdc++, libgcc and startup files and runs the
+    // binutils linker; LLVMgold.so is a plugin for that linker. python and
+    // perl run the helper scripts (scan-build, scan-view, git-clang-format,
+    // opt-viewer).
+    .depends = .{ "glibc", "gcc", "binutils", "libffi", "zlib", "zstd", "python", "perl" },
+    .build_depends = .{ "cmake", "ninja", "python" },
+}

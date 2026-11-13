@@ -23,6 +23,19 @@ One directory per package. Each holds two files.
 
 `.file = "name"` on a source overrides the file name taken from the URL.
 
+`.build_only = true` keeps a package out of the build root: it is built and
+published, but nothing later builds against it. Packages that only assemble
+others (`joe-desktop`) say this.
+
+`.network = true` lets the build reach the network. Builds are offline by
+default; the exception is for build systems that fetch their own dependencies
+(cargo), and every use of it is a debt to be paid by vendoring.
+
+The build order is computed from `depends` and `build_depends`
+(`bootstrap/order.py`), so both must be complete: a library a package links
+against belongs in `depends`, a tool it only runs while building in
+`build_depends`. The base system is the exception; its order is `ORDER`.
+
 ## `build.sh`
 
 A bash file defining functions. It is sourced, not executed, so it must not run
@@ -41,6 +54,42 @@ inside the build root, with no network. Any command that fails aborts the build.
 Available variables: `DESTDIR`, `SOURCES`, `PKG_NAME`, `PKG_VERSION`,
 `PKG_RELEASE`, `JOBS`. `MAKEFLAGS` is already set to `-j$JOBS`.
 
+## Writing a recipe from the book
+
+Recipes follow Linux From Scratch and Beyond LFS (systemd, development
+branch). `packages/.build/book.py` prints a page's commands, and for Beyond LFS
+also its download locations, checksums and dependency lists:
+
+    packages/.build/book.py chapter08/zlib
+    packages/.build/book.py --blfs general/glib2
+
+The book installs into the running system; a recipe stages into `$DESTDIR`:
+
+- `make install` becomes `make DESTDIR="$DESTDIR" install`; meson,
+  `DESTDIR="$DESTDIR" ninja install`; cmake, `DESTDIR="$DESTDIR" cmake --install
+  build`. Check that the package honours `DESTDIR`.
+- Every later command that touches installed paths (`mv`, `ln`, `rm`,
+  `install`, `sed -i`, `chmod`) acts on `"$DESTDIR/..."`. A symlink's target
+  stays as the book wrote it; only its location gets the prefix.
+- Source edits and patches go in `prepare`, configuring and compiling in
+  `build`, installing in `package`.
+- Leave out: test suites, `ldconfig`, cache updates
+  (`glib-compile-schemas`, `gtk-update-icon-cache`, `update-mime-database`,
+  `update-desktop-database`, `fc-cache`, `gio-querymodules`), documentation-only
+  steps, account creation, and "move the old version away" steps. Caches are
+  rebuilt by triggers shipped by the package that owns the tool.
+- Default configuration the book writes with a heredoc is installed under
+  `$DESTDIR/etc`.
+- Use the versions, URLs and flags on the page, not remembered ones: these
+  are development-branch books. Download each source into `build/src/`, check
+  it against the MD5 the page gives, and record its SHA-256.
+- Enable an optional feature only if what it needs has a recipe; otherwise
+  switch the feature off explicitly, so the result does not depend on what
+  happens to be in the build root.
+
+A recipe directory is claimed by creating it. If `packages/NAME` already
+exists, someone else is writing that recipe.
+
 ## Rules
 
 - **Everything goes through `$DESTDIR`.** Never write to `/usr`, `/etc` and so
@@ -56,6 +105,11 @@ Available variables: `DESTDIR`, `SOURCES`, `PKG_NAME`, `PKG_VERSION`,
 - Nothing under `/var`, `/run` or `/tmp` is packaged (the driver removes it):
   `/var` is shared between deployments and the other two are temporary. Ship a
   `usr/lib/tmpfiles.d/NAME.conf` for anything that must exist there.
+- A daemon that runs as its own user ships `usr/lib/sysusers.d/NAME.conf`
+  giving that user and group a **fixed** id (`u gdm 21 "GNOME Display Manager"
+  /var/lib/gdm`). Ids must be the same on every machine and in every
+  deployment because `/var` is shared between deployments. Files that must
+  belong to that user are created at boot by `tmpfiles.d`, never packaged.
 - No install scripts exist. If something must run after installation (a cache
   rebuild), ship a trigger in `usr/lib/dave/triggers/NAME.zon`:
   `.{ .paths = .{"usr/lib/"}, .exec = .{"/usr/bin/ldconfig"} }`.
