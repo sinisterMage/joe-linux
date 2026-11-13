@@ -293,6 +293,9 @@ pub const System = struct {
         _ = try s.applyTo(target, name, staged);
 
         const kernel = try boot.installKernel(s.arena, s.io, s.esp, target, try s.findKernel(target));
+        // Best effort: the loader already on the ESP starts this deployment
+        // too, so failing to bring a newer one must not cost the upgrade.
+        _ = boot.updateLoader(s.arena, s.io, s.esp, target) catch false;
         const entries = try boot.list(s.arena, s.io, s.esp);
         const current = try s.currentEntry(entries);
         _ = std.os.linux.syncfs(target.handle);
@@ -379,6 +382,17 @@ pub const System = struct {
         // A pending upgrade would otherwise take the default back at shutdown.
         try s.unstage();
         return target.id;
+    }
+
+    /// Login names of people who have an account in the running system but
+    /// not in deployment `id`. `/etc` belongs to a deployment while `/home` is
+    /// shared, so someone added since `id` was made cannot log in there.
+    pub fn accountsMissingIn(s: *System, id: u32) ![]const []const u8 {
+        const limit: Io.Limit = .limited(16 * 1024 * 1024);
+        const here = s.root.readFileAlloc(s.io, "etc/passwd", s.arena, limit) catch return &.{};
+        const path = try std.fmt.allocPrint(s.arena, deploy_dir ++ "/{d}/etc/passwd", .{id});
+        const there = s.top.readFileAlloc(s.io, path, s.arena, limit) catch return &.{};
+        return missingAccounts(s.arena, here, there);
     }
 
     // -- retention --------------------------------------------------------------
@@ -503,6 +517,32 @@ pub const System = struct {
         return .{ .deployments = views.items, .staged = state.staged, .last_finalize = state.last_finalize };
     }
 };
+
+/// The name on a passwd line, if it is a person's account: system accounts
+/// come and go with the packages that declare them and are not of interest.
+/// The range is login.defs' UID_MIN to UID_MAX.
+fn personOf(line: []const u8) ?[]const u8 {
+    var fields = std.mem.splitScalar(u8, line, ':');
+    const name = fields.next() orelse return null;
+    _ = fields.next() orelse return null;
+    const uid = std.fmt.parseInt(u32, fields.next() orelse return null, 10) catch return null;
+    return if (uid >= 1000 and uid <= 60000 and name.len > 0) name else null;
+}
+
+/// People with a line in the passwd text `here` and none in `there`.
+fn missingAccounts(arena: Allocator, here: []const u8, there: []const u8) ![]const []const u8 {
+    var missing: std.ArrayList([]const u8) = .empty;
+    var lines = std.mem.tokenizeScalar(u8, here, '\n');
+    next: while (lines.next()) |line| {
+        const name = personOf(line) orelse continue;
+        var others = std.mem.tokenizeScalar(u8, there, '\n');
+        while (others.next()) |other| {
+            if (other.len > name.len and other[name.len] == ':' and std.mem.startsWith(u8, other, name)) continue :next;
+        }
+        try missing.append(arena, name);
+    }
+    return missing.items;
+}
 
 // ---------------------------------------------------------------------------
 // Tests: a complete system in a temporary directory, unprivileged.
@@ -769,6 +809,57 @@ test "rollback discards a pending upgrade and skips unhealthy deployments" {
     _ = try s.stage(try fx.plan(&.{try fx.package("hello", "3.0-r1", "usr/bin/hello", "v3")}, "up again"));
     try testing.expectEqual(@as(u32, 1), try s.rollback());
     try testing.expect((try s.loadState()).staged == null);
+}
+
+test "an upgrade brings a newer boot loader to the ESP" {
+    var fx: Fixture = undefined;
+    if (!try fx.init()) return error.SkipZigTest;
+    defer fx.deinit();
+    const io = testing.io;
+    const s = &fx.sys;
+    const old = "MZ #### LoaderInfo: systemd-boot 262.1 ####";
+    const new = "MZ #### LoaderInfo: systemd-boot 263 ####";
+
+    try s.esp.createDirPath(io, "EFI/systemd");
+    try s.esp.createDirPath(io, "EFI/BOOT");
+    for (boot.loader_targets) |target| try s.esp.writeFile(io, .{ .sub_path = target, .data = old });
+    try fx.installLive(try fx.package("systemd-boot", "262.1-r1", boot.loader_source, old));
+
+    _ = try s.stage(try fx.plan(&.{try fx.package("systemd-boot", "263-r1", boot.loader_source, new)}, "systemd-boot"));
+    // Staging is a rehearsal: the ESP is not touched.
+    try testing.expectEqualStrings(old, try s.esp.readFileAlloc(io, boot.loader_targets[0], s.arena, .limited(1 << 20)));
+    try testing.expect((try s.finalize()).?.ok);
+    for (boot.loader_targets) |target|
+        try testing.expectEqualStrings(new, try s.esp.readFileAlloc(io, target, s.arena, .limited(1 << 20)));
+}
+
+test "rollback names the people whose accounts the target lacks" {
+    var fx: Fixture = undefined;
+    if (!try fx.init()) return error.SkipZigTest;
+    defer fx.deinit();
+    const io = testing.io;
+    const s = &fx.sys;
+    const base =
+        \\root:x:0:0:root:/root:/bin/bash
+        \\gdm:x:21:21:GNOME Display Manager:/var/lib/gdm:/bin/false
+        \\ann:x:1000:1000:Ann:/home/ann:/bin/bash
+        \\nobody:x:65534:65534:Unprivileged User:/dev/null:/bin/false
+        \\
+    ;
+    try s.root.writeFile(io, .{ .sub_path = "etc/passwd", .data = base });
+    const point = try s.rollbackPoint("before: dave install hello");
+    try testing.expectEqual(@as(usize, 0), (try s.accountsMissingIn(point)).len);
+
+    // A person and a system account are added after the snapshot; `an` must
+    // not be taken for `ann`.
+    try s.root.writeFile(io, .{ .sub_path = "etc/passwd", .data = base ++
+        "colord:x:71:71::/var/lib/colord:/bin/false\nbob:x:1001:1001::/home/bob:/bin/bash\nan:x:1002:1002::/home/an:/bin/bash\n" });
+    const missing = try s.accountsMissingIn(point);
+    try testing.expectEqual(@as(usize, 2), missing.len);
+    try testing.expectEqualStrings("bob", missing[0]);
+    try testing.expectEqualStrings("an", missing[1]);
+    // A deployment that cannot be read is no reason to refuse a rollback.
+    try testing.expectEqual(@as(usize, 0), (try s.accountsMissingIn(99)).len);
 }
 
 test "garbage collection keeps what matters and removes the rest" {

@@ -21,6 +21,7 @@ const Io = std.Io;
 const Allocator = std.mem.Allocator;
 const archive = @import("archive.zig");
 const db = @import("db.zig");
+const Version = @import("solver/version.zig").Version;
 
 pub const entries_dir = "loader/entries";
 pub const kernels_dir = "joe/kernels";
@@ -233,6 +234,61 @@ pub fn pruneKernels(arena: Allocator, io: Io, esp: Io.Dir, entries: []const Entr
     for (doomed.items) |name| try dir.deleteFile(io, name);
 }
 
+/// Where a root keeps the systemd-boot it ships.
+pub const loader_source = "usr/lib/systemd/boot/efi/systemd-bootx64.efi";
+/// Where the firmware finds it: the loader's own path and the removable-media
+/// fallback path, both written when the image was made.
+pub const loader_targets = [_][]const u8{ "EFI/systemd/systemd-bootx64.efi", "EFI/BOOT/BOOTX64.EFI" };
+
+/// The version a systemd-boot image states about itself ("262.1").
+fn loaderVersion(image: []const u8) ?[]const u8 {
+    const marker = "#### LoaderInfo: systemd-boot ";
+    const at = std.mem.indexOf(u8, image, marker) orelse return null;
+    const rest = image[at + marker.len ..];
+    return rest[0 .. std.mem.indexOf(u8, rest, " ####") orelse return null];
+}
+
+fn newerLoader(new: []const u8, old: []const u8) bool {
+    // Distributions append their own release ("262.1-1-arch").
+    const upstream = struct {
+        fn part(v: []const u8) []const u8 {
+            return v[0 .. std.mem.indexOfAny(u8, v, "-~") orelse v.len];
+        }
+    };
+    const a = Version.parse(upstream.part(new)) catch return false;
+    const b = Version.parse(upstream.part(old)) catch return false;
+    return a.order(b) == .gt;
+}
+
+/// Replaces systemd-boot on the ESP with the one `root` ships, if that one is
+/// newer; returns whether anything was replaced. The rules are those of
+/// `bootctl update`: the loader is shared by every deployment, so it only
+/// ever moves forward, and a file that is not systemd-boot is left alone.
+/// Each copy appears under its final name only once complete.
+pub fn updateLoader(arena: Allocator, io: Io, esp: Io.Dir, root: Io.Dir) !bool {
+    const limit: Io.Limit = .limited(64 * 1024 * 1024);
+    const new = root.readFileAlloc(io, loader_source, arena, limit) catch |err| switch (err) {
+        error.FileNotFound => return false,
+        else => return err,
+    };
+    const new_version = loaderVersion(new) orelse return false;
+    var replaced = false;
+    for (loader_targets) |target| {
+        const old = esp.readFileAlloc(io, target, arena, limit) catch continue;
+        if (!newerLoader(new_version, loaderVersion(old) orelse continue)) continue;
+        const tmp = try std.fmt.allocPrint(arena, "{s}.tmp", .{target});
+        try esp.writeFile(io, .{ .sub_path = tmp, .data = new });
+        {
+            var f = try esp.openFile(io, tmp, .{});
+            defer f.close(io);
+            f.sync(io) catch {};
+        }
+        try esp.rename(tmp, esp, target, io);
+        replaced = true;
+    }
+    return replaced;
+}
+
 /// Rewrites kernel options for another deployment: only the subvolume changes.
 pub fn optionsFor(arena: Allocator, options: []const u8, id: u32) ![]const u8 {
     const marker = "subvol=joe/deploy/";
@@ -338,6 +394,47 @@ test "kernels are stored by content and pruned when unreferenced" {
     try pruneKernels(arena, io, esp, try list(arena, io, esp), &.{});
     _ = try esp.statFile(io, a[1..], .{});
     try testing.expectError(error.FileNotFound, esp.statFile(io, b[1..], .{}));
+}
+
+test "the boot loader on the ESP only moves forward" {
+    const io = testing.io;
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var tmp = testing.tmpDir(.{ .iterate = true });
+    defer tmp.cleanup();
+    try tmp.dir.createDirPath(io, "esp/EFI/systemd");
+    try tmp.dir.createDirPath(io, "esp/EFI/BOOT");
+    try tmp.dir.createDirPath(io, "root/usr/lib/systemd/boot/efi");
+    var esp = try tmp.dir.openDir(io, "esp", .{ .iterate = true });
+    defer esp.close(io);
+    var root = try tmp.dir.openDir(io, "root", .{ .iterate = true });
+    defer root.close(io);
+    const read = struct {
+        fn file(a: Allocator, dir: Io.Dir, path: []const u8) ![]const u8 {
+            return dir.readFileAlloc(testing.io, path, a, .limited(1 << 20));
+        }
+    }.file;
+
+    const v262 = "MZ #### LoaderInfo: systemd-boot 262.1-1-arch #### old";
+    const v263 = "MZ #### LoaderInfo: systemd-boot 263 #### new";
+    try esp.writeFile(io, .{ .sub_path = loader_targets[0], .data = v262 });
+    // The fallback path holds some other system's loader: not ours to replace.
+    try esp.writeFile(io, .{ .sub_path = loader_targets[1], .data = "MZ grub" });
+
+    // A root that ships no loader, the same one, or an older one changes nothing.
+    try testing.expect(!try updateLoader(arena, io, esp, root));
+    try root.writeFile(io, .{ .sub_path = loader_source, .data = "MZ #### LoaderInfo: systemd-boot 262.1 ####" });
+    try testing.expect(!try updateLoader(arena, io, esp, root));
+    try root.writeFile(io, .{ .sub_path = loader_source, .data = "MZ #### LoaderInfo: systemd-boot 261.4 ####" });
+    try testing.expect(!try updateLoader(arena, io, esp, root));
+    try testing.expectEqualStrings(v262, try read(arena, esp, loader_targets[0]));
+
+    try root.writeFile(io, .{ .sub_path = loader_source, .data = v263 });
+    try testing.expect(try updateLoader(arena, io, esp, root));
+    try testing.expectEqualStrings(v263, try read(arena, esp, loader_targets[0]));
+    try testing.expectEqualStrings("MZ grub", try read(arena, esp, loader_targets[1]));
+    try testing.expectError(error.FileNotFound, esp.statFile(io, loader_targets[0] ++ ".tmp", .{}));
 }
 
 test "command line helpers" {

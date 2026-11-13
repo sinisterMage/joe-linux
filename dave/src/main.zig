@@ -677,6 +677,12 @@ const App = struct {
             return app.fail("cannot roll back: {t}", .{e});
         };
         try app.say("Deployment {d} will start on the next boot, and on every boot after it.", .{target});
+        const missing = sys.accountsMissingIn(target) catch &.{};
+        if (missing.len > 0) {
+            const names = try std.mem.join(app.arena, ", ", missing);
+            try app.say("Warning: deployment {d} was made before these accounts were created: {s}.", .{ target, names });
+            try app.say("Their files under /home are kept, but they cannot log in there until the accounts are created again.", .{});
+        }
         try app.say("Reboot to return to it.", .{});
     }
 

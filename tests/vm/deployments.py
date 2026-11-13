@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """End-to-end test of dave's deployments in a real VM: upgrade, late edits,
-rollback, live install, power loss, and unattended recovery from a broken
-upgrade.
+boot loader update, rollback, live install, power loss, and unattended
+recovery from a broken upgrade.
 
     deployments.py            on the scaffold (host kernel, borrowed userspace)
     deployments.py --joe      on an image built entirely from joe's own packages
@@ -35,6 +35,10 @@ def expect_running(vm, deployment):
     assert f"Running deployment {deployment}." in vm.run("dave status")
 
 
+def digest(vm, path):
+    return vm.run(f"sha256sum < {path}").split()[0]
+
+
 def wait_blessed(vm, deployment):
     for _ in range(60):
         if f"joe-{deployment}.conf" in entries(vm):
@@ -62,6 +66,9 @@ def publish_v1(repo):
 
 
 BASE_PORT = 8643
+# systemd-boot as the system ships it, and its two copies on the ESP.
+LOADER = "/usr/lib/systemd/boot/efi/systemd-bootx64.efi"
+LOADER_COPIES = ("/efi/EFI/systemd/systemd-bootx64.efi", "/efi/EFI/BOOT/BOOTX64.EFI")
 
 
 def main():
@@ -125,6 +132,13 @@ def scenarios(vm, repo):
 
     step("upgrade: applied at shutdown, including changes made after it was prepared")
     vm.run("echo made-after-upgrade > /etc/late-edit")
+    # Make the boot loader on the ESP an older release than the one the system
+    # ships, as it would be after an upgrade of systemd: the version it states
+    # about itself is rewritten in place. It is replaced before it ever runs.
+    for copy in LOADER_COPIES:
+        vm.run(f"LC_ALL=C sed -i 's/\\(#### LoaderInfo: systemd-boot \\)[0-9][0-9][0-9]/\\1100/' {copy}")
+        assert digest(vm, copy) != digest(vm, LOADER)
+    vm.run("sync")
     reboot_into_upgrade(vm, 2)
     expect_running(vm, 2)
     assert vm.run("hello").strip() == "hello v2"
@@ -132,11 +146,21 @@ def scenarios(vm, repo):
     assert vm.run("cat /etc/late-edit").strip() == "made-after-upgrade"
     assert "Everything is up to date." in vm.run("dave upgrade", timeout=300)
 
+    step("upgrade: the newer boot loader reached the ESP, and has just booted this system")
+    for copy in LOADER_COPIES:
+        assert digest(vm, copy) == digest(vm, LOADER), f"{copy} was not updated"
+
     step("rollback: returns to the previous system and stays there")
-    assert "Deployment 1 will start on the next boot" in vm.run("dave rollback")
+    # Someone given an account since the upgrade does not exist in the system
+    # being returned to: /etc belongs to the deployment.
+    vm.run("useradd -u 1234 late")
+    out = vm.run("dave rollback")
+    assert "Deployment 1 will start on the next boot" in out, out
+    assert "deployment 1 was made before these accounts were created: late." in out, out
     vm.reboot()
     expect_running(vm, 1)
     assert vm.run("hello").strip() == "hello v1"
+    assert vm.run("id late >/dev/null 2>&1; echo $?").strip() == "1"
     vm.reboot()
     expect_running(vm, 1)
 
