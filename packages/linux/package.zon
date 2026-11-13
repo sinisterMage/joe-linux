@@ -1,7 +1,7 @@
 .{
     .name = "linux",
     .version = "7.3.1",
-    .release = 5,
+    .release = 6,
     .description = "The Linux kernel and its modules",
     .license = "GPL-2.0-only",
     .sources = .{

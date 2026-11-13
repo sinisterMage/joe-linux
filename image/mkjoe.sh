@@ -65,13 +65,15 @@ packages=("$@")
 write_repos dir
 if [[ $test_image -eq 1 ]]; then
     # systemd-sysusers, run as a trigger, takes passwords for the accounts it
-    # creates from credentials.
-    credentials=$(mktemp -d)
-    printf joe > "$credentials/passwd.plaintext-password.joe"
+    # creates from credentials. Triggers run inside the new root, so that is
+    # where the directory has to be, and how its path has to be given.
+    credentials=/run/mkjoe-credentials
+    mkdir -p "$rootfs$credentials"
+    printf joe > "$rootfs$credentials/passwd.plaintext-password.joe"
     export CREDENTIALS_DIRECTORY=$credentials
 fi
 "$dave" --root "$rootfs" install "${packages[@]}"
-[[ -z ${credentials:-} ]] || rm -rf "$credentials"
+[[ -z ${credentials:-} ]] || rm -rf "${rootfs:?}$credentials"
 [[ -z $overlay ]] || cp -a --no-preserve=ownership "$overlay/." "$rootfs/"
 write_repos url
 rm -rf "$rootfs/var/cache/dave"

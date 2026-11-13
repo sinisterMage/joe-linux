@@ -6,7 +6,8 @@ DAVE := dave/zig-out/bin/dave
 
 .PHONY: help dave test test-cli scaffold test-boot-contract test-deployments \
         bootstrap packages image run test-joe test-security \
-        desktop-image run-desktop test-desktop clean
+        desktop-image run-desktop test-desktop \
+        release-image test-release vm run-vm serve-repo clean
 
 help:
 	@echo "dave"
@@ -29,6 +30,13 @@ help:
 	@echo "  make desktop-image        bootable GNOME image at build/images/joe-desktop.img"
 	@echo "  make run-desktop          boot it in a QEMU window (user joe, password joe)"
 	@echo "  make test-desktop         session and applications, with and without enforcement"
+	@echo ""
+	@echo "a machine to keep (see README.md, 'Living in it')"
+	@echo "  make release-image        the desktop without the test accounts: build/images/joe-release.img"
+	@echo "  make test-release         its first boot: disk growth, first-run setup, sound, shared folder"
+	@echo "  make vm                   a virtual machine with its own 64G disk in build/vm, made from that image"
+	@echo "  make run-vm               boot it; what you do in it stays (VM_ARGS='--share DIR' passes options)"
+	@echo "  make serve-repo           offer build/repo to that machine, for 'dave upgrade'"
 
 $(DAVE): $(wildcard dave/src/*.zig dave/src/solver/*.zig) dave/build.zig
 	cd dave && zig build -Doptimize=ReleaseSafe
@@ -96,7 +104,7 @@ test-joe: build/host-tools/bin/mcopy $(DAVE)
 test-security: build/host-tools/bin/mcopy $(DAVE)
 	python3 tests/vm/security.py
 
-# Like `image`, a demonstration image: it has a ready-made user (joe, password
+# Like `image`, a test image: it has a ready-made user (joe, password
 # joe) who is logged in automatically.
 desktop-image: build/host-tools/bin/mcopy
 	mkdir -p build/images build/joe/desktop-overlay/etc/gdm
@@ -110,6 +118,33 @@ run-desktop:
 
 test-desktop: build/host-tools/bin/mcopy $(DAVE)
 	python3 tests/vm/desktop.py
+
+# What a person would install: no test console, no ready-made account, root
+# locked. The first boot asks who you are (gnome-initial-setup).
+release-image: build/host-tools/bin/mcopy
+	mkdir -p build/images
+	image/mkjoe.sh --root-size 16G \
+	    --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/keys/joe.pub \
+	    build/images/joe-release.img joe-desktop
+
+test-release: build/host-tools/bin/mcopy $(DAVE)
+	python3 tests/vm/release.py
+
+# A machine that keeps its disk between runs. `make vm` never replaces an
+# existing one; delete build/vm to start again from the release image.
+vm:
+	@[ -e build/vm/disk.img ] || [ -e build/images/joe-release.img ] || $(MAKE) release-image
+	image/run.sh --persist build/vm --create
+
+run-vm:
+	image/run.sh --persist build/vm $(VM_ARGS)
+
+# The image's repository is http://10.0.2.2:8643, which is this machine as a
+# QEMU guest sees it. After building newer packages, `dave upgrade` in the
+# guest finds them here.
+serve-repo:
+	@echo "serving build/repo on port 8643 (Ctrl-C to stop)"
+	python3 -m http.server 8643 --bind 127.0.0.1 --directory build/repo
 
 clean:
 	rm -rf dave/.zig-cache dave/zig-out build/cli-test build/work

@@ -8,10 +8,12 @@ prepare() {
     make x86_64_defconfig
     scripts/kconfig/merge_config.sh -m .config /recipe/joe.config
     make olddefconfig
-    # Fail now, not at boot, if an option the boot path depends on was dropped.
+    # Fail now, not at boot, if an option the boot path depends on was
+    # dropped, or one whose absence shows only as a silent or flat desktop.
     local opt
     for opt in EFI_STUB BTRFS_FS VIRTIO_BLK BLK_DEV_NVME SATA_AHCI VFAT_FS EFIVAR_FS DEVTMPFS_MOUNT AUTOFS_FS \
-        SECURITY_JOE FS_VERITY CRYPTO_ECDSA; do
+        SECURITY_JOE FS_VERITY CRYPTO_ECDSA \
+        DRM_VIRTIO_GPU SND_HDA_INTEL SND_HDA_GENERIC SND_VIRTIO VIRTIO_FS; do
         grep -q "^CONFIG_$opt=y" .config || { echo "CONFIG_$opt is not built in" >&2; return 1; }
     done
 }

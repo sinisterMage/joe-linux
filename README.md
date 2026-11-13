@@ -21,13 +21,20 @@ The idea of snapshot-based upgrades without immutability comes from
 
 joe Linux builds from source into two systems that boot in a virtual machine:
 
-- a **console system** of about 70 packages, whose upgrade, rollback and
-  recovery behaviour is exercised end to end by `make test-joe`;
-- a **GNOME desktop** of about 320 packages: GDM, GNOME Shell on Wayland,
-  Terminal, Files, Text Editor and Settings, checked by `make test-desktop`
+- a **console system** of about 65 packages, with sudo, an editor, the
+  manual and ssh, whose upgrade, rollback and recovery behaviour is exercised
+  end to end by `make test-joe`;
+- a **GNOME desktop** of about 325 packages: GDM, GNOME Shell on Wayland,
+  Firefox, Files, Terminal, Text Editor, Settings and the usual small
+  applications (documents, images, video, music, archives, disks, maps,
+  weather, clocks, calculator), with fonts for most scripts, spell checking
+  and the common media codecs. `make test-desktop` starts every one of them,
   with the security module both logging and enforcing.
 
-It is not ready to install on a real computer; see [Not done yet](#not-done-yet).
+The desktop can be lived in as a virtual machine that keeps its disk: the
+first boot asks who you are, and upgrades come from the build machine. See
+[Living in it](#living-in-it). It is not ready to install on a real computer;
+see [Not done yet](#not-done-yet).
 
 ## How it behaves
 
@@ -40,7 +47,9 @@ dave upgrade          Works out and downloads the upgrade and proves it applies
                       see. The upgrade is applied when the machine shuts down.
 
 dave rollback         The previous system starts on the next boot, and on every
-                      boot after it.
+                      boot after it. Says so if someone has been given an
+                      account since that system was made: accounts live in
+                      /etc, which belongs to each system.
 
 dave status           What is running, what will start next, what is pending.
 ```
@@ -68,7 +77,10 @@ snapshot carries the database that describes exactly its own contents.
 applies the plan to the snapshot. Anything changed between `dave upgrade` and
 the reboot is therefore in the new system; there is no merge step. The boot
 entry for the new deployment is written last, so a power cut at any earlier
-point boots the old system with the upgrade still pending.
+point boots the old system with the upgrade still pending. A newer
+systemd-boot in the upgraded system replaces the one on the EFI system
+partition at the same moment, and only ever a newer one, because every
+deployment is started by the same loader.
 
 **The boot loader keeps the health record.** Each deployment has one
 systemd-boot entry. Entries are ordered by a priority that is bumped whenever a
@@ -151,15 +163,50 @@ make test-security         the security module's three rules
 ```
 make desktop-image         a GNOME image, build/images/joe-desktop.img
 make run-desktop           boot it in a QEMU window (user joe, password joe)
-make test-desktop          session and applications, logging and enforcing
+make test-desktop          session, every application, a web page; logging and enforcing
 ```
 
-Building the desktop packages takes several hours the first time; LLVM, Rust
-and SpiderMonkey are the long ones.
+Building the desktop packages takes several hours the first time; LLVM, Rust,
+Firefox, Node.js and SpiderMonkey are the long ones.
 
-These are demonstration images: root is logged in on the serial console
-without a password, and the desktop image has a ready-made user. There is no
-installer yet that could set accounts up properly.
+These are test images: root is logged in on the serial console without a
+password, and the desktop image has a ready-made user, because that is how
+the tests look inside. The release image below has neither.
+
+## Living in it
+
+```
+make release-image         the desktop as a person gets it, build/images/joe-release.img
+make test-release          its first boot: disk growth, first-run setup, sound, shared folder
+make vm                    a virtual machine with a 64G disk of its own, in build/vm
+make run-vm                boot it; what you do in it is still there next time
+make serve-repo            offer build/repo to that machine
+```
+
+The release image has no accounts and root has no password. On the first boot
+GDM starts GNOME's initial setup, which asks for a language, keyboard layout
+and time zone and creates your account. That account is an administrator (a
+member of `wheel`), so `sudo` works. The root file system grows to fill the
+disk it finds itself on.
+
+`make run-vm` uses the host's GPU for the guest's 3D when QEMU can (virgl),
+gives the guest a sound card, and takes options through `VM_ARGS`: `--share
+DIR` shares a host directory (`mount -t virtiofs host /mnt` in the guest),
+`--sound virtio`, `--no-gl`, `--memory`, `--cpus`. Delete `build/vm` to start
+again from the image.
+
+To change the system you are running, as its developer:
+
+```
+edit packages/NAME, bump .release in its package.zon
+bootstrap/build-packages.sh NAME      on the build machine
+make serve-repo                       leave it running
+
+sudo dave upgrade                     in the virtual machine
+reboot
+```
+
+`dave install NAME` in the machine takes a package from the same place.
 
 The bootstrap follows Linux From Scratch, and the desktop Beyond Linux From
 Scratch (systemd, development branches), with the same package versions. Recipes are described in [packages/README.md](packages/README.md).
@@ -191,15 +238,19 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   virtual machines and simple disks but not for encrypted or multi-device roots.
   Wireless is off. There is no installer; images are assembled on the build
   machine.
-- **Desktop gaps.** No web browser, printing, Bluetooth or mobile broadband;
-  Settings is built without those three panels. No first-run setup, so no way
-  to create your own user. No graphical front end to dave.
+- **Desktop gaps.** No printing, Bluetooth or mobile broadband; Settings is
+  built without those three panels. No graphical front end to dave. Only the
+  English (US) locale is built, so that is the one language the first-run
+  setup offers. No HEIF or AVIF images, no hardware video decoding, and no
+  office suite or mail client.
 - **Split packages.** A package is everything its upstream installs, so the
   base image carries the compiler because programs need its run-time libraries.
 - **Builds are not isolated from each other.** Every recipe builds in one
   shared build root. A fresh, minimal build root per package, chosen by the
-  solver, comes later. Five packages fetch Rust crates from the network while
-  building, and Rust itself starts from its upstream's prebuilt compiler.
+  solver, comes later. Seven packages fetch Rust crates from the network while
+  building, Rust itself starts from its upstream's prebuilt compiler, and the
+  TypeScript compiler (needed to build one application) is its upstream's
+  already-compiled release.
 - **Building dave inside joe.** dave is a static binary cross-built by Zig on
   the build machine, because joe does not package Zig yet.
 - HTTPS repositories, virtual packages (`provides`), and changing the kernel on

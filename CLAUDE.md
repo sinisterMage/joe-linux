@@ -18,6 +18,7 @@ README.md explains the design; `packages/README.md` is the recipe-writing refere
 - **Zig 0.17.1.** It uses `pub fn main(init: std.process.Init)` and the `std.Io` interface; older idioms do not compile. Check the std source (`zig env` gives the lib dir) rather than relying on memory. Known traps: a directory opened without `.iterate = true` is path-only and ioctls on it fail with EBADF; `Io.Dir.readFileAlloc` returns 0 bytes for some procfs files; std has zstd decompression only, which is why writing packages pipes through the `zstd` program.
 - `build/` must be on btrfs (reflink copies, subvolumes). All generated state lives there and is git-ignored.
 - The VM harness and `image/run.sh` hardcode Arch's OVMF paths (`/usr/share/edk2/x64/OVMF_*.4m.fd`).
+- **joe boots without an initramfs**, so the kernel mounts the root itself and, until udev has processed the partition, btrfs reports the root's device as `/dev/root`. Anything that needs the root's block device early in boot (systemd-repart, systemd-growfs) must run after udev; `packages/joe-base/build.sh` ships the drop-ins that arrange this.
 
 ## Commands
 
@@ -32,6 +33,8 @@ make image / make run      build/images/joe.img; boot it on this terminal (Ctrl-
 make test-joe              deployment scenarios on an image built from joe's own packages
 make test-security         the security module's three rules, in a VM
 make desktop-image / run-desktop / test-desktop     the GNOME image
+make release-image / test-release                   the desktop without test accounts; its first boot, in a VM
+make vm / run-vm / serve-repo                       a VM that keeps its disk (build/vm), and build/repo served to it
 ```
 
 A subset of unit tests (the filter matches test names and file paths such as `solver.version`):
@@ -52,12 +55,14 @@ This is resumable by file name: a package whose `NAME-VERSION-rRELEASE-x86_64.da
 
 Other tools: `bootstrap/order.py [NAME...]` prints the build order and reports missing recipes and cycles; `bootstrap/enter.sh [--net] CMD` runs a command inside the build root; `packages/.build/book.py [--blfs] PAGE` prints an LFS/BLFS page's commands for writing a recipe.
 
-VM tests are plain Python scripts (`python3 tests/vm/deployments.py [--joe]`, `security.py`, `desktop.py`). Each runs all of its scenarios in sequence on one VM; there is no per-scenario selector. `deployments.py` and `security.py` rebuild dave and their image on every run; `desktop.py` builds the desktop image unless given an image path as its argument. Everything the guest prints goes to `build/images/vm-<name>/console.log`, which is where to look after a failure. They serve repositories to the guest on host ports 8642 and 8643.
+VM tests are plain Python scripts (`python3 tests/vm/deployments.py [--joe]`, `security.py`, `desktop.py`, `release.py`). Each runs all of its scenarios in sequence on one VM; there is no per-scenario selector. `deployments.py` and `security.py` rebuild dave and their image on every run; `desktop.py` and `release.py` build their image unless given an image path as their argument. Everything the guest prints goes to `build/images/vm-<name>/console.log`, which is where to look after a failure. They serve repositories to the guest on host ports 8642 and 8643.
 
 ## Two tiers of test image
 
 - The **scaffold** (`image/mkscaffold*.sh`) is the host's kernel plus a stock Arch userspace with dave added. It exists so deployment mechanics can be tested in minutes without building the distribution. Nothing from it ships, and it has no security module.
 - The **joe image** (`image/mkjoe.sh`) is one `dave install` transaction of `joe-base` (or `joe-desktop`) into an empty directory, then `image/mkimage.sh`. It needs `make bootstrap` and `make packages` first, which take an hour or more (the desktop set several hours).
+
+- The **release image** (`make release-image`) is `joe-desktop` alone: no test console, no ready-made user, root locked. GDM starts gnome-initial-setup because no account exists. `tests/vm/release.py` boots the same package set plus `joe-test-console`, because the harness has no other way in.
 
 `--test` images add `joe-test-console`: root is logged in on ttyS0 with the prompt `joe# `, which `tests/vm/harness.py` depends on.
 
