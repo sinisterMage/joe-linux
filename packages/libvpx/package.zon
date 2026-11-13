@@ -1,0 +1,13 @@
+.{
+    .name = "libvpx",
+    .version = "1.17.0",
+    .release = 1,
+    .description = "VP8 and VP9 video codec library",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/webmproject/libvpx/archive/v1.17.0/libvpx-1.17.0.tar.gz", .sha256 = "1020f184046187baa2985dbde38e0691f49c44088bca7a1842b0236c6081dc0a" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    // configure looks for the assembler with which(1).
+    .build_depends = .{ "nasm", "which", "perl" },
+}

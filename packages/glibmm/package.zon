@@ -1,0 +1,14 @@
+.{
+    .name = "glibmm",
+    .version = "2.90.0",
+    .release = 1,
+    .description = "C++ bindings for GLib and GIO (glibmm-2.68 API)",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/glibmm/2.90/glibmm-2.90.0.tar.xz", .sha256 = "e2efa45643f16b9fea2d6299f2f403d672eaeacddf0ff7f8094e1af9b0f5980b" },
+    },
+    // perl and m4 run gmmproc, the code generator installed for the other
+    // *mm libraries; it is not used when building from release tarballs.
+    .depends = .{ "glibc", "gcc", "glib", "libsigcxx" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "perl" },
+}

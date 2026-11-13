@@ -1,0 +1,13 @@
+.{
+    .name = "typescript",
+    .version = "5.9.3",
+    .release = 1,
+    .description = "TypeScript compiler (tsc)",
+    .license = "Apache-2.0",
+    .sources = .{
+        // The npm package: the compiler as upstream publishes it, compiled
+        // to JavaScript. It has no dependencies besides node.
+        .{ .url = "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz", .sha256 = "10e108c9cf7d5f2879053dff18515fb405abf2ccef63eaaf017d9c571687a1d3" },
+    },
+    .depends = .{ "nodejs" },
+}

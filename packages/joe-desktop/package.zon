@@ -1,7 +1,7 @@
 .{
     .name = "joe-desktop",
     .version = "0.2",
-    .release = 1,
+    .release = 3,
     .description = "The joe Linux desktop: GNOME on Wayland",
     .license = "MIT",
     // Depends on joe-base, whose directory layout cannot be installed over
@@ -42,5 +42,48 @@
         "upower",
         "udisks",
         "colord",
+        // The first boot of a system nobody has an account on yet.
+        "gnome-initial-setup",
+        // Applications.
+        "firefox",
+        "loupe",
+        "evince",
+        "showtime",
+        "decibels",
+        "gnome-calculator",
+        "gnome-clocks",
+        "gnome-weather",
+        "gnome-maps",
+        "gnome-characters",
+        "gnome-font-viewer",
+        "gnome-disk-utility",
+        "baobab",
+        "file-roller",
+        "gnome-system-monitor",
+        // Trash, network places, removable media and archives in Files.
+        "gvfs",
+        // Decoders for the formats people actually have (H.264, AAC, MP3).
+        "gst-libav",
+        // Text: scripts the Adwaita fonts lack, metric-compatible stand-ins
+        // for the common office fonts, and a dictionary to check spelling
+        // against.
+        "noto-fonts",
+        "noto-fonts-cjk",
+        "noto-fonts-emoji",
+        "liberation-fonts",
+        "hunspell-en",
+        // Command-line tools. libarchive is named for its unzip.
+        "git",
+        "rsync",
+        "wget",
+        "zip",
+        "libarchive",
+        "gnupg",
+        "pinentry",
+        "htop",
+        "strace",
+        "lsof",
+        "pciutils",
+        "usbutils",
     },
 }

@@ -1,7 +1,7 @@
 .{
     .name = "joe-base",
     .version = "0.1",
-    .release = 2,
+    .release = 5,
     .description = "Everything a minimal joe Linux system consists of",
     .license = "MIT",
     .depends = .{
@@ -33,5 +33,20 @@
         "file",
         "diffutils",
         "btrfs-progs",
+        // What a person at a console expects to find: becoming root, an
+        // editor, the manual, a way in from another machine, and the tools
+        // for the other file systems a disk may carry.
+        "sudo",
+        "vim",
+        "nano",
+        "man-db",
+        "man-pages",
+        "bash-completion",
+        "openssh",
+        "psmisc",
+        "inetutils",
+        "dosfstools",
+        "e2fsprogs",
+        "make-ca",
     },
 }

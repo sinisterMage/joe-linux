@@ -1,0 +1,12 @@
+.{
+    .name = "noto-fonts-cjk",
+    .version = "2.004",
+    .release = 1,
+    .description = "Noto Sans CJK: Chinese, Japanese and Korean fonts",
+    .license = "OFL-1.1",
+    .sources = .{
+        .{ .url = "https://github.com/notofonts/noto-cjk/raw/Sans2.004/Sans/Variable/OTC/NotoSansCJK-VF.otf.ttc", .file = "NotoSansCJK-VF-2.004.otf.ttc", .sha256 = "d3d8256cdec8dbcb3552284bc6b20c734dd60c2ee9df83b5758e34807c4bac32" },
+    },
+    // The configuration file is read by fontconfig.
+    .depends = .{ "fontconfig" },
+}

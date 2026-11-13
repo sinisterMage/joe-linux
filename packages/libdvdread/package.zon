@@ -1,0 +1,12 @@
+.{
+    .name = "libdvdread",
+    .version = "7.1.1",
+    .release = 1,
+    .description = "Library for reading DVD-Video file systems and IFO files",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://get.videolan.org/libdvdread/7.1.1/libdvdread-7.1.1.tar.xz", .sha256 = "a0d47876548bec806774bbf8dbf20bb19ba139464383156b32eb8e59915b90a9" },
+    },
+    .depends = .{ "glibc" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

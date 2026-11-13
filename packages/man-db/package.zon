@@ -1,0 +1,12 @@
+.{
+    .name = "man-db",
+    .version = "2.13.1",
+    .release = 1,
+    .description = "Programs for finding and viewing manual pages: man, apropos, whatis, mandb",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.savannah.gnu.org/releases/man-db/man-db-2.13.1.tar.xz", .sha256 = "8afebb6f7eb6bb8542929458841f5c7e6f240e30c86358c1fbcefbea076c87d9" },
+    },
+    .depends = .{ "glibc", "libpipeline", "gdbm", "zlib", "libseccomp", "groff", "less" },
+    .build_depends = .{ "pkgconf", "gettext" },
+}

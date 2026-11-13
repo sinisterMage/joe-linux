@@ -1,0 +1,24 @@
+build() {
+    mkdir build
+    cd build
+    # The book lists OpenLDAP as required, but configure only needs it for
+    # LDAP keyservers and X.509 directory lookups in dirmngr; joe has no
+    # OpenLDAP, so that is switched off. Keyservers over hkps and https use
+    # GnuTLS (NTBTLS is not packaged). The smart card daemon talks to readers
+    # directly through libusb. tpm2d would need tpm2-tss.
+    ../configure --prefix=/usr \
+        --localstatedir=/var \
+        --sysconfdir=/etc \
+        --enable-gnutls \
+        --enable-sqlite \
+        --enable-ccid-driver \
+        --disable-ntbtls \
+        --disable-ldap \
+        --disable-tpm2d
+    make
+}
+
+package() {
+    cd build
+    make DESTDIR="$DESTDIR" install
+}

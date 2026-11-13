@@ -1,0 +1,14 @@
+.{
+    .name = "nodejs",
+    .version = "26.13.1",
+    .release = 1,
+    .description = "JavaScript runtime built on the V8 engine, with the npm package manager",
+    .license = "MIT AND Apache-2.0 AND BSD-3-Clause AND ISC AND Artistic-2.0",
+    .sources = .{
+        .{ .url = "https://nodejs.org/dist/v26.13.1/node-v26.13.1.tar.xz", .sha256 = "a7f6204ff63b6a2cd274d48903285abb86ed53a99070e532d4c2fd787457d9e6" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/node-v26.13.1-icu4c-79_fix-1.patch", .sha256 = "d4bc01174e92f2649bc63895f1d50c89a8a2d87c4e0a530eff8ce7e785c089bf" },
+    },
+    // Everything the book builds node against instead of its bundled copy.
+    .depends = .{ "glibc", "gcc", "brotli", "c-ares", "icu", "libuv", "nghttp2", "openssl", "simdutf", "zlib" },
+    .build_depends = .{ "python", "which", "pkgconf", "make" },
+}

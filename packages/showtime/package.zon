@@ -1,0 +1,17 @@
+.{
+    .name = "showtime",
+    .version = "49.1",
+    .release = 1,
+    .description = "GNOME Video Player",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/showtime/49/showtime-49.1.tar.xz", .sha256 = "8aefbb0e2009c7a1cd44ab801b06ca375f7e9683f029a052eb86fb433a785393" },
+    },
+    // A Python program: everything is used through introspection at run
+    // time. gst-plugins-bad has GstPlay; gst-plugin-gtk4 has
+    // gtk4paintablesink, without which the window stays empty;
+    // gst-plugins-base has glsinkbin and playbin; gst-plugins-good has the
+    // common demuxers and the audio sinks.
+    .depends = .{ "python", "pygobject", "glib", "gtk4", "libadwaita", "gstreamer", "gst-plugins-base", "gst-plugins-good", "gst-plugins-bad", "gst-plugin-gtk4" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "blueprint-compiler", "appstream" },
+}

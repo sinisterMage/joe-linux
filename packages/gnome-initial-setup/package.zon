@@ -1,0 +1,48 @@
+.{
+    .name = "gnome-initial-setup",
+    .version = "51.1",
+    .release = 2,
+    .description = "First-boot setup: language, keyboard, network, time zone and the first user account",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-initial-setup/51/gnome-initial-setup-51.1.tar.xz", .sha256 = "5883085d341b2ecff6e01cc7cb1ad42f2f3d2cff4c43144b47542c806fd6e682" },
+    },
+    // Linked: glib .. ibus (libsecret only has to be there to configure).
+    // Used at run time, by name: gdm starts the
+    // session (and owns the user it runs as), gnome-session and gnome-shell
+    // are the session, dconf reads the profile, tecla shows keyboard
+    // layouts, and systemd's localed and timedated and shadow's useradd
+    // (through accountsservice) apply the answers.
+    .depends = .{
+        "glibc",
+        "glib",
+        "gtk4",
+        "libadwaita",
+        "pango",
+        "harfbuzz",
+        "gdk-pixbuf",
+        "fontconfig",
+        "json-glib",
+        "networkmanager",
+        "libnma",
+        "polkit",
+        "accountsservice",
+        "gdm",
+        "gnome-desktop",
+        "gsettings-desktop-schemas",
+        "geoclue",
+        "geocode-glib",
+        "libgweather",
+        "krb5",
+        "libsecret",
+        "libpwquality",
+        "ibus",
+        "gnome-session",
+        "gnome-shell",
+        "dconf",
+        "tecla",
+        "systemd",
+        "shadow",
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

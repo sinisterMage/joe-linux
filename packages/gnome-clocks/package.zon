@@ -1,0 +1,17 @@
+.{
+    .name = "gnome-clocks",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME Clocks: world clocks, alarms, a stopwatch and timers",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-clocks/51/gnome-clocks-51.0.tar.xz", .sha256 = "4bdf9c0481a83037da1d0fa26d2c2c6a80cb736458fd18fde14acaf7924874c6" },
+    },
+    // gst-plugins-base: the alarm sounds are Ogg Vorbis, played through
+    // GTK's GStreamer media backend.
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "libgweather", "geocode-glib", "gnome-desktop", "geoclue", "icu", "cairo", "pango", "graphene", "gstreamer", "gst-plugins-base" },
+    // vorbis-tools: oggenc encodes the alarm sounds, which the tarball
+    // carries as FLAC. itstool translates the help pages; appstream provides
+    // the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "vala", "vorbis-tools", "itstool", "appstream" },
+}

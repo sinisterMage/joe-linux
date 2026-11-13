@@ -33,6 +33,14 @@ package() {
     cd build
     DESTDIR="$DESTDIR" ninja install
 
+    # The book's PAM file for the sessions gdm starts itself admits members
+    # of the gdm group only, because the book has no first-run setup. That
+    # session runs as a user whose group is gnome-initial-setup (see the
+    # gnome-initial-setup recipe); upstream's own files name both groups.
+    sed -i 's/user ingroup gdm$/user ingroup gdm:gnome-initial-setup/' \
+        "$DESTDIR/usr/lib/pam.d/gdm-launch-environment"
+    [[ $(grep -c 'ingroup gdm:gnome-initial-setup$' "$DESTDIR/usr/lib/pam.d/gdm-launch-environment") -eq 3 ]]
+
     # The book's "groupadd -g 21 gdm". There is no gdm user any more: the
     # greeter's users are dynamic and only need this group to exist.
     install -d "$DESTDIR/usr/lib/sysusers.d" "$DESTDIR/usr/lib/tmpfiles.d"

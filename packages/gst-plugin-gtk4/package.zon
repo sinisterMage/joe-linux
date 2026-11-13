@@ -1,0 +1,17 @@
+.{
+    .name = "gst-plugin-gtk4",
+    .version = "0.15.2",
+    .release = 1,
+    .description = "GStreamer video sink that renders into a GTK 4 paintable (from gst-plugins-rs)",
+    .license = "MPL-2.0",
+    .sources = .{
+        // The gtk4 plugin alone, as gst-plugins-rs publishes it on crates.io;
+        // the archive carries its own Cargo.lock.
+        .{ .url = "https://static.crates.io/crates/gst-plugin-gtk4/gst-plugin-gtk4-0.15.2.crate", .sha256 = "9d22a27972c25e706b428e78356458446314c70eb31aef07d4a32b843a6dea94" },
+    },
+    // cargo downloads the crates the plugin depends on from crates.io.
+    .network = true,
+    // gst-plugins-base: libgstvideo, libgstgl, libgstallocators.
+    .depends = .{ "glibc", "gcc", "glib", "gstreamer", "gst-plugins-base", "gtk4", "cairo", "pango", "gdk-pixbuf", "graphene" },
+    .build_depends = .{ "rust", "cargo-c", "pkgconf" },
+}

@@ -31,4 +31,28 @@ Kind=!*
 [Link]
 Unmanaged=yes
 EOT
+
+    # Default applications. GNOME's own list (gnome-mimeapps.list, from
+    # gnome-session) names its browser and document viewer, which are not
+    # what is installed; entries for programs that do not exist are skipped
+    # and this list is consulted next.
+    install -d "$DESTDIR/usr/share/applications"
+    {
+        echo '[Default Applications]'
+        local type
+        for type in text/html application/xhtml+xml x-scheme-handler/http x-scheme-handler/https; do
+            echo "$type=firefox.desktop"
+        done
+        for type in application/pdf application/x-bzpdf application/x-gzpdf application/x-xzpdf application/x-ext-pdf; do
+            echo "$type=org.gnome.Evince.desktop"
+        done
+    } > "$DESTDIR/usr/share/applications/mimeapps.list"
+
+    # What is pinned to the dash for a new account. GNOME's default names
+    # mostly applications that are not installed.
+    install -d "$DESTDIR/usr/share/glib-2.0/schemas"
+    cat > "$DESTDIR/usr/share/glib-2.0/schemas/20_joe-desktop.gschema.override" <<'EOT'
+[org.gnome.shell]
+favorite-apps=['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.TextEditor.desktop', 'org.gnome.Calculator.desktop']
+EOT
 }

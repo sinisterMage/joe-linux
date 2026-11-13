@@ -1,0 +1,11 @@
+.{
+    .name = "inetutils",
+    .version = "2.8",
+    .release = 2,
+    .description = "Basic networking programs: ping, traceroute, telnet, ftp, tftp, talk, ifconfig, dnsdomainname",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://ftpmirror.gnu.org/inetutils/inetutils-2.8.tar.gz", .sha256 = "57b3cf4f77555992881e5ba2a09a63b05aa2c56342a60ed4305b5f45938390b5" },
+    },
+    .depends = .{ "glibc", "ncurses", "readline", "libxcrypt" },
+}

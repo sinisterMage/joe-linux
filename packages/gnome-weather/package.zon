@@ -1,0 +1,15 @@
+.{
+    .name = "gnome-weather",
+    .version = "48.0",
+    .release = 1,
+    .description = "GNOME Weather",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-weather/48/gnome-weather-48.0.tar.xz", .sha256 = "4c0569b3d815ae2f9416d47134cbd3056340640ff186d31a94c865813b4bdbb5" },
+    },
+    // A gjs program: the libraries are used through introspection at run
+    // time (GWeather, Geoclue, Adw, Gtk).
+    .depends = .{ "gjs", "glib", "gtk4", "libadwaita", "libgweather", "geoclue" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

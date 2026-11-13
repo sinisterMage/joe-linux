@@ -1,0 +1,22 @@
+.{
+    .name = "loupe",
+    .version = "51.2",
+    .release = 1,
+    .description = "GNOME Image Viewer",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/loupe/51/loupe-51.2.tar.xz", .sha256 = "64ae1f9b381227eada39cb659edf29656ff7e42348823391678fcc01cdac01b8" },
+    },
+    // cargo downloads the crates loupe depends on from crates.io; the
+    // tarball does not vendor them.
+    .network = true,
+    // glycin is used through its Rust crate, which is compiled in; the
+    // package supplies the sandboxed loaders that crate starts, and
+    // libseccomp and fontconfig are linked for it. Little CMS, which the
+    // book lists, is not linked by this version (no lcms crate in
+    // Cargo.lock).
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "libgweather", "libseccomp", "fontconfig", "glycin", "cairo", "pango", "gdk-pixbuf", "graphene" },
+    // itstool translates the help pages; appstream provides the gettext
+    // rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "itstool", "appstream" },
+}

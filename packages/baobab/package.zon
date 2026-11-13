@@ -1,0 +1,12 @@
+.{
+    .name = "baobab",
+    .version = "50.0",
+    .release = 1,
+    .description = "GNOME Disk Usage Analyzer",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/baobab/50/baobab-50.0.tar.xz", .sha256 = "573c84f15f5f963a440500f6f43412c928ac2335f6b69dcb58f1a1fe5201024b" },
+    },
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "cairo", "pango", "graphene", "adwaita-icon-theme" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "vala", "desktop-file-utils", "appstream" },
+}

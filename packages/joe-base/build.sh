@@ -25,4 +25,31 @@ d /var/tmp 1777 root root 30d
 L /var/run - - - - ../run
 L /var/lock - - - - ../run/lock
 EOT
+
+    # A disk larger than the image that was written to it (a bigger virtual
+    # disk, later a real one): systemd-repart extends the root partition over
+    # the free space at each boot, and the file system then follows it.
+    # Nothing happens when there is no free space.
+    install -d "$DESTDIR/usr/lib/repart.d" "$DESTDIR/usr/lib/systemd/system/local-fs.target.wants"
+    cat > "$DESTDIR/usr/lib/repart.d/50-root.conf" <<'EOT'
+[Partition]
+Type=root
+EOT
+    ln -s ../systemd-growfs-root.service \
+        "$DESTDIR/usr/lib/systemd/system/local-fs.target.wants/systemd-growfs-root.service"
+
+    # joe boots without an initramfs, so the kernel mounts the root itself,
+    # and until udev has seen the partition btrfs names the device /dev/root,
+    # which nothing can open. Both units must wait for udev or they fail.
+    local unit
+    for unit in systemd-repart systemd-growfs-root; do
+        install -d "$DESTDIR/usr/lib/systemd/system/$unit.service.d"
+        cat > "$DESTDIR/usr/lib/systemd/system/$unit.service.d/10-joe-root-device.conf" <<'EOT'
+[Unit]
+After=systemd-udevd.service systemd-udev-trigger.service
+
+[Service]
+ExecStartPre=-/usr/bin/udevadm settle --timeout=30
+EOT
+    done
 }

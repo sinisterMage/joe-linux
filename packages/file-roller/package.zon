@@ -1,0 +1,20 @@
+.{
+    .name = "file-roller",
+    .version = "44.7",
+    .release = 2,
+    .description = "GNOME Archive Manager",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/file-roller/44/file-roller-44.7.tar.xz", .sha256 = "67cada96a2409c859f378e82fbe868b0e9c00a69e6b7b885d542c64ea2a1297d" },
+    },
+    // libarchive handles tar archives, cpio and ISO images in-process. 7zip
+    // is run for zip, 7z, rar and cab, which File Roller prefers over
+    // libarchive when it is installed: it is what reads and writes
+    // password-protected archives. It is required here because the fallback
+    // for zip does not work: File Roller takes any `unzip` for Info-ZIP's
+    // and lists with `unzip -ZTs`, but ours is libarchive's bsdunzip, which
+    // has no such mode. cpio is run for RPM packages. nautilus: the
+    // context-menu extension links libnautilus-extension.
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "pango", "json-glib", "libarchive", "nautilus", "cpio", "7zip" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "python", "desktop-file-utils", "appstream" },
+}

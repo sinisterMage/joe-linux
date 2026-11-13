@@ -1,0 +1,12 @@
+.{
+    .name = "x265",
+    .version = "4.3",
+    .release = 1,
+    .description = "H.265/HEVC video encoder library and command-line encoder",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/Multicorewareinc/x265/releases/download/4.3/x265_4.3.tar.gz", .sha256 = "83c53e4c8bbb8f1e33ed59e10a7d621d1d7801ca853910c3eb41f038b8ffb121" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "nasm" },
+}

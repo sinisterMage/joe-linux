@@ -1,0 +1,12 @@
+.{
+    .name = "lame",
+    .version = "3.100",
+    .release = 1,
+    .description = "MP3 encoder library and command-line encoder",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/lame/lame-3.100.tar.gz", .sha256 = "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e" },
+    },
+    // ncurses: the lame program's progress display.
+    .depends = .{ "glibc", "ncurses" },
+}

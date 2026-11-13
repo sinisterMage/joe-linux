@@ -1,0 +1,16 @@
+.{
+    .name = "gnome-characters",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME Characters, a character map",
+    .license = "BSD-3-Clause AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-characters/51/gnome-characters-51.0.tar.xz", .sha256 = "8b90e9d7fcff43622ed34677f0029cd74b440185f1639af48c439f63bebadc31" },
+    },
+    // libgc links GLib, Pango (with pangoft2: FreeType and fontconfig) and
+    // libadwaita. The gjs program also uses GnomeDesktop 4.0 through
+    // introspection, and IBus when it is there (it is not required).
+    .depends = .{ "glibc", "glib", "gjs", "gtk4", "libadwaita", "pango", "freetype", "fontconfig", "harfbuzz", "gnome-desktop" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

@@ -1,0 +1,10 @@
+.{
+    .name = "noto-fonts-emoji",
+    .version = "2.057",
+    .release = 1,
+    .description = "Noto Color Emoji font",
+    .license = "OFL-1.1",
+    .sources = .{
+        .{ .url = "https://github.com/googlefonts/noto-emoji/raw/v2026-09-24-unicode18_0/2D/fonts/NotoColorEmoji.ttf", .file = "NotoColorEmoji-2.057.ttf", .sha256 = "15671215ab769fdc7162a045d56fd7d7e477c51b04e6b3c761d914d8fdd6cc44" },
+    },
+}

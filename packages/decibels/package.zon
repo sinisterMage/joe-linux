@@ -1,0 +1,19 @@
+.{
+    .name = "decibels",
+    .version = "49.6.1",
+    .release = 1,
+    .description = "GNOME Audio Player",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/decibels/49/decibels-49.6.1.tar.xz", .sha256 = "9a67ba14df23517c849fcfdea764c73a241e59055299b125e98aeab2a7801ad5" },
+    },
+    // A gjs program: the libraries are used through introspection at run
+    // time. gst-plugins-bad has GstPlay; gst-plugins-base has GstAudio,
+    // GstPbutils and playbin; gst-plugins-good has the common demuxers and
+    // the audio sinks.
+    .depends = .{ "gjs", "glib", "gtk4", "libadwaita", "gstreamer", "gst-plugins-base", "gst-plugins-good", "gst-plugins-bad" },
+    // typescript: the program is written in TypeScript and compiled to
+    // JavaScript by tsc. appstream provides the gettext rules for the
+    // metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "typescript", "blueprint-compiler", "appstream" },
+}

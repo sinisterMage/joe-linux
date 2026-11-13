@@ -1,0 +1,17 @@
+.{
+    .name = "poppler",
+    .version = "26.11.0",
+    .release = 1,
+    .description = "PDF rendering library, its GLib binding and command-line tools",
+    .license = "(GPL-2.0-only OR GPL-3.0-only) AND BSD-3-Clause AND MIT",
+    .sources = .{
+        .{ .url = "https://poppler.freedesktop.org/poppler-26.11.0.tar.xz", .sha256 = "41c32680160addf5a8dd7a830e4869c01e9f6bee1abb91e44fabd1ba9d7828fb" },
+        // The encoding data (CMaps, CJK and Cyrillic tables) that the book
+        // installs on the same page.
+        .{ .url = "https://poppler.freedesktop.org/poppler-data-0.4.12.tar.gz", .sha256 = "c835b640a40ce357e1b83666aabd95edffa24ddddd49b8daff63adb851cdab74" },
+    },
+    // nss and nspr: verifying and creating digital signatures. curl: reading
+    // a PDF over HTTP. libpng and tiff: image output of pdfimages/pdftocairo.
+    .depends = .{ "glibc", "gcc", "glib", "cairo", "fontconfig", "freetype", "harfbuzz", "lcms2", "libjpeg-turbo", "libpng", "tiff", "openjpeg", "nss", "nspr", "curl", "brotli", "zlib" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "python" },
+}

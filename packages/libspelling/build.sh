@@ -1,12 +1,11 @@
 build() {
     mkdir build
     cd build
-    # The book's options (no documentation, no sysprof), plus:
-    # - enchant=disabled: Enchant, which the book recommends, needs Aspell
-    #   and a dictionary, and none of them exists here. The library then
-    #   has no spelling provider: its users (Text Editor) build and run, but
-    #   check nothing. Switch this on when an enchant recipe is added (it
-    #   also needs ICU).
+    # The book's options (no documentation, no sysprof). enchant=enabled is
+    # the default, spelled out: Enchant is the library's only spelling
+    # provider (here with Hunspell behind it, dictionaries in
+    # /usr/share/hunspell), and it brings ICU, which finds the word
+    # boundaries.
     # --wrap-mode=nodownload: sysprof is named as a subproject to fetch.
     meson setup .. \
         --prefix=/usr \
@@ -15,7 +14,7 @@ build() {
         --wrap-mode=nodownload \
         -D docs=false \
         -D sysprof=false \
-        -D enchant=disabled \
+        -D enchant=enabled \
         -D introspection=enabled \
         -D vapi=true \
         -D install-static=false

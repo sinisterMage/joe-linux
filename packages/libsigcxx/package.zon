@@ -1,0 +1,12 @@
+.{
+    .name = "libsigcxx",
+    .version = "3.6.0",
+    .release = 1,
+    .description = "libsigc++ 3, typesafe signal and callback system for C++",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libsigc++/3.6/libsigc++-3.6.0.tar.xz", .sha256 = "c3d23b37dfd6e39f2e09f091b77b1541fbfa17c4f0b6bf5c89baef7229080e17" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "gnome-font-viewer",
+    .version = "50.0",
+    .release = 1,
+    .description = "GNOME Fonts, a font viewer and thumbnailer",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-font-viewer/50/gnome-font-viewer-50.0.tar.xz", .sha256 = "9564b088c5b150c54e2a3a7bc7014deec6ee551261e98488f891b1f1b8dc6b80" },
+    },
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "harfbuzz", "fontconfig", "freetype", "fribidi", "cairo", "pango", "graphene" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

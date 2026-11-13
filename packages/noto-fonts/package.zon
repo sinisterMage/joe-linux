@@ -1,0 +1,16 @@
+.{
+    .name = "noto-fonts",
+    // Noto Sans and Noto Serif are at 2.015; Noto Sans Mono's last release
+    // is 2.014.
+    .version = "2.015",
+    .release = 1,
+    .description = "Noto Sans, Noto Serif and Noto Sans Mono fonts for Latin, Greek and Cyrillic",
+    .license = "OFL-1.1",
+    .sources = .{
+        .{ .url = "https://github.com/notofonts/latin-greek-cyrillic/releases/download/NotoSans-v2.015/NotoSans-v2.015.zip", .sha256 = "0c34df072a3fa7efbb7cbf34950e1f971a4447cffe365d3a359e2d4089b958f5" },
+        .{ .url = "https://github.com/notofonts/latin-greek-cyrillic/releases/download/NotoSerif-v2.015/NotoSerif-v2.015.zip", .sha256 = "0e9a43c8a4b94ac76f55069ed1d7385bbcaf6b99527a94deb5619e032b7e76c1" },
+        .{ .url = "https://github.com/notofonts/latin-greek-cyrillic/releases/download/NotoSansMono-v2.014/NotoSansMono-v2.014.zip", .sha256 = "090cf6c5e03f337a755630ca888b1fef463e64ae7b33ee134e9309c05f978732" },
+    },
+    // bsdtar unpacks the zip files.
+    .build_depends = .{ "libarchive" },
+}

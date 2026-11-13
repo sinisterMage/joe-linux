@@ -112,8 +112,21 @@ EOT
     # The same for interactive shells that are not login shells.
     cat > usr/lib/joe/bashrc <<'EOT'
 PS1='\u@\h:\w\$ '
+# What packages ship for interactive shells (command completion) is wanted
+# in a terminal window too, which is not a login shell.
+for script in /usr/lib/joe/profile.d/*.sh; do
+    [ -r "$script" ] && . "$script"
+done
+unset script
 if [ "$(id -u)" -ne 0 ] && [ -r /etc/bashrc ]; then . /etc/bashrc; fi
 EOT
+    # The language until someone chooses one (first-run setup, Settings, or
+    # localectl, all of which rewrite this file). systemd would otherwise
+    # supply C.UTF-8, which is no language at all: the first-run setup then
+    # has no keyboard layout to suggest and cannot be completed without
+    # going back to pick one. en_US is the one locale glibc is built with.
+    echo 'LANG=en_US.UTF-8' > etc/locale.conf
+
     cat > etc/profile <<'EOT'
 # Settings for login shells go here, or in files named /etc/profile.d/*.sh.
 #

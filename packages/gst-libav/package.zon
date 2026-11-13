@@ -1,0 +1,12 @@
+.{
+    .name = "gst-libav",
+    .version = "1.28.9",
+    .release = 1,
+    .description = "GStreamer plugin giving access to ffmpeg's codecs, demuxers and filters (H.264, H.265, AAC, MP4)",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.28.9.tar.xz", .sha256 = "4b3df21fa70972a80891d2298cf32c14a62c3db4483d545c7ac018230399186b" },
+    },
+    .depends = .{ "glibc", "glib", "gstreamer", "gst-plugins-base", "ffmpeg" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

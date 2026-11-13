@@ -1,0 +1,14 @@
+.{
+    .name = "gnome-disk-utility",
+    .version = "46.1",
+    .release = 1,
+    .description = "GNOME Disks: partitioning, formatting, SMART data and disk images",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-disk-utility/46/gnome-disk-utility-46.1.tar.xz", .sha256 = "c24e9439a04d70bcfae349ca134c7005435fe2b6f452114df878bff0b89bbffe" },
+    },
+    // gnome-settings-daemon loads the plug-in that warns about failing
+    // disks; xz (liblzma) compresses disk images.
+    .depends = .{ "glibc", "glib", "gtk3", "libhandy", "udisks", "libsecret", "libpwquality", "libdvdread", "libcanberra", "libnotify", "xz", "systemd", "cairo", "pango", "gdk-pixbuf", "gnome-settings-daemon" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "libxslt", "docbook-xsl-nons", "docbook-xml", "desktop-file-utils", "appstream" },
+}

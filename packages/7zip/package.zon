@@ -1,0 +1,13 @@
+.{
+    .name = "7zip",
+    .version = "26.06",
+    .release = 1,
+    .description = "7-Zip file archiver: 7z, zip, rar and many other formats, with encryption",
+    // The RAR decoder is under the unRAR restriction: it may not be used to
+    // re-create the RAR compression algorithm.
+    .license = "LGPL-2.1-or-later AND BSD-3-Clause AND LicenseRef-UnRAR",
+    .sources = .{
+        .{ .url = "https://github.com/ip7z/7zip/archive/26.06/7zip-26.06.tar.gz", .sha256 = "63bbf0ede83e4286ec8a2905ed732a12acc36dd4771984d870b054240ce761fa" },
+    },
+    .depends = .{ "glibc", "gcc" },
+}

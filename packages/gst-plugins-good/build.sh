@@ -3,16 +3,17 @@ build() {
     cd build
     # Every plugin with an outside dependency is named.
     #
-    # Built: cairo, FLAC, gdk-pixbuf, JPEG, PNG, bzip2 (Matroska), libsoup 3
+    # Built: cairo, FLAC, gdk-pixbuf, JPEG, PNG, bzip2 (Matroska), LAME (MP3
+    # encoding), mpg123 (MP3 decoding), libvpx (VP8 and VP9), libsoup 3
     # (HTTP source, and with libxml2 and OpenSSL the DASH/HLS/MSS client)
     # and Video4Linux (kernel interface only, device discovery through
     # gudev).
     #
     # Not built, because the library does not exist: aalib, AMR, libcaca,
-    # DV and IEEE 1394, JACK, LAME, mpg123, PulseAudio, shout2, Speex,
-    # TagLib, TwoLAME, VP8/VP9 (libvpx), WavPack, libv4l2, GTK 3, Qt 5/6,
-    # Orc. ximagesrc would need more of the X libraries than this
-    # distribution wants here, and OSS is obsolete.
+    # DV and IEEE 1394, JACK, shout2, Speex, TagLib, TwoLAME, WavPack,
+    # libv4l2, GTK 3, Qt 5/6, Orc. PulseAudio: sound goes out through
+    # pipewire's own sink. ximagesrc would need more of the X libraries
+    # than this distribution wants here, and OSS is obsolete.
     meson setup .. \
         --prefix=/usr \
         --buildtype=release \
@@ -40,14 +41,14 @@ build() {
         -D dv=disabled \
         -D dv1394=disabled \
         -D jack=disabled \
-        -D lame=disabled \
-        -D mpg123=disabled \
+        -D lame=enabled \
+        -D mpg123=enabled \
         -D pulse=disabled \
         -D shout2=disabled \
         -D speex=disabled \
         -D taglib=disabled \
         -D twolame=disabled \
-        -D vpx=disabled \
+        -D vpx=enabled \
         -D wavpack=disabled \
         -D gtk3=disabled \
         -D qt5=disabled \

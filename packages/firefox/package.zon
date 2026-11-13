@@ -1,0 +1,35 @@
+.{
+    .name = "firefox",
+    .version = "153.7.0esr",
+    .release = 2,
+    .description = "Mozilla Firefox web browser, extended support release",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://archive.mozilla.org/pub/firefox/releases/153.7.0esr/source/firefox-153.7.0esr.source.tar.xz", .sha256 = "7f8715ee7de2cf36a156216a9b1c7f26d1653010e65793bb2fce66e12edb6ea0" },
+    },
+    // Linked: GTK 3 and what comes with it, the X11 client libraries,
+    // alsa-lib, and every library the mozconfig takes from the system.
+    // Loaded at run time: the Wayland client library and libxkbcommon,
+    // libpulse (pulseaudio) for sound, libnotify for notifications,
+    // libICE and libSM for X session management, pipewire for screen
+    // sharing, mesa and libdrm for rendering, libpci (pciutils) to identify
+    // the GPU, and FFmpeg's libavcodec for H.264, AAC and MP3.
+    // startup-notification, which the book lists as required, is neither
+    // linked nor loaded by this version.
+    .depends = .{
+        "glibc", "gcc", "gtk3", "glib", "pango", "cairo",
+        "harfbuzz", "gdk-pixbuf", "at-spi2-core", "freetype", "fontconfig", "dbus",
+        "libnotify", "nspr", "nss", "icu", "libevent", "libvpx",
+        "libwebp", "dav1d", "libaom", "zlib", "pixman", "libpng",
+        "libjpeg-turbo", "libffi", "libx11", "libxcb", "libxext", "libxfixes",
+        "libxrandr", "libxrender", "libxcomposite", "libxcursor", "libxdamage", "libxi",
+        "libice", "libsm", "libxkbcommon", "wayland", "alsa-lib", "pulseaudio",
+        "pipewire", "mesa", "libdrm", "pciutils", "ffmpeg", "hicolor-icon-theme",
+    },
+    // The crates are vendored in the tarball (third_party/rust) and mach is
+    // told to use only the Python modules vendored next to them, so the
+    // build needs no network. clang compiles the C and C++ (upstream's
+    // default) and serves bindgen; nodejs is used only while building;
+    // libarchive provides unzip.
+    .build_depends = .{ "rust", "cbindgen", "llvm", "nodejs", "nasm", "python", "libarchive", "which", "pkgconf", "m4", "perl", "make", "xorgproto" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "libaom",
+    .version = "3.15.3",
+    .release = 1,
+    .description = "AV1 video codec reference encoder and decoder",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://storage.googleapis.com/aom-releases/libaom-3.15.3.tar.gz", .sha256 = "12c01dc731ed7b5a999e28120b45bf58a002ba3435a4ba2cfbc1e084a27c9c04" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    // perl generates the run-time CPU dispatch headers.
+    .build_depends = .{ "cmake", "ninja", "nasm", "perl" },
+}

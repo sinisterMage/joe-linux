@@ -1,0 +1,13 @@
+.{
+    .name = "mpg123",
+    .version = "1.33.7",
+    .release = 1,
+    .description = "MPEG audio (MP1, MP2, MP3) decoder library and console player",
+    .license = "LGPL-2.1-only",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/mpg123/mpg123-1.33.7.tar.bz2", .sha256 = "31d0e35a4ca567ec9b5ebda6c3062bb4435d6d3eacd6ef0d95cadd7854dc03ee" },
+    },
+    // curl: the mpg123 program runs it to read HTTPS streams.
+    .depends = .{ "glibc", "alsa-lib", "pulseaudio", "curl" },
+    .build_depends = .{ "pkgconf" },
+}

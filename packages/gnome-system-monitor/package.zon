@@ -1,0 +1,14 @@
+.{
+    .name = "gnome-system-monitor",
+    .version = "51.1",
+    .release = 1,
+    .description = "GNOME System Monitor: processes, resources and file systems",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-system-monitor/51/gnome-system-monitor-51.1.tar.xz", .sha256 = "acf0a61b02b18d20e29cc36cd275ed48fe5e2beeaac99140b299e659cb6493c6" },
+    },
+    // polkit: pkexec runs gsm-kill, gsm-renice and gsm-taskset on other
+    // users' processes.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "glibmm", "gtkmm4", "cairomm", "pangomm", "libsigcxx", "libgtop", "librsvg", "systemd", "cairo", "pango", "graphene", "polkit", "adwaita-icon-theme" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "python", "desktop-file-utils", "appstream" },
+}

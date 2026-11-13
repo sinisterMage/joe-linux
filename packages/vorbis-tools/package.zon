@@ -1,0 +1,14 @@
+.{
+    .name = "vorbis-tools",
+    .version = "1.4.3",
+    .release = 1,
+    .description = "Command-line tools for Ogg Vorbis files (oggenc, oggdec, ogginfo, vcut, vorbiscomment)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://downloads.xiph.org/releases/vorbis/vorbis-tools-1.4.3.tar.gz", .sha256 = "a1fe3ddc6777bdcebf6b797e7edfe0437954b24756ffcc8c6b816b63e0460dde" },
+    },
+    // flac: oggenc reads FLAC input, which is what gnome-clocks uses it for
+    // when it encodes its alarm sounds.
+    .depends = .{ "glibc", "libogg", "libvorbis", "flac" },
+    .build_depends = .{ "pkgconf" },
+}

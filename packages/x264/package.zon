@@ -1,0 +1,12 @@
+.{
+    .name = "x264",
+    .version = "20250815",
+    .release = 1,
+    .description = "H.264/MPEG-4 AVC video encoder library",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://anduin.linuxfromscratch.org/BLFS/x264/x264-20250815.tar.xz", .sha256 = "eb9c8febcf4889d01a4fd97f67a9bec74981a67c89d04e492b74e81edd720031" },
+    },
+    .depends = .{ "glibc" },
+    .build_depends = .{ "nasm" },
+}
