@@ -236,6 +236,10 @@ pub fn pack(arena: Allocator, io: Io, options: PackOptions) ![]const u8 {
 // Reading
 // ---------------------------------------------------------------------------
 
+/// Owns the archive file, decompression window and iterator scratch buffers.
+/// Its fields point into each other: use the pointer returned by `open` and
+/// never copy or move the reader. Parsed manifests belong to the caller's
+/// arena; payload entry paths borrow the reader's scratch storage.
 pub const PackageReader = struct {
     io: Io,
     file: Io.File,
@@ -250,10 +254,14 @@ pub const PackageReader = struct {
 
     pub const Entry = struct {
         /// Path relative to the root, as in the manifest.
+        /// Borrowed from the reader until the next call to `next` or `close`.
+        /// `stream` preserves it; copy it before retaining it beyond that time.
         path: []const u8,
         size: u64,
     };
 
+    /// Allocates a reader at a stable address. The caller must close it exactly
+    /// once with the same allocator. `dir` and `sub_path` are not retained.
     pub fn open(gpa: Allocator, io: Io, dir: Io.Dir, sub_path: []const u8) !*PackageReader {
         const self = try gpa.create(PackageReader);
         errdefer gpa.destroy(self);
@@ -271,6 +279,8 @@ pub const PackageReader = struct {
         return self;
     }
 
+    /// Closes the file and frees the reader and its buffers. Invalidates all
+    /// borrowed entry paths, but not manifests allocated in the caller's arena.
     pub fn close(self: *PackageReader, gpa: Allocator) void {
         self.file.close(self.io);
         gpa.free(self.window);
@@ -278,6 +288,9 @@ pub const PackageReader = struct {
     }
 
     /// Reads the manifest. Must be the first call after `open`.
+    /// Returned data does not borrow reader storage. Allocated strings and
+    /// slices belong to `arena`; the manifest remains valid after `next`,
+    /// `stream` and `close` until arena teardown.
     pub fn readManifest(self: *PackageReader, arena: Allocator) !Manifest {
         const member = (try self.iter.next()) orelse return error.InvalidPackage;
         if (member.kind != .file or !std.mem.eql(u8, member.name, manifest_member)) return error.InvalidPackage;
@@ -288,6 +301,8 @@ pub const PackageReader = struct {
     }
 
     /// The next regular file in the payload, or null at the end.
+    /// Invalidates the previous entry's borrowed path, including on error or
+    /// end of archive. Use `stream` before advancing to consume an entry.
     pub fn next(self: *PackageReader) !?Entry {
         const member = (try self.iter.next()) orelse return null;
         if (member.kind != .file) return error.InvalidPackage;
@@ -299,6 +314,8 @@ pub const PackageReader = struct {
     }
 
     /// Writes the contents of the entry last returned by `next`.
+    /// Call only once for that entry, before `next` or `close`. Does not
+    /// invalidate the entry's path; the writer is not retained.
     pub fn stream(self: *PackageReader, w: *Io.Writer) !void {
         try self.iter.streamRemaining(self.current.?, w);
         self.current = null;
@@ -306,6 +323,7 @@ pub const PackageReader = struct {
 };
 
 /// Reads only the manifest of a package file.
+/// The reader is closed before returning; the manifest belongs to `arena`.
 pub fn readManifestOf(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, sub_path: []const u8) !Manifest {
     const reader = try PackageReader.open(gpa, io, dir, sub_path);
     defer reader.close(gpa);
@@ -313,6 +331,60 @@ pub fn readManifestOf(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, sub
 }
 
 const testing = std.testing;
+
+test "reader ownership: retained paths and manifest outlive the reader" {
+    const io = testing.io;
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var tmp = testing.tmpDir(.{ .iterate = true });
+    defer tmp.cleanup();
+
+    try tmp.dir.createDir(io, "stage", .default_dir);
+    var stage = try tmp.dir.openDir(io, "stage", .{ .iterate = true });
+    defer stage.close(io);
+    const paths = [_][]const u8{ "alpha", "bravo" };
+    const contents = [_][]const u8{ "first payload", "second payload" };
+    for (paths, contents) |path, data| {
+        try stage.writeFile(io, .{ .sub_path = path, .data = data });
+    }
+    const name = try pack(arena, io, .{
+        .meta = .{ .name = "ownership", .version = "1-r1", .depends = &.{"dependency"} },
+        .src = stage,
+        .out_dir = tmp.dir,
+    });
+
+    var retained_paths: [paths.len][]const u8 = undefined;
+    const m = read: {
+        const reader = try PackageReader.open(testing.allocator, io, tmp.dir, name);
+        defer reader.close(testing.allocator);
+        const parsed = try reader.readManifest(arena);
+        for (paths, contents, &retained_paths) |path, data, *retained| {
+            const entry = (try reader.next()) orelse return error.MissingEntry;
+            try testing.expectEqualStrings(path, entry.path);
+            try testing.expectEqual(data.len, entry.size);
+            // Copy while the borrow is valid; never read an old entry after
+            // advancing the iterator or closing the reader.
+            retained.* = try arena.dupe(u8, entry.path);
+            var payload: Io.Writer.Allocating = .init(arena);
+            try reader.stream(&payload.writer);
+            try testing.expectEqualStrings(data, payload.written());
+            try testing.expectEqualStrings(path, entry.path);
+        }
+        try testing.expect((try reader.next()) == null);
+        break :read parsed;
+    };
+
+    // Only arena-owned data is accessed after the reader has been closed.
+    try testing.expectEqualStrings("ownership", m.name);
+    try testing.expectEqualStrings("1-r1", m.version);
+    try testing.expectEqualStrings("dependency", m.depends[0]);
+    try testing.expectEqual(paths.len, m.files.len);
+    for (paths, retained_paths, m.files) |path, retained, file| {
+        try testing.expectEqualStrings(path, retained);
+        try testing.expectEqualStrings(path, file.path);
+    }
+}
 
 test "pack and read back" {
     const io = testing.io;
