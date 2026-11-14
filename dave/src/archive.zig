@@ -332,6 +332,78 @@ pub fn readManifestOf(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, sub
 
 const testing = std.testing;
 
+test "reader open frees allocations and closes the file on out of memory" {
+    // Observe only this reader's file, forwarding both operations to real I/O.
+    // Counting every process descriptor would race with unrelated I/O workers.
+    const TrackedIo = struct {
+        backing: Io,
+        file: ?Io.File = null,
+        opens: usize = 0,
+        closes: usize = 0,
+
+        fn io(self: *@This()) Io {
+            return .{ .userdata = self, .vtable = &vtable };
+        }
+
+        const vtable: Io.VTable = blk: {
+            var table = Io.failing.vtable.*;
+            table.dirOpenFile = openFile;
+            table.fileClose = closeFiles;
+            break :blk table;
+        };
+
+        fn openFile(ctx: ?*anyopaque, dir: Io.Dir, path: []const u8, options: Io.Dir.OpenFileOptions) Io.File.OpenError!Io.File {
+            const self: *@This() = @ptrCast(@alignCast(ctx.?));
+            std.debug.assert(self.file == null);
+            const file = try dir.openFile(self.backing, path, options);
+            self.file = file;
+            self.opens += 1;
+            return file;
+        }
+
+        fn closeFiles(ctx: ?*anyopaque, files: []const Io.File) void {
+            const self: *@This() = @ptrCast(@alignCast(ctx.?));
+            std.debug.assert(files.len == 1);
+            std.debug.assert(self.file != null);
+            std.debug.assert(files[0].handle == self.file.?.handle);
+            Io.File.closeMany(self.backing, files);
+            self.file = null;
+            self.closes += 1;
+        }
+
+        fn cleanup(self: *@This()) void {
+            // If a test expectation fails, clean up for subsequent tests
+            // without incrementing the observed close count.
+            if (self.file) |file| file.close(self.backing);
+        }
+    };
+
+    var tmp = testing.tmpDir(.{});
+    defer tmp.cleanup();
+    // open() initializes the decoder but does not read the archive yet.
+    try tmp.dir.writeFile(testing.io, .{ .sub_path = "empty.dave", .data = "" });
+    for (0..2) |fail_index| {
+        var tracked: TrackedIo = .{ .backing = testing.io };
+        defer tracked.cleanup();
+        var failing: testing.FailingAllocator = .init(testing.allocator, .{ .fail_index = fail_index });
+        const allocator = failing.allocator();
+        if (PackageReader.open(allocator, tracked.io(), tmp.dir, "empty.dave")) |reader| {
+            reader.close(allocator);
+            return error.ExpectedOutOfMemory;
+        } else |err| try testing.expectEqual(error.OutOfMemory, err);
+
+        try testing.expect(failing.has_induced_failure);
+        try testing.expectEqual(fail_index, failing.allocations);
+        try testing.expectEqual(failing.allocations, failing.deallocations);
+        try testing.expectEqual(failing.allocated_bytes, failing.freed_bytes);
+        // Failure 0 precedes opening the file. Failure 1 is the decompression
+        // window allocation, after the reader and the real file were acquired.
+        try testing.expectEqual(fail_index, tracked.opens);
+        try testing.expectEqual(tracked.opens, tracked.closes);
+        try testing.expect(tracked.file == null);
+    }
+}
+
 test "reader ownership: retained paths and manifest outlive the reader" {
     const io = testing.io;
     var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
