@@ -232,8 +232,12 @@ enum joe_seal_state { JOE_UNKNOWN, JOE_SEALED, JOE_UNSEALED };
 
 struct joe_inode {
 	u8 state;
+	/* Log mode: bit JOE_REPORTED_UNSEALED once this file was reported. */
+	unsigned long reported;
 	struct joe_ops __rcu *ops;
 };
+
+#define JOE_REPORTED_UNSEALED 0
 
 struct joe_cred {
 	/*
@@ -316,8 +320,10 @@ static bool joe_task_root(struct task_struct *task)
  * which declarations are written: op=<operation> arg=<detail> exe=<program>.
  *
  * Log mode reports everything, below the console's level: nothing is wrong
- * yet and a missing line would be a missing declaration. Denials are
- * warnings, rate limited so that a misbehaving program cannot flood the log.
+ * yet and a missing line would be a missing declaration. The exception is an
+ * unsealed file, which is reported the first time privileged code uses it
+ * (joe_require_sealed). Denials are warnings, rate limited so that a
+ * misbehaving program cannot flood the log.
  */
 static int joe_violation(const struct joe_ops *ops, const char *op,
 			 const char *arg, int err)
@@ -499,6 +505,7 @@ static void joe_forget(struct inode *inode)
 	mutex_lock(&joe_verify_lock);
 	old = rcu_replace_pointer(blob->ops, NULL, lockdep_is_held(&joe_verify_lock));
 	WRITE_ONCE(blob->state, JOE_UNKNOWN);
+	clear_bit(JOE_REPORTED_UNSEALED, &blob->reported);
 	mutex_unlock(&joe_verify_lock);
 	joe_ops_put(old);
 }
@@ -527,6 +534,15 @@ static int joe_require_sealed(struct file *file, const char *op)
 		joe_ops_put(ops);
 		return 0;
 	}
+	/*
+	 * Where nothing is sealed yet (a live medium, an image before its
+	 * first boot has sealed it) every exec and every library of every root
+	 * process would be reported, again each time, and the kernel log would
+	 * lose the messages that matter. That a file is unsealed is said once.
+	 */
+	if (!joe_enforce &&
+	    test_and_set_bit(JOE_REPORTED_UNSEALED, &joe_inode(file_inode(file))->reported))
+		return 0;
 	name = joe_file_name(file, &page);
 	ret = joe_violation(joe_cred(current_cred())->ops, op, name, -EACCES);
 	if (page)
