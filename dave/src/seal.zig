@@ -224,7 +224,7 @@ pub fn capabilityName(number: usize) ?[]const u8 {
 ///   undeclared                      (written by dave, not by recipes)
 fn canonicalOperation(arena: Allocator, op: []const u8) Allocator.Error!?[]const u8 {
     if (std.mem.eql(u8, op, "none")) return "";
-    for ([_][]const u8{ "all", "net", "mount", "module", "ptrace", "bpf", "root-ipc", "cap:*", "write:*", "exec:*", undeclared }) |simple| {
+    for ([_][]const u8{ "all", "net", "mount", "module", "ptrace", "bpf", "root-ipc", "cap:*", "write:*", "exec:*" }) |simple| {
         if (std.mem.eql(u8, op, simple)) return op;
     }
     if (std.mem.indexOfAny(u8, op, "\n\x00") != null) return null;
@@ -488,6 +488,7 @@ test "declarations are translated and chosen per program" {
     try testing.expectError(error.InvalidOperation, operationsText(arena, &.{.{ .allow = &.{"cap:not_a_capability"} }}, "x"));
     try testing.expectError(error.InvalidOperation, operationsText(arena, &.{.{ .allow = &.{"write:relative/path"} }}, "x"));
     try testing.expectError(error.InvalidOperation, operationsText(arena, &.{.{ .allow = &.{"everything"} }}, "x"));
+    try testing.expectError(error.InvalidOperation, operationsText(arena, &.{.{ .allow = &.{undeclared} }}, "x"));
     try testing.expectError(error.InvalidOperation, operationsText(arena, &.{.{ .allow = &.{"write:/a\nall"} }}, "x"));
     try testing.expectEqual(@as(?usize, 12), capabilityNumber("net_admin"));
     try testing.expectEqualStrings("checkpoint_restore", capabilityName(40).?);

@@ -13,6 +13,7 @@ const Ed25519 = std.crypto.sign.Ed25519;
 const manifest_mod = @import("manifest.zig");
 const archive = @import("archive.zig");
 const db = @import("db.zig");
+const seal = @import("seal.zig");
 
 pub const index_name = "repo.zon";
 pub const signature_name = "repo.zon.sig";
@@ -184,6 +185,75 @@ pub fn writeIndex(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, secret_
     return entries.items.len;
 }
 
+const AuditProblem = struct {
+    filename: []const u8,
+    path: []const u8,
+    reason: []const u8,
+};
+
+fn auditProblemLessThan(_: void, a: AuditProblem, b: AuditProblem) bool {
+    switch (std.mem.order(u8, a.filename, b.filename)) {
+        .lt => return true,
+        .gt => return false,
+        .eq => {},
+    }
+    switch (std.mem.order(u8, a.path, b.path)) {
+        .lt => return true,
+        .gt => return false,
+        .eq => {},
+    }
+    return std.mem.order(u8, a.reason, b.reason) == .lt;
+}
+
+/// Checks package seal metadata and operation declarations without verifying
+/// signatures, for which no public key is available here.
+pub fn audit(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, out: *Io.Writer) !usize {
+    var problems: std.ArrayList(AuditProblem) = .empty;
+    var it = dir.iterate();
+    while (try it.next(io)) |entry| {
+        if (entry.kind != .file or !std.mem.endsWith(u8, entry.name, ".dave")) continue;
+        const filename = try arena.dupe(u8, entry.name);
+        const m = archive.readManifestOf(gpa, arena, io, dir, filename) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => {
+                try problems.append(arena, .{
+                    .filename = filename,
+                    .path = "-",
+                    .reason = try std.fmt.allocPrint(arena, "unreadable package ({t})", .{err}),
+                });
+                continue;
+            },
+        };
+        for (m.files) |f| {
+            if (f.kind != .file or f.config) continue;
+            if (f.seal == null and f.verity == null) {
+                try problems.append(arena, .{ .filename = filename, .path = f.path, .reason = "not sealed" });
+            } else if (f.seal == null or f.verity == null) {
+                try problems.append(arena, .{ .filename = filename, .path = f.path, .reason = "incomplete seal" });
+            } else if (seal.parseSignature(f.seal.?) == null or seal.parseDigest(f.verity.?) == null) {
+                try problems.append(arena, .{ .filename = filename, .path = f.path, .reason = "malformed seal" });
+            }
+
+            const ops = seal.operationsText(arena, m.operations, f.path) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                error.InvalidOperation => {
+                    try problems.append(arena, .{ .filename = filename, .path = f.path, .reason = "invalid operations" });
+                    continue;
+                },
+            };
+            const privileged = (f.mode & 0o111 != 0) or (f.mode & 0o6000 != 0) or f.caps != null;
+            if (privileged and std.mem.eql(u8, ops, seal.undeclared)) {
+                try problems.append(arena, .{ .filename = filename, .path = f.path, .reason = "undeclared privileged program" });
+            }
+        }
+    }
+    std.mem.sort(AuditProblem, problems.items, {}, auditProblemLessThan);
+    for (problems.items) |problem| {
+        try out.print("{s}: {s}: {s}\n", .{ problem.filename, problem.path, problem.reason });
+    }
+    return problems.items.len;
+}
+
 // ---------------------------------------------------------------------------
 // Using repositories
 // ---------------------------------------------------------------------------
@@ -293,6 +363,114 @@ fn matches(io: Io, cache: Io.Dir, rel: []const u8, entry: IndexEntry) !bool {
 }
 
 const testing = std.testing;
+
+fn writeAuditTestPackage(arena: Allocator, io: Io, dir: Io.Dir, filename: []const u8, m: manifest_mod.Manifest) !void {
+    var text: Io.Writer.Allocating = .init(arena);
+    try m.write(&text.writer);
+    var file = try dir.createFile(io, filename, .{});
+    defer file.close(io);
+    var child = try std.process.spawn(io, .{
+        .argv = &.{ "zstd", "-q", "-c" },
+        .stdin = .pipe,
+        .stdout = .{ .file = file },
+    });
+    errdefer child.kill(io);
+    var buf: [4096]u8 = undefined;
+    var pipe = child.stdin.?.writer(io, &buf);
+    var tar: std.tar.Writer = .{ .underlying_writer = &pipe.interface };
+    try tar.writeFileBytes(archive.manifest_member, text.written(), .{ .mode = 0o644 });
+    try tar.finishPedantically();
+    try pipe.interface.flush();
+    child.stdin.?.close(io);
+    child.stdin = null;
+    if (!(try child.wait(io)).success()) return error.CompressionFailed;
+}
+
+test "audit accepts sealed declarations and finds undeclared programs" {
+    const io = testing.io;
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var tmp = testing.tmpDir(.{ .iterate = true });
+    defer tmp.cleanup();
+    const key = try seal.SigningKey.parse(&seal.generateKey(io).secret_hex);
+
+    try tmp.dir.createDirPath(io, "clean-stage");
+    var clean_stage = try tmp.dir.openDir(io, "clean-stage", .{ .iterate = true });
+    defer clean_stage.close(io);
+    try clean_stage.writeFile(io, .{ .sub_path = "data", .data = "clean\n" });
+    _ = try archive.pack(arena, io, .{
+        .meta = .{ .name = "clean", .version = "1-r1", .operations = &.{.{ .allow = &.{"none"} }} },
+        .src = clean_stage,
+        .out_dir = tmp.dir,
+        .code_key = key,
+    });
+    var clean_report: Io.Writer.Allocating = .init(arena);
+    try testing.expectEqual(@as(usize, 0), try audit(testing.allocator, arena, io, tmp.dir, &clean_report.writer));
+    try testing.expectEqualStrings("", clean_report.written());
+
+    try tmp.dir.createDirPath(io, "undeclared-stage");
+    var undeclared_stage = try tmp.dir.openDir(io, "undeclared-stage", .{ .iterate = true });
+    defer undeclared_stage.close(io);
+    try undeclared_stage.writeFile(io, .{ .sub_path = "program", .data = "#!/bin/sh\n" });
+    try undeclared_stage.setFilePermissions(io, "program", .fromMode(0o755), .{});
+    try undeclared_stage.writeFile(io, .{ .sub_path = "data", .data = "not a program\n" });
+    const name = try archive.pack(arena, io, .{
+        .meta = .{ .name = "undeclared", .version = "1-r1" },
+        .src = undeclared_stage,
+        .out_dir = tmp.dir,
+        .code_key = key,
+    });
+    var report: Io.Writer.Allocating = .init(arena);
+    try testing.expectEqual(@as(usize, 1), try audit(testing.allocator, arena, io, tmp.dir, &report.writer));
+    const expected = try std.fmt.allocPrint(arena, "{s}: program: undeclared privileged program\n", .{name});
+    try testing.expectEqualStrings(expected, report.written());
+}
+
+test "audit detects absent and malformed seals and invalid operations" {
+    const io = testing.io;
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var tmp = testing.tmpDir(.{ .iterate = true });
+    defer tmp.cleanup();
+
+    try tmp.dir.createDirPath(io, "unsigned-stage");
+    var stage = try tmp.dir.openDir(io, "unsigned-stage", .{ .iterate = true });
+    defer stage.close(io);
+    try stage.writeFile(io, .{ .sub_path = "data", .data = "unsigned\n" });
+    const unsigned_name = try archive.pack(arena, io, .{
+        .meta = .{ .name = "unsigned", .version = "1-r1", .operations = &.{.{ .allow = &.{"none"} }} },
+        .src = stage,
+        .out_dir = tmp.dir,
+    });
+
+    const digest: [seal.digest_len * 2]u8 = @splat('0');
+    const signature: [seal.signature_len * 2]u8 = @splat('0');
+    try writeAuditTestPackage(arena, io, tmp.dir, "malformed.dave", .{
+        .name = "malformed",
+        .version = "1-r1",
+        .operations = &.{.{ .allow = &.{"none"} }},
+        .files = &.{.{ .path = "bad", .verity = &digest, .seal = "not hex" }},
+    });
+    try writeAuditTestPackage(arena, io, tmp.dir, "invalid.dave", .{
+        .name = "invalid",
+        .version = "1-r1",
+        .operations = &.{.{ .allow = &.{"not-an-operation"} }},
+        .files = &.{.{ .path = "bad", .verity = &digest, .seal = &signature }},
+    });
+
+    var report: Io.Writer.Allocating = .init(arena);
+    try testing.expectEqual(@as(usize, 3), try audit(testing.allocator, arena, io, tmp.dir, &report.writer));
+    const expected = try std.fmt.allocPrint(
+        arena,
+        "invalid.dave: bad: invalid operations\n" ++
+            "malformed.dave: bad: malformed seal\n" ++
+            "{s}: data: not sealed\n",
+        .{unsigned_name},
+    );
+    try testing.expectEqualStrings(expected, report.written());
+}
 
 test "sign and verify" {
     const key = generateKey(testing.io);

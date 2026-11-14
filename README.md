@@ -166,6 +166,7 @@ make image                 a bootable image, build/images/joe.img
 make run                   boot it in QEMU on this terminal (leave with Ctrl-A X)
 make test-joe              the same deployment tests on that image
 make test-security         the security module's three rules
+make audit-security        package seal and declaration audit
 ```
 
 ```
@@ -233,9 +234,9 @@ Scratch (systemd, development branches), with the same package versions. Recipes
 ## Not done yet
 
 - **Declarations for real packages.** The mechanism of rule 3 is tested, but
-  almost every package is still sealed as declaring `all`, because its
-  programs have not been studied. `grep -L operations packages/*/package.zon`
-  lists them. Until that list is short, rule 3 constrains little in practice.
+  real package programs still need studied declarations instead of generated
+  `undeclared` policies or stale `all` defaults. `dave repo audit build/repo`
+  lists the remaining undeclared programs and invalid or missing seals.
 - **The rest of the trust chain.** Kernel modules are checked by the module
   but not by the kernel's own signature enforcement; there is no kernel
   lockdown and no Secure Boot, so root can still replace the kernel or its

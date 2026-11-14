@@ -5,7 +5,7 @@
 DAVE := dave/zig-out/bin/dave
 
 .PHONY: help dave test test-cli scaffold test-boot-contract test-deployments \
-        bootstrap packages image run test-joe test-security \
+        bootstrap packages image run test-joe test-security audit-security \
         desktop-image run-desktop test-desktop \
         release-image test-release vm run-vm serve-repo clean
 
@@ -25,6 +25,7 @@ help:
 	@echo "  make run                  boot that image in QEMU on this terminal"
 	@echo "  make test-joe             the deployment tests on that image"
 	@echo "  make test-security        the security module's rules, in a VM"
+	@echo "  make audit-security       package seal and declaration audit"
 	@echo ""
 	@echo "the desktop (several more hours to build the first time)"
 	@echo "  make desktop-image        bootable GNOME image at build/images/joe-desktop.img"
@@ -103,6 +104,9 @@ test-joe: build/host-tools/bin/mcopy $(DAVE)
 
 test-security: build/host-tools/bin/mcopy $(DAVE)
 	python3 tests/vm/security.py
+
+audit-security: $(DAVE)
+	$(DAVE) repo audit build/repo
 
 # Like `image`, a test image: it has a ready-made user (joe, password
 # joe) who is logged in automatically.

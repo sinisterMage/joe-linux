@@ -90,4 +90,20 @@ out=$("${D[@]}" install hello 2>&1) && fail "accepted a tampered package"
 expect "checksum" "does not match the signed index" <<<"$out"
 [[ ! -e root/usr/bin/hello ]] || fail "installed a tampered package"
 
+echo "== an unsigned repository fails the seal audit"
+out=$("$dave" repo audit "$work/repo" 2>&1) && fail "unsigned repository passed its audit"
+expect "audit" "not sealed" <<<"$out"
+
+echo "== undeclared is reserved even without a signing key"
+mkdir -p "$work/stage/invalid/usr/bin"
+printf 'invalid\n' > "$work/stage/invalid/usr/bin/invalid"
+out=$("$dave" pack --name invalid --version 1.0-r1 --allow undeclared --out "$work/repo" "$work/stage/invalid" 2>&1) && \
+    fail "accepted an explicit undeclared operation"
+expect "reserved undeclared" "InvalidOperation" <<<"$out"
+
+echo "== a failed seal pass leaves no completion marker"
+out=$("${D[@]}" seal 2>&1) && fail "sealed a root containing unsigned packages"
+expect "strict seal" "missing, malformed, or unreadable seals" <<<"$out"
+[[ ! -e root/usr/lib/dave/sealed ]] || fail "failed seal pass wrote its completion marker"
+
 echo "cli tests passed"

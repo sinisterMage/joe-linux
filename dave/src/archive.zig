@@ -118,6 +118,9 @@ const Staged = struct {
 /// Packs a staged tree into `out_dir` and returns the package file name.
 pub fn pack(arena: Allocator, io: Io, options: PackOptions) ![]const u8 {
     std.debug.assert(options.zstd_level <= 19);
+    // Declarations are package metadata whether or not this pack is signed.
+    for (options.meta.operations) |entry|
+        _ = try seal.operationsText(arena, &.{.{ .allow = entry.allow }}, "");
     var staged: std.ArrayList(Staged) = .empty;
     {
         var walker = try options.src.walk(arena);
@@ -370,6 +373,17 @@ test "pack and read back" {
         seen += 1;
     }
     try testing.expectEqual(@as(usize, 3), seen);
+
+    // Operation validation is not conditional on having a signing key.
+    try testing.expectError(error.InvalidOperation, pack(arena, io, .{
+        .meta = .{
+            .name = "invalid",
+            .version = "1.0-r1",
+            .operations = &.{.{ .allow = &.{"undeclared"} }},
+        },
+        .src = stage,
+        .out_dir = tmp.dir,
+    }));
 }
 
 test "rejects files that are not packages" {

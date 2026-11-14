@@ -59,6 +59,7 @@ const usage =
     \\                                               Build a package from a recipe
     \\  pack --name N --version V --out DIR <tree>   Make a package from a directory
     \\  repo index <dir> [--key FILE]                Write and sign a repository index
+    \\  repo audit <dir>                             Audit package seals and declarations
     \\  key generate <basename>                      Create a repository signing key pair
     \\  key generate-code <basename>                 Create a code-signing key pair
     \\  seal                                         Seal installed files that are not yet sealed
@@ -824,8 +825,19 @@ const App = struct {
     }
 
     fn cmdRepo(app: *App, args: []const []const u8) !void {
-        if (args.len != 2 or !std.mem.eql(u8, args[0], "index")) return app.fail("usage: dave repo index <dir> [--key FILE]", .{});
+        if (args.len != 2 or (!std.mem.eql(u8, args[0], "index") and !std.mem.eql(u8, args[0], "audit")))
+            return app.fail("usage: dave repo index|audit <dir>", .{});
         const dir = try app.openDir(args[1]);
+        if (std.mem.eql(u8, args[0], "audit")) {
+            const problems = repo.audit(app.gpa, app.arena, app.io, dir, app.out) catch |e|
+                return app.fail("cannot audit {s}: {t}", .{ args[1], e });
+            if (problems > 0) {
+                try app.say("{d} security problem(s) found.", .{problems});
+                return error.Reported;
+            }
+            try app.say("No seal or declaration problems found.", .{});
+            return;
+        }
         const secret: ?[]const u8 = if (app.opts.key) |path|
             app.readAbsolute(path) orelse return app.fail("cannot read key {s}", .{path})
         else
@@ -871,21 +883,44 @@ const App = struct {
         const installed = db.load(app.arena, app.io, root) catch |e| return app.fail("the package database is unreadable: {t}", .{e});
         var done: usize = 0;
         var already: usize = 0;
+        var invalid: usize = 0;
         var modified: usize = 0;
         var impossible: usize = 0;
         for (installed) |m| {
             for (m.files) |f| {
-                const signature = seal.parseSignature(f.seal orelse continue) orelse continue;
-                const verity = seal.parseDigest(f.verity orelse continue) orelse continue;
-                const ops = seal.operationsText(app.arena, m.operations, f.path) catch continue;
+                if (f.kind != .file or f.config) continue;
+                const signature_text = f.seal orelse {
+                    invalid += 1;
+                    continue;
+                };
+                const verity_text = f.verity orelse {
+                    invalid += 1;
+                    continue;
+                };
+                const signature = seal.parseSignature(signature_text) orelse {
+                    invalid += 1;
+                    continue;
+                };
+                const verity = seal.parseDigest(verity_text) orelse {
+                    invalid += 1;
+                    continue;
+                };
+                const ops = seal.operationsText(app.arena, m.operations, f.path) catch {
+                    invalid += 1;
+                    continue;
+                };
                 const value = try seal.attribute(app.arena, ops, signature);
                 if (seal.isApplied(app.io, root, f.path, verity, value, seal.xattr_name)) {
                     already += 1;
                     continue;
                 }
                 // Sealing fixes the contents for good, so only seal what the
-                // package actually shipped.
-                const actual = seal.verityDigestOfFile(app.io, root, f.path) catch continue;
+                // package actually shipped. Missing and unreadable files are
+                // failures too, never a reason to mark the root complete.
+                const actual = seal.verityDigestOfFile(app.io, root, f.path) catch {
+                    invalid += 1;
+                    continue;
+                };
                 if (!std.mem.eql(u8, &actual, &verity)) {
                     modified += 1;
                     continue;
@@ -898,10 +933,12 @@ const App = struct {
             }
         }
         try app.say("Sealed {d} file(s); {d} were already sealed.", .{ done, already });
-        if (modified > 0) try app.say("{d} file(s) differ from what their package shipped and were left unsealed.", .{modified});
+        if (invalid > 0) return app.fail("{d} file(s) have missing, malformed, or unreadable seals", .{invalid});
+        if (modified > 0) return app.fail("{d} file(s) differ from what their package shipped and were left unsealed", .{modified});
         if (impossible > 0) return app.fail("{d} file(s) could not be sealed: the file system lacks fs-verity or this is not root", .{impossible});
         // Tells dave-seal.service that this root needs no further pass.
-        root.writeFile(app.io, .{ .sub_path = sealed_marker, .data = "" }) catch {};
+        root.writeFile(app.io, .{ .sub_path = sealed_marker, .data = "" }) catch |e|
+            return app.fail("cannot mark this root as sealed: {t}", .{e});
     }
 
     /// `dave --chroot-exec <dir> <program> [args...]`: used to run triggers
