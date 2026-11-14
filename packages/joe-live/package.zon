@@ -1,0 +1,11 @@
+.{
+    .name = "joe-live",
+    .version = "0.1",
+    .release = 2,
+    .description = "The live session of joe Linux's installation medium",
+    .license = "MIT",
+    // Only ever part of a live medium (image/live.zon). Never install it on
+    // a system that is kept: its user has no password and may do anything.
+    .build_only = true,
+    .depends = .{ "joe-desktop", "joe-installer", "sudo", "polkit" },
+}

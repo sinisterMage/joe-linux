@@ -1,0 +1,19 @@
+.{
+    .name = "qt6",
+    .version = "6.12.0",
+    .release = 1,
+    .description = "The Qt application framework: Qt Base, Qt Quick, Qt Wayland and Qt SVG",
+    .license = "LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://download.qt.io/archive/qt/6.12/6.12.0/single/qt-everywhere-src-6.12.0.tar.xz", .sha256 = "98ff4f44bac6ec3e1e62ee2a4316ae0e3d15badb015d753cc0268a20db52f165" },
+    },
+    .depends = .{
+        "glibc",        "gcc",           "zlib",          "zstd",          "pcre2",
+        "icu",          "harfbuzz",      "freetype",      "fontconfig",    "libpng",
+        "libjpeg-turbo", "glib",         "dbus",          "openssl",       "sqlite",
+        "systemd",      "libxkbcommon",  "wayland",       "mesa",          "libdrm",
+        "libinput",     "mtdev",         "libx11",        "libxcb",        "xcb-util",
+        "xcb-util-cursor", "xcb-util-image", "xcb-util-keysyms", "xcb-util-renderutil", "xcb-util-wm",
+    },
+    .build_depends = .{ "cmake", "ninja", "python", "perl", "pkgconf", "wayland-protocols" },
+}

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Install joe Linux
+Comment=Install joe Linux on a disk of this computer
+Exec=joe-installer
+Icon=org.joelinux.Installer
+Terminal=false
+Categories=System;
+Keywords=install;installer;setup;disk;
+StartupNotify=true

@@ -39,6 +39,10 @@ if [[ $(id -u) -ne 0 ]]; then
     # The dave recipe packages the binary just built and the units in system/.
     mkdir -p "$top/packages/dave/files"
     cp "$dave" "$top"/system/* "$top/packages/dave/files/"
+    # The joe-installer recipe builds the installer's source, installer/.
+    rm -rf "$top/packages/joe-installer/files"
+    mkdir -p "$top/packages/joe-installer/files"
+    cp -a "$top/installer" "$top/packages/joe-installer/files/installer"
     # Installing into the build root runs triggers in a chroot, which needs the
     # privileges a user namespace provides.
     exec unshare --map-root-user "$0" "$@"
