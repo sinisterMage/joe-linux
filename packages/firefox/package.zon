@@ -1,7 +1,7 @@
 .{
     .name = "firefox",
     .version = "153.7.0esr",
-    .release = 2,
+    .release = 3,
     .description = "Mozilla Firefox web browser, extended support release",
     .license = "MPL-2.0",
     .sources = .{

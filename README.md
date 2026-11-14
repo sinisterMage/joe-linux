@@ -33,8 +33,9 @@ joe Linux builds from source into two systems that boot in a virtual machine:
 
 The desktop can be lived in as a virtual machine that keeps its disk: the
 first boot asks who you are, and upgrades come from the build machine. See
-[Living in it](#living-in-it). It is not ready to install on a real computer;
-see [Not done yet](#not-done-yet).
+[Living in it](#living-in-it). It can also be installed, from a live medium
+whose installer erases a whole disk; see [Installing](#installing). Real
+computers are a work in progress; see [Not done yet](#not-done-yet).
 
 ## How it behaves
 
@@ -190,6 +191,52 @@ These are test images: root is logged in on the serial console without a
 password, and the desktop image has a ready-made user, because that is how
 the tests look inside. The release image below has neither.
 
+## Installing
+
+```
+make iso                   build/images/joe-live.iso, the installation medium
+make test-live             boot it as a CD and as a USB stick, in a VM
+make test-install          install from it onto an empty disk, then boot that
+```
+
+The medium is a hybrid ISO for UEFI computers (Secure Boot off): write it to a
+USB stick or attach it to a virtual machine as a CD. It starts a GNOME session
+from a compressed image of the desktop, with a layer in memory for changes, and
+opens the installer. The installer asks which disk to use and erases all of
+it: a new GPT with an EFI system partition and a btrfs root laid out exactly
+as an image's. The packages are installed from the medium itself, by one dave
+transaction, and sealed as they are installed. The installed system boots
+without an initramfs, like every joe system, and its first boot runs GNOME's
+initial setup.
+
+The installer (`installer/`) is a Qt Quick front end; all of its work is done by
+`dave install-system`, which can be run by hand on the medium:
+
+```
+dave install-system --list                 the disks, and why any cannot be used
+dave install-system --disk /dev/nvme0n1    erase it and install
+```
+
+Images and media are described by specifications in `image/*.zon` and built by
+`dave image build`; each Makefile target above names one. The build machine
+publishes the medium with the repository (see infra/build-machine).
+
+## Releases
+
+A release is named **J*X*-*Y*-*Z***, with a stage such as `-alpha1` before it
+is final:
+
+| Part | Is | In J1-7.3.1-0.2.0-alpha1 |
+|------|----|--------------------------|
+| J | joe, the distribution | J |
+| *X* | the system revision | 1 |
+| *Y* | the kernel's version | 7.3.1 |
+| *Z* | dave's version | 0.2.0 |
+
+`packages/joe-release` writes the name into `os-release` and the build machine
+names the installation medium after it. Its package version is the revision
+and stage alone (`1alpha1`), which dave orders before the final `1`.
+
 ## Living in it
 
 ```
@@ -236,7 +283,8 @@ Scratch (systemd, development branches), with the same package versions. Recipes
 | `packages/` | One recipe per package, and the build order |
 | `bootstrap/` | Scripts that build the first toolchain and then every package |
 | `system/` | dave's systemd units |
-| `image/` | Disk image assembly |
+| `image/` | Image and live medium specifications, and the scaffold's scripts |
+| `installer/` | The graphical installer |
 | `tests/` | Command-line tests and VM scenarios |
 
 ## Not done yet
@@ -251,10 +299,13 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   command line. There is no way yet to sign software built on the machine.
   Interpreters other than bash and Python (awk, sed, perl) do not ask before
   running a script.
-- **Real hardware.** The kernel boots without an initramfs, which is enough for
-  virtual machines and simple disks but not for encrypted or multi-device roots.
-  Wireless is off. There is no installer; images are assembled on the build
-  machine.
+- **Real hardware.** Firmware, processor microcode, Wi-Fi (through
+  NetworkManager and wpa_supplicant) and the Intel, AMD and NVIDIA graphics
+  drivers are there, but have been tried on few machines; there are no Vulkan
+  drivers or hardware video decoding yet. The kernel boots without an
+  initramfs, which is enough for internal disks but not for encrypted or
+  multi-device roots. The installer erases a whole disk: no encryption, no
+  installing beside another system. There is no Secure Boot.
 - **Desktop gaps.** No printing, Bluetooth or mobile broadband; Settings is
   built without those three panels. No graphical front end to dave. Only the
   English (US) locale is built, so that is the one language the first-run

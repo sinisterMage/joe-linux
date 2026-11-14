@@ -33,7 +33,10 @@ ac_add_options --with-system-nspr
 ac_add_options --with-system-nss
 ac_add_options --with-system-webp
 
-ac_add_options --enable-official-branding
+# Mozilla's own unofficial branding (it calls itself "Nightly"), not the
+# Firefox name and logo: Mozilla's trademark policy restricts distributing
+# builds under those (THIRD-PARTY-NOTICES.md).
+ac_add_options --with-branding=browser/branding/unofficial
 ac_add_options --disable-debug-symbols
 
 ac_add_options --prefix=/usr
@@ -97,8 +100,8 @@ EOF2
     cat > "$DESTDIR/usr/share/applications/firefox.desktop" << "EOF2"
 [Desktop Entry]
 Encoding=UTF-8
-Name=Firefox Web Browser
-Comment=Browse the World Wide Web
+Name=Web Browser
+Comment=Browse the World Wide Web (Mozilla's browser, without the Firefox name)
 GenericName=Web Browser
 Exec=firefox %u
 Terminal=false
@@ -120,6 +123,6 @@ EOF2
         ln -sv "/usr/lib/firefox/browser/chrome/icons/default/default$s.png" \
             "$DESTDIR/usr/share/icons/hicolor/${s}x${s}/apps/firefox.png"
     done
-    install -Dm644 browser/branding/official/default256.png \
+    install -Dm644 browser/branding/unofficial/default256.png \
         "$DESTDIR/usr/share/icons/hicolor/256x256/apps/firefox.png"
 }

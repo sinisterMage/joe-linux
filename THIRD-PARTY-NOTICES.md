@@ -80,13 +80,16 @@ A disk image or a package repository built from these recipes contains that
 software, several hundred packages, each under its own licence, and whoever
 distributes one must meet those licences' terms: for the many GPL and LGPL
 packages, among them the Linux kernel, that includes providing the
-corresponding source. Some packages need more care than their licence
-expression shows:
+corresponding source. The build machine publishes the source archive of
+every package beside the installation medium (`joe-build iso`, in
+`sources/`). Some packages need more care than their licence expression
+shows:
 
-- **Firefox** is built with Mozilla's official branding. Mozilla's trademark
-  policy restricts distributing builds under the Firefox name and logo; remove
-  `--enable-official-branding` from `packages/firefox/build.sh` before
-  distributing an image unless Mozilla has agreed.
+- **Firefox** is built with Mozilla's unofficial branding (it calls itself
+  "Nightly", and its desktop entry is "Web Browser"), because Mozilla's
+  trademark policy restricts distributing builds under the Firefox name and
+  logo. Official branding (`--enable-official-branding`) needs Mozilla's
+  agreement.
 - **7-Zip** includes its RAR decoder, whose licence forbids using the code to
   recreate the RAR compression algorithm.
 - **FFmpeg, x264 and x265** implement formats (H.264, H.265, AAC and others)

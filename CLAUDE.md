@@ -4,11 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-joe Linux is an independent distribution built from source. Three parts are original and live here; everything else is deliberately ordinary (glibc, systemd, usr-merge, GNOME), so prefer the conventional option when unsure.
+joe Linux is an independent distribution built from source. These parts are original and live here; everything else is deliberately ordinary (glibc, systemd, usr-merge, GNOME), so prefer the conventional option when unsure.
 
-1. **dave** (`dave/`): a package manager and deployment tool in Zig, with a PubGrub solver.
+1. **dave** (`dave/`): a package manager and deployment tool in Zig, with a PubGrub solver. It also builds every image (`dave image build`) and installs systems (`dave install-system`).
 2. **Transactional upgrades on a writable root**: btrfs snapshots plus systemd-boot boot counting.
 3. **The joe security module** (`packages/linux/joe-lsm/joe.c`): an LSM that restricts privileged processes to signed ("sealed") code and declared operations.
+4. **The installer** (`installer/`): a Qt Quick front end to `dave install-system`, run from the live medium (`image/live.zon`).
 
 README.md explains the design; `packages/README.md` is the recipe-writing reference. Read the latter before touching anything in `packages/`.
 
@@ -18,7 +19,7 @@ README.md explains the design; `packages/README.md` is the recipe-writing refere
 - **Zig 0.17.1.** It uses `pub fn main(init: std.process.Init)` and the `std.Io` interface; older idioms do not compile. Check the std source (`zig env` gives the lib dir) rather than relying on memory. Known traps: a directory opened without `.iterate = true` is path-only and ioctls on it fail with EBADF; `Io.Dir.readFileAlloc` returns 0 bytes for some procfs files; std has zstd decompression only, which is why writing packages pipes through the `zstd` program.
 - `build/` must be on btrfs (reflink copies, subvolumes). All generated state lives there and is git-ignored.
 - The VM harness and `image/run.sh` hardcode Arch's OVMF paths (`/usr/share/edk2/x64/OVMF_*.4m.fd`).
-- **joe boots without an initramfs**, so the kernel mounts the root itself and, until udev has processed the partition, btrfs reports the root's device as `/dev/root`. Anything that needs the root's block device early in boot (systemd-repart, systemd-growfs) must run after udev; `packages/joe-base/build.sh` ships the drop-ins that arrange this.
+- **Installed joe systems boot without an initramfs** (only the live medium has one), so the kernel mounts the root itself and, until udev has processed the partition, btrfs reports the root's device as `/dev/root`. Anything that needs the root's block device early in boot (systemd-repart, systemd-growfs) must run after udev; `packages/joe-base/build.sh` ships the drop-ins that arrange this.
 
 ## Commands
 
@@ -35,6 +36,10 @@ make test-security         the security module's three rules, in a VM
 make desktop-image / run-desktop / test-desktop     the GNOME image
 make release-image / test-release                   the desktop without test accounts; its first boot, in a VM
 make vm / run-vm / serve-repo                       a VM that keeps its disk (build/vm), and build/repo served to it
+make iso-tools             xorriso and erofs-utils (and mtools) into build/host-tools
+make iso                   build/images/joe-live.iso, the installation medium
+make test-live             boot the medium as a CD and as a USB stick
+make test-install          install from the medium onto an empty disk, then boot and check that
 ```
 
 A subset of unit tests (the filter matches test names and file paths such as `solver.version`):
@@ -55,16 +60,18 @@ This is resumable by file name: a package whose `NAME-VERSION-rRELEASE-x86_64.da
 
 Other tools: `bootstrap/order.py [NAME...]` prints the build order and reports missing recipes and cycles; `bootstrap/enter.sh [--net] CMD` runs a command inside the build root; `packages/.build/book.py [--blfs] PAGE` prints an LFS/BLFS page's commands for writing a recipe.
 
-VM tests are plain Python scripts (`python3 tests/vm/deployments.py [--joe]`, `security.py`, `desktop.py`, `release.py`). Each runs all of its scenarios in sequence on one VM; there is no per-scenario selector. `deployments.py` and `security.py` rebuild dave and their image on every run; `desktop.py` and `release.py` build their image unless given an image path as their argument. Everything the guest prints goes to `build/images/vm-<name>/console.log`, which is where to look after a failure. They serve repositories to the guest on host ports 8642 and 8643.
+VM tests are plain Python scripts (`python3 tests/vm/deployments.py [--joe]`, `security.py`, `desktop.py`, `release.py`, `live.py`, `install.py`). Each runs all of its scenarios in sequence on one VM; there is no per-scenario selector. `deployments.py` and `security.py` rebuild dave and their image on every run; `desktop.py`, `release.py`, `live.py` and `install.py` build their image (or ISO) unless given one as their argument. The live medium's system runs the *packaged* dave, so a dave change reaches `live.py` and `install.py` only after the `dave` package is rebuilt. Everything the guest prints goes to `build/images/vm-<name>/console.log`, which is where to look after a failure. They serve repositories to the guest on host ports 8642 and 8643.
 
-## Two tiers of test image
+## Images
 
-- The **scaffold** (`image/mkscaffold*.sh`) is the host's kernel plus a stock Arch userspace with dave added. It exists so deployment mechanics can be tested in minutes without building the distribution. Nothing from it ships, and it has no security module.
-- The **joe image** (`image/mkjoe.sh`) is one `dave install` transaction of `joe-base` (or `joe-desktop`) into an empty directory, then `image/mkimage.sh`. It needs `make bootstrap` and `make packages` first, which take an hour or more (the desktop set several hours).
+Every image is a specification in `image/*.zon` built by `dave image build SPEC --out FILE [--test] --repo NAME,DIR,URL,KEY [--with PKG] [--tree DIR]` (`dave/src/image.zig`; the layout is `provision.zig`, shared with `dave install-system`). Specs are parsed strictly: an unknown field is an error. Repository URLs are always given on the command line, never written in a spec. `image/mkjoe.sh` is a compatibility wrapper for the build machine's `joe-build`, to be removed once that is redeployed.
 
-- The **release image** (`make release-image`) is `joe-desktop` alone: no test console, no ready-made user, root locked. GDM starts gnome-initial-setup because no account exists. `tests/vm/release.py` boots the same package set plus `joe-test-console`, because the harness has no other way in.
+- The **scaffold** (`image/scaffold.zon`, tree prepared by `image/mkscaffold*.sh`) is the host's kernel and systemd-boot plus a stock Arch userspace with dave added. It exists so deployment mechanics can be tested in minutes without building the distribution. Nothing from it ships, and it has no security module.
+- The **joe images** (`console.zon`, `desktop.zon`) are one `dave install` transaction of `joe-base` (or `joe-desktop`) into an empty directory, laid out as a raw GPT disk without mounting anything. They need `make bootstrap` and `make packages` first, which take an hour or more (the desktop set several hours).
+- The **release image** (`release.zon`) is `joe-desktop` alone: no test console, no ready-made user, root locked. GDM starts gnome-initial-setup because no account exists. `tests/vm/release.py` boots the same package set plus `joe-test-console`, because the harness has no other way in.
+- The **live medium** (`live.zon`, `.format = .iso`, `dave/src/iso.zig`) is a hybrid UEFI ISO: the root as an erofs image with a tmpfs overlay (`joe-live` package: live user, masks), an initramfs made by a second dave transaction plus `image/initrd/`'s mount units, and the repository subset the installer installs from (`joe/install.zon`, `joe/repos/<name>/`). Nothing on it is sealed, so it runs the security module in log mode (`joe=log` on its command line).
 
-`--test` images add `joe-test-console`: root is logged in on ttyS0 with the prompt `joe# `, which `tests/vm/harness.py` depends on.
+`--test` images add `joe-test-console`: root is logged in on ttyS0 with the prompt `joe# `, which `tests/vm/harness.py` depends on. A `--test` medium also gets `console=ttyS0,115200` and puts `joe-test-console` in what it installs; `dave install-system` copies only `console=` arguments from the live command line into the installed system.
 
 ## Architecture
 
@@ -91,7 +98,7 @@ Invariants that span files:
 - `joe_keys.h` is generated by `bootstrap/build-packages.sh` from `build/keys/joe-code.pub`. The kernel therefore trusts only packages sealed with this build directory's key; a new key means rebuilding `linux`.
 - bash and Python carry patches (`packages/bash/joe-sealed-scripts.patch`, `packages/python/joe-sealed-code.patch`) that ask the module, via an ioctl on the open script, before running it.
 - Operations are declared per program in `package.zon` (`.operations`); the vocabulary is validated in `seal.zig`. A program no declaration covers is sealed `undeclared`; `dave repo audit build/repo` (or `make audit-security`) finds those and invalid seals.
-- Images are assembled unprivileged and so cannot be sealed at build time; `dave-seal.service` does it on first boot.
+- Images are assembled unprivileged and so cannot be sealed at build time; `dave-seal.service` does it on first boot. `dave install-system` runs as root and seals while installing, so an installed system's first boot has nothing to seal.
 - The module only logs unless the kernel is booted with `joe=enforce`.
 
 ### Packages and build order
@@ -103,4 +110,6 @@ Recipes follow Linux From Scratch and Beyond LFS (systemd, development branch). 
 ### Files that exist in more than one place
 
 - dave's systemd units are in `system/`. They are installed by both `packages/dave/build.sh` (real images) and `image/add-dave.sh` (scaffold); adding or renaming a unit means editing both. Units are enabled by shipping symlinks.
+- `packages/joe-installer/files/` is likewise populated with a copy of `installer/`.
+- `packages/joe-release/build.sh` holds the kernel's and dave's versions, because releases are named J<revision>-<kernel>-<dave>[-<stage>] (README.md, "Releases"). Changing either version means changing it there too and bumping `joe-release`'s `.release`; `tests/vm/live.py` checks they agree.
 - `packages/dave/files/` is populated by `build-packages.sh` with the freshly built binary and `system/*`. dave is cross-built on the host because joe does not package Zig. A dave change reaches an image only after the `dave` package is rebuilt, which needs a `.release` bump in `packages/dave/package.zon`.
