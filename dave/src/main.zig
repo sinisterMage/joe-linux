@@ -22,11 +22,6 @@ pub const deploy = @import("deploy.zig");
 pub const builder = @import("builder.zig");
 pub const seal = @import("seal.zig");
 
-/// Indexes are signed and packages are checked against the signed index, so
-/// transport security adds nothing dave relies on; leaving TLS out keeps the
-/// static binary small until HTTPS repositories are supported.
-pub const std_options: std.Options = .{ .http_disable_tls = true };
-
 const dave_version = "0.1.0";
 const top_mount = "/run/dave/top";
 const lock_path = "/run/dave/lock";
@@ -337,11 +332,22 @@ const App = struct {
         if (ctx.trusted.len == 0) return app.fail("no trusted keys in {s}; refusing to use unsigned repositories", .{repo.keys_path});
         if (!refresh) return repo.loadCached(app.arena, app.io, ctx.config, ctx.trusted, ctx.cache) catch |e|
             return app.fail("the cached repository index is unusable: {t}", .{e});
-        return repo.refresh(app.gpa, app.arena, app.io, ctx.config, ctx.trusted, ctx.cache) catch |e| switch (e) {
-            error.BadSignature => app.fail("a repository index is not signed by a trusted key; nothing was changed", .{}),
-            else => app.fail("cannot refresh repositories: {t}", .{e}),
-        };
+        for (ctx.config.repos) |r| {
+            repo.refreshRepo(app.gpa, app.arena, app.io, r, ctx.trusted, ctx.cache) catch |e| switch (e) {
+                error.BadSignature => return app.fail("a repository index is not signed by a trusted key; nothing was changed", .{}),
+                error.TlsInitializationFailed => return app.fail(tls_failed, .{r.url}),
+                error.CertificateBundleLoadFailure => return app.fail(no_certificates, .{}),
+                else => return app.fail("cannot refresh repository {s} ({s}): {t}", .{ r.name, r.url, e }),
+            };
+        }
+        return repo.loadCached(app.arena, app.io, ctx.config, ctx.trusted, ctx.cache) catch |e|
+            app.fail("the cached repository index is unusable: {t}", .{e});
     }
+
+    // The HTTP client reports every failed TLS handshake as one error; by far
+    // the most common cause is a certificate this system does not accept.
+    const tls_failed = "cannot connect securely to {s} (is its certificate valid, and trusted by this system?); nothing was changed";
+    const no_certificates = "cannot read this system's trusted certificates (/etc/pki/tls/certs/ca-bundle.crt); nothing was changed";
 
     fn solve(app: *App, request: resolve.Request) !resolve.Solution {
         var explanation: Io.Writer.Allocating = .init(app.arena);
@@ -372,6 +378,8 @@ const App = struct {
         for (solution.install, names) |u, *name| {
             _ = repo.ensurePackage(app.gpa, app.arena, app.io, u.candidate, ctx.cache) catch |e| switch (e) {
                 error.ChecksumMismatch => return app.fail("{s} does not match the signed index; nothing was changed", .{u.candidate.entry.filename}),
+                error.TlsInitializationFailed => return app.fail(tls_failed, .{u.candidate.repo_url}),
+                error.CertificateBundleLoadFailure => return app.fail(no_certificates, .{}),
                 else => return app.fail("cannot fetch {s}: {t}", .{ u.candidate.entry.filename, e }),
             };
             name.* = u.candidate.entry.filename;

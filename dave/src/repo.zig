@@ -1,10 +1,15 @@
 //! Package repositories.
 //!
-//! A repository is a directory (served over HTTP or read from a local path)
-//! holding package files, `repo.zon` describing them, and `repo.zon.sig`, an
-//! Ed25519 signature over the exact bytes of the index. The index records the
-//! SHA-256 of every package, so trusting the signature is enough to trust
-//! every package file, however it was transported.
+//! A repository is a directory (served over HTTPS or HTTP, or read from a
+//! local path) holding package files, `repo.zon` describing them, and
+//! `repo.zon.sig`, an Ed25519 signature over the exact bytes of the index. The
+//! index records the SHA-256 of every package, so trusting the signature is
+//! enough to trust every package file, however it was transported.
+//!
+//! What HTTPS adds is what a signature cannot give. An old index stays validly
+//! signed forever, so someone on the network path could keep serving one and
+//! hold a machine back from security fixes; with HTTPS only the server can.
+//! It also keeps what a machine installs from being read off the wire.
 
 const std = @import("std");
 const Io = std.Io;
@@ -40,7 +45,7 @@ pub const Index = struct {
 
 pub const RepoConfig = struct {
     name: []const u8,
-    /// `http://host/path` or a local directory.
+    /// `https://host/path`, `http://host/path` or a local directory.
     url: []const u8,
 };
 
@@ -275,15 +280,20 @@ pub fn audit(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, out: *Io.Wri
 // Using repositories
 // ---------------------------------------------------------------------------
 
-fn isHttp(url: []const u8) bool {
-    return std.mem.startsWith(u8, url, "http://");
+fn isRemote(url: []const u8) bool {
+    return std.mem.startsWith(u8, url, "https://") or std.mem.startsWith(u8, url, "http://");
 }
 
 /// Copies or downloads `<base>/<name>` to `dest_dir/dest_name`, atomically.
+///
+/// An HTTPS server must present a certificate for its host name that chains to
+/// a certificate in the store of the system dave is running on (on joe,
+/// `/etc/pki/tls/certs/ca-bundle.crt`, from make-ca). That is the running
+/// system's store even when dave works on another root with `--root`.
 pub fn fetch(gpa: Allocator, arena: Allocator, io: Io, base: []const u8, name: []const u8, dest_dir: Io.Dir, dest_name: []const u8) !void {
     const tmp = try std.fmt.allocPrint(arena, "{s}.partial", .{dest_name});
     errdefer dest_dir.deleteFile(io, tmp) catch {};
-    if (isHttp(base)) {
+    if (isRemote(base)) {
         const url = try std.fmt.allocPrint(arena, "{s}/{s}", .{ std.mem.trimEnd(u8, base, "/"), name });
         var file = try dest_dir.createFile(io, tmp, .{});
         defer file.close(io);
@@ -295,8 +305,6 @@ pub fn fetch(gpa: Allocator, arena: Allocator, io: Io, base: []const u8, name: [
         if (result.status != .ok) return error.DownloadFailed;
         try fw.interface.flush();
         try file.sync(io);
-    } else if (std.mem.startsWith(u8, base, "https://")) {
-        return error.HttpsNotSupported;
     } else {
         var src = Io.Dir.cwd().openDir(io, base, .{}) catch return error.RepositoryNotFound;
         defer src.close(io);
@@ -309,24 +317,27 @@ pub fn fetch(gpa: Allocator, arena: Allocator, io: Io, base: []const u8, name: [
 /// and returns all candidates. An index that fails verification is discarded
 /// and the previously cached one, if any, is left in place.
 pub fn refresh(gpa: Allocator, arena: Allocator, io: Io, config: Config, trusted: []const PublicKey, cache: Io.Dir) ![]Candidate {
-    for (config.repos) |r| {
-        if (!manifest_mod.validName(r.name)) return error.InvalidConfig;
-        try cache.createDirPath(io, r.name);
-        var dir = try cache.openDir(io, r.name, .{});
-        defer dir.close(io);
-        try fetch(gpa, arena, io, r.url, index_name, dir, index_name ++ ".new");
-        try fetch(gpa, arena, io, r.url, signature_name, dir, signature_name ++ ".new");
-        const text = try dir.readFileAlloc(io, index_name ++ ".new", arena, .limited(max_index_bytes));
-        const signature = try dir.readFileAlloc(io, signature_name ++ ".new", arena, .limited(4096));
-        verify(signature, text, trusted) catch |err| {
-            dir.deleteFile(io, index_name ++ ".new") catch {};
-            dir.deleteFile(io, signature_name ++ ".new") catch {};
-            return err;
-        };
-        try dir.rename(index_name ++ ".new", dir, index_name, io);
-        try dir.rename(signature_name ++ ".new", dir, signature_name, io);
-    }
+    for (config.repos) |r| try refreshRepo(gpa, arena, io, r, trusted, cache);
     return loadCached(arena, io, config, trusted, cache);
+}
+
+/// Downloads and verifies one repository's index into `cache/<name>`.
+pub fn refreshRepo(gpa: Allocator, arena: Allocator, io: Io, r: RepoConfig, trusted: []const PublicKey, cache: Io.Dir) !void {
+    if (!manifest_mod.validName(r.name)) return error.InvalidConfig;
+    try cache.createDirPath(io, r.name);
+    var dir = try cache.openDir(io, r.name, .{});
+    defer dir.close(io);
+    try fetch(gpa, arena, io, r.url, index_name, dir, index_name ++ ".new");
+    try fetch(gpa, arena, io, r.url, signature_name, dir, signature_name ++ ".new");
+    const text = try dir.readFileAlloc(io, index_name ++ ".new", arena, .limited(max_index_bytes));
+    const signature = try dir.readFileAlloc(io, signature_name ++ ".new", arena, .limited(4096));
+    verify(signature, text, trusted) catch |err| {
+        dir.deleteFile(io, index_name ++ ".new") catch {};
+        dir.deleteFile(io, signature_name ++ ".new") catch {};
+        return err;
+    };
+    try dir.rename(index_name ++ ".new", dir, index_name, io);
+    try dir.rename(signature_name ++ ".new", dir, signature_name, io);
 }
 
 /// Loads the cached indexes, re-verifying their signatures.

@@ -43,7 +43,7 @@ A subset of unit tests (the filter matches test names and file paths such as `so
 cd dave && zig test src/main.zig -target x86_64-linux-none --test-filter "version"
 ```
 
-`tests/cli.sh` can be run on its own; `DAVE=/path/to/dave` overrides the binary. It works in `build/cli-test`.
+`tests/cli.sh` can be run on its own; `DAVE=/path/to/dave` overrides the binary. It works in `build/cli-test`. Its network tests serve the repository from `127.0.0.1` over HTTP and HTTPS (a throwaway CA laid over `/etc/ssl` with `bwrap`), so it needs `openssl` and `python3` as well.
 
 Build specific packages (in dependency order, into the shared build root):
 

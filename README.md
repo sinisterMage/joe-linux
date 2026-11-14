@@ -93,7 +93,9 @@ mounted at all takes the same path through the kernel's panic timeout.
 
 **Packages** are zstd-compressed tar files beginning with a manifest that is
 authoritative for all file metadata. Repositories are signed with Ed25519; the
-signed index carries the SHA-256 of every package. Packages have no install
+signed index carries the SHA-256 of every package. They are fetched over HTTPS
+(checked against the system's certificate store), HTTP, or from a local
+directory; the signature is what is trusted either way. Packages have no install
 scripts: a package may declare a trigger (rebuild the linker cache when
 libraries change), and that is all.
 
@@ -262,8 +264,8 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   already-compiled release.
 - **Building dave inside joe.** dave is a static binary cross-built by Zig on
   the build machine, because joe does not package Zig yet.
-- HTTPS repositories, virtual packages (`provides`), and changing the kernel on
-  a running system (use `dave upgrade`).
+- Virtual packages (`provides`), and changing the kernel on a running system
+  (use `dave upgrade`).
 
 ## Licence
 

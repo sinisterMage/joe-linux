@@ -76,6 +76,78 @@ expect "dependency" "another package needs it" <<<"$out"
 [[ ! -e root/usr/bin/hello && ! -e root/usr/lib/libgreet.txt ]] || fail "files left behind"
 [[ -e root/usr/bin/tree ]] || fail "unrelated package removed"
 
+echo "== repositories over http and https"
+for tool in openssl python3 bwrap; do
+    command -v "$tool" >/dev/null || fail "the network tests need $tool"
+done
+# A throwaway certificate authority, a server certificate for 127.0.0.1 and
+# one for some other name. dave trusts only the system's certificate store, so
+# the test authority is laid over /etc/ssl for one dave process at a time.
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days 2 \
+    -subj "/CN=dave test authority" -addext basicConstraints=critical,CA:TRUE \
+    -addext keyUsage=critical,keyCertSign -keyout ca.key -out ca.pem 2>/dev/null
+for site in here:IP:127.0.0.1 elsewhere:DNS:elsewhere.example; do
+    name=${site%%:*}
+    openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -subj "/CN=$name" \
+        -keyout "$name.key" -out "$name.csr" 2>/dev/null
+    openssl x509 -req -in "$name.csr" -CA ca.pem -CAkey ca.key -CAcreateserial -days 2 \
+        -extfile <(printf 'subjectAltName=%s\nextendedKeyUsage=serverAuth\n' "${site#*:}") \
+        -out "$name.pem" 2>/dev/null
+done
+mkdir -p "$work/bin"
+cat > "$work/bin/serve.py" <<'EOF'
+# serve.py DIR CERT...: serves DIR over HTTP, and over HTTPS once per
+# certificate (CERT.pem, CERT.key); prints the ports in that order.
+import functools, http.server, ssl, sys, threading
+directory, *certs = sys.argv[1:]
+class Quiet(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *args): pass
+ports = []
+for cert in [None, *certs]:
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Quiet, directory=directory))
+    if cert:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(cert + ".pem", cert + ".key")
+        server.socket = context.wrap_socket(server.socket, server_side=True)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    ports.append(str(server.server_address[1]))
+print(*ports, flush=True)
+threading.Event().wait()
+EOF
+python3 -I "$work/bin/serve.py" "$work/repo" "$work/here" "$work/elsewhere" > ports 2> server.log &
+server=$!
+trap 'kill $server 2>/dev/null || true' EXIT
+for _ in $(seq 100); do [[ -s ports ]] && break; sleep 0.1; done
+read -r http_port here_port elsewhere_port < ports || fail "the test server did not start: $(cat server.log)"
+
+net_root() { # net_root DIR URL: an empty root whose only repository is URL
+    mkdir -p "$1/etc/dave/keys"
+    cp "$work/signing.pub" "$1/etc/dave/keys/"
+    printf '.{ .repos = .{ .{ .name = "test", .url = "%s" } } }\n' "$2" > "$1/etc/dave/repos.zon"
+}
+trusting_test_ca() { # the command, with the test authority as the only trusted certificate
+    bwrap --dev-bind / / --tmpfs /etc/ssl --ro-bind "$work/ca.pem" /etc/ssl/certs/ca-certificates.crt "$@"
+}
+
+net_root net-http "http://127.0.0.1:$http_port"
+"$dave" --root net-http install hello | expect "http" "install  hello  2.0-r1"
+[[ $(cat net-http/usr/bin/hello) == "hello v2" ]] || fail "nothing installed over http"
+
+net_root net-https "https://127.0.0.1:$here_port/"
+trusting_test_ca "$dave" --root net-https install hello | expect "https" "install  hello  2.0-r1"
+[[ $(cat net-https/usr/bin/hello) == "hello v2" ]] || fail "nothing installed over https"
+
+net_root net-untrusted "https://127.0.0.1:$here_port"
+out=$("$dave" --root net-untrusted install hello 2>&1) && fail "trusted a certificate outside the system's store"
+expect "untrusted" "cannot connect securely to https://127.0.0.1:$here_port" <<<"$out"
+[[ ! -e net-untrusted/usr/bin/hello ]] || fail "installed from an untrusted server"
+
+net_root net-wrong-name "https://127.0.0.1:$elsewhere_port"
+out=$(trusting_test_ca "$dave" --root net-wrong-name install hello 2>&1) && fail "accepted a certificate for another name"
+expect "wrong name" "cannot connect securely" <<<"$out"
+[[ ! -e net-wrong-name/usr/bin/hello ]] || fail "installed from a server with another name's certificate"
+kill $server
+
 echo "== a tampered index is refused"
 sed -i 's/tree/trex/' "$work/repo/repo.zon"
 out=$("${D[@]}" install hello 2>&1) && fail "accepted a tampered index"
