@@ -147,6 +147,12 @@ The details are in the source, which is commented for readers:
 
 ## Building and testing
 
+GitHub Actions runs dave's existing unit tests on pull requests and pushes to
+`main`, using Zig 0.17.1 on Ubuntu. To run the same checks locally:
+`cd dave && zig build test --summary all` (requires `zstd`). Tests that need
+btrfs or fs-verity skip when those features are unavailable. This workflow
+does not run the command-line or VM suites below.
+
 Requirements on the build machine: Zig 0.17.1, a C toolchain, QEMU with KVM,
 OVMF firmware, btrfs-progs 6.12 or newer, bubblewrap, and a build directory on
 btrfs. Nothing needs root.
