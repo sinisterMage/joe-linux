@@ -22,6 +22,35 @@ PROMPT = b"joe# "
 BOOT_BANNER = b"BdsDxe: starting "
 
 
+def start_virtiofsd(share, socket):
+    """Start the same unprivileged host-share daemon used by image/run.sh."""
+    binary = shutil.which("virtiofsd") or "/usr/lib/virtiofsd"
+    if not os.access(binary, os.X_OK):
+        return None
+    daemon = subprocess.Popen([
+        binary, "--socket-path", socket, "--shared-dir", share,
+        "--translate-uid", "squash-guest:0:0:4294967295", "--translate-gid", "squash-guest:0:0:4294967295",
+        "--translate-uid", "squash-host:0:1000:4294967295", "--translate-gid", "squash-host:0:1000:4294967295",
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    for _ in range(50):
+        if os.path.exists(socket):
+            return daemon
+        time.sleep(0.1)
+    stop_virtiofsd(daemon)
+    raise Timeout("virtiofsd did not start")
+
+
+def stop_virtiofsd(daemon):
+    if not daemon:
+        return
+    daemon.terminate()
+    try:
+        daemon.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        daemon.kill()
+        daemon.wait(timeout=5)
+
+
 class Timeout(Exception):
     pass
 

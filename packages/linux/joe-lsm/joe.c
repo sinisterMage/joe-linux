@@ -2,9 +2,9 @@
 /*
  * joe: the joe Linux security module.
  *
- * Three rules, all about privileged processes, which here means a process in
- * the initial user namespace with any of its user ids equal to 0 or with any
- * capability in its permitted set:
+ * Three rules, all about privileged processes, which here means a process with
+ * any global user id equal to 0 or with any capability in its permitted set in
+ * the initial user namespace:
  *
  *  1. A privileged process only executes sealed code. A file is sealed when
  *     its contents are protected by fs-verity and it carries an xattr with a
@@ -38,18 +38,23 @@
 #include <linux/cred.h>
 #include <linux/dcache.h>
 #include <linux/fs.h>
+#include <linux/fs_context.h>
 #include <linux/fsverity.h>
+#include <linux/ipc.h>
 #include <linux/kernel_read_file.h>
 #include <linux/lsm_hooks.h>
 #include <linux/mm.h>
 #include <linux/mman.h>
+#include <linux/mount.h>
 #include <linux/mutex.h>
 #include <linux/net.h>
 #include <linux/path.h>
+#include <linux/pid.h>
 #include <linux/ptrace.h>
 #include <linux/ratelimit.h>
 #include <linux/rcupdate.h>
 #include <linux/refcount.h>
+#include <linux/sched/signal.h>
 #include <linux/security.h>
 #include <linux/slab.h>
 #include <linux/socket.h>
@@ -61,6 +66,7 @@
 #include <crypto/sig.h>
 #include <uapi/linux/fsverity.h>
 #include <uapi/linux/lsm.h>
+#include <uapi/linux/mount.h>
 
 /* Generated at build time: the code-signing public keys this kernel trusts. */
 #include "joe_keys.h"
@@ -98,6 +104,7 @@ static bool joe_enforce = IS_ENABLED(CONFIG_SECURITY_JOE_ENFORCE);
 enum joe_flag {
 	JOE_ALL,		/* everything below */
 	JOE_NET,		/* sockets other than local and netlink */
+	JOE_ROOT_IPC,
 	JOE_MOUNT,
 	JOE_MODULE,
 	JOE_PTRACE,
@@ -115,6 +122,7 @@ struct joe_ops {
 	/* What has already been reported in log mode, to report each once. */
 	unsigned long reported_flags;
 	u64 reported_caps;
+	bool undeclared;
 	unsigned int nwrite;
 	unsigned int nexec;
 	const char *write[JOE_MAX_PATHS];	/* path prefixes */
@@ -149,8 +157,9 @@ static void joe_ops_put(struct joe_ops *ops)
  *
  *   all            write:/path/prefix    exec:/path/to/program
  *   net            write:*               exec:*
- *   mount          cap:<number>          cap:*
- *   module  ptrace  bpf
+ *   root-ipc       cap:<number>          cap:*
+ *   mount          module                ptrace
+ *   bpf            undeclared
  *
  * Unknown lines are ignored so that a newer package still loads on an older
  * kernel, where it simply gets fewer permissions than it asked for.
@@ -176,6 +185,10 @@ static struct joe_ops *joe_ops_parse(const u8 *text, size_t len)
 			__set_bit(JOE_ALL, &ops->flags);
 		} else if (!strcmp(line, "net")) {
 			__set_bit(JOE_NET, &ops->flags);
+		} else if (!strcmp(line, "root-ipc")) {
+			__set_bit(JOE_ROOT_IPC, &ops->flags);
+		} else if (!strcmp(line, "undeclared")) {
+			ops->undeclared = true;
 		} else if (!strcmp(line, "mount")) {
 			__set_bit(JOE_MOUNT, &ops->flags);
 		} else if (!strcmp(line, "module")) {
@@ -231,8 +244,15 @@ struct joe_cred {
 	struct joe_ops *ops;
 };
 
+struct joe_file {
+	/* The owner that asynchronous SIGIO/SIGURG signals are sent for. */
+	struct joe_ops *fown_ops;
+	struct pid *fown_tgid;
+};
+
 static struct lsm_blob_sizes joe_blob_sizes __ro_after_init = {
 	.lbs_cred = sizeof(struct joe_cred),
+	.lbs_file = sizeof(struct joe_file),
 	.lbs_inode = sizeof(struct joe_inode),
 };
 
@@ -241,20 +261,49 @@ static struct joe_inode *joe_inode(const struct inode *inode)
 	return inode->i_security + joe_blob_sizes.lbs_inode;
 }
 
+static struct joe_file *joe_file(const struct file *file)
+{
+	return file->f_security + joe_blob_sizes.lbs_file;
+}
+
 static struct joe_cred *joe_cred(const struct cred *cred)
 {
 	return cred->security + joe_blob_sizes.lbs_cred;
 }
 
-static bool joe_privileged(const struct cred *cred)
+static bool joe_root_cred(const struct cred *cred)
 {
-	if (cred->user_ns != &init_user_ns)
-		return false;
 	return uid_eq(cred->uid, GLOBAL_ROOT_UID) ||
 	       uid_eq(cred->euid, GLOBAL_ROOT_UID) ||
 	       uid_eq(cred->suid, GLOBAL_ROOT_UID) ||
-	       uid_eq(cred->fsuid, GLOBAL_ROOT_UID) ||
-	       !cap_isclear(cred->cap_permitted);
+	       uid_eq(cred->fsuid, GLOBAL_ROOT_UID);
+}
+
+static bool joe_privileged(const struct cred *cred)
+{
+	/* Root keeps its global identity in a child user namespace. */
+	return joe_root_cred(cred) ||
+	       (cred->user_ns == &init_user_ns && !cap_isclear(cred->cap_permitted));
+}
+
+static bool joe_task_privileged(struct task_struct *task)
+{
+	bool privileged;
+
+	rcu_read_lock();
+	privileged = joe_privileged(__task_cred(task));
+	rcu_read_unlock();
+	return privileged;
+}
+
+static bool joe_task_root(struct task_struct *task)
+{
+	bool root;
+
+	rcu_read_lock();
+	root = joe_root_cred(__task_cred(task));
+	rcu_read_unlock();
+	return root;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -485,6 +534,19 @@ static int joe_require_sealed(struct file *file, const char *op)
 	return ret;
 }
 
+static int joe_refuse_undeclared(struct file *file, struct joe_ops *caller)
+{
+	const char *name;
+	char *page;
+	int ret;
+
+	name = joe_file_name(file, &page);
+	ret = joe_violation(caller, "undeclared", name, -EACCES);
+	if (page)
+		free_page((unsigned long)page);
+	return ret;
+}
+
 /* ------------------------------------------------------------------------ */
 /* Rule 1 and rule 2: execution                                              */
 /* ------------------------------------------------------------------------ */
@@ -494,8 +556,9 @@ static int joe_bprm_check_security(struct linux_binprm *bprm)
 {
 	const struct cred *cred = current_cred();
 	struct joe_ops *ops = joe_cred(cred)->ops;
+	struct joe_ops *target = NULL;
 	const char *name;
-	char *page;
+	char *page = NULL;
 	unsigned int i;
 	int ret;
 
@@ -509,8 +572,16 @@ static int joe_bprm_check_security(struct linux_binprm *bprm)
 	 * Rule 3: may this program run that one? Asked once per exec, about
 	 * the file that was named, not about the interpreter of a script.
 	 */
-	if (!ops || joe_ops_allows(ops, JOE_EXEC_ANY) || bprm->interp != bprm->filename)
+	if (bprm->interp != bprm->filename)
 		return 0;
+	target = joe_sealed(bprm->file);
+	if (target && target->undeclared &&
+	    !(ops && test_bit(JOE_ALL, &ops->flags))) {
+		ret = joe_refuse_undeclared(bprm->file, ops);
+		goto out_target;
+	}
+	if (!ops || joe_ops_allows(ops, JOE_EXEC_ANY))
+		goto out_target;
 	name = joe_file_name(bprm->file, &page);
 	for (i = 0; i < ops->nexec; i++)
 		if (!strcmp(ops->exec[i], name))
@@ -519,6 +590,8 @@ static int joe_bprm_check_security(struct linux_binprm *bprm)
 out:
 	if (page)
 		free_page((unsigned long)page);
+out_target:
+	joe_ops_put(target);
 	return ret;
 }
 
@@ -532,9 +605,9 @@ static int joe_file_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 /* The same question asked through the kernel's own AT_EXECVE_CHECK. */
 static int joe_bprm_creds_for_exec(struct linux_binprm *bprm)
 {
-	if (!bprm->is_check || !joe_privileged(current_cred()))
+	if (!bprm->is_check)
 		return 0;
-	return joe_require_sealed(bprm->file, "script-unsealed");
+	return joe_bprm_check_security(bprm);
 }
 
 /*
@@ -550,8 +623,19 @@ static int joe_bprm_creds_from_file(struct linux_binprm *bprm, const struct file
 
 	if (joe_privileged(bprm->cred)) {
 		ops = joe_sealed((struct file *)file);
-		if (!ops)
+		if (!ops) {
 			ret = joe_require_sealed((struct file *)file, "exec-unsealed");
+		} else if (ops->undeclared) {
+			if (jc->ops && test_bit(JOE_ALL, &jc->ops->flags)) {
+				/* Only an undeclared program inherits an all caller. */
+				joe_ops_put(ops);
+				ops = joe_ops_get(jc->ops);
+			} else if (!joe_privileged(current_cred())) {
+				/* The earlier check saw an unprivileged caller. Do not
+				 * let a setuid/capability transition bypass this rule. */
+				ret = joe_refuse_undeclared((struct file *)file, jc->ops);
+			}
+		}
 	}
 	joe_ops_put(jc->ops);
 	jc->ops = ops;
@@ -647,6 +731,99 @@ static int joe_capable(const struct cred *cred, struct user_namespace *ns,
 	return joe_violation(ops, "cap", arg, -EPERM);
 }
 
+static int joe_task_kill(struct task_struct *p, struct kernel_siginfo *info,
+			 int sig, const struct cred *cred)
+{
+	struct joe_ops *ops;
+
+	if (!sig || info == SEND_SIG_PRIV ||
+	    (info != SEND_SIG_NOINFO && SI_FROMKERNEL(info)))
+		return 0;
+	if (!cred) {
+		if (same_thread_group(current, p))
+			return 0;
+		cred = current_cred();
+	}
+	ops = joe_cred(cred)->ops;
+	if (!ops || !joe_privileged(cred) || joe_ops_allows(ops, JOE_ROOT_IPC) ||
+	    !joe_task_root(p))
+		return 0;
+	return joe_flag_violation(ops, JOE_ROOT_IPC, "root-ipc", "signal", -EPERM);
+}
+
+static void joe_file_set_fowner(struct file *file)
+{
+	const struct cred *cred = current_cred();
+	struct joe_file *jf = joe_file(file);
+	struct joe_ops *old_ops = jf->fown_ops;
+	struct pid *old_tgid = jf->fown_tgid;
+
+	jf->fown_ops = NULL;
+	jf->fown_tgid = NULL;
+	if (joe_privileged(cred) && joe_cred(cred)->ops) {
+		jf->fown_ops = joe_ops_get(joe_cred(cred)->ops);
+		jf->fown_tgid = get_pid(task_tgid(current));
+	}
+	joe_ops_put(old_ops);
+	put_pid(old_tgid);
+}
+
+static int joe_file_send_sigiotask(struct task_struct *tsk,
+				   struct fown_struct *fown, int sig)
+{
+	struct joe_file *jf = joe_file(fown->file);
+	struct joe_ops *ops = jf->fown_ops;
+
+	if (!ops || joe_ops_allows(ops, JOE_ROOT_IPC) ||
+	    jf->fown_tgid == task_tgid(tsk) || !joe_task_root(tsk))
+		return 0;
+	return joe_flag_violation(ops, JOE_ROOT_IPC, "root-ipc", "sigio", -EPERM);
+}
+
+static int joe_ipc_check(struct kern_ipc_perm *ipcp, const char *arg)
+{
+	const struct cred *cred = current_cred();
+	struct joe_ops *ops = joe_cred(cred)->ops;
+
+	/* IPC_INFO and the related commands have no target object. */
+	if (!ipcp || !ops || !joe_privileged(cred) || joe_ops_allows(ops, JOE_ROOT_IPC) ||
+	    (!uid_eq(ipcp->uid, GLOBAL_ROOT_UID) &&
+	     !uid_eq(ipcp->cuid, GLOBAL_ROOT_UID)))
+		return 0;
+	return joe_flag_violation(ops, JOE_ROOT_IPC, "root-ipc", arg, -EPERM);
+}
+
+static int joe_ipc_permission(struct kern_ipc_perm *ipcp, short flag)
+{
+	return joe_ipc_check(ipcp, "sysv");
+}
+
+/* Object control does not necessarily go through ipc_permission. */
+static int joe_shm_shmctl(struct kern_ipc_perm *ipcp, int cmd)
+{
+	return joe_ipc_check(ipcp, "shmctl");
+}
+
+static int joe_msg_queue_msgctl(struct kern_ipc_perm *ipcp, int cmd)
+{
+	return joe_ipc_check(ipcp, "msgctl");
+}
+
+static int joe_sem_semctl(struct kern_ipc_perm *ipcp, int cmd)
+{
+	return joe_ipc_check(ipcp, "semctl");
+}
+
+static int joe_userns_create(const struct cred *cred)
+{
+	/* Global root remains confined after the transition. A capability-only
+	 * process would instead lose its declarations when its old capability set
+	 * was replaced by a full set in the new namespace. */
+	if (!joe_privileged(cred) || joe_root_cred(cred))
+		return 0;
+	return joe_violation(joe_cred(cred)->ops, "userns", "create", -EPERM);
+}
+
 static int joe_socket_create(int family, int type, int protocol, int kern)
 {
 	const struct cred *cred = current_cred();
@@ -680,16 +857,29 @@ static bool joe_may_write(const struct joe_ops *ops, const char *path)
 }
 
 /*
- * Write declarations concern persistent storage. Temporary and virtual file
- * systems (/run, /tmp, /proc, /sys, /dev) hold no state that outlives the
- * boot, and devices are governed by capabilities.
+ * Write declarations concern persistent storage. Only filesystems known to
+ * contain no state that outlives the boot are exempt; network, stacked and
+ * unknown filesystems are persistent, fail closed.
  */
 static bool joe_persistent(const struct super_block *sb)
 {
-	return sb->s_type->fs_flags & FS_REQUIRES_DEV;
+	static const char * const volatile_fs[] = {
+		"proc", "sysfs", "tmpfs", "ramfs", "rootfs", "devtmpfs",
+		"devpts", "cgroup", "cgroup2", "securityfs", "debugfs",
+		"tracefs", "configfs", "sockfs", "pipefs", "anon_inodefs",
+		"mqueue", "hugetlbfs", "fusectl", "rpc_pipefs", "autofs",
+		"binfmt_misc", "bpf",
+	};
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(volatile_fs); i++)
+		if (!strcmp(sb->s_type->name, volatile_fs[i]))
+			return false;
+	return true;
 }
 
-static int joe_check_write(const struct path *dir, struct dentry *dentry, const char *op)
+static int joe_check_write_path(const struct path *dir, struct dentry *dentry,
+				const char *op, bool force)
 {
 	const struct cred *cred = current_cred();
 	struct joe_ops *ops = joe_cred(cred)->ops;
@@ -698,7 +888,7 @@ static int joe_check_write(const struct path *dir, struct dentry *dentry, const 
 
 	if (!ops || !joe_privileged(cred) || joe_ops_allows(ops, JOE_WRITE_ANY))
 		return 0;
-	if (!joe_persistent(dir->dentry->d_sb))
+	if (!force && !joe_persistent(dir->dentry->d_sb))
 		return 0;
 	page = (char *)__get_free_page(GFP_KERNEL);
 	if (!page)
@@ -728,11 +918,19 @@ static int joe_check_write(const struct path *dir, struct dentry *dentry, const 
 	return ret;
 }
 
+static int joe_check_write(const struct path *dir, struct dentry *dentry, const char *op)
+{
+	return joe_check_write_path(dir, dentry, op, false);
+}
+
 static int joe_file_open(struct file *file)
 {
-	if (!(file->f_mode & FMODE_WRITE) || !S_ISREG(file_inode(file)->i_mode))
+	umode_t mode = file_inode(file)->i_mode;
+
+	if (!(file->f_mode & FMODE_WRITE) || (!S_ISREG(mode) && !S_ISBLK(mode)))
 		return 0;
-	return joe_check_write(&file->f_path, NULL, "write");
+	/* Block writes persist even when the device node lives in devtmpfs. */
+	return joe_check_write_path(&file->f_path, NULL, "write", S_ISBLK(mode));
 }
 
 static int joe_path_unlink(const struct path *dir, struct dentry *dentry)
@@ -782,15 +980,75 @@ static int joe_path_truncate(const struct path *path)
 	return joe_check_write(path, NULL, "write");
 }
 
-static int joe_sb_mount(const char *dev_name, const struct path *path,
-			const char *type, unsigned long flags, void *data)
+static int joe_check_mount(const char *arg)
 {
 	const struct cred *cred = current_cred();
 	struct joe_ops *ops = joe_cred(cred)->ops;
 
 	if (!ops || !joe_privileged(cred) || joe_ops_allows(ops, JOE_MOUNT))
 		return 0;
-	return joe_flag_violation(ops, JOE_MOUNT, "mount", type, -EPERM);
+	return joe_flag_violation(ops, JOE_MOUNT, "mount", arg, -EPERM);
+}
+
+static int joe_sb_mount(const char *dev_name, const struct path *path,
+			const char *type, unsigned long flags, void *data)
+{
+	return joe_check_mount(type);
+}
+
+static int joe_sb_kern_mount(const struct super_block *sb)
+{
+	/* FSCONFIG_CMD_CREATE reaches here even when no parameters were set. */
+	return joe_check_mount(sb->s_type->name);
+}
+
+static int joe_fs_context_parse_param(struct fs_context *fc,
+				      struct fs_parameter *param)
+{
+	int ret = joe_check_mount(fc->fs_type->name);
+
+	/* Joe never consumes filesystem parameters itself. */
+	return ret ? ret : -ENOPARAM;
+}
+
+static int joe_fsconfig(struct fs_context *fc, unsigned int cmd)
+{
+	/* Refuse creation before vfs_get_tree() can replay or modify anything. */
+	if (cmd == FSCONFIG_CMD_CREATE || cmd == FSCONFIG_CMD_CREATE_EXCL ||
+	    cmd == FSCONFIG_CMD_RECONFIGURE)
+		return joe_check_mount(fc->fs_type->name);
+	return 0;
+}
+
+static int joe_fsmount(struct fs_context *fc)
+{
+	/* Also covers inherited contexts and FSMOUNT_NAMESPACE. */
+	return joe_check_mount(fc->fs_type->name);
+}
+
+static int joe_move_mount(const struct path *from_path, const struct path *to_path)
+{
+	return joe_check_mount("move");
+}
+
+static int joe_mount_setattr(const struct path *path)
+{
+	return joe_check_mount("setattr");
+}
+
+static int joe_sb_umount(struct vfsmount *mnt, int flags)
+{
+	return joe_check_mount("umount");
+}
+
+static int joe_sb_remount(struct super_block *sb, void *mnt_opts)
+{
+	return joe_check_mount("remount");
+}
+
+static int joe_sb_pivotroot(const struct path *old_path, const struct path *new_path)
+{
+	return joe_check_mount("pivotroot");
 }
 
 static int joe_ptrace_access_check(struct task_struct *child, unsigned int mode)
@@ -802,6 +1060,28 @@ static int joe_ptrace_access_check(struct task_struct *child, unsigned int mode)
 	    joe_ops_allows(ops, JOE_PTRACE))
 		return 0;
 	return joe_flag_violation(ops, JOE_PTRACE, "ptrace", child->comm, -EPERM);
+}
+
+/*
+ * A ptrace declaration permits inspection and ordinary data writes, not an
+ * exception to rule 2. access_remote_vm supplies the VMA for ptrace and
+ * /proc/PID/mem; process_vm_writev supplies the target task instead.
+ */
+static int joe_remote_write(struct task_struct *task, struct vm_area_struct *vma)
+{
+	const struct cred *cred = current_cred();
+	struct joe_ops *ops = joe_cred(cred)->ops;
+
+	if (!joe_privileged(cred))
+		return 0;
+	if (vma && !(vma->vm_flags & VM_EXEC))
+		return 0;
+	if (task && !joe_task_privileged(task))
+		return 0;
+	if (!vma && !task)
+		return 0;
+	return joe_violation(ops, "jit",
+			     vma ? "remote-executable-write" : "process-vm-write", -EACCES);
 }
 
 static int joe_bpf(int cmd, union bpf_attr *attr, unsigned int size, bool kernel)
@@ -817,6 +1097,14 @@ static int joe_bpf(int cmd, union bpf_attr *attr, unsigned int size, bool kernel
 /* ------------------------------------------------------------------------ */
 /* Housekeeping                                                              */
 /* ------------------------------------------------------------------------ */
+
+static void joe_file_free_security(struct file *file)
+{
+	struct joe_file *jf = joe_file(file);
+
+	joe_ops_put(jf->fown_ops);
+	put_pid(jf->fown_tgid);
+}
 
 static int joe_cred_prepare(struct cred *new, const struct cred *old, gfp_t gfp)
 {
@@ -872,6 +1160,14 @@ static struct security_hook_list joe_hooks[] __ro_after_init = {
 	LSM_HOOK_INIT(kernel_read_file, joe_kernel_read_file),
 	LSM_HOOK_INIT(kernel_load_data, joe_kernel_load_data),
 	LSM_HOOK_INIT(capable, joe_capable),
+	LSM_HOOK_INIT(task_kill, joe_task_kill),
+	LSM_HOOK_INIT(file_set_fowner, joe_file_set_fowner),
+	LSM_HOOK_INIT(file_send_sigiotask, joe_file_send_sigiotask),
+	LSM_HOOK_INIT(ipc_permission, joe_ipc_permission),
+	LSM_HOOK_INIT(shm_shmctl, joe_shm_shmctl),
+	LSM_HOOK_INIT(msg_queue_msgctl, joe_msg_queue_msgctl),
+	LSM_HOOK_INIT(sem_semctl, joe_sem_semctl),
+	LSM_HOOK_INIT(userns_create, joe_userns_create),
 	LSM_HOOK_INIT(socket_create, joe_socket_create),
 	LSM_HOOK_INIT(file_open, joe_file_open),
 	LSM_HOOK_INIT(path_unlink, joe_path_unlink),
@@ -883,8 +1179,19 @@ static struct security_hook_list joe_hooks[] __ro_after_init = {
 	LSM_HOOK_INIT(path_rename, joe_path_rename),
 	LSM_HOOK_INIT(path_truncate, joe_path_truncate),
 	LSM_HOOK_INIT(sb_mount, joe_sb_mount),
+	LSM_HOOK_INIT(sb_kern_mount, joe_sb_kern_mount),
+	LSM_HOOK_INIT(fs_context_parse_param, joe_fs_context_parse_param),
+	LSM_HOOK_INIT(fsconfig, joe_fsconfig),
+	LSM_HOOK_INIT(fsmount, joe_fsmount),
+	LSM_HOOK_INIT(move_mount, joe_move_mount),
+	LSM_HOOK_INIT(mount_setattr, joe_mount_setattr),
+	LSM_HOOK_INIT(sb_umount, joe_sb_umount),
+	LSM_HOOK_INIT(sb_remount, joe_sb_remount),
+	LSM_HOOK_INIT(sb_pivotroot, joe_sb_pivotroot),
 	LSM_HOOK_INIT(ptrace_access_check, joe_ptrace_access_check),
+	LSM_HOOK_INIT(remote_write, joe_remote_write),
 	LSM_HOOK_INIT(bpf, joe_bpf),
+	LSM_HOOK_INIT(file_free_security, joe_file_free_security),
 	LSM_HOOK_INIT(cred_prepare, joe_cred_prepare),
 	LSM_HOOK_INIT(cred_transfer, joe_cred_transfer),
 	LSM_HOOK_INIT(cred_free, joe_cred_free),

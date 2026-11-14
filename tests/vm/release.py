@@ -15,7 +15,7 @@ import subprocess
 import sys
 import time
 
-from harness import VM, Timeout, TOP
+from harness import VM, Timeout, TOP, start_virtiofsd, stop_virtiofsd
 from repo import GUEST_HOST
 from desktop import step, wait_for
 
@@ -46,23 +46,6 @@ def new_machine(image):
     disk = os.path.join(machine, "disk.img")
     assert os.path.getsize(disk) == 40 << 30, os.path.getsize(disk)
     return disk
-
-
-def start_virtiofsd(share, socket):
-    """The same daemon, with the same identity mapping, as `run.sh --share`."""
-    binary = shutil.which("virtiofsd") or "/usr/lib/virtiofsd"
-    if not os.access(binary, os.X_OK):
-        return None
-    daemon = subprocess.Popen([
-        binary, "--socket-path", socket, "--shared-dir", share,
-        "--translate-uid", "squash-guest:0:0:4294967295", "--translate-gid", "squash-guest:0:0:4294967295",
-        "--translate-uid", "squash-host:0:1000:4294967295", "--translate-gid", "squash-host:0:1000:4294967295",
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    for _ in range(50):
-        if os.path.exists(socket):
-            return daemon
-        time.sleep(0.1)
-    raise AssertionError("virtiofsd did not start")
 
 
 def root_size(vm):
@@ -97,9 +80,8 @@ def main():
             vm.wait_boot(600)
             scenarios(vm, share, daemon is not None)
         finally:
-            if daemon:
-                daemon.terminate()
-                daemon.wait()
+            vm.close()
+            stop_virtiofsd(daemon)
         print(f"screenshots: {vm.workdir}")
     print("release scenarios passed")
 

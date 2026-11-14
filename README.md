@@ -114,7 +114,9 @@ are not affected.
    strings are not files and are allowed.
 2. *No code made at run time.* No anonymous executable memory, no writable
    executable mappings, no making modified memory executable. A just-in-time
-   compiler cannot work under these rules, so none can run as root.
+   compiler cannot work under these rules, so none can run as root. A debugger
+   cannot write another process's executable pages either: ptrace, process-vm
+   and `/proc/PID/mem` writes are covered as well as `mmap` and `mprotect`.
 3. *Declared operations.* A recipe states what its privileged programs do:
    which capabilities, whether the network, where they write, what they run.
 
@@ -125,6 +127,12 @@ are not affected.
    ```
 
    The declaration is part of what is signed, and the module refuses the rest.
+   `root-ipc` covers signals and SysV IPC between root processes. `none` is an
+   explicit empty declaration. A program no declaration covers is `undeclared`:
+   an `all` caller gives it `all`, and otherwise it is reported and refused when
+   enforcing. Global root stays confined when it creates a user namespace. A
+   process whose only global privilege is its capability set cannot create one,
+   because replacing that set would discard its confinement.
 
 The module logs by default and enforces when booted with `joe=enforce`. One
 consequence worth knowing: a root shell does not read `/etc/profile` or

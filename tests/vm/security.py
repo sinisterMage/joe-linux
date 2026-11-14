@@ -11,10 +11,11 @@ and, throughout, that unprivileged processes are not affected.
 
 import os
 import re
+import shutil
 import subprocess
 import sys
 
-from harness import VM, Timeout, TOP
+from harness import VM, Timeout, TOP, start_virtiofsd, stop_virtiofsd
 from repo import Repo, GUEST_HOST, GUEST_URL, serve_directory
 
 BASE_PORT = 8643
@@ -63,6 +64,11 @@ def main():
     probe_package(repo, "probe-all", probe, ["all"])
     probe_package(repo, "probe-none", probe, ["none"])
     probe_package(repo, "probe-declared", probe, PROBE_DECLARED)
+    probe_package(repo, "probe-undeclared", probe, [])
+    probe_package(repo, "probe-limited", probe, ["exec:/usr/bin/probe-undeclared"])
+    probe_package(repo, "probe-ipc", probe, ["root-ipc"])
+    probe_package(repo, "probe-cap", probe, ["cap:sys_admin"])
+    probe_package(repo, "probe-device", probe, ["write:/dev/vda"])
     repo.index()
 
     base = os.path.join(TOP, "build", "repo")
@@ -73,16 +79,31 @@ def main():
         "--repo", f"joe,{base},http://{GUEST_HOST}:{BASE_PORT},{base_key}",
         "--repo", f"test,{repo.path},{GUEST_URL},{repo.public_key}",
         image, "joe-base", "probe-all", "probe-none", "probe-declared",
+        "probe-undeclared", "probe-limited", "probe-ipc", "probe-cap", "probe-device",
     ], check=True)
 
     with VM(image, "security") as vm:
-        vm.start()
-        vm.wait_boot()
-        scenarios(vm)
+        share = os.path.join(TOP, "build", "images", "security-share")
+        shutil.rmtree(share, ignore_errors=True)
+        os.makedirs(share)
+        socket = os.path.join(vm.workdir, "virtiofs.sock")
+        daemon = start_virtiofsd(share, socket)
+        if daemon:
+            vm.extra_args = [
+                "-object", "memory-backend-memfd,id=mem,size=2G,share=on", "-numa", "node,memdev=mem",
+                "-chardev", f"socket,id=vfs,path={socket}", "-device", "vhost-user-fs-pci,chardev=vfs,tag=host",
+            ]
+        try:
+            vm.start()
+            vm.wait_boot()
+            scenarios(vm, share if daemon else None)
+        finally:
+            vm.close()
+            stop_virtiofsd(daemon)
     print("security scenarios passed")
 
 
-def scenarios(vm):
+def scenarios(vm, share):
     step("the module is active and starts in log mode")
     assert "joe" in vm.run("cat /sys/kernel/security/lsm").split(","), "the joe module is not loaded"
     assert vm.run("cat /sys/kernel/security/joe/enforce").strip() == "0"
@@ -101,6 +122,11 @@ def scenarios(vm):
     vm.run("cp /usr/bin/true /root/unsealed && /root/unsealed")
     log = vm.run("dmesg | grep 'joe: would-deny' | grep unsealed | tail -n 3")
     assert "op=exec-unsealed arg=/root/unsealed" in log, log
+
+    step("undeclared code is reported distinctly in log mode")
+    assert allowed(vm, "probe-limited exec /usr/bin/probe-undeclared")
+    log = vm.run("dmesg | grep 'joe: would-deny' | grep undeclared | tail -n 3")
+    assert "op=undeclared arg=/usr/bin/probe-undeclared" in log, log
 
     step("switching to enforcing is one-way")
     vm.run("echo 1 > /sys/kernel/security/joe/enforce")
@@ -123,11 +149,53 @@ def scenarios(vm):
     print(denied)
     assert "op=exec-unsealed" in denied, denied
 
+    step("undeclared is not none, and only an all caller supplies authority")
+    assert not allowed(vm, "probe-limited exec /usr/bin/probe-undeclared")
+    assert allowed(vm, "probe-all exec /usr/bin/probe-undeclared net")
+    assert not allowed(vm, "probe-all exec /usr/bin/probe-none net")
+    denied = vm.run("dmesg | grep 'joe: denied' | grep undeclared | tail -n 3")
+    assert "op=undeclared arg=/usr/bin/probe-undeclared" in denied, denied
+    vm.run("chmod 4755 /usr/bin/probe-undeclared")
+    assert not allowed(vm, as_nobody("probe-all exec /usr/bin/probe-undeclared"))
+    vm.run("chmod 755 /usr/bin/probe-undeclared")
+
+    step("AT_EXECVE_CHECK gives the same answer as a real exec")
+    assert allowed(vm, "probe-declared exec-check /usr/bin/true")
+    assert not allowed(vm, "probe-declared exec-check /usr/bin/false")
+    assert not allowed(vm, "probe-all exec-check /root/unsealed")
+
     step("rule 2: root cannot create executable memory, whatever it declares")
     assert not allowed(vm, "probe-all jit-anon")
     assert not allowed(vm, "probe-all jit-mprotect")
     assert allowed(vm, as_nobody("probe-all jit-anon"))
     assert allowed(vm, as_nobody("probe-all jit-mprotect"))
+
+    step("privileged processes cannot escape or inject code through task mechanisms")
+    assert allowed(vm, "probe-all userns")
+    assert allowed(vm, "probe-none userns")
+    assert not allowed(vm, "probe-all cap-only-userns")
+    assert not allowed(vm, "probe-all userns-jit")
+    assert allowed(vm, as_nobody("probe-none userns"))
+    assert allowed(vm, as_nobody("probe-none userns-jit"))
+    assert allowed(vm, "probe-all ptrace-root")
+    assert not allowed(vm, "probe-none ptrace-root")
+    assert not allowed(vm, "probe-all ptrace-write")
+    assert not allowed(vm, "probe-all proc-mem-write")
+    assert not allowed(vm, "probe-all process-vm-write")
+    assert allowed(vm, as_nobody("probe-all ptrace-write"))
+    assert allowed(vm, as_nobody("probe-all proc-mem-write"))
+    assert allowed(vm, as_nobody("probe-all process-vm-write"))
+    step("root-ipc authorizes root-to-root signals and SysV IPC")
+    assert not allowed(vm, "probe-none ipc-signal")
+    assert allowed(vm, "probe-ipc ipc-signal")
+    assert not allowed(vm, "probe-none ipc-sysv")
+    assert allowed(vm, "probe-ipc ipc-sysv")
+    assert not allowed(vm, "probe-none ipc-sysv-ctl")
+    assert allowed(vm, "probe-ipc ipc-sysv-ctl")
+    assert allowed(vm, "probe-none ipc-sysv-info")
+    assert allowed(vm, as_nobody("probe-none ipc-signal"))
+    assert allowed(vm, as_nobody("probe-none ipc-sysv"))
+    assert allowed(vm, as_nobody("probe-none ipc-sysv-ctl"))
 
     step("rule 3: a program that declares nothing can do nothing privileged")
     vm.run("mkdir -p /var/lib/probe /mnt/probe")
@@ -143,6 +211,19 @@ def scenarios(vm):
     assert allowed(vm, "probe-declared net")
     assert allowed(vm, "probe-declared cap")
     assert allowed(vm, "probe-declared mount /mnt/probe")
+    assert not allowed(vm, "probe-cap mount-create")
+    assert allowed(vm, "probe-declared mount-create")
+    assert not allowed(vm, "probe-all mount-delegate /usr/bin/probe-cap")
+    assert allowed(vm, "probe-all mount-delegate /usr/bin/probe-declared")
+    assert not allowed(vm, "probe-cap mount-new /mnt/probe")
+    assert allowed(vm, "probe-declared mount-new /mnt/probe")
+    vm.run("mount -t tmpfs probe /mnt/probe")
+    assert not allowed(vm, "probe-cap remount /mnt/probe")
+    assert allowed(vm, "probe-declared remount /mnt/probe")
+    assert not allowed(vm, "probe-cap mount-setattr /mnt/probe")
+    assert allowed(vm, "probe-declared mount-setattr /mnt/probe")
+    assert not allowed(vm, "probe-cap umount-only /mnt/probe")
+    assert allowed(vm, "probe-declared umount-only /mnt/probe")
     assert allowed(vm, "probe-declared write /var/lib/probe/file")
     assert not allowed(vm, "probe-declared write /var/lib/elsewhere")
     assert not allowed(vm, "probe-declared write /etc/probe-file")
@@ -150,9 +231,24 @@ def scenarios(vm):
     assert not allowed(vm, "probe-declared exec /usr/bin/false")
     assert allowed(vm, "probe-all write /etc/probe-file")
     assert allowed(vm, "probe-all exec /usr/bin/false")
+    assert not allowed(vm, "probe-none block-write /dev/vda")
+    assert allowed(vm, "probe-device block-write /dev/vda")
     # None of this concerns an unprivileged user, whom ordinary permissions confine.
     assert allowed(vm, as_nobody("probe-none net"))
     assert allowed(vm, as_nobody("probe-none exec /usr/bin/true"))
+
+    if share:
+        step("writes through virtiofs are persistent writes")
+        vm.run("mkdir -p /mnt/probe-share && mount -t virtiofs host /mnt/probe-share")
+        path = os.path.join(share, "probe")
+        assert not allowed(vm, "probe-none write /mnt/probe-share/probe")
+        assert not os.path.exists(path), "a denied virtiofs open created a host file"
+        assert allowed(vm, "probe-all write /mnt/probe-share/probe")
+        with open(path) as f:
+            assert f.read() == "x"
+        vm.run("umount /mnt/probe-share")
+    else:
+        print("    virtiofsd is not installed: the persistent host-share write probe is skipped")
 
     step("the system keeps working while enforcing")
     assert "Running deployment 1." in vm.run("dave status")
@@ -168,10 +264,11 @@ def scenarios(vm):
     assert "Running deployment 1." in vm.run("dave status")
     assert "status=126" in vm.run("/root/unsealed; echo status=$?", check=False)
     failed = vm.run("systemctl --failed --no-legend --plain", check=False).strip()
-    print(f"    failed units: {failed or 'none'}")
+    assert failed == "", failed
     denials = vm.run("dmesg | grep -c 'joe: denied'", check=False).strip()
     print(f"    denials since boot: {denials}")
-    print(vm.run("dmesg | grep 'joe: denied' | grep -v unsealed | head -n 15", check=False))
+    unexpected = vm.run("dmesg | grep 'joe: denied' | grep -vF 'op=exec-unsealed arg=/root/unsealed'", check=False).strip()
+    assert unexpected == "", unexpected
 
 
 if __name__ == "__main__":
