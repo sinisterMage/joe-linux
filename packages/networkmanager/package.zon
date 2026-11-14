@@ -1,12 +1,12 @@
 .{
     .name = "networkmanager",
     .version = "1.58.1",
-    .release = 1,
+    .release = 2,
     .description = "Network connection manager with the nmcli command line client",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{
         .{ .url = "https://gitlab.freedesktop.org/NetworkManager/NetworkManager/-/releases/1.58.1/downloads/NetworkManager-1.58.1.tar.xz", .sha256 = "262864cfd198123d3e5dbe91937441b97ee9059d6d712e1a5bfbb1c54668d14d" },
     },
-    .depends = .{ "glibc", "glib", "systemd", "dbus", "libndp", "curl", "libpsl", "nss", "nspr", "readline", "util-linux", "polkit", "kmod" },
+    .depends = .{ "glibc", "glib", "systemd", "dbus", "libndp", "curl", "libpsl", "nss", "nspr", "readline", "util-linux", "polkit", "kmod", "wpa_supplicant" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "perl", "python", "vala" },
 }

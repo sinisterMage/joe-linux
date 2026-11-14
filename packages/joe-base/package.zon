@@ -1,13 +1,18 @@
 .{
     .name = "joe-base",
     .version = "0.1",
-    .release = 5,
+    .release = 6,
     .description = "Everything a minimal joe Linux system consists of",
     .license = "MIT",
     .depends = .{
         "joe-filesystem",
         "joe-release",
         "linux",
+        // Real computers: firmware for the drivers that load it, the
+        // wireless regulatory database, and processor microcode.
+        "linux-firmware",
+        "wireless-regdb",
+        "cpu-microcode",
         "glibc",
         "systemd",
         "dbus",

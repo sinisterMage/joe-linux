@@ -1,24 +1,28 @@
 build() {
     mkdir -p build
     cd build
-    # Drivers for virtual machines and for no hardware at all, which need nothing
-    # beyond LLVM: llvmpipe and softpipe (software), virgl (virtio-gpu) and svga
-    # (VMware). The book's "auto" would add the hardware drivers, and with them
-    # glslang, SPIRV-LLVM-Translator, libclc, rust-bindgen and the Vulkan loader.
+    # Drivers for real graphics hardware and for virtual machines:
+    # - iris and crocus (Intel, from 2008 on), radeonsi (AMD, from 2012 on)
+    #   and nouveau (NVIDIA);
+    # - llvmpipe and softpipe (no GPU, or none the others drive), virgl
+    #   (virtio-gpu) and svga (VMware).
+    # Intel's drivers compile their own compute kernels while Mesa builds,
+    # which takes clang (part of llvm), SPIRV-LLVM-Translator and
+    # SPIRV-Tools; radeonsi needs LLVM's AMDGPU target, which llvm builds.
     #
-    # No Vulkan drivers (they need glslang) and so no video codecs, which only
-    # the Vulkan and VA-API front ends use.
+    # No Vulkan drivers yet (they need glslang and the Vulkan loader), and so
+    # no video codecs, which only the Vulkan and VA-API front ends use.
     #
     # Switched off because what they need is not part of joe Linux: gallium-va
-    # (libva), glvnd (libglvnd), lmsensors, spirv-tools, valgrind, libunwind.
-    # display-info (libdisplay-info) and xlib-lease (libXrandr) are only used by
-    # the Vulkan window-system code.
+    # (libva), glvnd (libglvnd), lmsensors, valgrind, libunwind. display-info
+    # (libdisplay-info) and xlib-lease (libXrandr) are only used by the Vulkan
+    # window-system code.
     meson setup .. \
         --prefix=/usr \
         --libdir=lib \
         --buildtype=release \
         -D platforms=x11,wayland \
-        -D gallium-drivers=llvmpipe,softpipe,virgl,svga \
+        -D gallium-drivers=iris,crocus,radeonsi,nouveau,llvmpipe,softpipe,virgl,svga \
         -D "vulkan-drivers=[]" \
         -D "video-codecs=[]" \
         -D glx=dri \
@@ -35,7 +39,7 @@ build() {
         -D glvnd=disabled \
         -D lmsensors=disabled \
         -D display-info=disabled \
-        -D spirv-tools=disabled \
+        -D spirv-tools=enabled \
         -D xlib-lease=disabled
     ninja
 }

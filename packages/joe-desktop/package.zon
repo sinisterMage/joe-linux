@@ -1,7 +1,7 @@
 .{
     .name = "joe-desktop",
     .version = "0.2",
-    .release = 3,
+    .release = 4,
     .description = "The joe Linux desktop: GNOME on Wayland",
     .license = "MIT",
     // Depends on joe-base, whose directory layout cannot be installed over
@@ -44,6 +44,8 @@
         "colord",
         // The first boot of a system nobody has an account on yet.
         "gnome-initial-setup",
+        // Sound on Intel laptops of the last few years.
+        "sof-firmware",
         // Applications.
         "firefox",
         "loupe",

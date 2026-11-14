@@ -10,8 +10,11 @@ build() {
     # /etc/resolv.conf symlink (rc-manager auto), so neither resolvconf nor
     # netconfig is used.
     #
-    # Switched off because what they need does not exist: Wi-Fi
-    # (wpa_supplicant, iwd), WWAN (ModemManager, ofono), Bluetooth, PPP,
+    # Wi-Fi goes through wpa_supplicant, over D-Bus (not iwd, and not the
+    # old wireless extensions).
+    #
+    # Switched off because what they need does not exist: WWAN
+    # (ModemManager, ofono), Bluetooth, PPP,
     # Open vSwitch and nm-cloud-setup (jansson), teamd, nmtui (newt),
     # SELinux, audit, CLAT (libbpf), firewalld, dhcpcd, Qt examples. NBFT
     # stays off as in the book. The paths of iptables, nft and dnsmasq are
@@ -49,7 +52,7 @@ build() {
         -D netconfig=no \
         -D introspection=true \
         -D vapi=true \
-        -D wifi=false \
+        -D wifi=true \
         -D iwd=false \
         -D wext=false \
         -D modem_manager=false \

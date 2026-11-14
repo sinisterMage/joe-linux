@@ -1,0 +1,18 @@
+.{
+    .name = "wpa_supplicant",
+    .version = "2.12",
+    .release = 1,
+    .description = "Joins Wi-Fi networks for NetworkManager: WPA, WPA2, WPA3 and 802.1X",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://w1.fi/releases/wpa_supplicant-2.12.tar.gz", .sha256 = "08e23937e16d0155e55cab2b51f51fbe10d80a1aa91c4e15442645059b737ef6" },
+    },
+    .depends = .{ "glibc", "openssl", "libnl", "dbus", "readline" },
+    .build_depends = .{"pkgconf"},
+    // It configures wireless interfaces (netlink, raw sockets) for
+    // NetworkManager, which starts it through D-Bus.
+    .operations = .{
+        .{ .programs = .{"usr/sbin/wpa_supplicant"}, .allow = .{ "net", "cap:net_admin", "cap:net_raw" } },
+        .{ .allow = .{"none"} },
+    },
+}

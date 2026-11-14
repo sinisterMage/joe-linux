@@ -1,0 +1,12 @@
+.{
+    .name = "spirv-tools",
+    .version = "1.4.363.0",
+    .release = 1,
+    .description = "Tools and libraries for processing SPIR-V shader modules",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/KhronosGroup/SPIRV-Tools/archive/vulkan-sdk-1.4.363.0/SPIRV-Tools-vulkan-sdk-1.4.363.0.tar.gz", .sha256 = "e6c83a215538fbfd265ccf398d3877985055df1273dbed73912bd05307664688" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja", "python", "spirv-headers" },
+}

@@ -1,0 +1,11 @@
+.{
+    .name = "cpu-microcode",
+    .version = "20261110",
+    .release = 1,
+    .description = "Processor microcode updates for Intel and AMD, loaded before the kernel starts anything",
+    .license = "LicenseRef-intel-microcode AND LicenseRef-linux-firmware",
+    .sources = .{
+        .{ .url = "https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/refs/tags/microcode-20261110.tar.gz", .file = "intel-microcode-20261110.tar.gz", .sha256 = "989a5cd345808babee491da69ed80ae5741697bc87743a71d0ba611f3fd6afa5" },
+    },
+    .build_depends = .{ "linux-firmware", "cpio", "zstd" },
+}
