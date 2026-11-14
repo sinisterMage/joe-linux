@@ -1,7 +1,7 @@
 .{
     .name = "dave",
     .version = "0.1.0",
-    .release = 5,
+    .release = 6,
     .description = "The joe Linux package manager and deployment tool",
     .license = "MIT",
     .depends = .{"systemd"},

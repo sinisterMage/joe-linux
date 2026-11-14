@@ -880,6 +880,12 @@ const App = struct {
     /// files, so this runs on its first boot; afterwards it finds nothing to do.
     fn cmdSeal(app: *App) !void {
         const root = try app.openDir(app.opts.root);
+        // Invalidate an older marker before anything that can fail. Otherwise
+        // dave-seal.service would suppress all later attempts after a bad pass.
+        root.deleteFile(app.io, sealed_marker) catch |e| switch (e) {
+            error.FileNotFound => {},
+            else => return app.fail("cannot invalidate the old sealed marker: {t}", .{e}),
+        };
         const installed = db.load(app.arena, app.io, root) catch |e| return app.fail("the package database is unreadable: {t}", .{e});
         var done: usize = 0;
         var already: usize = 0;

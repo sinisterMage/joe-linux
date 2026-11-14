@@ -224,6 +224,22 @@ pub fn audit(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, out: *Io.Wri
                 continue;
             },
         };
+        // Validate every entry, including unmatched and shadowed declarations
+        // that no installed file happens to select.
+        var operations_valid = true;
+        for (m.operations) |declaration| {
+            _ = seal.operationsText(arena, &.{.{ .allow = declaration.allow }}, "") catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                error.InvalidOperation => {
+                    operations_valid = false;
+                    try problems.append(arena, .{
+                        .filename = filename,
+                        .path = if (declaration.programs.len > 0) declaration.programs[0] else "-",
+                        .reason = "invalid operations",
+                    });
+                },
+            };
+        }
         for (m.files) |f| {
             if (f.kind != .file or f.config) continue;
             if (f.seal == null and f.verity == null) {
@@ -234,6 +250,7 @@ pub fn audit(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, out: *Io.Wri
                 try problems.append(arena, .{ .filename = filename, .path = f.path, .reason = "malformed seal" });
             }
 
+            if (!operations_valid) continue;
             const ops = seal.operationsText(arena, m.operations, f.path) catch |err| switch (err) {
                 error.OutOfMemory => return error.OutOfMemory,
                 error.InvalidOperation => {
@@ -459,13 +476,20 @@ test "audit detects absent and malformed seals and invalid operations" {
         .operations = &.{.{ .allow = &.{"not-an-operation"} }},
         .files = &.{.{ .path = "bad", .verity = &digest, .seal = &signature }},
     });
+    try writeAuditTestPackage(arena, io, tmp.dir, "reserved.dave", .{
+        .name = "reserved",
+        .version = "1-r1",
+        .operations = &.{.{ .programs = &.{"not-installed"}, .allow = &.{"undeclared"} }},
+        .files = &.{.{ .path = "data", .verity = &digest, .seal = &signature }},
+    });
 
     var report: Io.Writer.Allocating = .init(arena);
-    try testing.expectEqual(@as(usize, 3), try audit(testing.allocator, arena, io, tmp.dir, &report.writer));
+    try testing.expectEqual(@as(usize, 4), try audit(testing.allocator, arena, io, tmp.dir, &report.writer));
     const expected = try std.fmt.allocPrint(
         arena,
-        "invalid.dave: bad: invalid operations\n" ++
+        "invalid.dave: -: invalid operations\n" ++
             "malformed.dave: bad: malformed seal\n" ++
+            "reserved.dave: not-installed: invalid operations\n" ++
             "{s}: data: not sealed\n",
         .{unsigned_name},
     );

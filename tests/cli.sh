@@ -101,7 +101,8 @@ out=$("$dave" pack --name invalid --version 1.0-r1 --allow undeclared --out "$wo
     fail "accepted an explicit undeclared operation"
 expect "reserved undeclared" "InvalidOperation" <<<"$out"
 
-echo "== a failed seal pass leaves no completion marker"
+echo "== a failed seal pass invalidates an old completion marker"
+printf '' > root/usr/lib/dave/sealed
 out=$("${D[@]}" seal 2>&1) && fail "sealed a root containing unsigned packages"
 expect "strict seal" "missing, malformed, or unreadable seals" <<<"$out"
 [[ ! -e root/usr/lib/dave/sealed ]] || fail "failed seal pass wrote its completion marker"
