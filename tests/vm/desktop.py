@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 
+import harness
 from harness import VM, Timeout, TOP
 from repo import GUEST_HOST, GUEST_URL, PORT, serve_directory
 
@@ -45,19 +46,13 @@ def in_session(command):
 
 
 def build_image():
-    overlay = os.path.join(TOP, "build", "joe", "desktop-overlay")
-    os.makedirs(os.path.join(overlay, "etc", "gdm"), exist_ok=True)
-    # Log the test user in without asking, so the session can be examined.
-    with open(os.path.join(overlay, "etc", "gdm", "custom.conf"), "w") as f:
-        f.write("[daemon]\nAutomaticLoginEnable=True\nAutomaticLogin=joe\n")
+    # image/desktop.zon: the test user joe, logged in without asking so that
+    # the session can be examined.
     base = os.path.join(TOP, "build", "repo")
     key = os.path.join(TOP, "build", "keys", "joe.pub")
-    image = os.path.join(TOP, "build", "images", "joe-desktop.img")
-    subprocess.run([
-        os.path.join(TOP, "image", "mkjoe.sh"), "--test", "--overlay", overlay, "--root-size", "16G",
-        "--repo", f"joe,{base},http://{GUEST_HOST}:{BASE_PORT},{key}",
-        image, "joe-desktop", "joe-test-desktop",
-    ], check=True)
+    image = harness.build_image("desktop", os.path.join(TOP, "build", "images", "joe-desktop.img"), repos=[
+        ("joe", base, f"http://{GUEST_HOST}:{BASE_PORT}", key),
+    ])
     return image
 
 

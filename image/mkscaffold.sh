@@ -25,9 +25,12 @@ rm -rf "$rootfs" "$scaffold/root.x86_64"
 tar --zstd -xf "$tarball" -C "$scaffold" --no-same-owner
 mv "$scaffold/root.x86_64" "$rootfs"
 
-# Kernel modules matching the host kernel that the scaffold boots.
+# The host kernel (with its modules) and the host's systemd-boot, where dave
+# looks for a root's kernel and boot loader when it makes an image.
 mkdir -p "$rootfs/usr/lib/modules"
 cp -a --reflink=auto --no-preserve=ownership "/usr/lib/modules/$kver" "$rootfs/usr/lib/modules/"
+[[ -f $rootfs/usr/lib/modules/$kver/vmlinuz ]] || { echo "no kernel image in /usr/lib/modules/$kver" >&2; exit 1; }
+install -Dm644 /usr/lib/systemd/boot/efi/systemd-bootx64.efi "$rootfs/usr/lib/systemd/boot/efi/systemd-bootx64.efi"
 
 # btrfs-progs is not in the bootstrap tarball; borrow the host's for manual
 # experiments. dave itself talks to btrfs through ioctls and does not need it.

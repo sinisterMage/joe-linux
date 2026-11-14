@@ -1,0 +1,9 @@
+// The GNOME desktop as the tests see it: a ready-made user (joe, password
+// joe, from joe-test-desktop and --test) whom GDM logs in automatically.
+.{
+    .name = "joe-desktop",
+    .packages = .{ "joe-desktop", "joe-test-desktop" },
+    .overlay = "overlays/desktop",
+    .root_size = "16G",
+    .cmdline = "console=ttyS0,115200",
+}

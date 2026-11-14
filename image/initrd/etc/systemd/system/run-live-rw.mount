@@ -1,0 +1,11 @@
+# Where changes to the live system go: memory, gone at shutdown.
+[Unit]
+Description=joe Linux live session changes
+DefaultDependencies=no
+Before=initrd-root-fs.target
+
+[Mount]
+What=tmpfs
+Where=/run/live/rw
+Type=tmpfs
+Options=mode=0755,size=75%

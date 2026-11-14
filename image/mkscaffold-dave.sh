@@ -10,6 +10,7 @@ set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 top=$(dirname "$here")
+export PATH=$top/build/host-tools/bin:$PATH
 
 if [[ $(id -u) -ne 0 ]]; then
     exec unshare --map-root-user "$0" "$@"
@@ -25,18 +26,9 @@ rootfs=$top/build/scaffold/rootfs-dave
 rm -rf "$rootfs"
 cp -a --reflink=auto "$base" "$rootfs"
 "$here/add-dave.sh" "$rootfs" "$dave"
-cp "$public_key" "$rootfs/etc/dave/keys/"
 
-cat > "$rootfs/etc/dave/repos.zon" <<EOF2
-.{ .repos = .{ .{ .name = "joe", .url = "$repo_dir" } } }
-EOF2
-"$dave" --root "$rootfs" install "$@"
-cat > "$rootfs/etc/dave/repos.zon" <<EOF2
-.{ .repos = .{ .{ .name = "joe", .url = "$repo_url" } } }
-EOF2
-rm -rf "$rootfs/var/cache/dave"
-
-"$here/mkimage.sh" --rootfs "$rootfs" \
-    --kernel "/usr/lib/modules/$(uname -r)/vmlinuz" \
-    --sdboot /usr/lib/systemd/boot/efi/systemd-bootx64.efi \
-    --out "$out" --cmdline "console=ttyS0,115200"
+with=()
+for package in "$@"; do with+=(--with "$package"); done
+"$dave" image build "$here/scaffold.zon" --tree "$rootfs" \
+    --repo "joe,$repo_dir,$repo_url,$public_key" "${with[@]}" --out "$out"
+rm -rf "$rootfs"

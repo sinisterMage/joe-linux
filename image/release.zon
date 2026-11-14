@@ -1,0 +1,8 @@
+// The desktop as a person gets it in a virtual machine: no accounts, root
+// locked. The first boot asks who you are (gnome-initial-setup).
+.{
+    .name = "joe-release",
+    .packages = .{"joe-desktop"},
+    .root_size = "16G",
+    .cmdline = "console=ttyS0,115200",
+}

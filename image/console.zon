@@ -1,0 +1,11 @@
+// The console system: joe-base and nothing else.
+//
+//   dave image build image/console.zon --test --repo joe,DIR,URL,KEY --out joe.img
+//
+// --test adds joe-test-console, which the automated tests need and no real
+// installation should have: root is logged in on the serial console.
+.{
+    .name = "joe-console",
+    .packages = .{"joe-base"},
+    .cmdline = "console=ttyS0,115200",
+}

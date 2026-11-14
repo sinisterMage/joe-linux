@@ -20,6 +20,53 @@ OVMF_VARS = "/usr/share/edk2/x64/OVMF_VARS.4m.fd"
 PROMPT = b"joe# "
 # Printed by the firmware each time it hands over to the boot loader.
 BOOT_BANNER = b"BdsDxe: starting "
+DAVE = os.path.join(TOP, "dave", "zig-out", "bin", "dave")
+# Tools image builds need that the host may not have are built into
+# build/host-tools (see the Makefile).
+os.environ["PATH"] = os.path.join(TOP, "build", "host-tools", "bin") + os.pathsep + os.environ.get("PATH", "")
+
+
+def build_image(spec, out, repos=(), test=True, extra=(), tree=None):
+    """Builds image/<spec>.zon with `dave image build` and returns `out`.
+
+    `repos` are (name, dir, url, key) tuples: read from dir while building,
+    configured as url in the image. `extra` packages are installed with the
+    spec's own."""
+    command = [DAVE, "image", "build", os.path.join(TOP, "image", spec + ".zon"), "--out", out]
+    if test:
+        command.append("--test")
+    for repo in repos:
+        command += ["--repo", ",".join(repo)]
+    for package in extra:
+        command += ["--with", package]
+    if tree:
+        command += ["--tree", tree]
+    subprocess.run(command, check=True)
+    return out
+
+
+def blank_disk(path, size="40G"):
+    """An empty (sparse) disk image, for a machine to install onto."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if os.path.exists(path):
+        os.remove(path)
+    subprocess.run(["truncate", "-s", size, path], check=True)
+    return path
+
+
+def as_cd(iso):
+    """QEMU arguments attaching a live medium as a CD (on q35's AHCI), the
+    first thing the firmware tries."""
+    return ["-drive", f"if=none,id=medium,format=raw,media=cdrom,readonly=on,file={iso}",
+            "-device", "ide-cd,drive=medium,bootindex=0"]
+
+
+def as_usb_stick(iso):
+    """QEMU arguments attaching a live medium as a USB stick, as `dd` to a
+    stick would make it."""
+    return ["-device", "qemu-xhci,id=xhci",
+            "-drive", f"if=none,id=medium,format=raw,readonly=on,file={iso}",
+            "-device", "usb-storage,bus=xhci.0,drive=medium,bootindex=0"]
 
 
 def start_virtiofsd(share, socket):

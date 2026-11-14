@@ -1,0 +1,15 @@
+# The root the live system runs from: the image with the writable layer over
+# it. There is no root= on the kernel command line, so nothing else makes
+# this unit; initrd-root-fs.target requires it (the link next to this file).
+[Unit]
+Description=joe Linux live root
+DefaultDependencies=no
+Requires=run-live-lower.mount joe-live-layers.service
+After=run-live-lower.mount joe-live-layers.service
+Before=initrd-root-fs.target
+
+[Mount]
+What=overlay
+Where=/sysroot
+Type=overlay
+Options=lowerdir=/run/live/lower,upperdir=/run/live/rw/upper,workdir=/run/live/rw/work

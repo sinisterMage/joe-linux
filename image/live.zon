@@ -1,0 +1,41 @@
+// The installation medium: an ISO that boots UEFI computers from a CD or a
+// USB stick into a live GNOME session (joe-live), from which the installer
+// installs joe-desktop onto a disk, from the packages on the medium itself.
+//
+//   dave image build image/live.zon --repo joe,DIR,URL,KEY --out joe-live.iso
+//
+// URL is the repository installed systems (and the live system) take their
+// packages from afterwards. --test adds a root prompt on the serial console,
+// to the live system and to what it installs.
+.{
+    .name = "joe-live",
+    .format = .iso,
+    .packages = .{ "joe-desktop", "joe-live" },
+    .overlay = "overlays/live",
+    .iso = .{
+        // image/initrd/etc/systemd/system/run-live-medium.mount finds the
+        // medium by this label.
+        .label = "JOE_LIVE",
+        .initrd = .{
+            // What mounts the medium: systemd in its initrd mode, and what
+            // its units run. The kernel has every driver the medium needs
+            // built in, so there are no modules.
+            .packages = .{ "joe-filesystem", "systemd", "util-linux", "coreutils", "kmod", "bash" },
+            .overlay = "initrd",
+            // Packages are whole, so the compiler comes along for its run-time
+            // libraries (which stay, in usr/lib); in memory, at every boot of
+            // the medium, the rest is a few hundred MB for nothing.
+            .remove = .{
+                "usr/include",               "usr/share/man",         "usr/share/info",
+                "usr/share/doc",             "usr/share/locale",      "usr/share/i18n",
+                "usr/lib/pkgconfig",         "usr/share/pkgconfig",   "usr/share/bash-completion",
+                "usr/share/zsh",             "usr/lib/locale",        "usr/share/zoneinfo",
+                "usr/share/misc/magic.mgc",  "usr/libexec/gcc",       "usr/lib/gcc",
+                "usr/lib/*.a",               "usr/bin/lto-dump",      "usr/bin/gcc*",
+                "usr/bin/g++",               "usr/bin/c++",           "usr/bin/cpp",
+                "usr/bin/gcov*",             "usr/bin/x86_64-pc-linux-gnu-*",
+            },
+        },
+        .payload = .{"joe-desktop"},
+    },
+}

@@ -1,0 +1,12 @@
+# The live medium itself, a CD or a USB stick, found by the ISO 9660 volume
+# label `dave image build` gives it.
+[Unit]
+Description=joe Linux live medium
+DefaultDependencies=no
+Before=initrd-root-fs.target
+
+[Mount]
+What=/dev/disk/by-label/JOE_LIVE
+Where=/run/live/medium
+Type=iso9660
+Options=ro

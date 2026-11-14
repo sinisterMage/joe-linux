@@ -13,6 +13,8 @@ is the contract dave's implementation is then written against.
   6. A service's stop job can snapshot the root and write a boot entry during
      shutdown, capturing changes made right up to the reboot.
   7. A power cut before that stop job leaves the old deployment booting.
+  8. An entry may name an initrd holding only processor microcode (no
+     /init): the kernel still mounts the root itself, as joe needs.
 """
 
 import base64
@@ -122,6 +124,17 @@ class Contract:
         assert got == f"joe/deploy/{deployment}", f"expected deployment {deployment}, booted {got}"
 
 
+def newc(files):
+    """A newc cpio of {path: bytes}, as the kernel reads an initrd."""
+    out = b""
+    for ino, (name, data) in enumerate(list(files.items()) + [("TRAILER!!!", b"")], 1):
+        mode = 0o100644 if name != "TRAILER!!!" else 0
+        fields = [ino, mode, 0, 0, 1, 0, len(data), 0, 0, 0, 0, len(name) + 1, 0]
+        header = b"070701" + b"".join(b"%08x" % f for f in fields) + name.encode() + b"\0"
+        out += header + b"\0" * (-len(header) % 4) + data + b"\0" * (-len(data) % 4)
+    return out
+
+
 def step(text):
     print(f"--- {text}", flush=True)
 
@@ -229,6 +242,21 @@ def main():
         c.expect_subvol(6)
         assert vm.run("cat /var/lib/joe-staged").strip() == "7", "staged marker lost"
         assert not any(e.startswith("joe-7") for e in c.entries()), "entry appeared without finalize"
+
+        step("8. a microcode-only initrd leaves mounting the root to the kernel")
+        # Not real microcode: the kernel's early loader looks for these
+        # names, ignores what it cannot use, and finds no /init to run.
+        archive = newc({"kernel/x86/microcode/GenuineIntel.bin": b"\0" * 64,
+                        "kernel/x86/microcode/AuthenticAMD.bin": b"\0" * 64})
+        vm.run("mkdir -p /efi/joe/initrd")
+        vm.run(f"echo {base64.b64encode(archive).decode()} | base64 -d > /efi/joe/initrd/test.img")
+        vm.run("rm -f /var/lib/joe-staged")
+        c.snapshot(8)
+        text = c.entry_text(8, 9).replace("\noptions ", "\ninitrd /joe/initrd/test.img\noptions ")
+        c.write("/efi/loader/entries/joe-8.conf", text)
+        vm.reboot()
+        c.expect_subvol(8)
+        assert vm.run("systemctl show -P InitRDTimestampMonotonic").strip() == "0", "an initramfs stage ran"
 
         print("boot contract holds")
 

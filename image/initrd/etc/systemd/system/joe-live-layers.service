@@ -1,0 +1,11 @@
+[Unit]
+Description=Prepare the writable layer of the joe Linux live root
+DefaultDependencies=no
+Requires=run-live-rw.mount
+After=run-live-rw.mount
+Before=sysroot.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/mkdir -p /run/live/rw/upper /run/live/rw/work

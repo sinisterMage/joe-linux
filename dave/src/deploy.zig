@@ -28,6 +28,8 @@ const repo = @import("repo.zig");
 const Version = @import("solver/version.zig").Version;
 
 pub const deploy_dir = "joe/deploy";
+/// Where a root keeps its processor microcode archive (cpu-microcode).
+pub const microcode_path = "usr/lib/joe/microcode.img";
 pub const state_path = "joe/state.zon";
 pub const default_keep = 3;
 const scratch_prefix = ".scratch-";
@@ -141,35 +143,19 @@ pub const System = struct {
             s.fail(error.NoCurrentEntry, "the running deployment {d} has no boot entry", .{s.current});
     }
 
-    /// The kernel image of a root: `usr/lib/modules/<version>/vmlinuz`, taking
-    /// the newest version if there are several.
+    /// The initrds a deployment boots with: its processor microcode, if it
+    /// has any, copied to the ESP.
+    fn installInitrds(s: *System, root: Io.Dir) ![]const []const u8 {
+        _ = root.statFile(s.io, microcode_path, .{}) catch return &.{};
+        const path = try boot.installInitrd(s.arena, s.io, s.esp, root, microcode_path);
+        return s.arena.dupe([]const u8, &.{path});
+    }
+
     pub fn findKernel(s: *System, root: Io.Dir) ![]const u8 {
-        var best: ?[]const u8 = null;
-        var modules = root.openDir(s.io, "usr/lib/modules", .{ .iterate = true }) catch
-            return s.fail(error.NoKernel, "no kernel found under usr/lib/modules", .{});
-        defer modules.close(s.io);
-        var it = modules.iterate();
-        while (try it.next(s.io)) |e| {
-            if (e.kind != .directory) continue;
-            const candidate = try std.fmt.allocPrint(s.arena, "{s}/vmlinuz", .{e.name});
-            _ = modules.statFile(s.io, candidate, .{}) catch continue;
-            const name = try s.arena.dupe(u8, e.name);
-            if (best == null or newerKernel(name, best.?)) best = name;
-        }
-        const version = best orelse return s.fail(error.NoKernel, "no kernel found under usr/lib/modules", .{});
-        return std.fmt.allocPrint(s.arena, "usr/lib/modules/{s}/vmlinuz", .{version});
-    }
-
-    fn newerKernel(a: []const u8, b: []const u8) bool {
-        const va = Version.parse(upstreamPart(a)) catch return std.mem.order(u8, a, b) == .gt;
-        const vb = Version.parse(upstreamPart(b)) catch return std.mem.order(u8, a, b) == .gt;
-        return va.order(vb) == .gt;
-    }
-
-    /// Kernel release strings contain characters versions do not ("7.3.1-joe").
-    fn upstreamPart(release: []const u8) []const u8 {
-        const end = std.mem.indexOfAny(u8, release, "-~") orelse release.len;
-        return release[0..end];
+        return findKernelIn(s.arena, s.io, root) catch |err| switch (err) {
+            error.NoKernel => s.fail(error.NoKernel, "no kernel found under usr/lib/modules", .{}),
+            else => err,
+        };
     }
 
     /// The minimum a root needs before it is worth trying to boot.
@@ -293,6 +279,7 @@ pub const System = struct {
         _ = try s.applyTo(target, name, staged);
 
         const kernel = try boot.installKernel(s.arena, s.io, s.esp, target, try s.findKernel(target));
+        const initrds = try s.installInitrds(target);
         // Best effort: the loader already on the ESP starts this deployment
         // too, so failing to bring a newer one must not cost the upgrade.
         _ = boot.updateLoader(s.arena, s.io, s.esp, target) catch false;
@@ -305,6 +292,7 @@ pub const System = struct {
             .id = id,
             .priority = boot.highestPriority(entries) + 1,
             .kernel = kernel,
+            .initrds = initrds,
             .options = try boot.optionsFor(s.arena, current.options, id),
             .counted = true,
         });
@@ -339,6 +327,7 @@ pub const System = struct {
             .id = id,
             .priority = top + 1,
             .kernel = current.kernel,
+            .initrds = current.initrds,
             .options = try boot.optionsFor(s.arena, current.options, id),
             .counted = false,
         });
@@ -346,6 +335,7 @@ pub const System = struct {
             .id = s.current,
             .priority = top + 2,
             .kernel = current.kernel,
+            .initrds = current.initrds,
             .options = current.options,
             .counted = false,
         });
@@ -376,6 +366,7 @@ pub const System = struct {
             .id = target.id,
             .priority = boot.highestPriority(entries) + 1,
             .kernel = target.kernel,
+            .initrds = target.initrds,
             .options = target.options,
             .counted = false,
         });
@@ -542,6 +533,36 @@ fn missingAccounts(arena: Allocator, here: []const u8, there: []const u8) ![]con
         try missing.append(arena, name);
     }
     return missing.items;
+}
+
+/// The kernel image of a root: `usr/lib/modules/<version>/vmlinuz`, taking
+/// the newest version if there are several.
+pub fn findKernelIn(arena: Allocator, io: Io, root: Io.Dir) ![]const u8 {
+    var best: ?[]const u8 = null;
+    var modules = root.openDir(io, "usr/lib/modules", .{ .iterate = true }) catch return error.NoKernel;
+    defer modules.close(io);
+    var it = modules.iterate();
+    while (try it.next(io)) |e| {
+        if (e.kind != .directory) continue;
+        const candidate = try std.fmt.allocPrint(arena, "{s}/vmlinuz", .{e.name});
+        _ = modules.statFile(io, candidate, .{}) catch continue;
+        const name = try arena.dupe(u8, e.name);
+        if (best == null or newerKernel(name, best.?)) best = name;
+    }
+    const version = best orelse return error.NoKernel;
+    return std.fmt.allocPrint(arena, "usr/lib/modules/{s}/vmlinuz", .{version});
+}
+
+fn newerKernel(a: []const u8, b: []const u8) bool {
+    const va = Version.parse(upstreamPart(a)) catch return std.mem.order(u8, a, b) == .gt;
+    const vb = Version.parse(upstreamPart(b)) catch return std.mem.order(u8, a, b) == .gt;
+    return va.order(vb) == .gt;
+}
+
+/// Kernel release strings contain characters versions do not ("7.3.1-joe").
+fn upstreamPart(release: []const u8) []const u8 {
+    const end = std.mem.indexOfAny(u8, release, "-~") orelse release.len;
+    return release[0..end];
 }
 
 // ---------------------------------------------------------------------------

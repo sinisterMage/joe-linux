@@ -15,7 +15,7 @@ import shutil
 import subprocess
 import sys
 
-from harness import VM, Timeout, TOP, start_virtiofsd, stop_virtiofsd
+from harness import VM, Timeout, TOP, start_virtiofsd, stop_virtiofsd, build_image
 from repo import Repo, GUEST_HOST, GUEST_URL, serve_directory
 
 BASE_PORT = 8643
@@ -73,14 +73,11 @@ def main():
 
     base = os.path.join(TOP, "build", "repo")
     base_key = os.path.join(TOP, "build", "keys", "joe.pub")
-    image = os.path.join(TOP, "build", "images", "joe-security.img")
-    subprocess.run([
-        os.path.join(TOP, "image", "mkjoe.sh"), "--test",
-        "--repo", f"joe,{base},http://{GUEST_HOST}:{BASE_PORT},{base_key}",
-        "--repo", f"test,{repo.path},{GUEST_URL},{repo.public_key}",
-        image, "joe-base", "probe-all", "probe-none", "probe-declared",
-        "probe-undeclared", "probe-limited", "probe-ipc", "probe-cap", "probe-device",
-    ], check=True)
+    image = build_image("console", os.path.join(TOP, "build", "images", "joe-security.img"), repos=[
+        ("joe", base, f"http://{GUEST_HOST}:{BASE_PORT}", base_key),
+        ("test", repo.path, GUEST_URL, repo.public_key),
+    ], extra=["probe-all", "probe-none", "probe-declared", "probe-undeclared", "probe-limited",
+              "probe-ipc", "probe-cap", "probe-device"])
 
     with VM(image, "security") as vm:
         share = os.path.join(TOP, "build", "images", "security-share")
@@ -122,6 +119,11 @@ def scenarios(vm, share):
     vm.run("cp /usr/bin/true /root/unsealed && /root/unsealed")
     log = vm.run("dmesg | grep 'joe: would-deny' | grep unsealed | tail -n 3")
     assert "op=exec-unsealed arg=/root/unsealed" in log, log
+    # An unsealed file is reported once, not on every use: on a system
+    # nothing is sealed on yet, every use would flood the kernel log.
+    vm.run("/root/unsealed && /root/unsealed")
+    count = vm.run("dmesg | grep -c 'op=exec-unsealed arg=/root/unsealed '", check=False).strip()
+    assert count == "1", f"/root/unsealed was reported {count} times"
 
     step("undeclared code is reported distinctly in log mode")
     assert allowed(vm, "probe-limited exec /usr/bin/probe-undeclared")

@@ -1,0 +1,10 @@
+// The scaffold: this machine's kernel and boot loader with a stock Arch
+// userspace (image/mkscaffold.sh prepares the tree), so the deployment
+// mechanics can be tested without building joe. Nothing from it ships.
+// image/mkscaffold-dave.sh builds it with dave added (--tree) and packages
+// installed on top (--with).
+.{
+    .name = "scaffold",
+    .tree = "../build/scaffold/rootfs",
+    .cmdline = "console=ttyS0,115200",
+}

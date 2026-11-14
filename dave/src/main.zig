@@ -21,8 +21,14 @@ pub const triggers = @import("triggers.zig");
 pub const deploy = @import("deploy.zig");
 pub const builder = @import("builder.zig");
 pub const seal = @import("seal.zig");
+pub const provision = @import("provision.zig");
+pub const image = @import("image.zig");
+pub const cpio = @import("cpio.zig");
+pub const iso = @import("iso.zig");
+pub const command = @import("command.zig");
+pub const install_system = @import("install_system.zig");
 
-const dave_version = "0.1.0";
+const dave_version = "0.2.0";
 const top_mount = "/run/dave/top";
 const lock_path = "/run/dave/lock";
 const esp_path = "/efi";
@@ -59,6 +65,14 @@ const usage =
     \\  key generate-code <basename>                 Create a code-signing key pair
     \\  seal                                         Seal installed files that are not yet sealed
     \\
+    \\Images and installation
+    \\  image build <spec> --out FILE              Build a disk image or live medium from a
+    \\      [--test] [--repo NAME,DIR,URL,KEY]...  specification (image/*.zon); DIR is read while
+    \\      [--with PACKAGE]... [--tree DIR]        building, URL is what the image will use
+    \\  install-system --list [--json]             The disks joe Linux could be installed on
+    \\  install-system --disk DISK [--json]        Erase DISK and install what the live medium
+    \\                                             holds (joe/install.zon) onto it
+    \\
     \\Options
     \\  --root DIR       Operate on the system installed at DIR instead of /
     \\  --cache DIR      Where downloaded indexes and packages are kept
@@ -69,6 +83,10 @@ const usage =
     \\  --allow OP        An operation the package declares (pack), or the
     \\                    declaration for recipes that make none (build); without
     \\                    it, programs nothing declares are sealed `undeclared`
+    \\  --test           (image) Add joe-test-console: root logged in on the serial
+    \\                   console. For automated tests only
+    \\  --with PACKAGE   (image) Install PACKAGE as well as the spec's packages
+    \\  --tree DIR       (image) Start from DIR instead of the spec's tree
     \\
 ;
 
@@ -80,6 +98,14 @@ const Options = struct {
     reboot: bool = false,
     overwrite: bool = false,
     keep_work: bool = false,
+    test_image: bool = false,
+    tree: ?[]const u8 = null,
+    json: bool = false,
+    list: bool = false,
+    disk: ?[]const u8 = null,
+    from: ?[]const u8 = null,
+    repos: std.ArrayList([]const u8) = .empty,
+    with: std.ArrayList([]const u8) = .empty,
     buildroot: ?[]const u8 = null,
     sources: ?[]const u8 = null,
     work: ?[]const u8 = null,
@@ -106,17 +132,49 @@ const App = struct {
     out: *Io.Writer,
     err: *Io.Writer,
     opts: Options = .{},
+    /// The arguments dave was started with, for re-executing itself.
+    argv: []const []const u8 = &.{},
+    /// The environment of programs dave runs; null leaves them dave's own.
+    environ: ?*std.process.Environ.Map = null,
+    /// With --json, where events go (standard output); `out` then carries
+    /// what is said for people, on standard error.
+    events: ?*Io.Writer = null,
+    /// The last failure, for the error event.
+    last_error: []const u8 = "",
+    /// Passed to transactions, for progress events.
+    progress: ?txn.Progress = null,
 
     // -- reporting ------------------------------------------------------------
 
     /// Prints a message for the user and returns the error that ends the command.
     fn fail(app: *App, comptime fmt: []const u8, args: anytype) Failure {
-        app.err.print("dave: " ++ fmt ++ "\n", args) catch {};
+        app.last_error = std.fmt.allocPrint(app.arena, fmt, args) catch "out of memory";
+        app.err.print("dave: {s}\n", .{app.last_error}) catch {};
+        app.err.flush() catch {};
         return error.Reported;
+    }
+
+    /// One JSON object on a line of its own, for a program watching dave
+    /// (the installer). A reader that has gone away must not stop the work
+    /// it was watching, so writing errors are ignored.
+    fn event(app: *App, kind: []const u8, message: []const u8, fraction: ?f64) void {
+        const w = app.events orelse return;
+        std.json.Stringify.value(.{ .event = kind, .message = message, .fraction = fraction }, .{ .emit_null_optional_fields = false }, w) catch return;
+        w.writeByte('\n') catch return;
+        w.flush() catch return;
+    }
+
+    /// A step of a long operation: for people, and as an event.
+    fn step(app: *App, fraction: f64, comptime fmt: []const u8, args: anytype) void {
+        const message = std.fmt.allocPrint(app.arena, fmt, args) catch return;
+        app.say("==> {s}", .{message}) catch {};
+        app.event("step", message, fraction);
     }
 
     fn say(app: *App, comptime fmt: []const u8, args: anytype) !void {
         try app.out.print(fmt ++ "\n", args);
+        // Long operations (an image build) report as they go.
+        try app.out.flush();
     }
 
     // -- argument parsing -----------------------------------------------------
@@ -139,6 +197,12 @@ const App = struct {
                 app.opts.overwrite = true;
             } else if (std.mem.eql(u8, arg, "--keep-work")) {
                 app.opts.keep_work = true;
+            } else if (std.mem.eql(u8, arg, "--test")) {
+                app.opts.test_image = true;
+            } else if (std.mem.eql(u8, arg, "--json")) {
+                app.opts.json = true;
+            } else if (std.mem.eql(u8, arg, "--list")) {
+                app.opts.list = true;
             } else {
                 i += 1;
                 if (i >= args.len) return app.fail("{s} needs a value", .{arg});
@@ -175,6 +239,16 @@ const App = struct {
                     try app.opts.depends.append(app.arena, value);
                 } else if (std.mem.eql(u8, arg, "--conflicts")) {
                     try app.opts.conflicts.append(app.arena, value);
+                } else if (std.mem.eql(u8, arg, "--repo")) {
+                    try app.opts.repos.append(app.arena, value);
+                } else if (std.mem.eql(u8, arg, "--with")) {
+                    try app.opts.with.append(app.arena, value);
+                } else if (std.mem.eql(u8, arg, "--tree")) {
+                    app.opts.tree = value;
+                } else if (std.mem.eql(u8, arg, "--disk")) {
+                    app.opts.disk = value;
+                } else if (std.mem.eql(u8, arg, "--from")) {
+                    app.opts.from = value;
                 } else {
                     return app.fail("unknown option {s}", .{arg});
                 }
@@ -186,6 +260,7 @@ const App = struct {
 
     fn run(app: *App, args: []const []const u8) !void {
         if (args.len >= 1 and std.mem.eql(u8, args[0], triggers.chroot_command)) return app.chrootExec(args[1..]);
+        app.argv = args;
         try app.parseArgs(args);
         const pos = app.opts.positional.items;
         if (pos.len == 0) {
@@ -212,6 +287,8 @@ const App = struct {
         if (std.mem.eql(u8, cmd, "repo")) return app.cmdRepo(rest);
         if (std.mem.eql(u8, cmd, "key")) return app.cmdKey(rest);
         if (std.mem.eql(u8, cmd, "seal")) return app.cmdSeal();
+        if (std.mem.eql(u8, cmd, "image")) return app.cmdImage(rest);
+        if (std.mem.eql(u8, cmd, "install-system")) return app.cmdInstallSystem(rest);
         return app.fail("unknown command '{s}'; run 'dave help'", .{cmd});
     }
 
@@ -408,6 +485,7 @@ const App = struct {
             .install = try app.packageFiles(ctx, files),
             .remove = try app.removeNames(solution),
             .overwrite_unowned = app.opts.overwrite,
+            .progress = app.progress,
         }, &diag) catch |e| {
             if (diag.message.len > 0) return app.fail("{s}", .{diag.message});
             return app.fail("the transaction failed: {t}", .{e});
@@ -422,6 +500,7 @@ const App = struct {
             .root = ctx.root,
             .chroot_path = if (live) null else try Io.Dir.cwd().realPathFileAlloc(app.io, app.opts.root, app.arena),
             .self_exe = "/proc/self/exe",
+            .environ_map = app.environ,
         }) catch |e| return app.fail("a package trigger failed: {t}", .{e});
     }
 
@@ -955,6 +1034,275 @@ const App = struct {
             return app.fail("cannot mark this root as sealed: {t}", .{e});
     }
 
+    // -- images ---------------------------------------------------------------
+
+    fn cmdImage(app: *App, args: []const []const u8) !void {
+        if (args.len != 2 or !std.mem.eql(u8, args[0], "build"))
+            return app.fail("usage: dave image build <spec> --out FILE [--test] [--repo NAME,DIR,URL,KEY]... [--with PACKAGE]... [--tree DIR]", .{});
+        const out = app.opts.out orelse return app.fail("--out is required", .{});
+        // Every file in the image must be owned by root. Without privileges,
+        // the build runs where this user is root: a user namespace.
+        if (linux.getuid() != 0) return app.reenterAsRoot();
+
+        const spec_path = try app.absolute(args[1]);
+        const text = app.readAbsolute(spec_path) orelse return app.fail("cannot read {s}", .{args[1]});
+        var diag: image.Diagnostic = .{};
+        const spec = image.parseSpec(app.arena, text, args[1], &diag) catch |e| switch (e) {
+            error.InvalidSpec => return app.fail("{s}", .{diag.message}),
+            else => return e,
+        };
+        var repos: std.ArrayList(image.RepoArg) = .empty;
+        for (app.opts.repos.items) |r| {
+            try repos.append(app.arena, image.parseRepoArg(r) catch
+                return app.fail("--repo takes NAME,DIR,URL,KEY, not {s}", .{r}));
+        }
+        const out_path = try app.absolute(out);
+        var b: image.Builder = .{
+            .arena = app.arena,
+            .io = app.io,
+            .spec = spec,
+            .spec_dir = std.fs.path.dirname(spec_path) orelse "/",
+            .out = out_path,
+            .work = try std.fmt.allocPrint(app.arena, "{s}.work", .{out_path}),
+            .repos = repos.items,
+            .test_image = app.opts.test_image,
+            .tree_override = if (app.opts.tree) |t| try app.absolute(t) else null,
+            .extra_packages = app.opts.with.items,
+        };
+        defer b.cleanup();
+        const packages = try b.packages();
+        if (packages.len > 0 and repos.items.len == 0) return app.fail("{s} installs packages: name where they come from with --repo", .{args[1]});
+
+        try app.say("==> {s}: the root", .{spec.name});
+        b.prepareTree() catch |e| return app.imageFailed(&b, e);
+        if (packages.len > 0) {
+            if (app.opts.test_image) {
+                if (app.environ) |env| try env.put("CREDENTIALS_DIRECTORY", image.Builder.credentials_path);
+            }
+            app.opts.root = try b.treePath();
+            app.opts.cache = null;
+            try app.cmdChange(.install, packages);
+        }
+        b.finishTree() catch |e| return app.imageFailed(&b, e);
+        switch (spec.format) {
+            .disk => {
+                try app.say("==> {s}: disk image", .{spec.name});
+                b.buildDisk() catch |e| return app.imageFailed(&b, e);
+            },
+            .iso => {
+                try app.say("==> {s}: the initramfs", .{spec.name});
+                b.prepareInitrd() catch |e| return app.imageFailed(&b, e);
+                app.opts.root = try b.initrdPath();
+                app.opts.cache = null;
+                try app.cmdChange(.install, spec.iso.?.initrd.packages);
+                b.finishInitrd() catch |e| return app.imageFailed(&b, e);
+                try app.say("==> {s}: what the installer installs", .{spec.name});
+                b.preparePayloadRoot() catch |e| return app.imageFailed(&b, e);
+                const files = try app.payloadFiles(try b.payloadRootPath(), try b.payload());
+                try app.say("==> {s}: the medium, with {d} packages for the installer", .{ spec.name, files.len });
+                b.buildIso(files) catch |e| return app.imageFailed(&b, e);
+            },
+        }
+        try app.say("image ready: {s}", .{out});
+    }
+
+    /// The package files installing `names` into an empty root takes: the
+    /// same solve the installer will make from the medium.
+    fn payloadFiles(app: *App, root_path: []const u8, names: []const []const u8) ![]image.MediumFile {
+        app.opts.root = root_path;
+        app.opts.cache = null;
+        const ctx = try app.context();
+        var world: std.ArrayList(db.WorldEntry) = .empty;
+        for (names) |n| try world.append(app.arena, .{ .name = n });
+        const solution = try app.solve(.{
+            .world = world.items,
+            .installed = ctx.installed,
+            .candidates = try app.candidates(ctx, true),
+            .mode = .keep_installed,
+        });
+        const files = try app.arena.alloc(image.MediumFile, solution.install.len);
+        for (solution.install, files) |u, *f| f.* = .{ .repo_dir = u.candidate.repo_url, .filename = u.candidate.entry.filename };
+        return files;
+    }
+
+    fn imageFailed(app: *App, b: *image.Builder, e: anyerror) Failure {
+        if (b.diag.message.len > 0) return app.fail("{s}", .{b.diag.message});
+        return app.fail("the image could not be built: {t}", .{e});
+    }
+
+    /// Runs this same command again as root of a new user namespace, through
+    /// unshare(1): a process with more than one thread (and the I/O
+    /// implementation may have started some) cannot enter one itself.
+    fn reenterAsRoot(app: *App) Failure {
+        const exe = std.process.executablePathAlloc(app.io, app.arena) catch |e|
+            return app.fail("cannot find the dave executable: {t}", .{e});
+        var argv: std.ArrayList([]const u8) = .empty;
+        argv.appendSlice(app.arena, &.{ "unshare", "--map-root-user", exe }) catch return app.fail("out of memory", .{});
+        argv.appendSlice(app.arena, app.argv) catch return app.fail("out of memory", .{});
+        app.out.flush() catch {};
+        app.err.flush() catch {};
+        const e = std.process.replace(app.io, .{ .argv = argv.items, .environ_map = app.environ });
+        return app.fail("cannot enter a user namespace with unshare(1): {t}", .{e});
+    }
+
+    // -- installing onto a disk ------------------------------------------------
+
+    fn cmdInstallSystem(app: *App, args: []const []const u8) !void {
+        if (args.len != 0 or (app.opts.list == (app.opts.disk != null)))
+            return app.fail("usage: dave install-system --list [--json] | --disk DISK [--json]", .{});
+        if (app.opts.json) {
+            // Events alone on standard output; everything said for people
+            // (and what the programs dave runs say) on standard error.
+            app.events = app.out;
+            app.out = app.err;
+        }
+        if (app.opts.list) return app.listDisks();
+        app.installSystem(app.opts.disk.?) catch |e| {
+            app.event("error", if (app.last_error.len > 0) app.last_error else @errorName(e), null);
+            return e;
+        };
+        app.event("done", "joe Linux is installed", 1);
+    }
+
+    fn findDisks(app: *App) ![]install_system.Disk {
+        var diag: command.Diagnostic = .{};
+        const listing = command.run(app.arena, app.io, &install_system.lsblk_argv, .{ .capture = true }, &diag) catch |e| switch (e) {
+            error.CommandFailed => return app.fail("{s}", .{diag.message}),
+            else => return e,
+        };
+        const medium = install_system.mountSource(app.readAbsolute("/proc/self/mountinfo") orelse "", install_system.medium_mount);
+        return install_system.parseDisks(app.arena, listing, try install_system.readById(app.arena, app.io), medium) catch
+            app.fail("cannot understand what lsblk says about this computer's disks", .{});
+    }
+
+    fn listDisks(app: *App) !void {
+        const disks = try app.findDisks();
+        if (app.events) |w| {
+            std.json.Stringify.value(.{ .disks = disks }, .{}, w) catch {};
+            w.writeByte('\n') catch {};
+            return;
+        }
+        for (disks) |d| {
+            try app.say("{s}  {d} GB  {s}{s}{s}", .{
+                d.path,                                     d.size / 1_000_000_000, if (d.model.len > 0) d.model else "-",
+                if (d.usable) "" else "  cannot be used: ", d.reason,
+            });
+        }
+    }
+
+    fn installSystem(app: *App, disk_arg: []const u8) !void {
+        if (linux.getuid() != 0) return app.fail("installing joe Linux needs root", .{});
+        const medium_dir = app.opts.from orelse install_system.medium_dir;
+        const spec_path = try std.fs.path.join(app.arena, &.{ medium_dir, install_system.install_file });
+        const spec_text = app.readAbsolute(spec_path) orelse
+            return app.fail("{s} is missing: is this joe Linux's installation medium?", .{spec_path});
+        const medium = install_system.parseMedium(app.arena, spec_text) catch return app.fail("{s} is unreadable", .{spec_path});
+        var packages: std.ArrayList([]const u8) = .empty;
+        try packages.appendSlice(app.arena, medium.packages);
+        try packages.appendSlice(app.arena, app.opts.with.items);
+
+        // The disk, as a listing would show it: whatever a listing refuses,
+        // installing refuses too.
+        const device = Io.Dir.cwd().realPathFileAlloc(app.io, disk_arg, app.arena) catch
+            return app.fail("there is no disk {s}", .{disk_arg});
+        const disk = for (try app.findDisks()) |d| {
+            if (std.mem.eql(u8, d.device, device)) break d;
+        } else return app.fail("{s} is not a disk this system can install onto", .{disk_arg});
+        if (!disk.usable) return app.fail("{s} cannot be used: {s}", .{ disk_arg, disk.reason });
+
+        var lock_file = try app.lock();
+        defer lock_file.close(app.io);
+        const live_config = repo.loadConfig(app.arena, app.io, try app.openDir("/")) catch
+            return app.fail("this system's {s} is unreadable", .{repo.config_path});
+        if (live_config.repos.len == 0) return app.fail("this system has no repositories configured ({s})", .{repo.config_path});
+
+        const plan = provision.Plan.new(app.io, provision.default_esp_size, null);
+        var disks: install_system.Disks = .{ .arena = app.arena, .io = app.io };
+        defer disks.unmountTarget();
+
+        app.step(0.01, "Erasing {s}", .{if (disk.model.len > 0) disk.model else device});
+        const parts = disks.partition(device, plan) catch return app.fail("{s}", .{disks.diag.message});
+        app.step(0.03, "Creating file systems", .{});
+        disks.format(parts.esp, parts.root) catch return app.fail("{s}", .{disks.diag.message});
+        disks.mountTarget(parts.esp, parts.root) catch return app.fail("{s}", .{disks.diag.message});
+
+        // The new system installs from the medium, trusting what this one
+        // trusts.
+        const target_path = install_system.target_mount;
+        var target = try app.openDir(target_path);
+        defer target.close(app.io);
+        try target.createDirPath(app.io, repo.keys_path);
+        {
+            var keys = try app.openDir("/" ++ repo.keys_path);
+            defer keys.close(app.io);
+            var it = keys.iterate();
+            while (try it.next(app.io)) |e| {
+                if (e.kind != .file) continue;
+                try keys.copyFile(e.name, target, try std.fs.path.join(app.arena, &.{ repo.keys_path, e.name }), app.io, .{});
+            }
+            var config: std.ArrayList(image.RepoArg) = .empty;
+            for (live_config.repos) |r| {
+                const dir = try std.fs.path.join(app.arena, &.{ medium_dir, install_system.repos_dir, r.name });
+                try config.append(app.arena, .{ .name = r.name, .dir = dir, .url = r.url, .key = "" });
+            }
+            try target.writeFile(app.io, .{ .sub_path = repo.config_path, .data = try image.reposZon(app.arena, config.items, .build) });
+        }
+
+        app.step(0.05, "Installing packages", .{});
+        var reporter: InstallProgress = .{ .app = app };
+        app.progress = reporter.interface();
+        app.opts.root = target_path;
+        app.opts.cache = null;
+        try app.cmdChange(.install, packages.items);
+        app.progress = null;
+
+        app.step(0.88, "Sealing the installed files", .{});
+        try app.cmdSeal();
+
+        app.step(0.94, "Making the disk bootable", .{});
+        try target.writeFile(app.io, .{ .sub_path = "etc/fstab", .data = try provision.fstab(app.arena, plan) });
+        const kernel = deploy.findKernelIn(app.arena, app.io, target) catch return app.fail("the installed system has no kernel", .{});
+        const consoles = try provision.consoleArgs(app.arena, app.readAbsolute("/proc/cmdline") orelse "");
+        {
+            var esp = try app.openDir(target_path ++ "/" ++ provision.esp_mount);
+            defer esp.close(app.io);
+            provision.writeEsp(app.arena, app.io, esp, .{ .root = target, .kernel_path = kernel }, try provision.cmdline(app.arena, plan, consoles)) catch |e|
+                return app.fail("cannot write the EFI system partition: {t}", .{e});
+        }
+        // From now on the installed system takes its packages from where this
+        // one would.
+        try target.writeFile(app.io, .{ .sub_path = repo.config_path, .data = app.readAbsolute("/" ++ repo.config_path) orelse "" });
+        target.deleteTree(app.io, "var/cache/dave") catch {};
+        // Tell the firmware where the boot loader is. A firmware that will not
+        // be told still finds it at the removable-media path.
+        var diag: command.Diagnostic = .{};
+        if (command.run(app.arena, app.io, &.{
+            "bootctl",                "install",         "--root=" ++ target_path,    "--esp-path=/efi",
+            "--install-source=image", "--variables=yes", "--make-entry-directory=no", "--graceful",
+        }, .{}, &diag)) |_| {} else |_| {
+            app.say("note: the firmware was not told about the new system ({s}); it starts from the disk's removable-media path", .{diag.message}) catch {};
+        }
+
+        app.step(0.99, "Finishing", .{});
+        _ = linux.sync();
+        disks.unmountTarget();
+    }
+
+    const InstallProgress = struct {
+        app: *App,
+
+        fn interface(p: *InstallProgress) txn.Progress {
+            return .{ .context = p, .report = onPackage };
+        }
+
+        fn onPackage(ctx: *anyopaque, done: usize, total: usize, name: []const u8) void {
+            const p: *InstallProgress = @ptrCast(@alignCast(ctx));
+            const fraction = 0.05 + 0.83 * @as(f64, @floatFromInt(done)) / @as(f64, @floatFromInt(@max(total, 1)));
+            const message = std.fmt.allocPrint(p.app.arena, "Installing packages ({d} of {d}: {s})", .{ done, total, name }) catch return;
+            p.app.event("progress", message, fraction);
+        }
+    };
+
     /// `dave --chroot-exec <dir> <program> [args...]`: used to run triggers
     /// inside a root other than the running one.
     fn chrootExec(app: *App, args: []const []const u8) !void {
@@ -998,6 +1346,7 @@ pub fn main(init: std.process.Init) !void {
         .io = init.io,
         .out = &out_writer.interface,
         .err = &err_writer.interface,
+        .environ = init.environ_map,
     };
     var code: u8 = 0;
     app.run(args) catch |e| {

@@ -76,6 +76,8 @@ pub const RunOptions = struct {
     chroot_path: ?[]const u8,
     /// Path of the dave executable, used to enter the chroot.
     self_exe: []const u8,
+    /// The environment trigger programs get; dave's own when null.
+    environ_map: ?*const std.process.Environ.Map = null,
 };
 
 /// Runs the given triggers. A trigger whose program is not present in the root
@@ -91,7 +93,7 @@ pub fn run(arena: Allocator, io: Io, triggers: []const Trigger, options: RunOpti
             try argv.appendSlice(arena, &.{ options.self_exe, chroot_command, path });
         }
         try argv.appendSlice(arena, t.exec);
-        var child = try std.process.spawn(io, .{ .argv = argv.items, .stdin = .ignore });
+        var child = try std.process.spawn(io, .{ .argv = argv.items, .stdin = .ignore, .environ_map = options.environ_map });
         const term = try child.wait(io);
         if (!term.success() and !t.optional) return error.TriggerFailed;
     }

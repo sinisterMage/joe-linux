@@ -15,6 +15,7 @@ import subprocess
 import sys
 import time
 
+import harness
 from harness import VM, Timeout, TOP, start_virtiofsd, stop_virtiofsd
 from repo import GUEST_HOST
 from desktop import step, wait_for
@@ -27,13 +28,9 @@ MEMORY = "6G"
 def build_image():
     base = os.path.join(TOP, "build", "repo")
     key = os.path.join(TOP, "build", "keys", "joe.pub")
-    image = os.path.join(TOP, "build", "images", "joe-firstboot.img")
-    subprocess.run([
-        os.path.join(TOP, "image", "mkjoe.sh"), "--test", "--root-size", "16G",
-        "--repo", f"joe,{base},http://{GUEST_HOST}:{BASE_PORT},{key}",
-        image, "joe-desktop",
-    ], check=True)
-    return image
+    return harness.build_image("release", os.path.join(TOP, "build", "images", "joe-firstboot.img"), repos=[
+        ("joe", base, f"http://{GUEST_HOST}:{BASE_PORT}", key),
+    ])
 
 
 def new_machine(image):

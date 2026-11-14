@@ -179,4 +179,128 @@ out=$("${D[@]}" seal 2>&1) && fail "sealed a root containing unsigned packages"
 expect "strict seal" "missing, malformed, or unreadable seals" <<<"$out"
 [[ ! -e root/usr/lib/dave/sealed ]] || fail "failed seal pass wrote its completion marker"
 
+echo "== a disk image from a specification"
+PATH=$top/build/host-tools/bin:$PATH
+missing=
+for tool in mkfs.btrfs mkfs.vfat mcopy mtype mdir sfdisk unshare; do
+    command -v "$tool" >/dev/null || missing+=" $tool"
+done
+if [[ -n $missing ]]; then
+    echo "   skipped, missing:$missing (make build/host-tools/bin/mcopy builds mtools)"
+else
+    # The tampered package of an earlier test, made whole again.
+    rm -f "$work/repo/hello-2.0-r1-x86_64.dave"
+    make_pkg hello 2.0-r1 usr/bin/hello "hello v2" "libgreet >=1.1"
+    make_pkg kernel 1.0-r1 usr/lib/modules/1.0-test/vmlinuz "a kernel"
+    make_pkg loader 1.0-r1 usr/lib/systemd/boot/efi/systemd-bootx64.efi "MZ #### LoaderInfo: systemd-boot 262.1 ####"
+    make_pkg varstate 1.0-r1 var/lib/varstate/state "shared state"
+    "$dave" repo index "$work/repo" --key "$work/signing.key" >/dev/null
+    repo_arg="test,$work/repo,http://example.invalid/x86_64,$work/signing.pub"
+
+    printf '.{ .name = "typo", .packages = .{"hello"}, .rootsize = "1G" }\n' > typo.zon
+    out=$("$dave" image build typo.zon --repo "$repo_arg" --out typo.img 2>&1) && fail "accepted a misspelt spec field"
+    expect "strict spec" "rootsize" <<<"$out"
+
+    cat > image.zon <<'EOF'
+.{
+    .name = "cli",
+    .packages = .{ "kernel", "loader", "hello", "varstate" },
+    .root_size = "256M",
+    .esp_size = "64M",
+    .cmdline = "console=ttyS0,115200",
+}
+EOF
+    "$dave" image build image.zon --repo "$repo_arg" --out disk.img | expect "built" "image ready: disk.img"
+    [[ ! -e disk.img.work ]] || fail "the image build left its work directory"
+    [[ $(stat -c %s disk.img) -eq $(( (1 + 64 + 256 + 1) << 20 )) ]] || fail "unexpected image size $(stat -c %s disk.img)"
+    dump=$(sfdisk --dump disk.img)
+    expect "esp partition" "type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B" <<<"$dump"
+    expect "root partition" "type=4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709" <<<"$dump"
+    root_uuid=$(sed -n 's/.*type=4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709, uuid=\([0-9A-Fa-f-]*\).*/\1/p' <<<"$dump")
+    [[ -n $root_uuid ]] || fail "no root partition uuid in: $dump"
+
+    # The ESP is the partition at 1 MiB.
+    esp="disk.img@@1M"
+    entry=$(mtype -i "$esp" ::/loader/entries/joe-1.conf)
+    expect "entry" "rootflags=subvol=joe/deploy/1 rw rootwait panic=10 loglevel=4 console=ttyS0,115200" <<<"$entry"
+    grep -qi "root=PARTUUID=$root_uuid " <<<"$entry" || fail "the boot entry does not name the root partition: $entry"
+    kernel=$(sed -n 's/^linux //p' <<<"$entry")
+    [[ $(mtype -i "$esp" "::$kernel") == "a kernel" ]] || fail "the entry's kernel is not the root's kernel"
+    mdir -i "$esp" ::/EFI/BOOT | expect "fallback loader" "BOOTX64"
+    mdir -i "$esp" ::/EFI/systemd | expect "loader" "SYSTEM~1"
+    expect "loader.conf" "editor no" <<<"$(mtype -i "$esp" ::/loader/loader.conf)"
+
+    # The root partition: deployment 1 plus the shared subvolumes, and /var's
+    # contents moved out of the deployment into its own.
+    dd if=disk.img of=root.img bs=1M skip=65 count=256 status=none
+    tree=$(btrfs inspect-internal dump-tree -t fs_tree root.img 2>/dev/null; btrfs inspect-internal dump-tree -t root root.img 2>/dev/null)
+    for name in "name: 1" "name: home" "name: var"; do
+        grep -qF "$name" <<<"$tree" || fail "the root file system lacks a subvolume ($name)"
+    done
+    rm -f root.img
+fi
+
+echo "== a live medium from a specification"
+missing=
+for tool in xorriso mkfs.erofs fsck.erofs mkfs.vfat mcopy mtype sfdisk zstd cpio unshare; do
+    command -v "$tool" >/dev/null || missing+=" $tool"
+done
+if [[ -n $missing ]]; then
+    echo "   skipped, missing:$missing (make iso-tools builds xorriso and erofs-utils)"
+else
+    make_pkg osrel 1.0-r1 usr/lib/os-release 'PRETTY_NAME="joe Linux test"'
+    "$dave" repo index "$work/repo" --key "$work/signing.key" >/dev/null
+    mkdir -p initrd-overlay/etc
+    echo 'NAME="test initrd"' > initrd-overlay/etc/initrd-release
+    ln -sfn usr/bin/hello initrd-overlay/init
+    cat > live.zon <<'EOF'
+.{
+    .name = "cli-live",
+    .format = .iso,
+    .packages = .{ "kernel", "loader", "osrel", "hello" },
+    .cmdline = "quiet",
+    .iso = .{
+        .label = "JOE_TEST",
+        .initrd = .{ .packages = .{"hello"}, .overlay = "initrd-overlay", .remove = .{"usr/lib/libgreet.txt"} },
+        .payload = .{ "hello", "tree" },
+    },
+}
+EOF
+    "$dave" image build live.zon --repo "${repo_arg:-test,$work/repo,http://example.invalid/x86_64,$work/signing.pub}" \
+        --out live.iso | expect "built" "image ready: live.iso"
+
+    # The ISO 9660 file system: the root image, what the installer installs,
+    # and exactly the packages that takes, with the repository's signed index.
+    listing=$(xorriso -indev live.iso -find / -type f 2>/dev/null)
+    for path in /joe/root.erofs /joe/install.zon /joe/repos/test/repo.zon /joe/repos/test/repo.zon.sig \
+        /joe/repos/test/hello-2.0-r1-x86_64.dave /joe/repos/test/libgreet-1.1-r1-x86_64.dave /joe/repos/test/tree-2.2-r1-x86_64.dave; do
+        expect "medium" "'$path'" <<<"$listing"
+    done
+    [[ $(grep -c '\.dave' <<<"$listing") -eq 3 ]] || fail "the medium carries packages the installer does not need: $listing"
+    xorriso -indev live.iso -osirrox on -extract /joe/install.zon install.zon -extract /joe/root.erofs root.erofs 2>/dev/null
+    expect "install list" '"hello", "tree",' <<<"$(cat install.zon)"
+    fsck.erofs root.erofs >/dev/null || fail "the live root image does not check"
+
+    # It boots from a CD (El Torito, EFI) and as a disk (GPT partition 2).
+    xorriso -indev live.iso -report_el_torito plain 2>&1 | expect "el torito" "UEFI"
+    dump=$(sfdisk --dump live.iso)
+    expect "appended ESP" "type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B" <<<"$dump"
+    start=$(sed -n 's/^live.iso2 : start= *\([0-9]*\),.*/\1/p' <<<"$dump")
+    [[ -n $start ]] || fail "no second partition in: $dump"
+    esp="live.iso@@$((start * 512))"
+    entry=$(mtype -i "$esp" ::/loader/entries/joe-live.conf)
+    expect "title" "title joe Linux test" <<<"$entry"
+    expect "options" "options joe=log loglevel=4 systemd.gpt_auto=0 rd.systemd.gpt_auto=0 quiet" <<<"$entry"
+    [[ $entry != *root=* ]] || fail "the live entry names a root: $entry"
+    expect "safe graphics" "nomodeset" <<<"$(mtype -i "$esp" ::/loader/entries/joe-live-safe.conf)"
+    initrd=$(sed -n 's/^initrd //p' <<<"$entry")
+    mcopy -i "$esp" "::$initrd" initrd.img
+    contents=$(zstd -dc initrd.img | cpio -t 2>/dev/null)
+    for path in init dev/console etc/initrd-release usr/bin/hello; do
+        grep -qx "$path" <<<"$contents" || fail "the initramfs lacks $path"
+    done
+    ! grep -q "libgreet.txt\|usr/lib/dave/db" <<<"$contents" || fail "the initramfs kept what the spec removes"
+    rm -f root.erofs initrd.img
+fi
+
 echo "cli tests passed"

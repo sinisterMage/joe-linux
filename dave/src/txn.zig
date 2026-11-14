@@ -35,6 +35,14 @@ pub const Plan = struct {
     seal: bool = true,
     /// The attribute seals are stored in; only tests use another.
     seal_attribute: [*:0]const u8 = seal.xattr_name,
+    /// Told after each package is written, for those watching a long
+    /// transaction (the installer).
+    progress: ?Progress = null,
+};
+
+pub const Progress = struct {
+    context: *anyopaque,
+    report: *const fn (context: *anyopaque, done: usize, total: usize, name: []const u8) void,
 };
 
 pub const Change = struct {
@@ -399,10 +407,11 @@ pub fn apply(gpa: Allocator, arena: Allocator, io: Io, root: Io.Dir, plan: Plan,
 
     // Phase 2: write.
     var changes: std.ArrayList(Change) = .empty;
-    for (plan.install) |pf| {
+    for (plan.install, 1..) |pf, done| {
         const m = try t.installPackage(pf);
         const old = installed_by_name.get(m.name);
         try changes.append(arena, .{ .name = m.name, .old_version = if (old) |o| o.version else null, .new_version = m.version });
+        if (plan.progress) |p| p.report(p.context, done, plan.install.len, m.name);
     }
     for (incoming) |m| {
         if (installed_by_name.get(m.name)) |old| try t.removeObsolete(old);

@@ -14,6 +14,12 @@
 //! check has passed. dave reads the state from the file name and never keeps
 //! a second copy that could drift.
 //!
+//! An entry may also name initrds. joe boots without an initramfs, so the
+//! only one is the processor microcode archive (cpu-microcode), which the
+//! kernel reads before it mounts the root itself. Kernels and initrds are
+//! stored on the ESP under names derived from their contents, and every
+//! rewrite of an entry carries its initrds along.
+//!
 //! All of this was verified against systemd-boot 262 in tests/vm/boot_contract.py.
 
 const std = @import("std");
@@ -25,6 +31,7 @@ const Version = @import("solver/version.zig").Version;
 
 pub const entries_dir = "loader/entries";
 pub const kernels_dir = "joe/kernels";
+pub const initrds_dir = "joe/initrd";
 pub const default_tries = 3;
 const prefix = "joe-";
 const suffix = ".conf";
@@ -45,6 +52,8 @@ pub const Entry = struct {
     tries_done: u32 = 0,
     /// Path of the kernel image, relative to the ESP root with a leading slash.
     kernel: []const u8,
+    /// Paths of the initrds, likewise, in the order they are given.
+    initrds: []const []const u8 = &.{},
     options: []const u8,
     file_name: []const u8 = "",
 
@@ -82,6 +91,19 @@ fn field(text: []const u8, key: []const u8) ?[]const u8 {
     return null;
 }
 
+/// Every value of a key that may be given more than once ("initrd").
+fn fieldAll(arena: Allocator, text: []const u8, key: []const u8) ![]const []const u8 {
+    var out: std.ArrayList([]const u8) = .empty;
+    var lines = std.mem.tokenizeScalar(u8, text, '\n');
+    while (lines.next()) |raw| {
+        const line = std.mem.trim(u8, raw, " \t\r");
+        if (!std.mem.startsWith(u8, line, key) or line.len == key.len) continue;
+        if (line[key.len] != ' ' and line[key.len] != '\t') continue;
+        try out.append(arena, std.mem.trim(u8, line[key.len..], " \t"));
+    }
+    return out.items;
+}
+
 /// Every deployment entry on the ESP, in the order systemd-boot would try
 /// them: usable entries by descending priority, then exhausted ones.
 pub fn list(arena: Allocator, io: Io, esp: Io.Dir) ![]Entry {
@@ -102,6 +124,7 @@ pub fn list(arena: Allocator, io: Io, esp: Io.Dir) ![]Entry {
             .tries_left = parsed.tries_left,
             .tries_done = parsed.tries_done,
             .kernel = field(text, "linux") orelse continue,
+            .initrds = try fieldAll(arena, text, "initrd"),
             .options = field(text, "options") orelse "",
             .file_name = try arena.dupe(u8, e.name),
         });
@@ -139,6 +162,7 @@ pub const WriteOptions = struct {
     id: u32,
     priority: u64,
     kernel: []const u8,
+    initrds: []const []const u8 = &.{},
     options: []const u8,
     /// True for a deployment that has never booted: it gets boot counting.
     counted: bool,
@@ -155,21 +179,23 @@ pub fn write(arena: Allocator, io: Io, esp: Io.Dir, options: WriteOptions) !void
         try std.fmt.allocPrint(arena, prefix ++ "{d}+{d}" ++ suffix, .{ options.id, default_tries })
     else
         try std.fmt.allocPrint(arena, prefix ++ "{d}" ++ suffix, .{options.id});
-    const text = try std.fmt.allocPrint(arena,
+    var text: Io.Writer.Allocating = .init(arena);
+    try text.writer.print(
         \\title joe Linux (deployment {d})
         \\sort-key joe
         \\version {d}
         \\linux {s}
-        \\options {s}
         \\
-    , .{ options.id, options.priority, options.kernel, options.options });
+    , .{ options.id, options.priority, options.kernel });
+    for (options.initrds) |initrd| try text.writer.print("initrd {s}\n", .{initrd});
+    try text.writer.print("options {s}\n", .{options.options});
 
     // Remove stale names for this deployment first; if we are interrupted in
     // between, the deployment merely has no entry, which is always safe.
     try removeFrom(arena, io, dir, options.id);
     // The temporary name does not end in ".conf", so the loader ignores it.
     const tmp = try std.fmt.allocPrint(arena, ".{s}.tmp", .{name});
-    try dir.writeFile(io, .{ .sub_path = tmp, .data = text });
+    try dir.writeFile(io, .{ .sub_path = tmp, .data = text.written() });
     {
         var f = try dir.openFile(io, tmp, .{});
         defer f.close(io);
@@ -202,36 +228,52 @@ fn removeFrom(arena: Allocator, io: Io, dir: Io.Dir, id: u32) !void {
 /// returns its loader path. An image already present is not rewritten, so an
 /// existing entry can never end up pointing at different bytes.
 pub fn installKernel(arena: Allocator, io: Io, esp: Io.Dir, src_dir: Io.Dir, src_path: []const u8) ![]const u8 {
+    return installByContent(arena, io, esp, src_dir, src_path, kernels_dir, ".efi");
+}
+
+/// An initrd, stored and named the same way as kernels.
+pub fn installInitrd(arena: Allocator, io: Io, esp: Io.Dir, src_dir: Io.Dir, src_path: []const u8) ![]const u8 {
+    return installByContent(arena, io, esp, src_dir, src_path, initrds_dir, ".img");
+}
+
+fn installByContent(arena: Allocator, io: Io, esp: Io.Dir, src_dir: Io.Dir, src_path: []const u8, dir: []const u8, ext: []const u8) ![]const u8 {
     const digest = try archive.hashFile(io, src_dir, src_path);
-    const rel = try std.fmt.allocPrint(arena, kernels_dir ++ "/{s}.efi", .{digest[0..16]});
+    const rel = try std.fmt.allocPrint(arena, "{s}/{s}{s}", .{ dir, digest[0..16], ext });
     const loader_path = try std.fmt.allocPrint(arena, "/{s}", .{rel});
     if (esp.statFile(io, rel, .{})) |_| return loader_path else |err| switch (err) {
         error.FileNotFound => {},
         else => return err,
     }
-    try esp.createDirPath(io, kernels_dir);
+    try esp.createDirPath(io, dir);
     const tmp = try std.fmt.allocPrint(arena, "{s}.tmp", .{rel});
     try src_dir.copyFile(src_path, esp, tmp, io, .{});
     try esp.rename(tmp, esp, rel, io);
     return loader_path;
 }
 
-/// Deletes kernel images no remaining entry refers to.
+/// Deletes kernel images and initrds no remaining entry refers to.
 pub fn pruneKernels(arena: Allocator, io: Io, esp: Io.Dir, entries: []const Entry, also_keep: []const []const u8) !void {
-    var dir = esp.openDir(io, kernels_dir, .{ .iterate = true }) catch |err| switch (err) {
-        error.FileNotFound => return,
-        else => return err,
-    };
-    defer dir.close(io);
-    var doomed: std.ArrayList([]const u8) = .empty;
-    var it = dir.iterate();
-    outer: while (try it.next(io)) |e| {
-        const loader_path = try std.fmt.allocPrint(arena, "/" ++ kernels_dir ++ "/{s}", .{e.name});
-        for (entries) |entry| if (std.mem.eql(u8, entry.kernel, loader_path)) continue :outer;
-        for (also_keep) |keep| if (std.mem.eql(u8, keep, loader_path)) continue :outer;
-        try doomed.append(arena, try arena.dupe(u8, e.name));
+    var referenced: std.ArrayList([]const u8) = .empty;
+    for (entries) |entry| {
+        try referenced.append(arena, entry.kernel);
+        try referenced.appendSlice(arena, entry.initrds);
     }
-    for (doomed.items) |name| try dir.deleteFile(io, name);
+    try referenced.appendSlice(arena, also_keep);
+    for ([_][]const u8{ kernels_dir, initrds_dir }) |dir_path| {
+        var dir = esp.openDir(io, dir_path, .{ .iterate = true }) catch |err| switch (err) {
+            error.FileNotFound => continue,
+            else => return err,
+        };
+        defer dir.close(io);
+        var doomed: std.ArrayList([]const u8) = .empty;
+        var it = dir.iterate();
+        outer: while (try it.next(io)) |e| {
+            const loader_path = try std.fmt.allocPrint(arena, "/{s}/{s}", .{ dir_path, e.name });
+            for (referenced.items) |keep| if (std.mem.eql(u8, keep, loader_path)) continue :outer;
+            try doomed.append(arena, try arena.dupe(u8, e.name));
+        }
+        for (doomed.items) |name| try dir.deleteFile(io, name);
+    }
 }
 
 /// Where a root keeps the systemd-boot it ships.
@@ -394,6 +436,42 @@ test "kernels are stored by content and pruned when unreferenced" {
     try pruneKernels(arena, io, esp, try list(arena, io, esp), &.{});
     _ = try esp.statFile(io, a[1..], .{});
     try testing.expectError(error.FileNotFound, esp.statFile(io, b[1..], .{}));
+}
+
+test "initrds are written, read back and kept while referenced" {
+    const io = testing.io;
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var tmp = testing.tmpDir(.{ .iterate = true });
+    defer tmp.cleanup();
+    try tmp.dir.createDirPath(io, "esp");
+    var esp = try tmp.dir.openDir(io, "esp", .{ .iterate = true });
+    defer esp.close(io);
+    try tmp.dir.writeFile(io, .{ .sub_path = "vmlinuz", .data = "kernel" });
+    try tmp.dir.writeFile(io, .{ .sub_path = "ucode-1", .data = "microcode 1" });
+    try tmp.dir.writeFile(io, .{ .sub_path = "ucode-2", .data = "microcode 2" });
+    const kernel = try installKernel(arena, io, esp, tmp.dir, "vmlinuz");
+    const one = try installInitrd(arena, io, esp, tmp.dir, "ucode-1");
+    const two = try installInitrd(arena, io, esp, tmp.dir, "ucode-2");
+    try testing.expect(std.mem.startsWith(u8, one, "/joe/initrd/") and std.mem.endsWith(u8, one, ".img"));
+
+    try write(arena, io, esp, .{ .id = 1, .priority = 1, .kernel = kernel, .initrds = &.{one}, .options = "subvol=joe/deploy/1", .counted = false });
+    try write(arena, io, esp, .{ .id = 2, .priority = 2, .kernel = kernel, .options = "subvol=joe/deploy/2", .counted = false });
+    const text = try esp.readFileAlloc(io, entries_dir ++ "/joe-1.conf", arena, .limited(4096));
+    // The order systemd-boot reads: initrd lines between linux and options.
+    try testing.expect(std.mem.indexOf(u8, text, "linux /joe/kernels/").? < std.mem.indexOf(u8, text, "initrd /joe/initrd/").?);
+    try testing.expect(std.mem.indexOf(u8, text, "initrd /joe/initrd/").? < std.mem.indexOf(u8, text, "options ").?);
+
+    const entries = try list(arena, io, esp);
+    try testing.expectEqual(@as(usize, 1), find(entries, 1).?.initrds.len);
+    try testing.expectEqualStrings(one, find(entries, 1).?.initrds[0]);
+    try testing.expectEqual(@as(usize, 0), find(entries, 2).?.initrds.len);
+
+    try pruneKernels(arena, io, esp, entries, &.{});
+    _ = try esp.statFile(io, one[1..], .{});
+    _ = try esp.statFile(io, kernel[1..], .{});
+    try testing.expectError(error.FileNotFound, esp.statFile(io, two[1..], .{}));
 }
 
 test "the boot loader on the ESP only moves forward" {

@@ -3,11 +3,16 @@
 # Everything here runs as an ordinary user. Nothing needs root on the host.
 
 DAVE := dave/zig-out/bin/dave
+# Tools image builds need that the host may not have are built here.
+export PATH := $(CURDIR)/build/host-tools/bin:$(PATH)
+# Images read joe's repository from build/repo and are configured to fetch from
+# http://10.0.2.2:8643: this machine as a QEMU guest sees it (make serve-repo).
+REPO := --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/keys/joe.pub
 
 .PHONY: help dave test test-cli scaffold test-boot-contract test-deployments \
         bootstrap packages image run test-joe test-security audit-security \
         desktop-image run-desktop test-desktop \
-        release-image test-release vm run-vm serve-repo clean
+        release-image test-release vm run-vm serve-repo iso-tools iso test-live test-install clean
 
 help:
 	@echo "dave"
@@ -38,6 +43,11 @@ help:
 	@echo "  make vm                   a virtual machine with its own 64G disk in build/vm, made from that image"
 	@echo "  make run-vm               boot it; what you do in it stays (VM_ARGS='--share DIR' passes options)"
 	@echo "  make serve-repo           offer build/repo to that machine, for 'dave upgrade'"
+	@echo ""
+	@echo "the installation medium (image/live.zon)"
+	@echo "  make iso                  build/images/joe-live.iso: a live session with the installer"
+	@echo "  make test-live            boot it as a CD and as a USB stick"
+	@echo "  make test-install         install from it onto an empty disk, then boot that"
 
 $(DAVE): $(wildcard dave/src/*.zig dave/src/solver/*.zig) dave/build.zig
 	cd dave && zig build -Doptimize=ReleaseSafe
@@ -54,17 +64,38 @@ build/host-tools/bin/mcopy:
 	cd build/src && rm -rf mtools && mkdir mtools && tar -xf mtools-4.0.49.tar.bz2 -C mtools --strip-components=1
 	cd build/src/mtools && ./configure --prefix=$(CURDIR)/build/host-tools --disable-floppyd && $(MAKE) && $(MAKE) install
 
+# What a live ISO is made with: its compressed root (erofs) and the ISO itself.
+XORRISO := xorriso-1.5.8.pl02
+XORRISO_SHA256 := b1455ecafbf0692ddafe1d71002a96f2ce2d77f4deae602678261ce033f97bc8
+EROFS := erofs-utils-1.9.4
+EROFS_SHA256 := 7d135aa2550326a5acf20f53c518aea5a8900015ce50700044e40f818c31dd80
+
+build/host-tools/bin/xorriso:
+	mkdir -p build/src build/host-tools
+	cd build/src && [ -e $(XORRISO).tar.gz ] || curl -fsSLO https://ftp.gnu.org/gnu/xorriso/$(XORRISO).tar.gz
+	cd build/src && echo "$(XORRISO_SHA256)  $(XORRISO).tar.gz" | sha256sum -c --quiet
+	cd build/src && rm -rf xorriso && mkdir xorriso && tar -xf $(XORRISO).tar.gz -C xorriso --strip-components=1
+	cd build/src/xorriso && ./configure --prefix=$(CURDIR)/build/host-tools && $(MAKE) && $(MAKE) install
+
+# Needs the host's lz4, xz and zstd libraries and headers.
+build/host-tools/bin/mkfs.erofs:
+	mkdir -p build/src build/host-tools
+	cd build/src && [ -e $(EROFS).tar.gz ] || curl -fsSLO https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/snapshot/$(EROFS).tar.gz
+	cd build/src && echo "$(EROFS_SHA256)  $(EROFS).tar.gz" | sha256sum -c --quiet
+	cd build/src && rm -rf erofs-utils && mkdir erofs-utils && tar -xf $(EROFS).tar.gz -C erofs-utils --strip-components=1
+	cd build/src/erofs-utils && ./autogen.sh && ./configure --prefix=$(CURDIR)/build/host-tools \
+	    --enable-lz4 --enable-lzma --with-libzstd --disable-fuse && $(MAKE) && $(MAKE) install
+
+iso-tools: build/host-tools/bin/mcopy build/host-tools/bin/xorriso build/host-tools/bin/mkfs.erofs
+
 build/scaffold/archlinux-bootstrap.tar.zst:
 	mkdir -p build/scaffold
 	curl -fsSL -o $@ https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst
 
-build/images/scaffold.img: build/scaffold/archlinux-bootstrap.tar.zst build/host-tools/bin/mcopy
+build/images/scaffold.img: build/scaffold/archlinux-bootstrap.tar.zst build/host-tools/bin/mcopy $(DAVE)
 	mkdir -p build/images
 	image/mkscaffold.sh
-	image/mkimage.sh --rootfs build/scaffold/rootfs \
-	    --kernel /usr/lib/modules/$$(uname -r)/vmlinuz \
-	    --sdboot /usr/lib/systemd/boot/efi/systemd-bootx64.efi \
-	    --out $@ --cmdline "console=ttyS0,115200"
+	$(DAVE) image build image/scaffold.zon --out $@
 
 scaffold: build/images/scaffold.img
 
@@ -89,12 +120,12 @@ bootstrap: build/lfs/wget-list
 packages: $(DAVE)
 	bootstrap/build-packages.sh
 
-# --test: root logs in on the serial console without a password. There is no
-# installer yet to set one, so this is how a demonstration image is used.
-image: build/host-tools/bin/mcopy
+# Images are described by image/*.zon and built by `dave image build`.
+# --test: root logs in on the serial console without a password, which is how
+# the tests look inside and how a demonstration image is used.
+image: build/host-tools/bin/mcopy $(DAVE)
 	mkdir -p build/images
-	image/mkjoe.sh --test --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/keys/joe.pub \
-	    build/images/joe.img joe-base
+	$(DAVE) image build image/console.zon --test $(REPO) --out build/images/joe.img
 
 run:
 	image/run.sh
@@ -110,12 +141,9 @@ audit-security: $(DAVE)
 
 # Like `image`, a test image: it has a ready-made user (joe, password
 # joe) who is logged in automatically.
-desktop-image: build/host-tools/bin/mcopy
-	mkdir -p build/images build/joe/desktop-overlay/etc/gdm
-	printf '[daemon]\nAutomaticLoginEnable=True\nAutomaticLogin=joe\n' > build/joe/desktop-overlay/etc/gdm/custom.conf
-	image/mkjoe.sh --test --overlay build/joe/desktop-overlay --root-size 16G \
-	    --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/keys/joe.pub \
-	    build/images/joe-desktop.img joe-desktop joe-test-desktop
+desktop-image: build/host-tools/bin/mcopy $(DAVE)
+	mkdir -p build/images
+	$(DAVE) image build image/desktop.zon --test $(REPO) --out build/images/joe-desktop.img
 
 run-desktop:
 	image/run.sh --desktop
@@ -125,11 +153,9 @@ test-desktop: build/host-tools/bin/mcopy $(DAVE)
 
 # What a person would install: no test console, no ready-made account, root
 # locked. The first boot asks who you are (gnome-initial-setup).
-release-image: build/host-tools/bin/mcopy
+release-image: build/host-tools/bin/mcopy $(DAVE)
 	mkdir -p build/images
-	image/mkjoe.sh --root-size 16G \
-	    --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/keys/joe.pub \
-	    build/images/joe-release.img joe-desktop
+	$(DAVE) image build image/release.zon $(REPO) --out build/images/joe-release.img
 
 test-release: build/host-tools/bin/mcopy $(DAVE)
 	python3 tests/vm/release.py
@@ -146,6 +172,19 @@ run-vm:
 # The image's repository is http://10.0.2.2:8643, which is this machine as a
 # QEMU guest sees it. After building newer packages, `dave upgrade` in the
 # guest finds them here.
+# The installation medium. Like the other images it is configured for
+# http://10.0.2.2:8643; the build machine makes the published one (joe-build
+# iso) with the public repository's URL.
+iso: iso-tools $(DAVE)
+	mkdir -p build/images
+	$(DAVE) image build image/live.zon $(REPO) --out build/images/joe-live.iso
+
+test-live: iso-tools $(DAVE)
+	python3 tests/vm/live.py
+
+test-install: iso-tools $(DAVE)
+	python3 tests/vm/install.py
+
 serve-repo:
 	@echo "serving build/repo on port 8643 (Ctrl-C to stop)"
 	python3 -m http.server 8643 --bind 127.0.0.1 --directory build/repo

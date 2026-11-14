@@ -13,7 +13,7 @@ import subprocess
 import sys
 import time
 
-from harness import VM, Timeout, TOP, BOOT_BANNER
+from harness import VM, Timeout, TOP, BOOT_BANNER, build_image
 from repo import Repo, GUEST_HOST, GUEST_URL, script, serve_directory
 
 
@@ -82,13 +82,10 @@ def main():
         # from a second one, as a third-party repository would be.
         base = os.path.join(TOP, "build", "repo")
         base_key = os.path.join(TOP, "build", "keys", "joe.pub")
-        image = os.path.join(TOP, "build", "images", "joe.img")
-        subprocess.run([
-            os.path.join(TOP, "image", "mkjoe.sh"), "--test",
-            "--repo", f"joe,{base},http://{GUEST_HOST}:{BASE_PORT},{base_key}",
-            "--repo", f"test,{repo.path},{GUEST_URL},{repo.public_key}",
-            image, "joe-base", "hello", "release-marker",
-        ], check=True)
+        image = build_image("console", os.path.join(TOP, "build", "images", "joe.img"), repos=[
+            ("joe", base, f"http://{GUEST_HOST}:{BASE_PORT}", base_key),
+            ("test", repo.path, GUEST_URL, repo.public_key),
+        ], extra=["hello", "release-marker"])
         base_server = serve_directory(base, BASE_PORT)
     else:
         image = os.path.join(TOP, "build", "images", "scaffold-dave.img")
