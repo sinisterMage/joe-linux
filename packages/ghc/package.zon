@@ -1,0 +1,31 @@
+.{
+    .name = "ghc",
+    .version = "9.12.4",
+    .release = 2,
+    .description = "The Glasgow Haskell Compiler and its boot libraries, with GHCi, Haddock and hsc2hs",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Checksums from https://downloads.haskell.org/~ghc/9.12.4/SHA256SUMS.
+        .{ .url = "https://downloads.haskell.org/~ghc/9.12.4/ghc-9.12.4-src.tar.xz", .sha256 = "02d1ee5080acf00e135b93b238f09015b06ff27254cde59669cf57c42c2bee43" },
+        // GHC is written in Haskell. Like rust's stage0, this is upstream's
+        // build of an older release, used only to compile the one above
+        // (configure.ac asks for 9.6 or later); nothing of it is installed.
+        // 9.10.1 because the Hadrian sources below are published for it.
+        // Checksum from https://downloads.haskell.org/~ghc/9.10.1/SHA256SUMS.
+        .{ .url = "https://downloads.haskell.org/~ghc/9.10.1/ghc-9.10.1-x86_64-deb12-linux.tar.xz", .sha256 = "330c43eea88434e2de3480e05a5ea5cf7664090ef12245602dfe8463ac5dc496" },
+        // The Hackage packages Hadrian (GHC's build system) needs, with the
+        // plan for building them with GHC 9.10.1, as GHC publishes them for
+        // hadrian/bootstrap/bootstrap.py. No checksum is published; its
+        // plan-bootstrap.json is the in-tree plan-bootstrap-9_10_1.json, and
+        // bootstrap.py checks every tarball in it against that plan.
+        .{ .url = "https://downloads.haskell.org/~ghc/9.12.4/hadrian-bootstrap-sources/hadrian-bootstrap-sources-9.10.1.tar.gz", .sha256 = "92b3c72c56cafe07032f0f9e907fb6d7a5306298798c28314ac2e19f2876315a", .file = "ghc-9.12.4-hadrian-bootstrap-sources-9.10.1.tar.gz" },
+    },
+    // ghc runs gcc to compile C and link, and ld, ar and ranlib from
+    // binutils. Its runtime system links libffi, ghc-bignum links GMP, and
+    // the terminfo library (GHCi's line editor) links ncurses. Programs GHC
+    // links need libgmp and libffi as well.
+    .depends = .{ "glibc", "gcc", "binutils", "gmp", "libffi", "ncurses" },
+    // bootstrap.py and the runtime system's generated headers need Python;
+    // Hadrian runs autoreconf to make the installation's configure script.
+    .build_depends = .{ "python", "autoconf" },
+}

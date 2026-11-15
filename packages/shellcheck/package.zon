@@ -1,0 +1,20 @@
+.{
+    .name = "shellcheck",
+    .version = "0.11.0",
+    .release = 1,
+    .description = "Static analysis and linting for shell scripts",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // No checksum is published for the source archive.
+        .{ .url = "https://github.com/koalaman/shellcheck/archive/v0.11.0/shellcheck-0.11.0.tar.gz", .sha256 = "8b07554f92e4fbfc33f1539a1f475f21c6503ceae8f806efcc518b1f529f7102" },
+    },
+    // cabal downloads the Hackage libraries ShellCheck is built from (aeson
+    // and the rest); they are not vendored yet.
+    .network = true,
+    // The Haskell libraries are linked in statically. What remains is what
+    // every GHC program links: libgmp (ghc-bignum) and libffi (the runtime
+    // system), besides glibc.
+    .depends = .{ "glibc", "gmp", "libffi" },
+    // striptests is a bash script.
+    .build_depends = .{ "ghc", "cabal-install", "bash" },
+}
