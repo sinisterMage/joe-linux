@@ -1,0 +1,31 @@
+.{
+    .name = "cups",
+    .version = "2.4.20",
+    .release = 1,
+    .description = "Print spooler and the libcups client library",
+    .license = "Apache-2.0 WITH LLVM-exception",
+    .sources = .{
+        .{ .url = "https://github.com/OpenPrinting/cups/releases/download/v2.4.20/cups-2.4.20-source.tar.gz", .sha256 = "ab4d9cd7f3e58060091d2b24972223d6401675f11c49b65abf4f6ef31dea22ff" },
+    },
+    // The book lists cups-filters as required: the scheduler runs its
+    // filters to turn documents into what printers take. It is not a
+    // dependency here because cups-filters builds against this package
+    // (through libcupsfilters); whatever installs a printing system
+    // installs both. colord is talked to over D-Bus when it runs and is not
+    // needed otherwise. The ppdc tools are C++. xdg-open opens the web
+    // interface from the menu entry.
+    .depends = .{
+        "glibc",
+        "gcc",
+        "zlib",
+        "gnutls",
+        "avahi",
+        "dbus",
+        "libusb",
+        "linux-pam",
+        "systemd",
+        "acl",
+        "xdg-utils",
+    },
+    .build_depends = .{ "pkgconf" },
+}

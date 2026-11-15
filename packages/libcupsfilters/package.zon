@@ -1,0 +1,30 @@
+.{
+    .name = "libcupsfilters",
+    .version = "2.1.2",
+    .release = 1,
+    .description = "OpenPrinting library of the filter functions cups-filters is made of",
+    .license = "Apache-2.0 WITH LLVM-exception",
+    .sources = .{
+        .{ .url = "https://github.com/OpenPrinting/libcupsfilters/releases/download/2.1.2/libcupsfilters-2.1.2.tar.xz", .sha256 = "cd1f0003af7cc35beeb4e7b13cb4392b53b9885684bd8b60099036ef0587e54f" },
+    },
+    // Ghostscript and Poppler are back ends it runs (gs) and links
+    // (poppler-cpp); qpdf does the PDF-to-PDF work. The book also lists
+    // GLib, MuPDF and pdfio, which this release does not use or only runs
+    // optionally (mutool, switched off: MuPDF has no recipe).
+    .depends = .{
+        "glibc",
+        "gcc",
+        "cups",
+        "qpdf",
+        "poppler",
+        "ghostscript",
+        "lcms2",
+        "fontconfig",
+        "libjpeg-turbo",
+        "libpng",
+        "tiff",
+        "libjxl",
+        "dbus",
+    },
+    .build_depends = .{ "pkgconf" },
+}

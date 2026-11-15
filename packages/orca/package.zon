@@ -1,0 +1,34 @@
+.{
+    .name = "orca",
+    .version = "51.1",
+    .release = 1,
+    .description = "Screen reader for GNOME",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/orca/51/orca-51.1.tar.xz", .sha256 = "22829394474e9fde7fdd46b03a98c9a98eb595106b21fb71afdbe2f82436077b" },
+    },
+    // Pure Python on PyGObject. at-spi2-core provides the Atspi and Atk
+    // typelibs and the Atspi overrides, gtk3 the Gtk and Gdk ones, and
+    // GStreamer the sounds. speech-dispatcher's speechd module is the
+    // speech output. dasbus is required; babel (language names),
+    // setproctitle (so that the process is called orca, which Chromium
+    // checks to turn on accessibility) and psutil (system information
+    // commands) are optional upstream and wanted here. Braille (brlapi,
+    // liblouis) and mouse review under X11 (libwnck) are not available.
+    .depends = .{
+        "python",
+        "pygobject",
+        "glib",
+        "gtk3",
+        "at-spi2-core",
+        "gsettings-desktop-schemas",
+        "gstreamer",
+        "gst-plugins-base",
+        "speech-dispatcher",
+        "dasbus",
+        "babel",
+        "setproctitle",
+        "psutil",
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "python" },
+}

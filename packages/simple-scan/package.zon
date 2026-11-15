@@ -1,0 +1,24 @@
+.{
+    .name = "simple-scan",
+    .version = "50.0",
+    .release = 1,
+    .description = "Document Scanner for GNOME",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/simple-scan/50/simple-scan-50.0.tar.xz", .sha256 = "cc32b561ae227182d31a94466632e311723756e3ac90538c3c7e2a2c9aaa4a09" },
+    },
+    .depends = .{
+        "glibc",
+        "glib",
+        "gtk4",
+        "libadwaita",
+        "cairo",
+        "gdk-pixbuf",
+        "zlib",
+        "libgusb",
+        "colord",
+        "libwebp",
+        "sane",
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext", "itstool" },
+}

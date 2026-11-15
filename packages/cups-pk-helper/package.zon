@@ -1,0 +1,14 @@
+.{
+    .name = "cups-pk-helper",
+    .version = "0.2.7",
+    .release = 1,
+    .description = "PolicyKit helper that lets desktop settings configure CUPS",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.freedesktop.org/software/cups-pk-helper/releases/cups-pk-helper-0.2.7.tar.xz", .sha256 = "66070ddb448fe9fcee76aa26be2ede5a80f85563e3a4afd59d2bfd79fbe2e831" },
+    },
+    // A system bus service, started by dbus-daemon on demand; it asks
+    // polkit before each change it makes through libcups.
+    .depends = .{ "glibc", "glib", "polkit", "cups", "dbus" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

@@ -1,0 +1,24 @@
+.{
+    .name = "gnome-bluetooth",
+    .version = "47.2",
+    .release = 1,
+    .description = "GNOME Bluetooth libraries, with the Settings panel widgets and bluetooth-sendto",
+    .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-bluetooth/47/gnome-bluetooth-47.2.tar.xz", .sha256 = "41f20e6d6176b72590af63552b232d83f2fffdd77ecfaa5eaf32c5a4a86fad64" },
+    },
+    // It talks to BlueZ (bluetoothd, and obexd for sending files) over
+    // D-Bus. libudev comes from systemd.
+    .depends = .{
+        "glibc",
+        "glib",
+        "gtk4",
+        "libadwaita",
+        "gsound",
+        "libnotify",
+        "upower",
+        "systemd",
+        "bluez",
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "python", "libxml2" },
+}

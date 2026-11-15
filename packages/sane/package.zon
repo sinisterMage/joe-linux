@@ -1,0 +1,29 @@
+.{
+    .name = "sane",
+    .version = "1.4.0",
+    .release = 1,
+    .description = "Scanner Access Now Easy: the scanner backends, libsane and saned",
+    .license = "GPL-2.0-or-later WITH SANE-exception",
+    .sources = .{
+        .{ .url = "https://anduin.linuxfromscratch.org/BLFS/sane/sane-backends-1.4.0.tar.gz", .sha256 = "f99205c903dfe2fb8990f0c531232c9a00ec9c2c66ac7cb0ce50b4af9f407a72" },
+    },
+    // The genesys backend is C++. libusb for USB scanners; Avahi, libcurl,
+    // libxml2 and Poppler's GLib binding for the escl backend (network
+    // scanners) and for saned's announcements; libjpeg, libpng and TIFF for
+    // the image formats.
+    .depends = .{
+        "glibc",
+        "gcc",
+        "libusb",
+        "libjpeg-turbo",
+        "libpng",
+        "tiff",
+        "avahi",
+        "curl",
+        "libxml2",
+        "poppler",
+        "glib",
+        "systemd",
+    },
+    .build_depends = .{ "pkgconf", "python", "gettext" },
+}

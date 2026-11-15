@@ -1,0 +1,28 @@
+.{
+    .name = "speech-dispatcher",
+    .version = "0.12.1",
+    .release = 1,
+    .description = "Common interface to speech synthesisers, with its Python bindings",
+    .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/brailcom/speechd/releases/download/0.12.1/speech-dispatcher-0.12.1.tar.gz", .sha256 = "b14a5238d287d2dcce4dd42bbd66ca65fa228e7e683708267f7b34036f7ba4b4" },
+    },
+    // espeak-ng is the one synthesiser built in. The three audio back ends
+    // are plug-ins for libpulse, PipeWire and ALSA. The Python package
+    // (speechd, used by Orca) and spd-conf, which needs pyxdg, run on the
+    // system Python.
+    .depends = .{
+        "glibc",
+        "glib",
+        "dotconf",
+        "libsndfile",
+        "systemd",
+        "espeak-ng",
+        "pulseaudio",
+        "pipewire",
+        "alsa-lib",
+        "python",
+        "pyxdg",
+    },
+    .build_depends = .{ "pkgconf", "gettext", "python" },
+}
