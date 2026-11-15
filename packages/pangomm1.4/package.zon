@@ -1,0 +1,12 @@
+.{
+    .name = "pangomm1.4",
+    .version = "2.46.5",
+    .release = 1,
+    .description = "C++ bindings for Pango (pangomm-1.4 API, for gtkmm 3)",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/pangomm/2.46/pangomm-2.46.5.tar.xz", .sha256 = "38ca0b050b065de4e3da0c182df657437757063bbf0c4b6c9567ddba019b1d68" },
+    },
+    .depends = .{ "glibc", "gcc", "glib", "pango", "cairo", "glibmm2.4", "cairomm1.0", "libsigcxx2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

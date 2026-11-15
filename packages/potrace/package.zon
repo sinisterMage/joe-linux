@@ -1,0 +1,12 @@
+.{
+    .name = "potrace",
+    .version = "1.16",
+    .release = 1,
+    .description = "Tool and library for tracing bitmaps into smooth vector outlines",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/potrace/potrace-1.16.tar.gz", .sha256 = "be8248a17dedd6ccbaab2fcc45835bb0502d062e40fbded3bc56028ce5eb7acc" },
+    },
+    // zlib: level 3 PostScript compression in the potrace program.
+    .depends = .{ "glibc", "zlib" },
+}

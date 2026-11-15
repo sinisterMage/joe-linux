@@ -1,0 +1,14 @@
+.{
+    .name = "glibmm2.4",
+    .version = "2.66.10",
+    .release = 1,
+    .description = "C++ bindings for GLib and GIO (glibmm-2.4 API, for gtkmm 3)",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/glibmm/2.66/glibmm-2.66.10.tar.xz", .sha256 = "2b61780203aed98e701d3ea57c8f353e7c8ada9706a79be782f6c5153dd035c0" },
+    },
+    .depends = .{ "glibc", "gcc", "glib", "libsigcxx2" },
+    // perl: gmmproc, the code generator that is installed for other
+    // bindings, is configured with its path.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "perl" },
+}

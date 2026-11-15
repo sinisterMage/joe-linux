@@ -1,0 +1,13 @@
+.{
+    .name = "atkmm1.6",
+    .version = "2.28.5",
+    .release = 1,
+    .description = "C++ bindings for ATK (atkmm-1.6 API, for gtkmm 3)",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/atkmm/2.28/atkmm-2.28.5.tar.xz", .sha256 = "ae449192a582a2582a95e0602b15d792bbd639e836339b81ef916aa87540ac5c" },
+    },
+    // at-spi2-core provides ATK.
+    .depends = .{ "glibc", "gcc", "glib", "at-spi2-core", "glibmm2.4", "libsigcxx2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

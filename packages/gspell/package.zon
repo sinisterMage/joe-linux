@@ -1,0 +1,13 @@
+.{
+    .name = "gspell",
+    .version = "1.14.5",
+    .release = 1,
+    .description = "Spell-checking library for GTK 3 applications",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gspell/1.14/gspell-1.14.5.tar.xz", .sha256 = "788783b56fc3d03283b3aa29302d0b958aeca88835e10b1ec61f19e0efc7e8a4" },
+    },
+    .depends = .{ "glibc", "glib", "gtk3", "pango", "enchant", "icu" },
+    // glib provides g-ir-scanner; vala provides vapigen.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "vala" },
+}

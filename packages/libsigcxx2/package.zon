@@ -1,0 +1,12 @@
+.{
+    .name = "libsigcxx2",
+    .version = "2.12.1",
+    .release = 1,
+    .description = "libsigc++ 2, typesafe signal and callback system for C++ (sigc++-2.0 API)",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libsigc++/2.12/libsigc++-2.12.1.tar.xz", .sha256 = "a9dbee323351d109b7aee074a9cb89ca3e7bcf8ad8edef1851f4cf359bd50843" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}
