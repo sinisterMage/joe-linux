@@ -1,0 +1,13 @@
+.{
+    .name = "avahi",
+    .version = "0.9rc5",
+    .release = 1,
+    .description = "mDNS/DNS-SD service discovery: avahi-daemon, its client libraries and tools",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/lathiat/avahi/archive/v0.9-rc5/avahi-0.9-rc5.tar.gz", .sha256 = "5b0a9d88110b0fc8aaafc5cc0a26e83e7d2a4aca3a36bc27c9b626db7ead27b0" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/avahi-0.9-rc5-ipv6_race_condition_fix-1.patch", .sha256 = "218c909581d0ca2c86c8145bb0797050d987a6b0ae3417949dbe2a6d55c49360" },
+    },
+    .depends = .{ "glibc", "glib", "dbus", "expat", "libdaemon", "libevent", "gdbm", "systemd" },
+    .build_depends = .{ "autoconf", "automake", "libtool", "gettext", "pkgconf" },
+}

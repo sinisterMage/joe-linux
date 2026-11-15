@@ -1,0 +1,19 @@
+.{
+    .name = "git-lfs",
+    .version = "3.8.1",
+    .release = 1,
+    .description = "Git extension for versioning large files",
+    .license = "MIT",
+    .sources = .{
+        // Upstream's release tarball; its SHA-256 is in the signed
+        // sha256sums.asc of the release.
+        .{ .url = "https://github.com/git-lfs/git-lfs/releases/download/v3.8.1/git-lfs-v3.8.1.tar.gz", .sha256 = "1939307bef808580f7c8954ede7072889d7e76721f5d6fdc4ab110bf907330ab" },
+    },
+    // go downloads the modules git-lfs depends on; they are not vendored
+    // yet (upstream also publishes git-lfs-vendor-v3.8.1.tar.gz).
+    .network = true,
+    // git-lfs runs git; it is linked with cgo against glibc.
+    .depends = .{ "glibc", "git" },
+    // gettext's msgfmt compiles the translations that are built in.
+    .build_depends = .{ "go", "make", "gettext" },
+}
