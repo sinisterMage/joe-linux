@@ -8,7 +8,13 @@ build() {
     # PulseAudio-compatible server (needs no PulseAudio), pw-cat with
     # libsndfile, RAOP (OpenSSL), Opus for RTP, systemd user units.
     #
-    # Not built: Bluetooth (bluez, and with it libusb), JACK and the JACK
+    # Bluetooth audio through BlueZ: A2DP with SBC, Opus and G.722, and
+    # headset calls with the native HSP/HFP back end, which asks
+    # ModemManager about calls on a modem. libusb is for USB Bluetooth
+    # adapters that do HFP offload.
+    #
+    # Not built: the AAC, aptX, LDAC and LC3 Bluetooth codecs and the
+    # ofono and hsphfpd back ends (no recipes), JACK and the JACK
     # replacement libraries, libcamera, the v4l2 LD_PRELOAD shim, libpulse
     # tunnels, Avahi, FFmpeg, Vulkan, SDL2, ROC, LV2, libmysofa, WebRTC
     # echo cancelling, the X11 bell (libcanberra), FFADO, snap, ebur128,
@@ -41,8 +47,22 @@ build() {
         -D flatpak=enabled \
         -D gsettings=enabled \
         -D gsettings-pulse-schema=disabled \
-        -D bluez5=disabled \
-        -D libusb=disabled \
+        -D bluez5=enabled \
+        -D bluez5-backend-hsp-native=enabled \
+        -D bluez5-backend-hfp-native=enabled \
+        -D bluez5-backend-native-mm=enabled \
+        -D bluez5-backend-ofono=disabled \
+        -D bluez5-backend-hsphfpd=disabled \
+        -D bluez5-codec-opus=enabled \
+        -D bluez5-codec-g722=enabled \
+        -D bluez5-codec-aac=disabled \
+        -D bluez5-codec-aptx=disabled \
+        -D bluez5-codec-ldac=disabled \
+        -D bluez5-codec-ldac-dec=disabled \
+        -D bluez5-codec-lc3=disabled \
+        -D bluez5-codec-lc3plus=disabled \
+        -D bluez5-plc-spandsp=disabled \
+        -D libusb=enabled \
         -D jack=disabled \
         -D pipewire-jack=disabled \
         -D pipewire-v4l2=disabled \

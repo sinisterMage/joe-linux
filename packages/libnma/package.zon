@@ -1,7 +1,7 @@
 .{
     .name = "libnma",
     .version = "1.10.6",
-    .release = 1,
+    .release = 2,
     .description = "NetworkManager connection editing widgets for GTK 3 and GTK 4",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{
@@ -11,7 +11,7 @@
     // when they are there and falls back to version 3 only otherwise; only
     // the non-graphical part is used, by both the GTK 3 and the GTK 4
     // library. Depending on gcr4 alone keeps the result fixed.
-    .depends = .{ "glibc", "glib", "gtk3", "gtk4", "networkmanager", "gcr4", "iso-codes" },
+    .depends = .{ "glibc", "glib", "gtk3", "gtk4", "networkmanager", "gcr4", "iso-codes", "mobile-broadband-provider-info" },
     // glib provides g-ir-scanner and glib-compile-resources; libxml2 the
     // xmllint that glib-compile-resources runs.
     .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala", "gettext", "libxml2" },

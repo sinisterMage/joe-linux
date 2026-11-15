@@ -13,8 +13,10 @@ build() {
     # Wi-Fi goes through wpa_supplicant, over D-Bus (not iwd, and not the
     # old wireless extensions).
     #
-    # Switched off because what they need does not exist: WWAN
-    # (ModemManager, ofono), Bluetooth, PPP,
+    # Mobile broadband goes through ModemManager, and Bluetooth dial-up
+    # networking through BlueZ.
+    #
+    # Switched off because what they need does not exist: ofono, PPP,
     # Open vSwitch and nm-cloud-setup (jansson), teamd, nmtui (newt),
     # SELinux, audit, CLAT (libbpf), firewalld, dhcpcd, Qt examples. NBFT
     # stays off as in the book. The paths of iptables, nft and dnsmasq are
@@ -55,9 +57,9 @@ build() {
         -D wifi=true \
         -D iwd=false \
         -D wext=false \
-        -D modem_manager=false \
+        -D modem_manager=true \
         -D ofono=false \
-        -D bluez5_dun=false \
+        -D bluez5_dun=true \
         -D ppp=false \
         -D ovs=false \
         -D teamdctl=false \

@@ -1,12 +1,15 @@
 .{
     .name = "gnome-control-center",
     .version = "51.1",
-    .release = 1,
+    .release = 2,
     .description = "GNOME Settings",
     .license = "GPL-2.0-or-later",
     .sources = .{
         .{ .url = "https://download.gnome.org/sources/gnome-control-center/51/gnome-control-center-51.1.tar.xz", .sha256 = "1054976c2f1977f770ba134b872f547c89db7005e4422f09a96d521379c083cb" },
     },
+    // cups, gnome-bluetooth and modemmanager (libmm-glib) are the Printers,
+    // Bluetooth and Mobile Network panels, and mobile broadband in the
+    // Network panel.
     // pulseaudio is the client library (libpulse) for the Sound panel.
     // wayland and libx11 are linked by the bundled libgxdp. tecla is the
     // keyboard layout viewer the Keyboard panel starts; shared-mime-info is
@@ -43,6 +46,9 @@
         "libgtop",
         "udisks",
         "networkmanager",
+        "modemmanager",
+        "cups",
+        "gnome-bluetooth",
         "libnma",
         "ibus",
         "tecla",

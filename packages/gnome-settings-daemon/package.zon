@@ -1,7 +1,7 @@
 .{
     .name = "gnome-settings-daemon",
     .version = "51.1",
-    .release = 1,
+    .release = 2,
     .description = "Session services that apply GNOME settings: power, media keys, colour, date and time, XSettings",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{
@@ -27,6 +27,11 @@
         "systemd",
         "libgudev",
         "networkmanager",
+        // Printer notifications (cups) and mobile broadband PIN
+        // prompts (wwan: ModemManager, with gcr for the dialog).
+        "cups",
+        "modemmanager",
+        "gcr4",
         "colord",
         "fontconfig",
         "libx11",

@@ -1,12 +1,13 @@
 .{
     .name = "pipewire",
     .version = "1.6.11",
-    .release = 1,
+    .release = 2,
     .description = "Server and libraries for handling audio and video streams, with ALSA and PulseAudio compatibility",
     .license = "MIT AND LGPL-2.1-or-later AND GPL-2.0-only",
     .sources = .{
         .{ .url = "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.11/pipewire-1.6.11.tar.bz2", .sha256 = "0b32fbbece4591376b45dde5a818bfa5b3517e70913a2f7414e33c47c20b07ee" },
     },
-    .depends = .{ "glibc", "glib", "alsa-lib", "dbus", "systemd", "gstreamer", "gst-plugins-base", "libsndfile", "opus", "openssl", "readline", "ncurses", "libdrm" },
+    .depends = .{ "glibc", "glib", "alsa-lib", "dbus", "systemd", "gstreamer", "gst-plugins-base", "libsndfile", "opus", "openssl", "readline", "ncurses", "libdrm",
+        "bluez", "sbc", "libusb", "modemmanager" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "python" },
 }

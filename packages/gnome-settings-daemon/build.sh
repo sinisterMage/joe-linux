@@ -2,8 +2,7 @@ build() {
     mkdir build
     cd build
     # The book builds with the defaults; here every plugin is stated:
-    # - cups (printer notifications) and wwan (ModemManager) need packages
-    #   that do not exist.
+    # - cups (printer notifications) and wwan (ModemManager) are on.
     # - smartcard: nothing can log in with a smart card here (no pam_pkcs11),
     #   so the service would only idle.
     # - usb-protection has no build dependency; it does nothing unless
@@ -26,8 +25,8 @@ build() {
         -D usb-protection=true \
         -D smartcard=false \
         -D gcr3=false \
-        -D cups=false \
-        -D wwan=false \
+        -D cups=true \
+        -D wwan=true \
         -D udev_dir=/usr/lib/udev
     ninja
 }

@@ -1,7 +1,10 @@
 prepare() {
-    # CUPS, gnome-bluetooth and ModemManager are hard requirements upstream
-    # and do not exist here; see the patch's header for what it removes.
-    patch -Np1 -i /recipe/joe-drop-unavailable-panels.patch
+    # The Printers panel links Samba's libsmbclient, to browse for printers
+    # shared over SMB, whenever it is installed; there is no option for it.
+    # joe's desktop does not include Samba, so never look for it (network
+    # printers are found over IPP).
+    sed -i "s/dependency('smbclient', required: false)/dependency('', required: false)/" \
+        panels/printers/meson.build
 }
 
 build() {
