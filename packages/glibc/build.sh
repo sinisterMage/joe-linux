@@ -1,3 +1,7 @@
+# Stripped by package() below rather than by the build driver, so that the
+# dynamic linker keeps its symbol table.
+NOSTRIP=1
+
 prepare() {
     patch -Np1 -i "$SOURCES/glibc-fhs-1.patch"
     patch -Np1 -i "$SOURCES/glibc-2.44-upstream_fixes-4.patch"
@@ -58,4 +62,20 @@ EOT
     .exec = .{"/usr/sbin/ldconfig"},
 }
 EOT
+
+    # What the build driver would do, except that ld-linux-x86-64.so.2 loses
+    # only its debugging information: valgrind's Memcheck needs the dynamic
+    # linker's symbol table to replace strlen and friends in it, or it
+    # reports errors that are not there (LFS keeps it for the same reason).
+    local f
+    while IFS= read -r -d '' f; do
+        if [[ $(head -c 4 "$f" | od -An -c | tr -d ' ') != '177ELF' ]]; then
+            [[ $f != *.a ]] || strip --strip-debug "$f" 2>/dev/null || true
+            continue
+        fi
+        case $f in
+            */ld-linux-x86-64.so.2 | *.o) strip --strip-debug "$f" 2>/dev/null || true ;;
+            *) strip --strip-unneeded "$f" 2>/dev/null || true ;;
+        esac
+    done < <(find "$DESTDIR" -type f -print0)
 }

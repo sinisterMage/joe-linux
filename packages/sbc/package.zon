@@ -1,0 +1,12 @@
+.{
+    .name = "sbc",
+    .version = "2.2",
+    .release = 1,
+    .description = "The SBC audio codec every Bluetooth headset and speaker speaks",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.kernel.org/pub/linux/bluetooth/sbc-2.2.tar.xz", .sha256 = "a1ada76ef35e5af9c2fbd063754dc9e37a8d989417c6eb1ecebb089b1383ae9e" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{"pkgconf"},
+}

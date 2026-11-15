@@ -22,7 +22,8 @@ prepare() {
     # Drivers that need firmware from the root: modules, or they could never
     # load it.
     for opt in DRM_I915 DRM_XE DRM_AMDGPU DRM_NOUVEAU CFG80211 MAC80211 IWLWIFI ATH11K_PCI RTW89_8852CE MT7921E \
-        SND_SOC_SOF_PCI MAC80211_HWSIM; do
+        SND_SOC_SOF_PCI MAC80211_HWSIM \
+        BT BT_HCIBTUSB USB_NET_CDC_MBIM USB_NET_QMI_WWAN MHI_WWAN_MBIM WIREGUARD TUN NF_TABLES CIFS NFSD; do
         grep -q "^CONFIG_$opt=m" .config || { echo "CONFIG_$opt is not a module" >&2; return 1; }
     done
 }
