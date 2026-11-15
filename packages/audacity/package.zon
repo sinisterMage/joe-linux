@@ -1,0 +1,29 @@
+.{
+    .name = "audacity",
+    .version = "4.0.2",
+    .release = 1,
+    .description = "Multitrack audio editor and recorder",
+    .license = "GPL-3.0-only AND GPL-2.0-or-later",
+    .sources = .{
+        // The release's source snapshot: the Git tree with its submodules
+        // (the muse framework, muse_deps) and, in offline-deps/, the pinned
+        // source archives of the code it compiles in.
+        .{ .url = "https://github.com/audacity/audacity/releases/download/Audacity-4.0.2/audacity-sources-4.0.2.tar.xz", .sha256 = "4799c2ce2deabacf2be8d6d6b3c5a5621bcd3aacf7c1c38bd0a3f2598f1034c0" },
+    },
+    // qt6 must include Qt 5 Compat, Network Authorization and the Linguist
+    // tools (qt5compat, qtnetworkauth, qttools).
+    // alsa-lib: the bundled PortMixer (recording levels). systemd: libudev,
+    // to notice audio devices coming and going. libx11: LV2 plugin windows.
+    // ffmpeg is loaded at run time, for import and export of the formats
+    // the other libraries do not cover.
+    .depends = .{
+        "glibc",      "gcc",        "qt6",        "wxwidgets", "portaudio",
+        "soxr",       "soundtouch", "libsndfile", "libogg",    "libvorbis",
+        "flac",       "opus",       "opusfile",   "lame",      "mpg123",
+        "wavpack",    "twolame",    "libid3tag",  "expat",     "zlib",
+        "libpng",     "sqlite",     "freetype",   "harfbuzz",  "alsa-lib",
+        "systemd",    "libx11",     "ffmpeg",
+    },
+    // git applies the build's patches to the bundled sources.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "git" },
+}

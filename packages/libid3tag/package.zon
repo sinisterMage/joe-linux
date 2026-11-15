@@ -1,0 +1,13 @@
+.{
+    .name = "libid3tag",
+    .version = "0.16.4",
+    .release = 1,
+    .description = "ID3 tag reading and writing library",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://codeberg.org/tenacityteam/libid3tag/releases/download/0.16.4/id3tag-0.16.4-source.tar.gz", .sha256 = "8b6bc96016f6ab3a52b753349ed442e15181de9db1df01884f829e3d4f3d1e78" },
+    },
+    .depends = .{ "glibc", "zlib" },
+    // gperf generates the frame-type and compatibility lookup tables.
+    .build_depends = .{ "cmake", "ninja", "gperf" },
+}

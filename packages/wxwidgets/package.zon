@@ -1,0 +1,24 @@
+.{
+    .name = "wxwidgets",
+    .version = "3.2.12",
+    .release = 1,
+    .description = "Cross-platform C++ GUI toolkit, GTK 3 port",
+    .license = "LGPL-2.0-or-later WITH WxWindows-exception-3.1",
+    .sources = .{
+        .{ .url = "https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.12/wxWidgets-3.2.12.tar.bz2", .sha256 = "a62719bb5e1dcc41c1a6fc1eecd499c7ee8521f70402c7b1bb3342a1e16344e0" },
+    },
+    // gst-plugins-bad provides libgstplayer, which wxMediaCtrl plays with.
+    // libxxf86vm: wxDisplay video modes; libsm: session management;
+    // libxtst: wxUIActionSimulator; libsecret: wxSecretStore; curl:
+    // wxWebRequest; xz: LZMA streams; pcre2 (32-bit): wxRegEx.
+    .depends = .{
+        "glibc",       "gcc",          "glib",        "gtk3",        "pango",
+        "cairo",       "gdk-pixbuf",   "at-spi2-core", "fontconfig", "freetype",
+        "harfbuzz",    "libx11",       "libxxf86vm",  "libsm",
+        "libxtst",     "libxkbcommon", "libpng",      "libjpeg-turbo",
+        "tiff",        "zlib",         "expat",       "pcre2",       "xz",
+        "curl",        "libnotify",    "libsecret",   "gstreamer",   "gst-plugins-base",
+        "gst-plugins-bad",
+    },
+    .build_depends = .{"pkgconf"},
+}
