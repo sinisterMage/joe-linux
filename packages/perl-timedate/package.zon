@@ -1,0 +1,12 @@
+.{
+    .name = "perl-timedate",
+    .version = "2.35",
+    .release = 1,
+    .description = "Perl modules for parsing, formatting and converting dates and times (Date::Parse, Date::Format)",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/A/AT/ATOOMIC/TimeDate-2.35.tar.gz", .sha256 = "baddd0306ae2e86e9ec28d3de5439e514643e80b3735e43bd0fbb426d73304de" },
+    },
+    .depends = .{"perl"},
+    .build_depends = .{"perl"},
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "libarchive-c",
+    .version = "5.3",
+    .release = 1,
+    .description = "Python interface to libarchive",
+    .license = "CC0-1.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/l/libarchive-c/libarchive_c-5.3.tar.gz", .sha256 = "5ddb42f1a245c927e7686545da77159859d5d4c6d00163c59daff4df314dae82" },
+    },
+    // libarchive is loaded with ctypes at run time.
+    .depends = .{ "python", "libarchive" },
+    .build_depends = .{ "python", "setuptools" },
+}

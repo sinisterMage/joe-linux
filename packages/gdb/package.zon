@@ -1,0 +1,16 @@
+.{
+    .name = "gdb",
+    .version = "18.1",
+    .release = 1,
+    .description = "The GNU debugger",
+    .license = "GPL-3.0-or-later AND LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://ftpmirror.gnu.org/gdb/gdb-18.1.tar.xz", .sha256 = "cd9fc3fe2b47743840e42c1592d3d87f8302eb18639c0b8b4ba0898002e2348f" },
+    },
+    // gmp is required; mpfr (floating-point formats), expat (XML target
+    // descriptions), xz (MiniDebugInfo), zstd (compressed sections) and
+    // xxhash (faster hashing) are used when found and all have recipes.
+    // Python is embedded for scripting. libstdc++ comes from gcc.
+    .depends = .{ "glibc", "gcc", "readline", "ncurses", "zlib", "zstd", "xz", "expat", "gmp", "mpfr", "xxhash", "python" },
+    .build_depends = .{ "python", "pkgconf" },
+}

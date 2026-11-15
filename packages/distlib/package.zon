@@ -1,0 +1,12 @@
+.{
+    .name = "distlib",
+    .version = "0.4.4",
+    .release = 1,
+    .description = "Low-level components of Python distribution utilities",
+    .license = "PSF-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/d/distlib/distlib-0.4.4.tar.gz", .sha256 = "ca4175b4ac7f71223cc30ed7248c45d2b38c2439d8ee6e498ab67ed63cf3508d" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "fakeroot",
+    .version = "2.1.4",
+    .release = 1,
+    .description = "Runs a command in an environment that fakes root privileges for file manipulation",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Upstream is Debian's; the checksum is the one in its signed
+        // fakeroot_2.1.4-1.dsc.
+        .{ .url = "https://deb.debian.org/debian/pool/main/f/fakeroot/fakeroot_2.1.4.orig.tar.xz", .sha256 = "0822bd5a9f0cf19d2ba0546b88b0432d4d3d9917db62c57b74044ccadba06e49" },
+    },
+    // libfakeroot links libacl. The fakeroot script runs getopt
+    // (util-linux).
+    .depends = .{ "glibc", "acl", "util-linux", "bash" },
+    // libcap only for sys/capability.h, so that capset() is faked too.
+    .build_depends = .{ "meson", "ninja", "python", "libcap" },
+}

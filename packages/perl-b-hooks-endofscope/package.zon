@@ -1,0 +1,14 @@
+.{
+    .name = "perl-b-hooks-endofscope",
+    .version = "0.28",
+    .release = 1,
+    .description = "Perl module that runs code when Perl finishes compiling the surrounding scope",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/B-Hooks-EndOfScope-0.28.tar.gz", .sha256 = "edac77a17fc36620c8324cc194ce1fad2f02e9fcbe72d08ad0b2c47f0c7fd8ef" },
+    },
+    // Makefile.PL asks for Variable::Magic (the XS implementation) whenever
+    // a compiler is available, as it is here.
+    .depends = .{ "perl", "perl-module-implementation", "perl-sub-exporter-progressive", "perl-variable-magic" },
+    .build_depends = .{"perl"},
+}

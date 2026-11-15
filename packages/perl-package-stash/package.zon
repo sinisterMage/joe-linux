@@ -1,0 +1,14 @@
+.{
+    .name = "perl-package-stash",
+    .version = "0.40",
+    .release = 1,
+    .description = "Perl module with routines for manipulating stashes (symbol tables)",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/Package-Stash-0.40.tar.gz", .sha256 = "5a9722c6d9cb29ee133e5f7b08a5362762a0b5633ff5170642a5b0686e95e066" },
+    },
+    // The pure-Perl implementation (Package::Stash::PP). Package::Stash::XS,
+    // which Makefile.PL would otherwise ask for, does not exist here.
+    .depends = .{ "perl", "perl-dist-checkconflicts", "perl-module-implementation" },
+    .build_depends = .{ "perl", "perl-dist-checkconflicts" },
+}

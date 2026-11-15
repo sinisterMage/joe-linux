@@ -1,0 +1,12 @@
+.{
+    .name = "vcs-versioning",
+    .version = "2.2.4",
+    .release = 1,
+    .description = "Version numbers from version control metadata, the core of setuptools-scm",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/v/vcs_versioning/vcs_versioning-2.2.4.tar.gz", .sha256 = "ed718fdee42170e128a8add6f23f53aa64dc7d9ab2de87d3083a691df881a809" },
+    },
+    .depends = .{ "python", "packaging" },
+    .build_depends = .{ "python", "setuptools", "packaging" },
+}

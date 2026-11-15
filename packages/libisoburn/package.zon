@@ -1,0 +1,16 @@
+.{
+    .name = "libisoburn",
+    .version = "1.5.8.pl02",
+    .release = 1,
+    .description = "Library and xorriso tool for creating, reading and changing ISO 9660 images and burning them",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.libburnia-project.org/releases/libisoburn-1.5.8.pl02.tar.gz", .sha256 = "a977b03dc3686d9fdca600458b1578f9cac2b875609bd5ec21f5ada55f20ec50" },
+    },
+    // xorriso, with its xorrisofs, osirrox and xorrecord personalities.
+    // readline is for its dialog mode; acl and zlib it uses directly as
+    // well as through libisofs. xorriso-dd-target is a shell script that
+    // runs lsblk (util-linux) and dd (coreutils).
+    .depends = .{ "glibc", "libburn", "libisofs", "readline", "acl", "zlib", "util-linux", "coreutils" },
+    .build_depends = .{"pkgconf"},
+}

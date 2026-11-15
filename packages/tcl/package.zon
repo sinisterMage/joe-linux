@@ -1,0 +1,17 @@
+.{
+    .name = "tcl",
+    .version = "8.6.18",
+    .release = 1,
+    .description = "Tool Command Language, an embeddable scripting language",
+    .license = "TCL",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/tcl/tcl8.6.18-src.tar.gz", .sha256 = "14f9af32b1767ff718477a8f974ad03c34341097e6b43f4ce54644ee974e268e" },
+    },
+    // zlib is the system one when configure finds it (the zlib command).
+    // The bundled packages (Thread, Itcl, TDBC and the SQLite binding with
+    // its own copy of SQLite) are built too, as the book does; the TDBC
+    // drivers for MySQL, PostgreSQL and ODBC load their client libraries
+    // only when used.
+    .depends = .{ "glibc", "zlib" },
+    .build_depends = .{},
+}

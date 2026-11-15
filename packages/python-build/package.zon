@@ -1,0 +1,12 @@
+.{
+    .name = "python-build",
+    .version = "1.6.1",
+    .release = 1,
+    .description = "Simple, correct build frontend for Python packages (PEP 517)",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/b/build/build-1.6.1.tar.gz", .sha256 = "51cc11666391ab6f092070437ac747002ff46f3e4113a3622177ee6b488bfc53" },
+    },
+    .depends = .{ "python", "packaging", "pyproject-hooks" },
+    .build_depends = .{ "python", "flit-core" },
+}

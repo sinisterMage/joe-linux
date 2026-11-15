@@ -1,0 +1,12 @@
+.{
+    .name = "perl-module-implementation",
+    .version = "0.09",
+    .release = 1,
+    .description = "Perl module that loads one of several alternate implementations of a module",
+    .license = "Artistic-2.0",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Module-Implementation-0.09.tar.gz", .sha256 = "c15f1a12f0c2130c9efff3c2e1afe5887b08ccd033bd132186d1e7d5087fd66d" },
+    },
+    .depends = .{ "perl", "perl-module-runtime", "perl-try-tiny" },
+    .build_depends = .{"perl"},
+}

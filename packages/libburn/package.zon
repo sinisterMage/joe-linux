@@ -1,0 +1,12 @@
+.{
+    .name = "libburn",
+    .version = "1.5.8",
+    .release = 1,
+    .description = "Library for writing CD, DVD and Blu-ray media",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.libburnia-project.org/releases/libburn-1.5.8.tar.gz", .sha256 = "8e24dd99f5b7cafbecf0116d61b619ee89098e20263e6f47c793aaf4a98d6473" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{},
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "perl-params-validationcompiler",
+    .version = "0.31",
+    .release = 1,
+    .description = "Perl module that builds optimized subroutine parameter validators",
+    .license = "Artistic-2.0",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Params-ValidationCompiler-0.31.tar.gz", .sha256 = "7b6497173f1b6adb29f5d51d8cf9ec36d2f1219412b4b2410e9d77a901e84a6d" },
+    },
+    // The book also lists Specio; it is one of the type systems this module
+    // accepts, not a dependency of it (DateTime brings it in anyway).
+    .depends = .{ "perl", "perl-eval-closure", "perl-exception-class" },
+    .build_depends = .{"perl"},
+}

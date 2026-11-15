@@ -1,0 +1,12 @@
+.{
+    .name = "pathspec",
+    .version = "1.1.1",
+    .release = 1,
+    .description = "Gitignore-style pattern matching of file paths for Python",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pathspec/pathspec-1.1.1.tar.gz", .sha256 = "17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

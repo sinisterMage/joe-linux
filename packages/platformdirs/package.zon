@@ -1,0 +1,12 @@
+.{
+    .name = "platformdirs",
+    .version = "4.14.5",
+    .release = 1,
+    .description = "Platform-specific user and system directories for Python",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/platformdirs/platformdirs-4.14.5.tar.gz", .sha256 = "32e9921db7385aa8169bee4fe9501923e5715ba9fb7ea3b9c69b0d8e0639f7a1" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "hatchling", "hatch-vcs", "hatch-fancy-pypi-readme" },
+}

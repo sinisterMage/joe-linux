@@ -1,0 +1,12 @@
+.{
+    .name = "hatch-vcs",
+    .version = "0.5.0",
+    .release = 1,
+    .description = "Hatch plugin for versioning with version control systems",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/h/hatch-vcs/hatch_vcs-0.5.0.tar.gz", .sha256 = "0395fa126940340215090c344a2bf4e2a77bcbe7daab16f41b37b98c95809ff9" },
+    },
+    .depends = .{ "python", "hatchling", "setuptools-scm" },
+    .build_depends = .{ "python", "hatchling" },
+}

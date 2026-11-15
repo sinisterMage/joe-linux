@@ -1,0 +1,14 @@
+.{
+    .name = "bats",
+    .version = "1.14.0",
+    .release = 1,
+    .description = "Bash Automated Testing System, a TAP-compliant testing framework for Bash",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/bats-core/bats-core/archive/v1.14.0/bats-core-1.14.0.tar.gz", .sha256 = "bb537b70b15b732f6d8827dd6578e3d8ce166636ce1f18ea9a074184fcce9177" },
+    },
+    // Bash scripts. Running tests in parallel (--jobs) would also need GNU
+    // parallel, which joe Linux does not have.
+    .depends = .{ "bash", "coreutils" },
+    .build_depends = .{},
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "python-magic",
+    .version = "0.4.27",
+    .release = 1,
+    .description = "Python interface to libmagic, file type identification",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/python-magic/python-magic-0.4.27.tar.gz", .sha256 = "c1ba14b08e4a5f5c31a302b7721239695b2f0f058d125bd5ce1ee36b9d9d3c3b" },
+    },
+    // libmagic (file) is loaded with ctypes at run time.
+    .depends = .{ "python", "file" },
+    .build_depends = .{ "python", "setuptools" },
+}

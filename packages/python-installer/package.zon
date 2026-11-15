@@ -1,0 +1,12 @@
+.{
+    .name = "python-installer",
+    .version = "1.1.0",
+    .release = 1,
+    .description = "Library for installing Python wheels",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/i/installer/installer-1.1.0.tar.gz", .sha256 = "5adc0c01ce62d809989e246987cd68944fe5df8af562d0358f65b2ab15cb5de7" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

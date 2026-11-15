@@ -1,0 +1,13 @@
+.{
+    .name = "perl-mro-compat",
+    .version = "0.15",
+    .release = 1,
+    .description = "Perl module providing the mro interface for old Perls",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/H/HA/HAARG/MRO-Compat-0.15.tar.gz", .sha256 = "0d4535f88e43babd84ab604866215fc4d04398bd4db7b21852d4a31b1c15ef61" },
+    },
+    // Only useful before Perl 5.9.5, but Specio requires it.
+    .depends = .{"perl"},
+    .build_depends = .{"perl"},
+}

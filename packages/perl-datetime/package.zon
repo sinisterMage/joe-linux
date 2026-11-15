@@ -1,0 +1,15 @@
+.{
+    .name = "perl-datetime",
+    .version = "1.66",
+    .release = 1,
+    .description = "Date and time object for Perl",
+    .license = "Artistic-2.0",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/DateTime-1.66.tar.gz", .sha256 = "afabd686fb83d3ebf49ee453974f9122f3eec9b25ff8d2ddf4f12de92af1e5e2" },
+    },
+    // The XS part (with a pure-Perl fallback) links only the C library.
+    // Makefile.PL checks for conflicting installed versions with
+    // Dist::CheckConflicts.
+    .depends = .{ "glibc", "perl", "perl-datetime-locale", "perl-datetime-timezone", "perl-dist-checkconflicts", "perl-params-validationcompiler", "perl-specio", "perl-try-tiny", "perl-namespace-autoclean" },
+    .build_depends = .{ "perl", "perl-dist-checkconflicts" },
+}

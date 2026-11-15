@@ -1,0 +1,12 @@
+.{
+    .name = "perl-module-runtime",
+    .version = "0.018",
+    .release = 1,
+    .description = "Perl module for handling Perl modules at run time",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Module-Runtime-0.018.tar.gz", .sha256 = "0bf77ef68e53721914ff554eada20973596310b4e2cf1401fc958601807de577" },
+    },
+    .depends = .{"perl"},
+    .build_depends = .{"perl"},
+}

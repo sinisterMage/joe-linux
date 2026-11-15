@@ -1,0 +1,14 @@
+.{
+    .name = "poetry-core",
+    .version = "2.4.1",
+    .release = 1,
+    .description = "Poetry's PEP 517 build backend",
+    .license = "MIT AND BSD-3-Clause AND (Apache-2.0 OR BSD-2-Clause)",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/poetry_core/poetry_core-2.4.1.tar.gz", .sha256 = "89dceb6c10e9c6d8650a16183400e3c9ff9ddee13b0a81023b5575334a2b3744" },
+    },
+    // Builds itself (backend-path). It carries its own copies of fastjsonschema
+    // (BSD-3-Clause), lark and tomli (MIT) and packaging.
+    .depends = .{"python"},
+    .build_depends = .{"python"},
+}

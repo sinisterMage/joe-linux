@@ -1,0 +1,12 @@
+.{
+    .name = "pluggy",
+    .version = "1.6.0",
+    .release = 1,
+    .description = "Plugin and hook calling mechanisms for Python",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pluggy/pluggy-1.6.0.tar.gz", .sha256 = "7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "setuptools-scm" },
+}

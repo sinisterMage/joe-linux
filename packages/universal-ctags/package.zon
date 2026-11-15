@@ -1,0 +1,16 @@
+.{
+    .name = "universal-ctags",
+    .version = "6.2.1",
+    .release = 1,
+    .description = "Generates index (tag) files of names found in source code, for editors and other tools",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/universal-ctags/ctags/releases/download/v6.2.1/universal-ctags-6.2.1.tar.gz", .sha256 = "2c63efe9e0e083dc50e6fdd8c5414781cc8873d8c8940cf553c01870ed962f8c" },
+    },
+    // libxml2 (XML-based parsers), jansson (JSON output), libseccomp
+    // (--_interactive=sandbox), libyaml (YAML parsers), pcre2 (--regex
+    // with Perl syntax).
+    .depends = .{ "glibc", "libxml2", "jansson", "libseccomp", "libyaml", "pcre2" },
+    // The build runs Perl scripts that turn optlib and text files into C.
+    .build_depends = .{ "pkgconf", "perl" },
+}

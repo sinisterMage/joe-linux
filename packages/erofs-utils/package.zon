@@ -1,0 +1,17 @@
+.{
+    .name = "erofs-utils",
+    .version = "1.9.4",
+    .release = 1,
+    .description = "Tools for the EROFS read-only file system: mkfs.erofs, fsck.erofs, dump.erofs, erofsfuse",
+    .license = "MIT AND (GPL-2.0-or-later OR MIT)",
+    .sources = .{
+        // Upstream publishes releases as tags only; this is the tag's
+        // snapshot, the same file the Makefile's iso-tools target uses.
+        .{ .url = "https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/snapshot/erofs-utils-1.9.4.tar.gz", .sha256 = "7d135aa2550326a5acf20f53c518aea5a8900015ce50700044e40f818c31dd80" },
+    },
+    // Compressors: lz4, xz (LZMA), zlib and libdeflate (DEFLATE), zstd.
+    // libuuid from util-linux for file system UUIDs, fuse3 for erofsfuse,
+    // xxhash for the extended attribute filter.
+    .depends = .{ "glibc", "lz4", "xz", "zlib", "libdeflate", "zstd", "util-linux", "fuse3", "xxhash" },
+    .build_depends = .{ "autoconf", "automake", "libtool", "pkgconf" },
+}

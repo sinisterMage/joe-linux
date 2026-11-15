@@ -1,0 +1,14 @@
+.{
+    .name = "valgrind",
+    .version = "3.28.0",
+    .release = 1,
+    .description = "Tools for finding memory errors, profiling and debugging",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://sourceware.org/pub/valgrind/valgrind-3.28.0.tar.bz2", .sha256 = "9f7a18d128f05d3a80fea53e6953f34aad7200a425ceaee46099a8a798a7dd9c" },
+    },
+    // The tools are static. cg_annotate, cg_diff and cg_merge are Python
+    // scripts; callgrind_annotate, callgrind_control and ms_print are Perl.
+    .depends = .{ "glibc", "perl", "python" },
+    .build_depends = .{ "perl", "python" },
+}

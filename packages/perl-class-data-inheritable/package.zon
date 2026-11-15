@@ -1,0 +1,12 @@
+.{
+    .name = "perl-class-data-inheritable",
+    .version = "0.10",
+    .release = 1,
+    .description = "Perl module for inheritable, overridable class data",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/R/RS/RSHERER/Class-Data-Inheritable-0.10.tar.gz", .sha256 = "aa1ae68a611357b7bfd9a2f64907cc196ddd6d047cae64ef9d0ad099d98ae54a" },
+    },
+    .depends = .{"perl"},
+    .build_depends = .{"perl"},
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "perl-class-singleton",
+    .version = "1.6",
+    .release = 1,
+    .description = "Perl base class for classes that have only one instance",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/S/SH/SHAY/Class-Singleton-1.6.tar.gz", .sha256 = "27ba13f0d9512929166bbd8c9ef95d90d630fc80f0c9a1b7458891055e9282a4" },
+    },
+    .depends = .{"perl"},
+    .build_depends = .{"perl"},
+}

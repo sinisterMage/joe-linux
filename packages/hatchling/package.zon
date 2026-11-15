@@ -1,0 +1,14 @@
+.{
+    .name = "hatchling",
+    .version = "1.32.0",
+    .release = 1,
+    .description = "Extensible, standards-compliant build backend for Python projects",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/h/hatchling/hatchling-1.32.0.tar.gz", .sha256 = "0bdbde4a52b06c37e3eca395f85a762bf0ef06fe374fd8ae429dc6be10230f5f" },
+    },
+    // Hatchling builds itself from its own source (backend-path), so its run-time
+    // dependencies are needed to build it as well.
+    .depends = .{ "python", "packaging", "pathspec", "pluggy", "tomlkit", "trove-classifiers" },
+    .build_depends = .{ "python", "packaging", "pathspec", "pluggy", "tomlkit", "trove-classifiers" },
+}

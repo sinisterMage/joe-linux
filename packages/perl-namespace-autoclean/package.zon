@@ -1,0 +1,12 @@
+.{
+    .name = "perl-namespace-autoclean",
+    .version = "0.31",
+    .release = 1,
+    .description = "Perl module that keeps imports out of a package's namespace",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/namespace-autoclean-0.31.tar.gz", .sha256 = "d3b32c82e1d2caa9d58b8c8075965240e6cab66ab9350bd6f6bea4ca07e938d6" },
+    },
+    .depends = .{ "perl", "perl-b-hooks-endofscope", "perl-namespace-clean" },
+    .build_depends = .{"perl"},
+}

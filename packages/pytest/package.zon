@@ -1,0 +1,12 @@
+.{
+    .name = "pytest",
+    .version = "9.2.0",
+    .release = 1,
+    .description = "Testing framework for Python",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pytest/pytest-9.2.0.tar.gz", .sha256 = "97c4f3b1f3c7414aa36465e09b8220f1d03627993bd51b1282e193753c80557b" },
+    },
+    .depends = .{ "python", "iniconfig", "packaging", "pluggy", "pygments" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm" },
+}

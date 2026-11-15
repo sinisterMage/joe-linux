@@ -1,0 +1,12 @@
+.{
+    .name = "filelock",
+    .version = "4.2.10",
+    .release = 1,
+    .description = "Platform-independent file locking for Python",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/f/filelock/filelock-4.2.10.tar.gz", .sha256 = "fcc3c0cb8bfe7f4b3bb0e231c04b15dbad068cb3c2515f343d8fde4dce93bd5d" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "hatchling", "hatch-vcs", "hatch-fancy-pypi-readme" },
+}

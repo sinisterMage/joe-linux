@@ -1,0 +1,12 @@
+.{
+    .name = "perl-role-tiny",
+    .version = "2.002005",
+    .release = 1,
+    .description = "Minimalist role composition for Perl",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Role-Tiny-2.002005.tar.gz", .sha256 = "4618ec524618c104dc28a8cc86af129a00cad282aea7f4c75060ba05d4c8f4d7" },
+    },
+    .depends = .{"perl"},
+    .build_depends = .{"perl"},
+}

@@ -1,0 +1,18 @@
+.{
+    .name = "cppcheck",
+    .version = "2.22.0",
+    .release = 1,
+    .description = "Static analysis tool for C and C++ code",
+    .license = "GPL-3.0-or-later AND Zlib",
+    .sources = .{
+        .{ .url = "https://github.com/danmar/cppcheck/archive/2.22.0/cppcheck-2.22.0.tar.gz", .sha256 = "d74945deb2d50393430e07596b766f8a779512c7f60dac2a30ea64e059ece57b" },
+    },
+    // TinyXML-2 (Zlib) is the copy in externals/. cppcheck-htmlreport and
+    // the addons (MISRA, CERT, naming and so on) are Python; the report
+    // highlights code with Pygments.
+    .depends = .{ "glibc", "gcc", "python", "pygments" },
+    // Python runs the match compiler at build time. Boost is used for its
+    // header-only small_vector. xsltproc and the DocBook stylesheets make
+    // the manual page.
+    .build_depends = .{ "cmake", "ninja", "python", "boost", "libxslt", "docbook-xsl-nons", "docbook-xml" },
+}

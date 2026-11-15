@@ -1,0 +1,13 @@
+.{
+    .name = "perl-specio",
+    .version = "0.53",
+    .release = 1,
+    .description = "Type constraints and coercions for Perl",
+    .license = "Artistic-2.0",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Specio-0.53.tar.gz", .sha256 = "0d0eecfb9e89bd0f5f710fac42e1200a882d513a862f98497eaef5927ac6c183" },
+    },
+    // Test::Fatal is a run-time requirement: Specio ships Test::Specio.
+    .depends = .{ "perl", "perl-clone", "perl-clone-pp", "perl-devel-stacktrace", "perl-eval-closure", "perl-mro-compat", "perl-module-implementation", "perl-module-runtime", "perl-role-tiny", "perl-sub-quote", "perl-test-fatal", "perl-try-tiny" },
+    .build_depends = .{"perl"},
+}

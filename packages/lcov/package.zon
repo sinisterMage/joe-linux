@@ -1,0 +1,24 @@
+.{
+    .name = "lcov",
+    .version = "2.6",
+    .release = 1,
+    .description = "Graphical front end for gcov coverage data: lcov, geninfo and genhtml",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/linux-test-project/lcov/releases/download/v2.6/lcov-2.6.tar.gz", .sha256 = "67a45db99b8ef0260c3fac9a2e3749fd8fa350a15e235dd3c29b356d97755c75" },
+    },
+    // The tools are Perl and need Capture::Tiny, DateTime, Devel::StackTrace
+    // and Date::Parse (TimeDate); JSON::PP and the rest come with perl.
+    // geninfo runs gcov (gcc). py2lcov and xml2lcov are Python. The C++
+    // extension links libgcc_s (and libstdc++, statically when gcc ships
+    // libstdc++.a).
+    //
+    // Left out, all optional: Memory::Process (the max_memory setting),
+    // DateTime::Format::W3CDTF (lcov has its own parser), JSON::XS (faster
+    // JSON), Devel::Cover (only perl2lcov), GD (genpng's overview images).
+    .depends = .{ "glibc", "gcc", "perl", "perl-capture-tiny", "perl-datetime", "perl-devel-stacktrace", "perl-timedate", "python" },
+    // Makefile.PL of the C++ extension loads lcovutil.pm, which needs its
+    // Perl modules at build time too. "make install" cleans the tests it
+    // installs with a Python script.
+    .build_depends = .{ "perl", "perl-capture-tiny", "perl-datetime", "perl-devel-stacktrace", "perl-timedate", "python" },
+}

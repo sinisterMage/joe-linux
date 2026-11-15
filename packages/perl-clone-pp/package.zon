@@ -1,0 +1,12 @@
+.{
+    .name = "perl-clone-pp",
+    .version = "1.08",
+    .release = 1,
+    .description = "Perl module that recursively copies Perl data types, in pure Perl",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/N/NE/NEILB/Clone-PP-1.08.tar.gz", .sha256 = "57203094a5d8574b6a00951e8f2399b666f4e74f9511d9c9fb5b453d5d11f578" },
+    },
+    .depends = .{"perl"},
+    .build_depends = .{"perl"},
+}

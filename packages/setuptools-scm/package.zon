@@ -1,0 +1,12 @@
+.{
+    .name = "setuptools-scm",
+    .version = "10.1.2",
+    .release = 1,
+    .description = "Python package versions from git or Mercurial metadata",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/setuptools_scm/setuptools_scm-10.1.2.tar.gz", .sha256 = "24079818acc46e99aae0d65b8d511fafe965970d9cbd060c7b9f7275ded520fb" },
+    },
+    .depends = .{ "python", "vcs-versioning", "packaging", "setuptools" },
+    .build_depends = .{ "python", "setuptools", "vcs-versioning", "packaging" },
+}

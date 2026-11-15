@@ -1,0 +1,12 @@
+.{
+    .name = "perl-test-fatal",
+    .version = "0.018",
+    .release = 1,
+    .description = "Perl module with simple helpers for testing code that throws exceptions",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/R/RJ/RJBS/Test-Fatal-0.018.tar.gz", .sha256 = "b8d2cccf9ee467271bc478f9cf7eba49545452be9302ae359bc538b8bf687cd6" },
+    },
+    .depends = .{ "perl", "perl-try-tiny" },
+    .build_depends = .{"perl"},
+}

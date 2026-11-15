@@ -1,0 +1,12 @@
+.{
+    .name = "perl-clone",
+    .version = "0.50",
+    .release = 1,
+    .description = "Perl module that recursively copies Perl data types (XS)",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/A/AT/ATOOMIC/Clone-0.50.tar.gz", .sha256 = "f9732a4a857974db30905233589113003301b585b0cecda29a21cfba5bb014f9" },
+    },
+    .depends = .{ "glibc", "perl" },
+    .build_depends = .{"perl"},
+}

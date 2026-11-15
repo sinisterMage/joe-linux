@@ -1,0 +1,12 @@
+.{
+    .name = "python-discovery",
+    .version = "1.9.5",
+    .release = 1,
+    .description = "Discovery of Python interpreters on a system, used by virtualenv",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/python-discovery/python_discovery-1.9.5.tar.gz", .sha256 = "86279f5d2728bc067de28b7ddc571be2eacc2ae0e7048f8629d2481a0f8848a2" },
+    },
+    .depends = .{ "python", "filelock" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs", "hatch-fancy-pypi-readme" },
+}
