@@ -1,0 +1,12 @@
+.{
+    .name = "iputils",
+    .version = "20250605",
+    .release = 1,
+    .description = "Network diagnostics: arping, tracepath and clockdiff (ping comes from inetutils)",
+    .license = "GPL-2.0-or-later AND BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/iputils/iputils/releases/download/20250605/iputils-20250605.tar.xz", .sha256 = "6f213700dbf96b5cc4499ca70cb15ecd69c09f405b06785bb4a1a10b572b6276" },
+    },
+    .depends = .{ "glibc", "libcap", "libidn2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

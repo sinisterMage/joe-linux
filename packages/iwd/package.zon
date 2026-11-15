@@ -1,0 +1,14 @@
+.{
+    .name = "iwd",
+    .version = "3.12",
+    .release = 1,
+    .description = "iNet wireless daemon: a lightweight Wi-Fi client and access point, with iwctl",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://www.kernel.org/pub/linux/network/wireless/iwd-3.12.tar.xz", .sha256 = "d89a5e45c7180170e19be828f9e944a768c593758094fc57a358d0e7c4cb1a49" },
+    },
+    // readline: iwctl. The embedded Linux library (ell) is the copy in the
+    // tarball, and has its own D-Bus client; dbus is the bus it talks to.
+    .depends = .{ "glibc", "readline", "dbus" },
+    .build_depends = .{"pkgconf"},
+}

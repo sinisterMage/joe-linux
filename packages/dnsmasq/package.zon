@@ -1,0 +1,12 @@
+.{
+    .name = "dnsmasq",
+    .version = "2.93",
+    .release = 1,
+    .description = "Lightweight DNS forwarder and DHCP, router advertisement and TFTP server",
+    .license = "GPL-2.0-only OR GPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://thekelleys.org.uk/dnsmasq/dnsmasq-2.93.tar.xz", .sha256 = "0c00d4e5c97c8306e5fb932b348b34269c9c29a0e7df0e8e82958b407092bc19" },
+    },
+    .depends = .{ "glibc", "dbus", "libidn2", "nettle", "gmp", "nftables" },
+    .build_depends = .{ "pkgconf", "gettext" },
+}

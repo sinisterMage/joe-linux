@@ -1,0 +1,12 @@
+.{
+    .name = "libqmi",
+    .version = "1.38.0",
+    .release = 1,
+    .description = "Library for talking to WWAN modems using the Qualcomm MSM Interface protocol",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/mobile-broadband/libqmi/-/archive/1.38.0/libqmi-1.38.0.tar.gz", .sha256 = "8ee3b3a9002f2b45c825deade85710db006e01674f5f9359d351c192cc926015" },
+    },
+    .depends = .{ "glibc", "glib", "libgudev", "libmbim", "libqrtr-glib" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
+}

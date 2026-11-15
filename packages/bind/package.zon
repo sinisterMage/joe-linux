@@ -1,0 +1,12 @@
+.{
+    .name = "bind",
+    .version = "9.20.30",
+    .release = 1,
+    .description = "BIND DNS server (named) and the DNS tools dig, host, nslookup, nsupdate and rndc",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://ftp.isc.org/isc/bind9/9.20.30/bind-9.20.30.tar.xz", .sha256 = "9e1443a40a72a30272cbc3196d020a6b2e26937111c83e59e101e82e1e3b4fef" },
+    },
+    .depends = .{ "glibc", "liburcu", "libuv", "openssl", "libcap", "json-c", "libxml2", "nghttp2", "lmdb", "krb5", "libidn2", "readline", "zlib" },
+    .build_depends = .{"pkgconf"},
+}

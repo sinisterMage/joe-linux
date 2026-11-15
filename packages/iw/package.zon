@@ -1,0 +1,12 @@
+.{
+    .name = "iw",
+    .version = "6.17",
+    .release = 1,
+    .description = "Show and change wireless devices and their configuration through nl80211",
+    .license = "ISC",
+    .sources = .{
+        .{ .url = "https://www.kernel.org/pub/software/network/iw/iw-6.17.tar.xz", .sha256 = "7d182e498289ab39b257da6780d562e415377107f50358ee5b55b8cfe40b1e33" },
+    },
+    .depends = .{ "glibc", "libnl" },
+    .build_depends = .{"pkgconf"},
+}

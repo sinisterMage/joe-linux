@@ -1,0 +1,12 @@
+.{
+    .name = "mobile-broadband-provider-info",
+    .version = "20261111",
+    .release = 1,
+    .description = "Database of mobile broadband providers and their access point settings",
+    .license = "CC-PDDC",
+    .sources = .{
+        // Checksum from upstream's .sha256sum next to the tarball.
+        .{ .url = "https://download.gnome.org/sources/mobile-broadband-provider-info/20261111/mobile-broadband-provider-info-20261111.tar.xz", .sha256 = "e591c1d327c296964b1ae99e6f9458952b1f8e27337a6bc4b3f3e8e55016a182" },
+    },
+    .build_depends = .{ "meson", "ninja", "libxslt" },
+}

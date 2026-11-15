@@ -1,0 +1,13 @@
+.{
+    .name = "modemmanager",
+    .version = "1.24.2",
+    .release = 1,
+    .description = "Mobile broadband modem management service, with mmcli and libmm-glib",
+    .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/mobile-broadband/ModemManager/-/archive/1.24.2/ModemManager-1.24.2.tar.gz", .sha256 = "fbc75adcc0d7b0565f256e7ff4e8872b0a37c4413ff576665f7470932d9c1b68" },
+    },
+    .depends = .{ "glibc", "glib", "libgudev", "libmbim", "libqmi", "libqrtr-glib", "polkit", "systemd", "dbus" },
+    // xsltproc turns the D-Bus interface descriptions into a header.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "libxslt", "vala" },
+}
