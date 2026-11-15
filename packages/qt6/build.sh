@@ -12,8 +12,11 @@
 #   The book removes the modules it cannot build instead.
 #
 # What the book leaves out by default stays out: examples, tests, an rpath,
-# the SBOM. OpenSSL, D-Bus and the system's SQLite are linked as the book
-# links them; messages go to the journal.
+# the SBOM. Printing goes through CUPS, and double-conversion is the
+# system's. Of the SQL drivers only SQLite's is built: PostgreSQL's would
+# make every Qt installation carry the database server's package, and
+# MySQL and ODBC have no recipes. OpenSSL, D-Bus and the system's SQLite
+# are linked as the book links them; messages go to the journal.
 build() {
     mkdir build
     cd build
@@ -30,6 +33,11 @@ build() {
         -journald \
         -submodules qtdeclarative,qtwayland,qtsvg,qttools,qt5compat,qtnetworkauth \
         -- \
+        -D FEATURE_system_doubleconversion=ON \
+        -D FEATURE_cups=ON \
+        -D FEATURE_sql_psql=OFF \
+        -D FEATURE_sql_mysql=OFF \
+        -D FEATURE_sql_odbc=OFF \
         -D FEATURE_assistant=OFF \
         -D FEATURE_designer=OFF \
         -D FEATURE_qdoc=OFF \

@@ -1,7 +1,7 @@
 .{
     .name = "freerdp",
     .version = "3.33.1",
-    .release = 1,
+    .release = 2,
     .description = "Remote Desktop Protocol client and server libraries and tools",
     .license = "Apache-2.0",
     .sources = .{
@@ -19,6 +19,9 @@
         "libxkbcommon", "pixman", "libx11", "libxext", "libxinerama", "libxcursor",
         "libxv", "libxi", "libxrender", "libxrandr", "libxfixes", "libxdamage",
         "libxtst",
+        "libice",
+        "libsm",
+        "libxkbfile",
     },
     .build_depends = .{ "cmake", "ninja", "pkgconf", "xorgproto" },
 }

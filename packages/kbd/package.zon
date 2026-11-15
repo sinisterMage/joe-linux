@@ -1,7 +1,7 @@
 .{
     .name = "kbd",
     .version = "2.10.0",
-    .release = 1,
+    .release = 2,
     .description = "Console keyboard maps, fonts and the tools that load them",
     .license = "GPL-2.0-or-later",
     .sources = .{

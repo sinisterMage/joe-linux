@@ -1,7 +1,7 @@
 .{
     .name = "boost",
     .version = "1.92.0",
-    .release = 1,
+    .release = 2,
     .description = "Boost, a collection of peer-reviewed portable C++ libraries",
     .license = "BSL-1.0",
     .sources = .{
@@ -9,6 +9,7 @@
     },
     // ICU is used by Boost.Regex and Boost.Locale; zlib, bzip2, xz (liblzma)
     // and zstd by the compression filters of Boost.Iostreams.
-    .depends = .{ "glibc", "gcc", "icu", "zlib", "bzip2", "xz", "zstd" },
+    // Boost.Cobalt's TLS streams (libboost_cobalt_io_ssl) link OpenSSL.
+    .depends = .{ "glibc", "gcc", "icu", "zlib", "bzip2", "xz", "zstd", "openssl" },
     .build_depends = .{"which"},
 }

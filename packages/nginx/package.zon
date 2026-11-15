@@ -1,11 +1,11 @@
 .{
     .name = "nginx",
     .version = "1.30.6",
-    .release = 1,
+    .release = 2,
     .description = "HTTP server, reverse proxy, and mail and TCP/UDP proxy server",
     .license = "BSD-2-Clause",
     .sources = .{
         .{ .url = "https://nginx.org/download/nginx-1.30.6.tar.gz", .sha256 = "3cf46f5ed7504d460125866b7bea99fb357f31d887e2e63b35503310e9b8b6c8" },
     },
-    .depends = .{ "glibc", "pcre2", "zlib", "openssl" },
+    .depends = .{ "glibc", "pcre2", "zlib", "openssl", "libxcrypt" },
 }

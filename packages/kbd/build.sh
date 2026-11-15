@@ -9,8 +9,10 @@ prepare() {
 }
 
 build() {
-    # vlock needs Linux-PAM and is not wanted on the console.
-    ./configure --prefix=/usr --disable-vlock
+    # vlock needs Linux-PAM and is not wanted on the console. The XKB
+    # conversion (keymaps made from X keyboard layouts) would link
+    # libxkbcommon, which the base system does not have; it is off.
+    ./configure --prefix=/usr --disable-vlock --disable-xkb
     make
 }
 

@@ -1,7 +1,7 @@
 .{
     .name = "inkscape",
     .version = "1.4.4",
-    .release = 1,
+    .release = 2,
     .description = "Vector graphics editor using SVG as its native format",
     .license = "GPL-2.0-or-later AND GPL-3.0-or-later AND LGPL-2.1-or-later AND LGPL-3.0-or-later AND MPL-1.1 AND OFL-1.1",
     .sources = .{
@@ -20,6 +20,8 @@
         "lcms2",      "poppler",    "potrace",   "libpng",    "libjpeg-turbo", "libxml2", "libxslt",
         "zlib",       "readline",   "libepoxy",  "libx11",    "libcanberra", "python",   "lxml",
         "pygobject",
+        "libice",
+        "libsm",
     },
     // perl provides pod2man for the manual pages.
     .build_depends = .{ "cmake", "ninja", "pkgconf", "gettext", "perl" },
