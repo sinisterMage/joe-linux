@@ -1,0 +1,17 @@
+.{
+    .name = "pcsc-lite",
+    .version = "2.5.3",
+    .release = 1,
+    .description = "PC/SC smart card middleware: the pcscd daemon and libpcsclite",
+    .license = "BSD-3-Clause AND GPL-3.0-or-later",
+    .sources = .{
+        // Checked against upstream's OpenPGP signature (Ludovic Rousseau,
+        // F5E11B9FFE911146F41D953D78A1B4DFE8F9C57E).
+        .{ .url = "https://pcsclite.apdu.fr/files/pcsc-lite-2.5.3.tar.xz", .sha256 = "fe2bb733ecf95e52768907eb00da9f9f3daf180960283e514a05dcc090afa3bd" },
+    },
+    // pcscd is socket-activated (libsystemd), finds USB readers through
+    // libudev and asks polkit who may use them. pcsc-spy, a debugging
+    // tool, is a Python script.
+    .depends = .{ "glibc", "systemd", "polkit", "glib", "python" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "flex", "perl" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "minizip",
+    .version = "1.4",
+    .release = 1,
+    .description = "Library for reading and writing zip archives, from zlib's contrib directory",
+    .license = "Zlib",
+    .sources = .{
+        // The zlib release this belongs to; the same tarball as the zlib
+        // recipe's.
+        .{ .url = "https://zlib.net/fossils/zlib-1.4.tar.gz", .sha256 = "02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584" },
+    },
+    .depends = .{ "glibc", "zlib" },
+    .build_depends = .{ "autoconf", "automake", "libtool" },
+}

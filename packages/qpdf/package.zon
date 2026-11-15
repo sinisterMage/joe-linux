@@ -1,0 +1,13 @@
+.{
+    .name = "qpdf",
+    .version = "12.4.2",
+    .release = 1,
+    .description = "Library and program for structural, content-preserving transformations of PDF files",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/qpdf/qpdf/releases/download/v12.4.2/qpdf-12.4.2.tar.gz", .sha256 = "8a58af5b6141319287c1883bec8bd1bd545b7567b7fc5e6ce5d25a1c85f36397" },
+    },
+    // OpenSSL and GnuTLS are both crypto providers (encrypted PDFs).
+    .depends = .{ "glibc", "gcc", "zlib", "libjpeg-turbo", "openssl", "gnutls" },
+    .build_depends = .{ "cmake", "pkgconf" },
+}

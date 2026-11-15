@@ -1,0 +1,33 @@
+.{
+    .name = "gsconnect",
+    .version = "74",
+    .release = 1,
+    .description = "KDE Connect implementation for GNOME Shell",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/GSConnect/gnome-shell-extension-gsconnect/archive/v74/gnome-shell-extension-gsconnect-74.tar.gz", .sha256 = "7eda214a9d48e3e8f674c4f37d551835d7c10f3695c5830294ff1562f4dbd184" },
+    },
+    // All JavaScript, run by gjs inside GNOME Shell (the extension) and on
+    // its own (the service, with GTK 3; the preferences, with GTK 4 and
+    // libadwaita). It runs openssl to make its certificate and ssh-add and
+    // ssh-keygen for the SFTP plug-in, whose mounts go through GVfs.
+    // Contacts come from Evolution Data Server and sounds from GSound when
+    // present.
+    .depends = .{
+        "gjs",
+        "gnome-shell",
+        "glib",
+        "gtk3",
+        "gtk4",
+        "libadwaita",
+        "gdk-pixbuf",
+        "pango",
+        "at-spi2-core",
+        "gsound",
+        "evolution-data-server",
+        "gvfs",
+        "openssl",
+        "openssh",
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "glib" },
+}

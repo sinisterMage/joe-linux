@@ -20,9 +20,9 @@ build() {
     #   "nonfree" (needed only for fdk-aac) would make the result
     #   undistributable. AAC is covered by ffmpeg's own encoder and decoder,
     #   AV1 encoding by libaom.
-    # - VA-API, VDPAU, Vulkan, the NVIDIA and AMD interfaces and V4L2
-    #   mem2mem: no recipes for libva and libvdpau, and this release targets
-    #   virtual machines without hardware video decoding.
+    # - VDPAU, Vulkan, the NVIDIA and AMD interfaces and V4L2 mem2mem: no
+    #   recipes for libvdpau and the Vulkan loader. (VA-API is on: it is how
+    #   Firefox and other ffmpeg users decode video on the GPU.)
     # - ffplay (SDL has no recipe), X11 screen grabbing (the session is
     #   Wayland), sndio.
     # - HTML and text documentation (needs Texinfo); the manual pages are
@@ -53,6 +53,7 @@ build() {
         --enable-alsa \
         --enable-libpulse \
         --enable-libdrm \
+        --enable-vaapi \
         --enable-zlib \
         --enable-bzlib \
         --enable-lzma \

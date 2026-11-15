@@ -1,0 +1,13 @@
+.{
+    .name = "pyxdg",
+    .version = "0.28",
+    .release = 1,
+    .description = "Python implementation of the freedesktop.org base directory, menu and desktop entry specifications",
+    .license = "LGPL-2.0-only",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyxdg/pyxdg-0.28.tar.gz", .sha256 = "3267bb3074e934df202af2ee0868575484108581e6f3cb006af1da35395e88b4" },
+    },
+    // Pure Python.
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

@@ -1,0 +1,34 @@
+.{
+    .name = "keepassxc",
+    .version = "2.8.0",
+    .release = 1,
+    .description = "Password manager for KeePass databases",
+    .license = "GPL-2.0-only OR GPL-3.0-only",
+    .sources = .{
+        // Checked against upstream's .DIGEST file.
+        .{ .url = "https://github.com/keepassxreboot/keepassxc/releases/download/2.8.0/keepassxc-2.8.0-src.tar.xz", .sha256 = "4ed4b77d375f021fc04648c257fedfb41dc13c6bd5c4965d8ded31284c9c653c" },
+    },
+    // 2.8 is the first release on Qt 6. Botan does all the cryptography
+    // (Argon2 included); minizip reads and writes KeeShare containers;
+    // libpcsclite and libusb talk to hardware keys; keyutils keeps the
+    // Quick Unlock secret; libxkbcommon, libX11, libXi and libXtst are for
+    // Auto-Type; readline is for keepassxc-cli.
+    .depends = .{
+        "glibc",
+        "gcc",
+        "qt6",
+        "botan",
+        "zlib",
+        "minizip",
+        "qrencode",
+        "pcsc-lite",
+        "libusb",
+        "keyutils",
+        "readline",
+        "libxkbcommon",
+        "libx11",
+        "libxi",
+        "libxtst",
+    },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

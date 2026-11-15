@@ -1,14 +1,14 @@
 .{
     .name = "ffmpeg",
     .version = "9.0.2",
-    .release = 1,
+    .release = 2,
     .description = "Libraries and tools to record, convert and stream audio and video",
     .license = "GPL-3.0-or-later",
     .sources = .{
         .{ .url = "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz", .sha256 = "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e" },
         .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/ffmpeg-9.0.2-chromium_method-1.patch", .sha256 = "ba75bed1121425b15b485c0af10673900ab9df48d86e64a706aff3ef94f2e139" },
     },
-    .depends = .{ "glibc", "zlib", "bzip2", "xz", "openssl", "freetype", "harfbuzz", "fontconfig", "fribidi", "lame", "opus", "libvorbis", "libvpx", "libwebp", "x264", "x265", "dav1d", "libaom", "alsa-lib", "pulseaudio", "libdrm" },
+    .depends = .{ "glibc", "zlib", "bzip2", "xz", "openssl", "freetype", "harfbuzz", "fontconfig", "fribidi", "lame", "opus", "libvorbis", "libvpx", "libwebp", "x264", "x265", "dav1d", "libaom", "alsa-lib", "pulseaudio", "libdrm", "libva" },
     // perl turns the Texinfo sources into the manual pages.
     .build_depends = .{ "nasm", "pkgconf", "perl" },
 }

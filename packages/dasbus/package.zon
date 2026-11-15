@@ -1,0 +1,13 @@
+.{
+    .name = "dasbus",
+    .version = "1.7",
+    .release = 1,
+    .description = "D-Bus library for Python built on GLib and PyGObject",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/d/dasbus/dasbus-1.7.tar.gz", .sha256 = "a8850d841adfe8ee5f7bb9f82cf449ab9b4950dc0633897071718e0d0036b6f6" },
+    },
+    // Pure Python; it talks to D-Bus through GLib's GDBus via PyGObject.
+    .depends = .{ "python", "pygobject", "glib" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "botan",
+    .version = "3.14.1",
+    .release = 1,
+    .description = "C++ cryptography library and command-line tool",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // Checked against upstream's OpenPGP signature (Botan-3.14.1.tar.xz.asc,
+        // made by the "Botan Distribution Key" from botan.randombit.net).
+        .{ .url = "https://botan.randombit.net/releases/Botan-3.14.1.tar.xz", .sha256 = "5b85cba0f014d344eb8e9919aee0a3bdc31e16acb05816410025be9bee1e0930" },
+    },
+    // Compression filters for zlib, bzip2 and xz, and the SQLite store for
+    // certificates and TLS sessions. The trust store it reads by default is
+    // make-ca's bundle.
+    .depends = .{ "glibc", "gcc", "zlib", "bzip2", "xz", "sqlite", "make-ca" },
+    .build_depends = .{ "python", "docutils", "make-ca" },
+}

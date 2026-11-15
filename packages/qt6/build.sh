@@ -5,8 +5,11 @@
 #   /usr/include/qt6. CMake finds it through /usr/lib/cmake/Qt6.
 # - Only the modules joe's programs use are built (-submodules builds those
 #   and what they need): Qt Quick, its controls and shader tools (the
-#   installer, installer/), Qt Wayland (applications in a GNOME session) and
-#   Qt SVG (icons). The book removes the modules it cannot build instead.
+#   installer, installer/), Qt Wayland (applications in a GNOME session),
+#   Qt SVG (icons), from Qt Tools only the Linguist programs (lrelease,
+#   lupdate) that applications such as KeePassXC translate themselves with,
+#   and Qt 5 Compat and Qt Network Authorization, which Audacity uses.
+#   The book removes the modules it cannot build instead.
 #
 # What the book leaves out by default stays out: examples, tests, an rpath,
 # the SBOM. OpenSSL, D-Bus and the system's SQLite are linked as the book
@@ -25,8 +28,14 @@ build() {
         -no-rpath \
         -no-sbom \
         -journald \
-        -submodules qtdeclarative,qtwayland,qtsvg \
+        -submodules qtdeclarative,qtwayland,qtsvg,qttools,qt5compat,qtnetworkauth \
         -- \
+        -D FEATURE_assistant=OFF \
+        -D FEATURE_designer=OFF \
+        -D FEATURE_qdoc=OFF \
+        -D FEATURE_clang=OFF \
+        -D FEATURE_distancefieldgenerator=OFF \
+        -D FEATURE_pixeltool=OFF \
         -D INSTALL_BINDIR=lib/qt6/bin \
         -D INSTALL_LIBEXECDIR=lib/qt6 \
         -D INSTALL_ARCHDATADIR=lib/qt6 \

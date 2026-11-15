@@ -1,0 +1,14 @@
+.{
+    .name = "babel",
+    .version = "2.18.0",
+    .release = 1,
+    .description = "Internationalisation utilities for Python, with the CLDR locale data",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/b/babel/babel-2.18.0.tar.gz", .sha256 = "b80b99a14bd085fcacfa15c9165f651fbb3406e66cc603abf11c5750937c992d" },
+    },
+    // Pure Python. The sdist carries the CLDR data already converted
+    // (babel/locale-data, babel/global.dat), so nothing is downloaded.
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

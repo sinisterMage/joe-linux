@@ -1,0 +1,13 @@
+.{
+    .name = "qrencode",
+    .version = "4.1.1",
+    .release = 1,
+    .description = "Library and program for encoding data in QR Code symbols",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/fukuchi/libqrencode/archive/v4.1.1/libqrencode-4.1.1.tar.gz", .sha256 = "5385bc1b8c2f20f3b91d258bf8ccc8cf62023935df2d2676b5b67049f31a049c" },
+    },
+    // libpng for the qrencode program's PNG output.
+    .depends = .{ "glibc", "libpng" },
+    .build_depends = .{ "autoconf", "automake", "libtool", "pkgconf" },
+}

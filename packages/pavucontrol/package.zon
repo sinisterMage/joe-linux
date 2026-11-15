@@ -1,0 +1,24 @@
+.{
+    .name = "pavucontrol",
+    .version = "6.2",
+    .release = 1,
+    .description = "Volume control for PulseAudio-compatible sound servers",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.freedesktop.org/software/pulseaudio/pavucontrol/pavucontrol-6.2.tar.xz", .sha256 = "e93a7836c7307dcbc989e95fc7ec0878322514c475fabd90e89ed52fd4f15d32" },
+    },
+    // libcanberra plays the feedback sound when a volume is changed.
+    .depends = .{
+        "glibc",
+        "gcc",
+        "gtkmm4",
+        "glibmm",
+        "libsigcxx",
+        "gtk4",
+        "glib",
+        "json-glib",
+        "pulseaudio",
+        "libcanberra",
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

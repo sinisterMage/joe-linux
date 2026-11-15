@@ -1,0 +1,29 @@
+.{
+    .name = "deja-dup",
+    .version = "50.2",
+    .release = 1,
+    .description = "Simple backup tool for GNOME",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes its releases as GitLab tag archives only.
+        .{ .url = "https://gitlab.gnome.org/World/deja-dup/-/archive/50.2/deja-dup-50.2.tar.gz", .sha256 = "ac5e0c708868e5cd1a605b4b72ab52818f0e24f3fc25052f40a84d0ada3b6023" },
+    },
+    // Backups are made by running restic. Network locations are mounted
+    // through GVfs and its FUSE layer (fusermount3). Duplicity (only for
+    // restoring from old Duplicity backups) and rclone (Google Drive and
+    // OneDrive) have no recipe; the program reports them missing when such
+    // a backup is chosen.
+    .depends = .{
+        "glibc",
+        "glib",
+        "gtk4",
+        "libadwaita",
+        "json-glib",
+        "libsecret",
+        "libsoup",
+        "restic",
+        "gvfs",
+        "fuse3",
+    },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "blueprint-compiler", "gettext", "itstool" },
+}

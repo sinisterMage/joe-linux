@@ -10,11 +10,16 @@ build() {
     # which takes clang (part of llvm), SPIRV-LLVM-Translator and
     # SPIRV-Tools; radeonsi needs LLVM's AMDGPU target, which llvm builds.
     #
-    # No Vulkan drivers yet (they need glslang and the Vulkan loader), and so
-    # no video codecs, which only the Vulkan and VA-API front ends use.
+    # No Vulkan drivers yet (they need glslang and the Vulkan loader).
     #
-    # Switched off because what they need is not part of joe Linux: gallium-va
-    # (libva), glvnd (libglvnd), lmsensors, valgrind, libunwind. display-info
+    # VA-API (gallium-va, through libva) gives hardware video decoding and
+    # encoding to Firefox, GStreamer and ffmpeg on radeonsi, nouveau and virgl.
+    # Every codec Mesa has is built, H.264, H.265 and VC-1 included, as joe
+    # already ships decoders and encoders for them (gst-libav, x264, x265).
+    #
+    # Switched off because what they need is not part of joe Linux: glvnd
+    # (libglvnd), lmsensors. valgrind and libunwind only help to debug Mesa
+    # itself. display-info
     # (libdisplay-info) and xlib-lease (libXrandr) are only used by the Vulkan
     # window-system code.
     meson setup .. \
@@ -24,7 +29,7 @@ build() {
         -D platforms=x11,wayland \
         -D gallium-drivers=iris,crocus,radeonsi,nouveau,llvmpipe,softpipe,virgl,svga \
         -D "vulkan-drivers=[]" \
-        -D "video-codecs=[]" \
+        -D video-codecs=all \
         -D glx=dri \
         -D egl=enabled \
         -D gbm=enabled \
@@ -35,7 +40,7 @@ build() {
         -D expat=enabled \
         -D valgrind=disabled \
         -D libunwind=disabled \
-        -D gallium-va=disabled \
+        -D gallium-va=enabled \
         -D glvnd=disabled \
         -D lmsensors=disabled \
         -D display-info=disabled \

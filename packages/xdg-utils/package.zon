@@ -1,0 +1,15 @@
+.{
+    .name = "xdg-utils",
+    .version = "1.2.1",
+    .release = 1,
+    .description = "Desktop-independent command-line tools such as xdg-open, xdg-mime and xdg-settings",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.freedesktop.org/xdg/xdg-utils/-/archive/v1.2.1/xdg-utils-v1.2.1.tar.gz", .sha256 = "f6b648c064464c2636884c05746e80428110a576f8daacf46ef2e554dcfdae75" },
+    },
+    // Shell scripts. In a GNOME session they hand over to gio (opening
+    // files and links, MIME types) and gsettings; xdg-screensaver's X11
+    // fallback would run xset and xprop, which joe does not have.
+    .depends = .{ "bash", "coreutils", "grep", "sed", "glib" },
+    .build_depends = .{ "libxslt", "docbook-xml", "docbook-xsl-nons", "groff" },
+}
