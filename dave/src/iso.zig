@@ -5,8 +5,8 @@
 //! CD (El Torito) and, written to a USB stick, as a disk (its GPT has the EFI
 //! system partition appended). It holds:
 //!
-//!   joe/root.erofs        the live root: the spec's tree as a compressed
-//!                         read-only image
+//!   joe/root.squashfs     the live root: the spec's tree as a compressed
+//!                         read-only SquashFS image
 //!   joe/repos/<name>/     for each repository, its signed index and the
 //!                         packages of the spec's payload: what the installer
 //!                         installs, offline, with the same transaction as
@@ -21,7 +21,8 @@
 //! directory, plus the units of image/initrd/ that mount the medium, the
 //! image and the layer, archived as a zstd-compressed newc cpio.
 //!
-//! Nothing on the medium is sealed (erofs and overlayfs have no fs-verity),
+//! Nothing on the medium is sealed (SquashFS and overlayfs have no
+//! fs-verity),
 //! so the security module runs in log mode there, stated on the command line
 //! so that a kernel built to enforce by default still boots it.
 
@@ -39,8 +40,10 @@ pub const Options = struct {
     /// What the installer installs. These packages and everything they
     /// depend on are put on the medium.
     payload: []const []const u8 = &.{},
-    /// mkfs.erofs's -z argument for the live root.
-    compression: []const u8 = "zstd,level=15",
+    /// mksquashfs's -comp argument for the live root: xz, the smallest
+    /// download, as other distributions' media use (with the x86 filter and
+    /// 1 MiB blocks); zstd decompresses faster.
+    compression: []const u8 = "xz",
 };
 
 pub const Initrd = struct {

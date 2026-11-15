@@ -64,11 +64,11 @@ build/host-tools/bin/mcopy:
 	cd build/src && rm -rf mtools && mkdir mtools && tar -xf mtools-4.0.49.tar.bz2 -C mtools --strip-components=1
 	cd build/src/mtools && ./configure --prefix=$(CURDIR)/build/host-tools --disable-floppyd && $(MAKE) && $(MAKE) install
 
-# What a live ISO is made with: its compressed root (erofs) and the ISO itself.
+# What a live ISO is made with: its compressed root (SquashFS) and the ISO itself.
 XORRISO := xorriso-1.5.8.pl02
 XORRISO_SHA256 := b1455ecafbf0692ddafe1d71002a96f2ce2d77f4deae602678261ce033f97bc8
-EROFS := erofs-utils-1.9.4
-EROFS_SHA256 := 7d135aa2550326a5acf20f53c518aea5a8900015ce50700044e40f818c31dd80
+SQUASHFS := squashfs-tools-4.7.5
+SQUASHFS_SHA256 := 547b7b7f4d2e44bf91b6fc554664850c69563701deab9fd9cd7e21f694c88ea6
 
 build/host-tools/bin/xorriso:
 	mkdir -p build/src build/host-tools
@@ -77,16 +77,17 @@ build/host-tools/bin/xorriso:
 	cd build/src && rm -rf xorriso && mkdir xorriso && tar -xf $(XORRISO).tar.gz -C xorriso --strip-components=1
 	cd build/src/xorriso && ./configure --prefix=$(CURDIR)/build/host-tools && $(MAKE) && $(MAKE) install
 
-# Needs the host's lz4, xz and zstd libraries and headers.
-build/host-tools/bin/mkfs.erofs:
-	mkdir -p build/src build/host-tools
-	cd build/src && [ -e $(EROFS).tar.gz ] || curl -fsSLO https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/snapshot/$(EROFS).tar.gz
-	cd build/src && echo "$(EROFS_SHA256)  $(EROFS).tar.gz" | sha256sum -c --quiet
-	cd build/src && rm -rf erofs-utils && mkdir erofs-utils && tar -xf $(EROFS).tar.gz -C erofs-utils --strip-components=1
-	cd build/src/erofs-utils && ./autogen.sh && ./configure --prefix=$(CURDIR)/build/host-tools \
-	    --enable-lz4 --enable-lzma --with-libzstd --disable-fuse && $(MAKE) && $(MAKE) install
+# mksquashfs and unsquashfs, with the xz and zstd compressors only: they need
+# the host's xz and zstd libraries and headers, and nothing else.
+build/host-tools/bin/mksquashfs:
+	mkdir -p build/src build/host-tools/bin
+	cd build/src && [ -e $(SQUASHFS).tar.gz ] || curl -fsSLO https://github.com/plougher/squashfs-tools/releases/download/$(subst squashfs-tools-,,$(SQUASHFS))/$(SQUASHFS).tar.gz
+	cd build/src && echo "$(SQUASHFS_SHA256)  $(SQUASHFS).tar.gz" | sha256sum -c --quiet
+	cd build/src && rm -rf squashfs-tools && mkdir squashfs-tools && tar -xf $(SQUASHFS).tar.gz -C squashfs-tools --strip-components=1
+	$(MAKE) -C build/src/squashfs-tools/squashfs-tools GZIP_SUPPORT=0 LZO_SUPPORT=0 LZ4_SUPPORT=0 \
+	    XZ_SUPPORT=1 ZSTD_SUPPORT=1 COMP_DEFAULT=xz INSTALL_DIR=$(CURDIR)/build/host-tools/bin INSTALL_MANPAGES_DIR= install
 
-iso-tools: build/host-tools/bin/mcopy build/host-tools/bin/xorriso build/host-tools/bin/mkfs.erofs
+iso-tools: build/host-tools/bin/mcopy build/host-tools/bin/xorriso build/host-tools/bin/mksquashfs
 
 build/scaffold/archlinux-bootstrap.tar.zst:
 	mkdir -p build/scaffold

@@ -242,11 +242,11 @@ fi
 
 echo "== a live medium from a specification"
 missing=
-for tool in xorriso mkfs.erofs fsck.erofs mkfs.vfat mcopy mtype sfdisk zstd cpio unshare; do
+for tool in xorriso mksquashfs unsquashfs mkfs.vfat mcopy mtype sfdisk zstd cpio unshare; do
     command -v "$tool" >/dev/null || missing+=" $tool"
 done
 if [[ -n $missing ]]; then
-    echo "   skipped, missing:$missing (make iso-tools builds xorriso and erofs-utils)"
+    echo "   skipped, missing:$missing (make iso-tools builds xorriso and squashfs-tools)"
 else
     make_pkg osrel 1.0-r1 usr/lib/os-release 'PRETTY_NAME="joe Linux test"'
     "$dave" repo index "$work/repo" --key "$work/signing.key" >/dev/null
@@ -272,14 +272,16 @@ EOF
     # The ISO 9660 file system: the root image, what the installer installs,
     # and exactly the packages that takes, with the repository's signed index.
     listing=$(xorriso -indev live.iso -find / -type f 2>/dev/null)
-    for path in /joe/root.erofs /joe/install.zon /joe/repos/test/repo.zon /joe/repos/test/repo.zon.sig \
+    for path in /joe/root.squashfs /joe/install.zon /joe/repos/test/repo.zon /joe/repos/test/repo.zon.sig \
         /joe/repos/test/hello-2.0-r1-x86_64.dave /joe/repos/test/libgreet-1.1-r1-x86_64.dave /joe/repos/test/tree-2.2-r1-x86_64.dave; do
         expect "medium" "'$path'" <<<"$listing"
     done
     [[ $(grep -c '\.dave' <<<"$listing") -eq 3 ]] || fail "the medium carries packages the installer does not need: $listing"
-    xorriso -indev live.iso -osirrox on -extract /joe/install.zon install.zon -extract /joe/root.erofs root.erofs 2>/dev/null
+    xorriso -indev live.iso -osirrox on -extract /joe/install.zon install.zon -extract /joe/root.squashfs root.squashfs 2>/dev/null
     expect "install list" '"hello", "tree",' <<<"$(cat install.zon)"
-    fsck.erofs root.erofs >/dev/null || fail "the live root image does not check"
+    # The root image: xz-compressed SquashFS holding the spec's tree.
+    expect "root image" "Compression xz" <<<"$(unsquashfs -s root.squashfs)"
+    expect "root image" "squashfs-root/usr/bin/hello" <<<"$(unsquashfs -l root.squashfs)"
 
     # It boots from a CD (El Torito, EFI) and as a disk (GPT partition 2).
     xorriso -indev live.iso -report_el_torito plain 2>&1 | expect "el torito" "UEFI"
@@ -300,7 +302,7 @@ EOF
         grep -qx "$path" <<<"$contents" || fail "the initramfs lacks $path"
     done
     ! grep -q "libgreet.txt\|usr/lib/dave/db" <<<"$contents" || fail "the initramfs kept what the spec removes"
-    rm -f root.erofs initrd.img
+    rm -f root.squashfs initrd.img
 fi
 
 echo "cli tests passed"

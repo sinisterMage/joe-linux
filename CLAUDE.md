@@ -36,7 +36,7 @@ make test-security         the security module's three rules, in a VM
 make desktop-image / run-desktop / test-desktop     the GNOME image
 make release-image / test-release                   the desktop without test accounts; its first boot, in a VM
 make vm / run-vm / serve-repo                       a VM that keeps its disk (build/vm), and build/repo served to it
-make iso-tools             xorriso and erofs-utils (and mtools) into build/host-tools
+make iso-tools             xorriso and squashfs-tools (and mtools) into build/host-tools
 make iso                   build/images/joe-live.iso, the installation medium
 make test-live             boot the medium as a CD and as a USB stick
 make test-install          install from the medium onto an empty disk, then boot and check that
@@ -69,7 +69,7 @@ Every image is a specification in `image/*.zon` built by `dave image build SPEC 
 - The **scaffold** (`image/scaffold.zon`, tree prepared by `image/mkscaffold*.sh`) is the host's kernel and systemd-boot plus a stock Arch userspace with dave added. It exists so deployment mechanics can be tested in minutes without building the distribution. Nothing from it ships, and it has no security module.
 - The **joe images** (`console.zon`, `desktop.zon`) are one `dave install` transaction of `joe-base` (or `joe-desktop`) into an empty directory, laid out as a raw GPT disk without mounting anything. They need `make bootstrap` and `make packages` first, which take an hour or more (the desktop set several hours).
 - The **release image** (`release.zon`) is `joe-desktop` alone: no test console, no ready-made user, root locked. GDM starts gnome-initial-setup because no account exists. `tests/vm/release.py` boots the same package set plus `joe-test-console`, because the harness has no other way in.
-- The **live medium** (`live.zon`, `.format = .iso`, `dave/src/iso.zig`) is a hybrid UEFI ISO: the root as an erofs image with a tmpfs overlay (`joe-live` package: live user, masks), an initramfs made by a second dave transaction plus `image/initrd/`'s mount units, and the repository subset the installer installs from (`joe/install.zon`, `joe/repos/<name>/`). Nothing on it is sealed, so it runs the security module in log mode (`joe=log` on its command line).
+- The **live medium** (`live.zon`, `.format = .iso`, `dave/src/iso.zig`) is a hybrid UEFI ISO: the root as an xz-compressed SquashFS image with a tmpfs overlay (`joe-live` package: live user, masks), an initramfs made by a second dave transaction plus `image/initrd/`'s mount units, and the repository subset the installer installs from (`joe/install.zon`, `joe/repos/<name>/`). Nothing on it is sealed, so it runs the security module in log mode (`joe=log` on its command line).
 
 `--test` images add `joe-test-console`: root is logged in on ttyS0 with the prompt `joe# `, which `tests/vm/harness.py` depends on. A `--test` medium also gets `console=ttyS0,115200` and puts `joe-test-console` in what it installs; `dave install-system` copies only `console=` arguments from the live command line into the installed system.
 

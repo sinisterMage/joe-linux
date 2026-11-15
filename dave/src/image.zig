@@ -509,15 +509,21 @@ pub const Builder = struct {
             }
         }
 
-        // The live root, compressed. --all-root: files the user namespace
-        // shows as root are root's, never the building user's.
-        const workers = try std.fmt.allocPrint(arena, "--workers={d}", .{std.Thread.getCpuCount() catch 1});
-        try b.exec(&.{
-            "mkfs.erofs",                                                   "--quiet",
-            try std.fmt.allocPrint(arena, "-z{s}", .{options.compression}), "-Eztailpacking",
-            "--all-root",                                                   workers,
-            try b.join(&.{ staging, "joe", "root.erofs" }),                 try b.treePath(),
-        }, null);
+        // The live root, a SquashFS image in 1 MiB blocks. -all-root: files the
+        // user namespace shows as root are root's, never the building user's.
+        // -noappend: mksquashfs adds to an image that already exists.
+        {
+            var argv: std.ArrayList([]const u8) = .empty;
+            try argv.appendSlice(arena, &.{
+                "mksquashfs",  try b.treePath(), try b.join(&.{ staging, "joe", "root.squashfs" }),
+                "-noappend",   "-quiet",         "-no-progress",
+                "-all-root",   "-b",             "1M",
+                "-comp",       options.compression,
+                "-processors", try std.fmt.allocPrint(arena, "{d}", .{std.Thread.getCpuCount() catch 1}),
+            });
+            if (std.mem.eql(u8, options.compression, "xz")) try argv.appendSlice(arena, &.{ "-Xbcj", "x86", "-Xdict-size", "1M" });
+            try b.exec(argv.items, null);
+        }
 
         // The initramfs.
         const initrd_img = try b.join(&.{ b.work, "initrd.img" });

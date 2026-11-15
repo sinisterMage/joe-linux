@@ -1,4 +1,5 @@
-# The root as it was built: a compressed, read-only image on the medium.
+# The root as it was built: a compressed, read-only SquashFS image on the
+# medium.
 [Unit]
 Description=joe Linux live root image
 DefaultDependencies=no
@@ -6,7 +7,7 @@ RequiresMountsFor=/run/live/medium
 Before=initrd-root-fs.target
 
 [Mount]
-What=/run/live/medium/joe/root.erofs
+What=/run/live/medium/joe/root.squashfs
 Where=/run/live/lower
-Type=erofs
+Type=squashfs
 Options=loop,ro

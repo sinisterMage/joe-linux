@@ -33,7 +33,7 @@ def build_iso():
 def check_live(vm, medium_device):
     step("the root is the image with a writable layer over it")
     assert vm.run("findmnt -no FSTYPE /").strip() == "overlay"
-    assert vm.run("findmnt -no FSTYPE /run/live/lower").strip() == "erofs"
+    assert vm.run("findmnt -no FSTYPE /run/live/lower").strip() == "squashfs"
     source = vm.run("findmnt -no SOURCE /run/live/medium").strip()
     if not source.startswith(medium_device):
         # systemd attaches a CD that has a partition table (as a hybrid ISO
