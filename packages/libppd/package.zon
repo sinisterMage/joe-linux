@@ -1,0 +1,14 @@
+.{
+    .name = "libppd",
+    .version = "2.1.1",
+    .release = 1,
+    .description = "OpenPrinting library for PPD files, for printers that still need them",
+    .license = "Apache-2.0 WITH LLVM-exception",
+    .sources = .{
+        .{ .url = "https://github.com/OpenPrinting/libppd/releases/download/2.1.1/libppd-2.1.1.tar.xz", .sha256 = "3fa341cc03964046d2bf6b161d80c1b4b2e20609f38d860bcaa11cb70c1285e4" },
+    },
+    // It runs gs and Poppler's pdftops and pdftocairo to make PostScript.
+    // The ppdc utilities are C++.
+    .depends = .{ "glibc", "gcc", "cups", "libcupsfilters", "zlib", "ghostscript", "poppler" },
+    .build_depends = .{ "pkgconf" },
+}

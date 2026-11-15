@@ -1,7 +1,7 @@
 .{
     .name = "joe-desktop",
     .version = "0.2",
-    .release = 4,
+    .release = 5,
     .description = "The joe Linux desktop: GNOME on Wayland",
     .license = "MIT",
     // Depends on joe-base, whose directory layout cannot be installed over
@@ -42,6 +42,16 @@
         "upower",
         "udisks",
         "colord",
+        // Bluetooth, mobile broadband and printing, which the Settings
+        // panels of the same names manage. avahi finds network printers;
+        // cups-pk-helper is how Settings adds them.
+        "bluez",
+        "gnome-bluetooth",
+        "modemmanager",
+        "cups",
+        "cups-filters",
+        "cups-pk-helper",
+        "avahi",
         // The first boot of a system nobody has an account on yet.
         "gnome-initial-setup",
         // Sound on Intel laptops of the last few years.

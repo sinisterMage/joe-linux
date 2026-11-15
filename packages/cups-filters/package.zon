@@ -1,0 +1,17 @@
+.{
+    .name = "cups-filters",
+    .version = "2.0.1",
+    .release = 1,
+    .description = "OpenPrinting CUPS filters, back ends and driverless PPD generator",
+    .license = "Apache-2.0 WITH LLVM-exception",
+    .sources = .{
+        .{ .url = "https://github.com/OpenPrinting/cups-filters/releases/download/2.0.1/cups-filters-2.0.1.tar.xz", .sha256 = "39e71de3ce06762b342749f1dc7cba6817738f7bf4d322c1bb9ab10b8569ab80" },
+        // The book gives no checksum for its patches.
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/cups-filters-2.0.1-security_fix-1.patch", .sha256 = "52e73c96d896d18b28eabc6f507eb1011686d9c436c69983ba485312ed3e573b" },
+    },
+    // The filters are thin wrappers around libcupsfilters and libppd, which
+    // run Ghostscript and Poppler. driverless runs CUPS's ippfind.
+    // cups-browsed (discovering remote queues) is a separate package.
+    .depends = .{ "glibc", "cups", "libcupsfilters", "libppd", "ghostscript", "poppler" },
+    .build_depends = .{ "pkgconf", "gettext" },
+}
