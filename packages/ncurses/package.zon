@@ -1,7 +1,7 @@
 .{
     .name = "ncurses",
     .version = "6.6",
-    .release = 1,
+    .release = 3,
     .description = "Libraries for terminal-independent handling of character screens",
     .license = "X11-distribute-modifications-variant",
     .sources = .{

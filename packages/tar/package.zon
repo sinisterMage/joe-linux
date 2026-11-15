@@ -1,7 +1,7 @@
 .{
     .name = "tar",
     .version = "1.35",
-    .release = 1,
+    .release = 3,
     .description = "Archiving program",
     .license = "GPL-3.0-or-later",
     .sources = .{

@@ -1,7 +1,7 @@
 .{
     .name = "findutils",
     .version = "4.11.0",
-    .release = 1,
+    .release = 3,
     .description = "Programs to find files: find, locate, updatedb and xargs",
     .license = "GPL-3.0-or-later",
     .sources = .{

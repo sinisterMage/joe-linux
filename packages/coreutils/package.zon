@@ -1,7 +1,7 @@
 .{
     .name = "coreutils",
     .version = "9.12",
-    .release = 1,
+    .release = 4,
     .description = "The basic file, shell and text manipulation utilities",
     .license = "GPL-3.0-or-later",
     .sources = .{
@@ -10,4 +10,11 @@
     },
     .depends = .{ "glibc", "acl", "attr", "libcap", "gmp" },
     .build_depends = .{ "autoconf", "automake", "gettext", "perl" },
+    // true and false do nothing, so they need no authority: declared, they
+    // can be named in another program's exec: list (an undeclared program
+    // runs only from an all caller). Everything else is undeclared and so
+    // has the authority of the root shell or service that runs it.
+    .operations = .{
+        .{ .programs = .{ "usr/bin/true", "usr/bin/false" }, .allow = .{"none"} },
+    },
 }

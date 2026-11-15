@@ -1,7 +1,7 @@
 .{
     .name = "zstd",
     .version = "1.5.7",
-    .release = 1,
+    .release = 3,
     .description = "Zstandard real-time compression tools and library",
     .license = "BSD-3-Clause OR GPL-2.0-only",
     .sources = .{

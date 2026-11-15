@@ -1,7 +1,7 @@
 .{
     .name = "binutils",
     .version = "2.47",
-    .release = 1,
+    .release = 3,
     .description = "Linker, assembler and other tools for object files",
     .license = "GPL-3.0-or-later AND LGPL-3.0-or-later",
     .sources = .{

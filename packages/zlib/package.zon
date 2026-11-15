@@ -1,7 +1,7 @@
 .{
     .name = "zlib",
     .version = "1.4",
-    .release = 1,
+    .release = 3,
     .description = "Compression library implementing the deflate algorithm",
     .license = "Zlib",
     .sources = .{

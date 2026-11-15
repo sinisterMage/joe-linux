@@ -1,7 +1,7 @@
 .{
     .name = "gzip",
     .version = "1.15",
-    .release = 1,
+    .release = 3,
     .description = "Programs for compressing and decompressing gzip files",
     .license = "GPL-3.0-or-later",
     .sources = .{

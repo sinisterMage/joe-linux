@@ -1,7 +1,7 @@
 .{
     .name = "iana-etc",
     .version = "20261015",
-    .release = 1,
+    .release = 3,
     .description = "The services and protocols databases from IANA",
     .license = "MIT",
     .sources = .{

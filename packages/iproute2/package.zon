@@ -1,7 +1,7 @@
 .{
     .name = "iproute2",
     .version = "7.3.0",
-    .release = 1,
+    .release = 3,
     .description = "Networking and traffic control utilities",
     .license = "GPL-2.0-or-later",
     .sources = .{

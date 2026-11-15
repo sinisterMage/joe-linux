@@ -1,7 +1,7 @@
 .{
     .name = "linux-pam",
     .version = "1.7.3",
-    .release = 1,
+    .release = 3,
     .description = "Pluggable Authentication Modules: libpam, the standard modules and base configuration",
     .license = "BSD-3-Clause OR GPL-2.0-or-later",
     .sources = .{
@@ -10,4 +10,12 @@
     },
     .depends = .{ "glibc", "libxcrypt" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "flex", "bison" },
+    // Set-uid root. Run by an ordinary user, a program holds only what its
+    // seal declares (packages/linux/joe-lsm), so these declare all;
+    // narrower lists are rule 3's work.
+    // unix_chkpwd checks passwords for programs that are not root (the
+    // screen lock).
+    .operations = .{
+        .{ .programs = .{ "usr/sbin/unix_chkpwd" }, .allow = .{"all"} },
+    },
 }

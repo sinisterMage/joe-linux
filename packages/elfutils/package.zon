@@ -1,7 +1,7 @@
 .{
     .name = "elfutils",
     .version = "0.197",
-    .release = 1,
+    .release = 3,
     .description = "Library for reading and writing ELF files (libelf only)",
     .license = "GPL-2.0-or-later OR LGPL-3.0-or-later",
     .sources = .{

@@ -1,7 +1,7 @@
 .{
     .name = "sudo",
     .version = "1.9.17p2",
-    .release = 1,
+    .release = 2,
     .description = "Lets permitted users run commands as root or another user",
     .license = "ISC AND BSD-2-Clause AND BSD-3-Clause AND Zlib",
     .sources = .{
@@ -9,4 +9,10 @@
     },
     .depends = .{ "glibc", "linux-pam", "libxcrypt", "openssl", "zlib" },
     .build_depends = .{"gettext"},
+    // Set-uid root. Run by an ordinary user, a program holds only what its
+    // seal declares (packages/linux/joe-lsm), so these declare all;
+    // narrower lists are rule 3's work.
+    .operations = .{
+        .{ .programs = .{ "usr/bin/sudo" }, .allow = .{"all"} },
+    },
 }

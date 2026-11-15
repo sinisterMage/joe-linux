@@ -1,7 +1,7 @@
 .{
     .name = "fuse3",
     .version = "3.18.3",
-    .release = 1,
+    .release = 2,
     .description = "Filesystem in Userspace: library and helpers for user-space file systems",
     .license = "LGPL-2.1-only AND GPL-2.0-only",
     .sources = .{
@@ -9,4 +9,10 @@
     },
     .depends = .{"glibc"},
     .build_depends = .{ "meson", "ninja", "pkgconf" },
+    // Set-uid root. Run by an ordinary user, a program holds only what its
+    // seal declares (packages/linux/joe-lsm), so these declare all;
+    // narrower lists are rule 3's work.
+    .operations = .{
+        .{ .programs = .{ "usr/bin/fusermount3" }, .allow = .{"all"} },
+    },
 }

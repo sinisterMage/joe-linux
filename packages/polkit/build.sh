@@ -1,3 +1,16 @@
+prepare() {
+    # meson_post_install.py gives /etc/polkit-1/rules.d to the polkitd group
+    # when that user exists where it runs, which in the build root it does
+    # once polkit has been installed there, and chown is not possible in the
+    # build. The ownership comes from polkit's tmpfiles.d file at boot; the
+    # script still makes pkexec and polkit-agent-helper-1 set-uid.
+    sed -i 's/^    polkitd_gid = pwd.getpwnam(polkitd_user).pw_gid$/    polkitd_gid = None/' meson_post_install.py
+    if grep -q 'getpwnam' meson_post_install.py; then
+        echo "meson_post_install.py still looks the polkitd user up" >&2
+        return 1
+    fi
+}
+
 build() {
     mkdir build
     cd build

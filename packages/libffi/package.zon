@@ -1,7 +1,7 @@
 .{
     .name = "libffi",
     .version = "3.8.0",
-    .release = 1,
+    .release = 3,
     .description = "Portable foreign function interface library",
     .license = "MIT",
     .sources = .{

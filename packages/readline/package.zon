@@ -1,7 +1,7 @@
 .{
     .name = "readline",
     .version = "8.3",
-    .release = 1,
+    .release = 3,
     .description = "Library for command-line editing and history",
     .license = "GPL-3.0-or-later",
     .sources = .{

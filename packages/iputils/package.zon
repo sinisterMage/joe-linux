@@ -1,7 +1,7 @@
 .{
     .name = "iputils",
     .version = "20250605",
-    .release = 1,
+    .release = 2,
     .description = "Network diagnostics: arping, tracepath and clockdiff (ping comes from inetutils)",
     .license = "GPL-2.0-or-later AND BSD-3-Clause",
     .sources = .{
@@ -9,4 +9,10 @@
     },
     .depends = .{ "glibc", "libcap", "libidn2" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+    // Set-uid root. Run by an ordinary user, a program holds only what its
+    // seal declares (packages/linux/joe-lsm), so these declare all;
+    // narrower lists are rule 3's work.
+    .operations = .{
+        .{ .programs = .{ "usr/bin/clockdiff" }, .allow = .{"all"} },
+    },
 }

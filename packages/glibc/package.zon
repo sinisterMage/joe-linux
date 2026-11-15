@@ -1,7 +1,7 @@
 .{
     .name = "glibc",
     .version = "2.44",
-    .release = 4,
+    .release = 5,
     .description = "The GNU C library",
     .license = "LGPL-2.1-or-later",
     .sources = .{
@@ -10,10 +10,4 @@
         .{ .url = "https://www.linuxfromscratch.org/patches/lfs/development/glibc-2.44-upstream_fixes-4.patch", .sha256 = "630866d6d1282f94c41a59deb2af37b1a2ad1c321f8de7b1aa80f1f4f0431717" },
     },
     .build_depends = .{"linux-api-headers"},
-    // As glibc 2.44-r2, the build in the repository before the time zone
-    // data moved to tzdata, was sealed: its programs claim no privileged
-    // operations.
-    .operations = .{
-        .{ .allow = .{"none"} },
-    },
 }

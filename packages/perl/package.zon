@@ -1,7 +1,7 @@
 .{
     .name = "perl",
     .version = "5.44.0",
-    .release = 1,
+    .release = 3,
     .description = "The Perl programming language",
     .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
     .sources = .{

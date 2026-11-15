@@ -1,7 +1,7 @@
 .{
     .name = "krb5",
     .version = "1.22.2",
-    .release = 1,
+    .release = 2,
     .description = "MIT Kerberos V5 libraries and client programs",
     .license = "MIT",
     .sources = .{
@@ -12,4 +12,10 @@
     },
     .depends = .{ "glibc", "openssl", "e2fsprogs", "keyutils" },
     .build_depends = .{ "pkgconf", "perl", "bison", "gettext" },
+    // Set-uid root. Run by an ordinary user, a program holds only what its
+    // seal declares (packages/linux/joe-lsm), so these declare all;
+    // narrower lists are rule 3's work.
+    .operations = .{
+        .{ .programs = .{ "usr/bin/ksu" }, .allow = .{"all"} },
+    },
 }

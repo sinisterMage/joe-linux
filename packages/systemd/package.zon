@@ -1,7 +1,7 @@
 .{
     .name = "systemd",
     .version = "262.1",
-    .release = 4,
+    .release = 6,
     .description = "System and service manager, with udev and the systemd-boot boot loader",
     .license = "LGPL-2.1-or-later",
     .sources = .{
@@ -9,4 +9,11 @@
     },
     .depends = .{ "glibc", "libcap", "libxcrypt", "acl", "kmod", "zstd", "xz", "zlib", "bash", "linux-pam" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gperf", "python", "jinja2", "pyelftools", "joe-release" },
+    // PID 1, and systemd-executor, which starts every service, hold all
+    // authority, which services that declare nothing inherit (until each one
+    // has its own list: rule 3). The kernel starts systemd-coredump itself,
+    // and passes no authority on.
+    .operations = .{
+        .{ .programs = .{ "usr/lib/systemd/systemd", "usr/lib/systemd/systemd-executor", "usr/lib/systemd/systemd-coredump" }, .allow = .{"all"} },
+    },
 }

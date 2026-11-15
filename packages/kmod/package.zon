@@ -1,7 +1,7 @@
 .{
     .name = "kmod",
     .version = "34.3",
-    .release = 1,
+    .release = 3,
     .description = "Tools and library for loading and managing kernel modules",
     .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
     .sources = .{
@@ -9,4 +9,9 @@
     },
     .depends = .{ "glibc", "zlib", "xz", "zstd" },
     .build_depends = .{ "meson", "ninja", "pkgconf" },
+    // The kernel runs modprobe (this program) to load modules on demand, and
+    // passes no authority on.
+    .operations = .{
+        .{ .programs = .{ "usr/bin/kmod" }, .allow = .{"all"} },
+    },
 }

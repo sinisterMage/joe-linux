@@ -1,7 +1,7 @@
 .{
     .name = "file",
     .version = "5.48",
-    .release = 1,
+    .release = 3,
     .description = "Utility and library for determining the type of a file",
     .license = "BSD-2-Clause",
     .sources = .{

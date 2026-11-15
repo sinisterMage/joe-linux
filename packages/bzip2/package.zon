@@ -1,7 +1,7 @@
 .{
     .name = "bzip2",
     .version = "1.0.8",
-    .release = 1,
+    .release = 3,
     .description = "Block-sorting file compressor and library",
     .license = "bzip2-1.0.6",
     .sources = .{
