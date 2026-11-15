@@ -28,7 +28,7 @@ pub const iso = @import("iso.zig");
 pub const command = @import("command.zig");
 pub const install_system = @import("install_system.zig");
 
-const dave_version = "0.2.0";
+const dave_version = "0.2.1";
 const top_mount = "/run/dave/top";
 const lock_path = "/run/dave/lock";
 const esp_path = "/efi";

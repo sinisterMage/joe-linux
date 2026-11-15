@@ -21,15 +21,23 @@ The idea of snapshot-based upgrades without immutability comes from
 
 joe Linux builds from source into two systems that boot in a virtual machine:
 
-- a **console system** of about 65 packages, with sudo, an editor, the
+- a **console system** of about 70 packages, with sudo, an editor, the
   manual and ssh, whose upgrade, rollback and recovery behaviour is exercised
   end to end by `make test-joe`;
-- a **GNOME desktop** of about 325 packages: GDM, GNOME Shell on Wayland,
+- a **GNOME desktop** of about 355 packages: GDM, GNOME Shell on Wayland,
   Firefox, Files, Terminal, Text Editor, Settings and the usual small
   applications (documents, images, video, music, archives, disks, maps,
   weather, clocks, calculator), with fonts for most scripts, spell checking
-  and the common media codecs. `make test-desktop` starts every one of them,
-  with the security module both logging and enforcing.
+  and the common media codecs, and printing, Bluetooth (headsets included)
+  and mobile broadband. `make test-desktop` starts every one of them, with
+  the security module both logging and enforcing.
+
+The repository holds about 630 packages in all; what neither system
+includes is a `dave install` away. That covers development tools and
+toolchains (gdb, valgrind, Go, Zig, OpenJDK, GHC, uv, ripgrep, ShellCheck),
+servers (PostgreSQL, BIND, unbound, nginx, Samba, NFS, WireGuard, nftables)
+and applications such as LibreOffice, GIMP, Inkscape, VLC, Audacity,
+Remmina and KeePassXC.
 
 The desktop can be lived in as a virtual machine that keeps its disk: the
 first boot asks who you are, and upgrades come from the build machine. See
@@ -141,6 +149,13 @@ The module logs by default and enforces when booted with `joe=enforce`. One
 consequence worth knowing: a root shell does not read `/etc/profile` or
 `~/.bashrc`, because files you can edit are not sealed.
 
+Today the distribution declares `all` for the programs where privilege
+starts: systemd's PID 1 and the executor that starts every service, root's
+bash, sudo, dave, the programs the kernel itself starts (modprobe,
+systemd-coredump, request-key), and every set-uid program. Everything else
+is `undeclared`, so it acts with the authority of the shell or service that
+runs it. Narrower declarations for each service are the next step.
+
 The details are in the source, which is commented for readers:
 [packages/linux/joe-lsm/joe.c](packages/linux/joe-lsm/joe.c), [dave/src/seal.zig](dave/src/seal.zig),
 [dave/src/deploy.zig](dave/src/deploy.zig), [dave/src/boot.zig](dave/src/boot.zig),
@@ -201,8 +216,9 @@ make test-install          install from it onto an empty disk, then boot that
 
 The medium is a hybrid ISO for UEFI computers (Secure Boot off): write it to a
 USB stick or attach it to a virtual machine as a CD. It starts a GNOME session
-from a compressed image of the desktop, with a layer in memory for changes, and
-opens the installer. The installer asks which disk to use and erases all of
+from a compressed image of the desktop (SquashFS, xz), with a layer in memory
+for changes, and opens the installer. The installer asks which disk to use
+and erases all of
 it: a new GPT with an EFI system partition and a btrfs root laid out exactly
 as an image's. The packages are installed from the medium itself, by one dave
 transaction, and sealed as they are installed. The installed system boots
@@ -226,16 +242,16 @@ publishes the medium with the repository (see infra/build-machine).
 A release is named **J*X*-*Y*-*Z***, with a stage such as `-alpha1` before it
 is final:
 
-| Part | Is | In J1-7.3.1-0.2.0-alpha1 |
+| Part | Is | In J1-7.3.1-0.2.1-alpha2 |
 |------|----|--------------------------|
 | J | joe, the distribution | J |
 | *X* | the system revision | 1 |
 | *Y* | the kernel's version | 7.3.1 |
-| *Z* | dave's version | 0.2.0 |
+| *Z* | dave's version | 0.2.1 |
 
 `packages/joe-release` writes the name into `os-release` and the build machine
 names the installation medium after it. Its package version is the revision
-and stage alone (`1alpha1`), which dave orders before the final `1`.
+and stage alone (`1alpha2`), which dave orders before the final `1`.
 
 ## Living in it
 
@@ -289,10 +305,11 @@ Scratch (systemd, development branches), with the same package versions. Recipes
 
 ## Not done yet
 
-- **Declarations for real packages.** The mechanism of rule 3 is tested, but
-  real package programs still need studied declarations instead of generated
-  `undeclared` policies or stale `all` defaults. `dave repo audit build/repo`
-  lists the remaining undeclared programs and invalid or missing seals.
+- **Declarations for each service.** The mechanism of rule 3 is tested, and
+  the base system's entry points and set-uid programs declare `all`, but
+  services still receive `all` from systemd instead of holding studied
+  declarations of their own. `dave repo audit build/repo` lists the
+  undeclared programs and any invalid or missing seals.
 - **The rest of the trust chain.** Kernel modules are checked by the module
   but not by the kernel's own signature enforcement; there is no kernel
   lockdown and no Secure Boot, so root can still replace the kernel or its
@@ -301,26 +318,29 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   running a script.
 - **Real hardware.** Firmware, processor microcode, Wi-Fi (through
   NetworkManager and wpa_supplicant) and the Intel, AMD and NVIDIA graphics
-  drivers are there, but have been tried on few machines; there are no Vulkan
-  drivers or hardware video decoding yet. The kernel boots without an
-  initramfs, which is enough for internal disks but not for encrypted or
-  multi-device roots. The installer erases a whole disk: no encryption, no
-  installing beside another system. There is no Secure Boot.
-- **Desktop gaps.** No printing, Bluetooth or mobile broadband; Settings is
-  built without those three panels. No graphical front end to dave. Only the
-  English (US) locale is built, so that is the one language the first-run
-  setup offers. No HEIF or AVIF images, no hardware video decoding, and no
-  office suite or mail client.
+  drivers are there, but have been tried on few machines. There are no Vulkan
+  drivers yet. Video is decoded on the GPU through VA-API with Mesa's drivers
+  (AMD, nouveau, virtual machines), but Intel's VA-API driver is not packaged.
+  The kernel boots without an initramfs, which is enough for internal disks
+  but not for encrypted or multi-device roots. The installer erases a whole
+  disk: no encryption, no installing beside another system. There is no
+  Secure Boot.
+- **Desktop gaps.** No graphical front end to dave. Only the English (US)
+  locale is built, so that is the one language the first-run setup offers.
+  No HEIF or AVIF images and no mail client. LibreOffice is in the repository
+  but not installed by default.
 - **Split packages.** A package is everything its upstream installs, so the
   base image carries the compiler because programs need its run-time libraries.
 - **Builds are not isolated from each other.** Every recipe builds in one
   shared build root. A fresh, minimal build root per package, chosen by the
-  solver, comes later. Seven packages fetch Rust crates from the network while
-  building, Rust itself starts from its upstream's prebuilt compiler, and the
-  TypeScript compiler (needed to build one application) is its upstream's
-  already-compiled release.
-- **Building dave inside joe.** dave is a static binary cross-built by Zig on
-  the build machine, because joe does not package Zig yet.
+  solver, comes later. Fifteen packages fetch their locked Rust, Go or Haskell
+  dependencies from the network while building. Rust, Go, GHC and OpenJDK
+  are each first compiled by a prebuilt compiler: their upstream's, or for
+  OpenJDK the book's.
+  The TypeScript compiler (needed to build one application) is its upstream's
+  already-compiled release, and bun is upstream's binary, repackaged.
+- **Building dave inside joe.** joe packages Zig 0.17.1 now, but the dave
+  package is still the static binary cross-built on the build machine.
 - Virtual packages (`provides`), and changing the kernel on a running system
   (use `dave upgrade`).
 
