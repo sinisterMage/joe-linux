@@ -1,0 +1,14 @@
+.{
+    .name = "libssh",
+    .version = "0.12.2",
+    .release = 1,
+    .description = "Library implementing the SSH protocol for clients and servers",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against upstream's signature (libssh-0.12.2.tar.xz.asc).
+        .{ .url = "https://www.libssh.org/files/0.12/libssh-0.12.2.tar.xz", .sha256 = "49560f677d96e3706a904ac2de1116e25f3680937d51e5c92198fcba4a1c1e9f" },
+    },
+    // krb5 provides GSSAPI authentication.
+    .depends = .{ "glibc", "openssl", "zlib", "krb5" },
+    .build_depends = .{ "cmake", "ninja" },
+}

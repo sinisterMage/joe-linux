@@ -1,0 +1,14 @@
+.{
+    .name = "libvncserver",
+    .version = "0.9.15",
+    .release = 1,
+    .description = "Libraries for writing VNC servers and clients (libvncserver, libvncclient)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/LibVNC/libvncserver/archive/LibVNCServer-0.9.15/LibVNCServer-0.9.15.tar.gz", .sha256 = "62352c7795e231dfce044beb96156065a05a05c974e5de9e023d688d8ff675d7" },
+    },
+    // gnutls is the TLS layer, libgcrypt the cryptography (VNC, Apple and
+    // UltraVNC authentication); systemd is socket activation for servers.
+    .depends = .{ "glibc", "zlib", "lzo", "libjpeg-turbo", "libpng", "gnutls", "libgcrypt", "libgpg-error", "systemd" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

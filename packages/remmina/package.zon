@@ -1,0 +1,23 @@
+.{
+    .name = "remmina",
+    .version = "1.4.44",
+    .release = 1,
+    .description = "Remote desktop client for RDP, VNC and SSH",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.com/Remmina/Remmina/-/archive/v1.4.44/Remmina-v1.4.44.tar.gz", .sha256 = "67199bb48657e8b42892924f005781542f50f8b029597f8b6c1ee9ed8a80b68e" },
+    },
+    // freerdp is the RDP plugin, libvncserver (libvncclient) the VNC plugin,
+    // libssh and vte SSH and SFTP; libsecret stores passwords in the keyring,
+    // cups is printer redirection over RDP. libgcrypt, libsodium and openssl
+    // encrypt saved passwords; curl and json-glib are linked unconditionally.
+    .depends = .{
+        "glibc",   "glib",      "gtk3",         "gdk-pixbuf", "pango",     "cairo",
+        "wayland", "libgcrypt", "libgpg-error", "openssl",    "libsodium", "libssh",
+        "vte",     "pcre2",     "json-glib",    "curl",       "freerdp",   "libvncserver",
+        "libsecret", "cups",
+    },
+    // update-mime-database (shared-mime-info) is looked for to decide
+    // whether the MIME type for .remmina files is installed.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "gettext", "shared-mime-info" },
+}

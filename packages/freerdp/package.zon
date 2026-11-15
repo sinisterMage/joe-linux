@@ -1,0 +1,24 @@
+.{
+    .name = "freerdp",
+    .version = "3.33.1",
+    .release = 1,
+    .description = "Remote Desktop Protocol client and server libraries and tools",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/freerdp/freerdp/archive/3.33.1/FreeRDP-3.33.1.tar.gz", .sha256 = "6b6da1e7217f924b033da6896e70eb4c4a447c3900d03c0d10179062f0a7d495" },
+    },
+    // gcc: the proxy server's modules are C++. icu does WinPR's Unicode
+    // conversion, zlib the smart-card emulation; pixman and libxkbcommon are
+    // the Wayland client, linux-pam the shadow server's authentication,
+    // libusb USB redirection, fuse3 file copies through the clipboard, json-c
+    // Azure AD log-in.
+    .depends = .{
+        "glibc", "gcc", "openssl", "zlib", "icu", "ffmpeg",
+        "cairo", "json-c", "krb5", "libusb", "fuse3", "cups",
+        "pulseaudio", "alsa-lib", "pcsc-lite", "linux-pam", "systemd", "wayland",
+        "libxkbcommon", "pixman", "libx11", "libxext", "libxinerama", "libxcursor",
+        "libxv", "libxi", "libxrender", "libxrandr", "libxfixes", "libxdamage",
+        "libxtst",
+    },
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "xorgproto" },
+}

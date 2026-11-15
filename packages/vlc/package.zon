@@ -1,0 +1,30 @@
+.{
+    .name = "vlc",
+    .version = "3.0.24",
+    .release = 1,
+    .description = "Media player and streaming server",
+    .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.videolan.org/vlc/3.0.24/vlc-3.0.24.tar.xz", .sha256 = "e7cab503d1d7d5849b89d2cf0e1ee60d0ef6d012407791b644b9cfc0cc225fdf" },
+    },
+    // minizip and systemd (the journal logger and udev discovery) are
+    // detected with no switch to turn them off. qt6 is the interface;
+    // libx11, libxext, libxpm and libxinerama are its X11 helpers and the
+    // skins2 interface. protobuf and abseil-cpp are Chromecast output;
+    // libnotify and gtk3 the notification plugin; librsvg and cairo the SVG
+    // decoder; libvncserver provides libvncclient for vnc://.
+    .depends = .{
+        "glibc", "gcc", "zlib", "minizip", "systemd", "dbus",
+        "lua", "libarchive", "libdvdread", "libssh2", "libvncserver", "libogg",
+        "mpg123", "ffmpeg", "libva", "libaom", "dav1d", "libvpx", "flac",
+        "libvorbis", "opus", "libpng", "libjpeg-turbo", "x264", "x265",
+        "freetype", "fribidi", "harfbuzz", "fontconfig", "librsvg", "cairo",
+        "glib", "gdk-pixbuf", "libxcb", "xcb-util-keysyms", "libx11", "libxext",
+        "libxpm", "libxinerama", "mesa", "pulseaudio", "alsa-lib", "soxr",
+        "avahi", "libxml2", "libgcrypt", "libgpg-error", "gnutls", "libsecret",
+        "libnotify", "gtk3", "protobuf", "abseil-cpp", "qt6", "ncurses",
+    },
+    // luac compiles the Lua scripts, protoc the Chromecast protocol, qmake6
+    // and moc the Qt interface; xorgproto is checked for by the XCB modules.
+    .build_depends = .{ "pkgconf", "gettext", "lua", "protobuf", "qt6", "xorgproto" },
+}

@@ -1,0 +1,24 @@
+.{
+    .name = "openjdk",
+    .version = "25.0.5.0.3",
+    .release = 1,
+    .description = "The OpenJDK Java development kit: compiler, runtime and tools",
+    .license = "GPL-2.0-only WITH Classpath-exception-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/openjdk/jdk25u/archive/jdk-25.0.5.0.3-ga.tar.gz", .sha256 = "b4dfab0e1a41ed6cc8595555323102d4b3910a7e6e14bc9ec59d945028030072" },
+        // The book's "existing binary" (its Java page): a JDK the book's
+        // editors built with these same instructions. Like rust's stage0, it
+        // only compiles the one above and is not installed.
+        .{ .url = "https://anduin.linuxfromscratch.org/BLFS/OpenJDK/OpenJDK-25.0.5.0.3/OpenJDK-25.0.5.0.3+1-x86_64-bin.tar.xz", .sha256 = "4edfd187c226fad3106ccd796bdf03c0b34ee3cb2dee7ca4b5413fc5bba8cb36" },
+    },
+    // AWT and Java Sound need X11, ALSA, CUPS and the font and image
+    // libraries; the trust store is make-ca's.
+    .depends = .{
+        "glibc",     "gcc",          "zlib",       "alsa-lib",
+        "cups",      "freetype",     "fontconfig", "giflib",
+        "harfbuzz",  "lcms2",        "libjpeg-turbo", "libpng",
+        "libx11",    "libxext",      "libxi",      "libxrender",
+        "libxrandr", "libxt",        "libxtst",    "make-ca",
+    },
+    .build_depends = .{ "cpio", "libarchive", "which", "zip", "file", "make", "bash", "pkgconf" },
+}

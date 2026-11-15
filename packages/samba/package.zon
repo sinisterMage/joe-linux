@@ -1,0 +1,40 @@
+.{
+    .name = "samba",
+    .version = "4.25.1",
+    .release = 1,
+    .description = "SMB/CIFS file and print server, client tools, winbind and libsmbclient",
+    .license = "GPL-3.0-or-later AND LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.samba.org/pub/samba/stable/samba-4.25.1.tar.gz", .sha256 = "7f367545bca69aa96897628f82f0f04d4b66b3bcb36cb978b9bb952c4b4c428d" },
+    },
+    // libtasn1: lib/mscat. dbus: the vfs_snapper module. python: the
+    // Python bindings and samba-tool.
+    .depends = .{
+        "glibc",
+        "gnutls",
+        "libtasn1",
+        "libtirpc",
+        "talloc",
+        "popt",
+        "krb5",
+        "linux-pam",
+        "icu",
+        "jansson",
+        "lmdb",
+        "libarchive",
+        "libcap",
+        "acl",
+        "attr",
+        "zlib",
+        "readline",
+        "ncurses",
+        "systemd",
+        "dbus",
+        "avahi",
+        "cups",
+        "python",
+    },
+    // perl-parse-yapp: pidl, the IDL compiler. rpcsvc-proto: the rpcsvc
+    // headers. xsltproc and the DocBook stylesheets make the manual pages.
+    .build_depends = .{ "python", "perl", "perl-parse-yapp", "rpcsvc-proto", "pkgconf", "bison", "flex", "libxslt", "docbook-xml", "docbook-xsl-nons", "gettext" },
+}
