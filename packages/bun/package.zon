@@ -1,0 +1,16 @@
+.{
+    .name = "bun",
+    .version = "1.4.4",
+    .release = 1,
+    .description = "JavaScript runtime, bundler, test runner and package manager",
+    // Bun's own code is MIT; the JavaScriptCore engine built into it is
+    // under the LGPL.
+    .license = "MIT AND LGPL-2.0-or-later",
+    .sources = .{
+        // Upstream's release build, not built here: see build.sh. The
+        // checksum is the one in upstream's SHASUMS256.txt for this release.
+        .{ .url = "https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/bun-linux-x64-baseline.zip", .sha256 = "e0446eb55995772eb9894bebae9a6be368d985a8b9271ee124486f9946eedd76", .file = "bun-linux-x64-baseline-1.4.4.zip" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{"libarchive"},
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "lld",
+    .version = "23.1.0",
+    .release = 1,
+    .description = "The LLVM linker, with its libraries",
+    .license = "Apache-2.0 WITH LLVM-exception",
+    .sources = .{
+        // The same release tarball as llvm's; this builds only its lld/.
+        .{ .url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.0/llvm-project-23.1.0.src.tar.xz", .sha256 = "ab1f0e3ec52448c33e8782eaf0422504b87c7b016b22514653ee0d8fcee479ff" },
+    },
+    // lld links libLLVM; it must be the same LLVM release.
+    .depends = .{ "glibc", "gcc", "llvm =23.1.0", "zlib", "zstd" },
+    .build_depends = .{ "cmake", "ninja", "python" },
+}

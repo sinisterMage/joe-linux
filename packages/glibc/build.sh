@@ -47,18 +47,7 @@ ethers: files
 rpc: files
 EOT
 
-    # Time zone data, compiled with the zic just built.
-    mkdir tz
-    tar -xf "$SOURCES/tzdata2026f.tar.gz" -C tz
-    local zoneinfo="$DESTDIR/usr/share/zoneinfo" zic="$DESTDIR/usr/sbin/zic" tz
-    mkdir -p "$zoneinfo"/{posix,right}
-    for tz in etcetera southamerica northamerica europe africa antarctica asia australasia backward; do
-        "$zic" -L /dev/null -d "$zoneinfo" "tz/$tz"
-        "$zic" -L /dev/null -d "$zoneinfo/posix" "tz/$tz"
-        "$zic" -L tz/leapseconds -d "$zoneinfo/right" "tz/$tz"
-    done
-    cp tz/zone.tab tz/zone1970.tab tz/iso3166.tab "$zoneinfo"
-    "$zic" -d "$zoneinfo" -p America/New_York
+    # The time zone data is the tzdata package.
 
     # The dynamic linker cache follows every change to the library directories.
     install -d "$DESTDIR/usr/lib/dave/triggers"

@@ -1,0 +1,15 @@
+.{
+    .name = "tzdata",
+    .version = "2026f",
+    .release = 1,
+    .description = "Time zone rules for the world's clocks, from the IANA database",
+    .license = "LicenseRef-Public-Domain AND BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://www.iana.org/time-zones/repository/releases/tzdata2026f.tar.gz", .sha256 = "01b4a91cec5167ed48c11e8ab78f2048cead78ce94b0cafcad0ae8c5a3044d3d" },
+    },
+    // glibc installed this data itself up to 2.44-r2, so the two can only
+    // change hands in one transaction: the newer glibc comes with tzdata.
+    .conflicts = .{"glibc <2.44-r3"},
+    // zic, the time zone compiler, is part of glibc.
+    .build_depends = .{"glibc"},
+}

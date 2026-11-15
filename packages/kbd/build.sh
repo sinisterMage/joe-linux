@@ -1,0 +1,19 @@
+# LFS chapter 8. systemd-vconsole-setup runs loadkeys and setfont from here.
+
+prepare() {
+    # The Backspace and Delete keys behave consistently in every keymap.
+    patch -Np1 -i "$SOURCES/kbd-2.10.0-backspace-1.patch"
+    # resizecons does not work with current kernels.
+    sed -i '/RESIZECONS_PROGS=/s/yes/no/' configure
+    sed -i 's/resizecons.8 //' docs/man/man8/Makefile.in
+}
+
+build() {
+    # vlock needs Linux-PAM and is not wanted on the console.
+    ./configure --prefix=/usr --disable-vlock
+    make
+}
+
+package() {
+    make DESTDIR="$DESTDIR" install
+}

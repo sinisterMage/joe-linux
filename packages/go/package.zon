@@ -1,0 +1,19 @@
+.{
+    .name = "go",
+    .version = "1.27.4",
+    .release = 1,
+    .description = "The Go programming language: compiler, standard library and the go command",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://go.dev/dl/go1.27.4.src.tar.gz", .sha256 = "73cfb8571aec0c01177687db87163d46aa20e9779672772891aa17654d9a6099" },
+        // Go is written in Go. Like rust's stage0, this is upstream's build
+        // of the previous release, used only to compile the one above
+        // (src/cmd/dist/buildtool.go asks for go1.24.6 or later); nothing of
+        // it is installed. Checksum from https://go.dev/dl/?mode=json.
+        .{ .url = "https://go.dev/dl/go1.26.11.linux-amd64.tar.gz", .sha256 = "9849f4e04ee35303714e34fbc3ac8ab44ea3e448a95aa182f91e3b9b79c710ec" },
+    },
+    // The toolchain is statically linked. Programs that use cgo need gcc,
+    // and the go command switches cgo off when there is no C compiler.
+    .depends = .{"glibc"},
+    .build_depends = .{ "gcc", "binutils", "bash" },
+}

@@ -1,7 +1,7 @@
 .{
     .name = "joe-base",
     .version = "0.1",
-    .release = 6,
+    .release = 7,
     .description = "Everything a minimal joe Linux system consists of",
     .license = "MIT",
     .depends = .{
@@ -14,6 +14,7 @@
         "wireless-regdb",
         "cpu-microcode",
         "glibc",
+        "tzdata",
         "systemd",
         "dbus",
         "dave",
@@ -23,6 +24,7 @@
         "shadow",
         "kmod",
         "iproute2",
+        "kbd",
         "procps-ng",
         "iana-etc",
         "findutils",
