@@ -1,0 +1,12 @@
+.{
+    .name = "mypaint-brushes",
+    .version = "2.0.2",
+    .release = 1,
+    .description = "Brush collection for libmypaint, used by GIMP's MyPaint Brush tool",
+    .license = "CC0-1.0",
+    .sources = .{
+        .{ .url = "https://github.com/mypaint/mypaint-brushes/releases/download/v2.0.2/mypaint-brushes-2.0.2.tar.xz", .sha256 = "7984a74edef94571d872d0629b224abaa956a36f632f5c5516b33d22e49eb566" },
+    },
+    // Data files only, read through libmypaint.
+    .depends = .{"libmypaint"},
+}

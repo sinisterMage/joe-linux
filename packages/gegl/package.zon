@@ -1,0 +1,19 @@
+.{
+    .name = "gegl",
+    .version = "0.4.72",
+    .release = 1,
+    .description = "Graph-based image processing framework used by GIMP",
+    .license = "LGPL-3.0-or-later AND GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gimp.org/pub/gegl/0.4/gegl-0.4.72.tar.xz", .sha256 = "ccbb8cdd1db56ecd4ece5dbabae0118ab2c46b5b3439c94f3cec467798ce956d" },
+    },
+    // gcc: the OpenEXR operations are C++, and OpenMP is libgomp. The
+    // operations link the image libraries.
+    .depends = .{
+        "glibc",      "gcc",    "babl",  "glib",    "json-glib", "libjpeg-turbo", "libpng",
+        "gdk-pixbuf", "lcms2", "librsvg", "tiff",      "openexr",       "imath",  "cairo",
+        "pango",      "harfbuzz", "poppler", "libwebp",
+    },
+    // glib provides g-ir-scanner; vala provides vapigen.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "vala" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "babl",
+    .version = "0.1.128",
+    .release = 1,
+    .description = "Pixel format and colour space conversion library used by GEGL and GIMP",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gimp.org/pub/babl/0.1/babl-0.1.128.tar.xz", .sha256 = "e676507b421d414d49db8627415dc1eadbd787536baa7d6fe94a1f1971cbe73e" },
+    },
+    .depends = .{ "glibc", "lcms2" },
+    // glib provides g-ir-scanner for the GObject Introspection data; vala
+    // provides vapigen.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "glib", "vala" },
+}

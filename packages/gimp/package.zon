@@ -1,0 +1,31 @@
+.{
+    .name = "gimp",
+    .version = "3.2.8",
+    .release = 1,
+    .description = "GNU Image Manipulation Program",
+    .license = "GPL-3.0-or-later AND LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gimp.org/gimp/v3.2/gimp-3.2.8.tar.xz", .sha256 = "16a2696cadc9e03a2ef97ccb895e062f654cb2b8211fb57074db85f26646c847" },
+    },
+    // The program and its plug-ins link most of these. python, pygobject,
+    // pycairo and gjs run the Python and JavaScript plug-ins (the build also
+    // runs the freshly built GIMP to render its splash and logo images);
+    // poppler-data comes with poppler. glib-networking provides TLS, which
+    // configure checks for. ghostscript is libgs, for PostScript and EPS.
+    // iso-codes and shared-mime-info are read at run time; xdg-utils'
+    // xdg-email sends images by mail.
+    .depends = .{
+        "glibc",        "gcc",          "glib",            "gtk3",       "at-spi2-core",  "babl",
+        "gegl",         "cairo",        "pango",           "harfbuzz",   "fribidi",       "fontconfig",
+        "freetype",     "gdk-pixbuf",   "librsvg",         "exiv2",      "gexiv2",        "json-glib",
+        "lcms2",        "libmypaint",   "mypaint-brushes", "appstream",  "libarchive",    "libunwind",
+        "libx11",       "libxmu",       "libxext",         "libxfixes",  "libxcursor",    "libxpm",
+        "tiff",         "libjpeg-turbo", "libpng",         "zlib",       "bzip2",         "xz",
+        "poppler",      "openjpeg",     "openexr",         "imath",      "libwebp",       "libjxl",
+        "ghostscript",  "alsa-lib",     "libgudev",        "iso-codes",  "shared-mime-info",
+        "glib-networking", "python",    "pygobject",       "pycairo",    "gjs",           "xdg-utils",
+    },
+    // xsltproc is required by configure; vala builds the VAPI files and the
+    // Vala plug-ins; glib provides g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "perl", "libxslt", "libxml2", "vala", "desktop-file-utils", "bash-completion" },
+}
