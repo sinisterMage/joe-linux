@@ -1,0 +1,16 @@
+.{
+    .name = "zig",
+    .version = "0.17.1",
+    .release = 1,
+    .description = "The Zig programming language and its C/C++ cross compiler",
+    .license = "MIT AND Apache-2.0 WITH LLVM-exception",
+    .sources = .{
+        // zig-bootstrap: Zig together with the LLVM 22 it is written for.
+        // Checksum from https://ziglang.org/download/index.json.
+        .{ .url = "https://ziglang.org/download/0.17.1/zig-bootstrap-0.17.1.tar.xz", .sha256 = "58c099060ad9237496c7e7f57235d9eb9e5a3713e7df5f90d8ccc06391a359dd" },
+    },
+    // LLVM, Clang and LLD are linked in statically; libstdc++ (gcc), zlib and
+    // zstd are the system's.
+    .depends = .{ "glibc", "gcc", "zlib", "zstd" },
+    .build_depends = .{ "cmake", "ninja", "python" },
+}
