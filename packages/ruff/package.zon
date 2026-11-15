@@ -1,0 +1,18 @@
+.{
+    .name = "ruff",
+    .version = "0.17.5",
+    .release = 1,
+    .description = "Fast Python linter and code formatter",
+    .license = "MIT",
+    .sources = .{
+        // The source archive upstream attaches to the release, with its
+        // published SHA-256.
+        .{ .url = "https://github.com/astral-sh/ruff/releases/download/0.17.5/source.tar.gz", .sha256 = "19771f58d0943cc7bebe2f57f62bc39f50dad71cc02bb166ca4f2436d5b0f4f3", .file = "ruff-0.17.5-source.tar.gz" },
+    },
+    // cargo downloads the crates ruff depends on from crates.io; they are
+    // not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "rust", "make" },
+}

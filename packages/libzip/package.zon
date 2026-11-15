@@ -1,0 +1,14 @@
+.{
+    .name = "libzip",
+    .version = "1.12.1",
+    .release = 1,
+    .description = "Library for reading, creating and modifying zip archives, with zipcmp, zipmerge and ziptool",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://libzip.org/download/libzip-1.12.1.tar.xz", .sha256 = "c40062022a1963c80573d48f6070792297cecd7c6bffe3aefcac0d8b9bee8913" },
+    },
+    // zlib (deflate), bzip2, xz (liblzma) and zstd for the compression
+    // methods; OpenSSL for AES encryption.
+    .depends = .{ "glibc", "zlib", "bzip2", "xz", "zstd", "openssl" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

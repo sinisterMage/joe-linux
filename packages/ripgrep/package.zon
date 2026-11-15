@@ -1,0 +1,16 @@
+.{
+    .name = "ripgrep",
+    .version = "15.2.0",
+    .release = 1,
+    .description = "Line-oriented search tool that recursively searches directories for a regex pattern (rg)",
+    .license = "Unlicense OR MIT",
+    .sources = .{
+        .{ .url = "https://github.com/BurntSushi/ripgrep/archive/15.2.0/ripgrep-15.2.0.tar.gz", .sha256 = "7605249d3eb0d5f170e3414498e3344e26b1e7a147aec518b57090b80036a562" },
+    },
+    // cargo downloads the crates ripgrep depends on from crates.io; they
+    // are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; pcre2 for -P (--pcre2).
+    .depends = .{ "glibc", "gcc", "pcre2" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

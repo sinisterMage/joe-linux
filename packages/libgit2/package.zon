@@ -1,0 +1,14 @@
+.{
+    .name = "libgit2",
+    .version = "1.9.7",
+    .release = 1,
+    .description = "Portable, pure C implementation of the Git core methods as a linkable library",
+    .license = "GPL-2.0-only WITH GCC-exception-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/libgit2/libgit2/archive/v1.9.7/libgit2-1.9.7.tar.gz", .sha256 = "1a4fbe7589e814777ae76b64734ad80f4ecad22cd33a22682a2aaea4ae5375e7" },
+    },
+    // OpenSSL for HTTPS and SHA-256, libssh2 for SSH, krb5 for SPNEGO
+    // (GSSAPI) authentication, pcre2 for regular expressions.
+    .depends = .{ "glibc", "openssl", "libssh2", "krb5", "pcre2", "zlib" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

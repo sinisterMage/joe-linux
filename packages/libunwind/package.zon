@@ -1,0 +1,13 @@
+.{
+    .name = "libunwind",
+    .version = "1.8.3",
+    .release = 1,
+    .description = "Library for determining the call chain of a program, locally or in another process",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/libunwind/libunwind/releases/download/v1.8.3/libunwind-1.8.3.tar.gz", .sha256 = "be30d910e67f58d82e753231f1357f326a1a088acf126b21ff77e60aab19b90b" },
+    },
+    // liblzma (xz) and zlib read compressed symbol tables (MiniDebugInfo
+    // and SHF_COMPRESSED sections).
+    .depends = .{ "glibc", "xz", "zlib" },
+}

@@ -1,0 +1,11 @@
+.{
+    .name = "fftw",
+    .version = "3.3.11",
+    .release = 1,
+    .description = "Library for computing discrete Fourier transforms, in single, double and long-double precision",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.fftw.org/fftw-3.3.11.tar.gz", .sha256 = "5630c24cdeb33b131612f7eb4b1a9934234754f9f388ff8617458d0be6f239a1" },
+    },
+    .depends = .{"glibc"},
+}

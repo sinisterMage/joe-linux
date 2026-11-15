@@ -1,0 +1,12 @@
+.{
+    .name = "re2",
+    .version = "2025.11.05",
+    .release = 1,
+    .description = "Fast, safe, thread-friendly regular expression library",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/google/re2/releases/download/2025-11-05/re2-2025-11-05.tar.gz", .sha256 = "87f6029d2f6de8aa023654240a03ada90e876ce9a4676e258dd01ea4c26ffd67" },
+    },
+    .depends = .{ "glibc", "gcc", "abseil-cpp" },
+    .build_depends = .{ "cmake", "ninja" },
+}

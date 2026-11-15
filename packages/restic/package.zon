@@ -1,0 +1,22 @@
+.{
+    .name = "restic",
+    .version = "0.19.1",
+    .release = 1,
+    .description = "Fast, secure, efficient backup program",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // Upstream's release tarball; its SHA-256 is in the signed SHA256SUMS
+        // of the release.
+        .{ .url = "https://github.com/restic/restic/releases/download/v0.19.1/restic-0.19.1.tar.gz", .sha256 = "bb9b1a19040744d26d8a79be029d4e6b189c45ccc9d8831d7fe367d3c33df725" },
+    },
+    // go downloads the modules restic depends on; they are not vendored
+    // yet.
+    .network = true,
+    // Built without cgo, as upstream does, so no library is linked; as a
+    // position-independent executable it is still relocated by glibc's
+    // dynamic loader. "restic mount" runs fusermount, FUSE 2's name for
+    // the helper; fuse3 installs only fusermount3, so mounting a
+    // repository needs that name provided first.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

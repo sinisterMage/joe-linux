@@ -1,0 +1,12 @@
+.{
+    .name = "nlohmann-json",
+    .version = "3.12.0",
+    .release = 1,
+    .description = "Header-only JSON library for modern C++",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/nlohmann/json/archive/v3.12.0/json-3.12.0.tar.gz", .sha256 = "4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187" },
+    },
+    // Headers, CMake and pkg-config files only: nothing is linked.
+    .build_depends = .{ "cmake", "ninja" },
+}

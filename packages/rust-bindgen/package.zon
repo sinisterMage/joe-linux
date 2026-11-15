@@ -1,0 +1,17 @@
+.{
+    .name = "rust-bindgen",
+    .version = "0.73.2",
+    .release = 1,
+    .description = "Generates Rust FFI bindings to C and C++ libraries (bindgen)",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/rust-lang/rust-bindgen/archive/refs/tags/v0.73.2/rust-bindgen-0.73.2.tar.gz", .sha256 = "5fc3277dd334e4bbbd7bdb8cad5d4fb87a667b2e95a2bae350a8d5424c280629" },
+    },
+    // cargo downloads the crates bindgen depends on from crates.io; they
+    // are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding. bindgen loads libclang from llvm at
+    // run time (clang-sys's runtime feature) and needs clang's own headers.
+    .depends = .{ "glibc", "gcc", "llvm" },
+    .build_depends = .{"rust"},
+}

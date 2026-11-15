@@ -1,0 +1,18 @@
+.{
+    .name = "uv",
+    .version = "0.13.8",
+    .release = 1,
+    .description = "Fast Python package and project manager, with uvx to run tools from Python packages",
+    .license = "Apache-2.0 OR MIT",
+    .sources = .{
+        // The source archive upstream attaches to the release, with its
+        // published SHA-256.
+        .{ .url = "https://github.com/astral-sh/uv/releases/download/0.13.8/source.tar.gz", .sha256 = "d4c04b6e4ca197f016cf0877814bcb81d210b962f452ca423ae8c3cd507b5785", .file = "uv-0.13.8-source.tar.gz" },
+    },
+    // cargo downloads the crates uv depends on from crates.io; they are not
+    // vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; zstd for zstd-compressed downloads.
+    .depends = .{ "glibc", "gcc", "zstd" },
+    .build_depends = .{ "rust", "pkgconf", "make" },
+}

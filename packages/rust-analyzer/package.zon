@@ -1,0 +1,17 @@
+.{
+    .name = "rust-analyzer",
+    .version = "2026.11.09",
+    .release = 1,
+    .description = "Language server for Rust",
+    .license = "MIT OR Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/rust-lang/rust-analyzer/archive/2026-11-09/rust-analyzer-2026-11-09.tar.gz", .sha256 = "c198b54c0e17b224665ec2272b7dab6bb98b0c17123ea559d0dddbb0d287ccdf" },
+    },
+    // cargo downloads the crates rust-analyzer depends on from crates.io;
+    // they are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding. rust-analyzer runs cargo and rustc and
+    // reads the standard library's sources (rust's "src" component).
+    .depends = .{ "glibc", "gcc", "rust" },
+    .build_depends = .{ "rust", "make" },
+}

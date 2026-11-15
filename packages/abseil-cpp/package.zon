@@ -1,0 +1,12 @@
+.{
+    .name = "abseil-cpp",
+    .version = "20260817.0",
+    .release = 1,
+    .description = "Abseil, Google's collection of C++ libraries augmenting the standard library",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/abseil/abseil-cpp/releases/download/20260817.0/abseil-cpp-20260817.0.tar.gz", .sha256 = "f7e05179df39c45434cad433f5783840bb3788ef322976f9138bc6b72b3a107d" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

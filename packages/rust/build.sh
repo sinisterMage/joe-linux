@@ -60,7 +60,9 @@ docs = false
 # are installed by a default rustup installation, and rust-src is needed
 # to build the Rust code in Linux kernel (in case you need such a kernel
 # feature).
-tools = ["cargo", "clippy", "rustdoc", "rustfmt", "src"]
+# rust-analyzer-proc-macro-srv lets the rust-analyzer package expand
+# procedural macros with this toolchain.
+tools = ["cargo", "clippy", "rustdoc", "rustfmt", "rust-analyzer-proc-macro-srv", "src"]
 
 # Build only from the crates in vendor/, and fail rather than reach for
 # the network if one is missing.

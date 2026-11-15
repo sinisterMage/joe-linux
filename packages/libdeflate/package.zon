@@ -1,0 +1,12 @@
+.{
+    .name = "libdeflate",
+    .version = "1.26",
+    .release = 1,
+    .description = "Fast library for DEFLATE, zlib and gzip compression and decompression of whole buffers",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/ebiggers/libdeflate/releases/download/v1.26/libdeflate-1.26.tar.gz", .sha256 = "125856d4656e0feab660f94842f835923410c9281fedbcee64598c918da42b5a" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "cmake", "ninja" },
+}

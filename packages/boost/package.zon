@@ -1,0 +1,14 @@
+.{
+    .name = "boost",
+    .version = "1.92.0",
+    .release = 1,
+    .description = "Boost, a collection of peer-reviewed portable C++ libraries",
+    .license = "BSL-1.0",
+    .sources = .{
+        .{ .url = "https://github.com/boostorg/boost/releases/download/boost-1.92.0/boost-1.92.0-b2-nodocs.tar.xz", .sha256 = "ea7b982002cc9dfbe59b0b217b206f470dc75f3de0bb2973d844118934d82411" },
+    },
+    // ICU is used by Boost.Regex and Boost.Locale; zlib, bzip2, xz (liblzma)
+    // and zstd by the compression filters of Boost.Iostreams.
+    .depends = .{ "glibc", "gcc", "icu", "zlib", "bzip2", "xz", "zstd" },
+    .build_depends = .{"which"},
+}
