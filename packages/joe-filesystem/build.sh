@@ -23,7 +23,14 @@ package() {
     ln -s ../proc/self/mounts etc/mtab
     printf '127.0.0.1  localhost\n::1        localhost\n' > etc/hosts
     echo joe > etc/hostname
-    printf '/bin/sh\n/bin/bash\n' > etc/shells
+    # Login shells chsh accepts. There are no install scripts to add a shell
+    # when its package is installed, so every shell joe packages is listed;
+    # one that is not installed cannot be chosen anyway, since chsh also
+    # requires the program to exist.
+    local shell
+    for shell in sh bash zsh dash fish; do
+        printf '/bin/%s\n/usr/bin/%s\n' "$shell" "$shell"
+    done > etc/shells
     # The image builder writes the real table; / is never listed in it.
     : > etc/fstab
 
