@@ -1,0 +1,19 @@
+.{
+    .name = "luajit",
+    .version = "2.1.1794386141",
+    .release = 1,
+    .description = "Just-in-time compiler and interpreter for Lua 5.1",
+    .license = "MIT",
+    .sources = .{
+        // LuaJIT makes no release tarballs: its v2.1 branch is a rolling
+        // release. This is commit 63c8f1a9b479ba5518cf6a170ff7729178bc3cfd
+        // of the official GitHub mirror (2026-11-11, "DynASM: Escape paths
+        // in #line directive"). Upstream numbers a build 2.1.<commit time
+        // in seconds>, from `git show -s --format=%ct` or, in an archive,
+        // the .relver file that git substitutes; luajit -v prints it.
+        // GitHub publishes no checksum for archives.
+        .{ .url = "https://github.com/LuaJIT/LuaJIT/archive/63c8f1a9b479ba5518cf6a170ff7729178bc3cfd/luajit-2.1.1794386141.tar.gz", .sha256 = "8cad76f444b76001b7123dc626c5d0bfc24f1f790333737443345f7e6b41bb5f" },
+    },
+    // libgcc_s: LuaJIT unwinds through C frames with the system unwinder.
+    .depends = .{ "glibc", "gcc" },
+}

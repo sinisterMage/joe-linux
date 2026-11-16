@@ -1,0 +1,16 @@
+.{
+    .name = "tk",
+    .version = "8.6.18",
+    .release = 1,
+    .description = "Graphical user interface toolkit for Tcl, with the wish shell",
+    .license = "TCL",
+    .sources = .{
+        // Checked against the book's MD5 (63a13111a136118ec72faee1228143e6).
+        .{ .url = "https://downloads.sourceforge.net/tcl/tk8.6.18-src.tar.gz", .sha256 = "95cd528a80f5e4bdb557af9b14a7197d6860793a3894e25e7c9fad2ed05d4c3c" },
+    },
+    // libtk draws with Xlib, renders fonts with Xft and Fontconfig, and
+    // uses the MIT-SCREEN-SAVER extension (libXss, libXext) for "tk
+    // inactive". It links Tcl's stub library; wish links libtcl.
+    .depends = .{ "glibc", "tcl", "libx11", "libxft", "fontconfig", "libxscrnsaver", "libxext" },
+    .build_depends = .{ "pkgconf", "xorgproto" },
+}

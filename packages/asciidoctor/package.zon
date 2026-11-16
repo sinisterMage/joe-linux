@@ -1,0 +1,14 @@
+.{
+    .name = "asciidoctor",
+    .version = "2.0.26",
+    .release = 1,
+    .description = "Text processor that converts AsciiDoc to HTML 5, DocBook 5 and manual pages",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the book's MD5 (2bfb3830092af1dc213a99e785688372).
+        .{ .url = "https://github.com/asciidoctor/asciidoctor/archive/v2.0.26/asciidoctor-2.0.26.tar.gz", .sha256 = "25c22b934bc0ae2448f2d73d4b2eba0c59e0521cf5e893fb0b0ad54a461bf066" },
+    },
+    // Pure Ruby, with no gem dependencies at run time.
+    .depends = .{"ruby"},
+    .build_depends = .{"ruby"},
+}

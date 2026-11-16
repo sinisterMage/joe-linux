@@ -1,0 +1,60 @@
+.{
+    .name = "bash-language-server",
+    .version = "5.8.1",
+    .release = 1,
+    .description = "Language server for Bash, with diagnostics from ShellCheck",
+    .license = "MIT",
+    .sources = .{
+        // The npm package: the server compiled from TypeScript (out/) and
+        // the Bash grammar compiled to WebAssembly (tree-sitter-bash.wasm).
+        .{ .url = "https://registry.npmjs.org/bash-language-server/-/bash-language-server-5.8.1.tgz", .sha256 = "2ae910de8c50f4ec148222bdc580c121f2c621bdacc1225716218ca700f8ec79" },
+        // Its npm dependencies, all of them, at exactly the versions of
+        // upstream's lockfile (pnpm-lock.yaml at tag server-5.8.1, importer
+        // "server", production dependencies only), each checked against
+        // the SHA-512 integrity recorded there. No two need different
+        // versions of the same package, so they sit side by side in one
+        // node_modules. All are plain JavaScript (web-tree-sitter and
+        // @one-ini/wasm carry WebAssembly) with no install scripts.
+        .{ .url = "https://registry.npmjs.org/@mixmark-io/domino/-/domino-2.2.0.tgz", .file = "mixmark-io-domino-2.2.0.tgz", .sha256 = "b829bcca09544649f6432020dd6915b6fb054154d7a77eb6f8b3fb1f4165afec" },
+        .{ .url = "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz", .file = "nodelib-fs.scandir-2.1.5.tgz", .sha256 = "a924bfa317c78e8bdbb0bd361522aba431fffe0878bf3699a8cb35a6e50cf94c" },
+        .{ .url = "https://registry.npmjs.org/@nodelib/fs.stat/-/fs.stat-2.0.5.tgz", .file = "nodelib-fs.stat-2.0.5.tgz", .sha256 = "d8f8533551f21aca87b3fc2d4bc2e2cc7ab221104902c07da3df20baaf52136b" },
+        .{ .url = "https://registry.npmjs.org/@nodelib/fs.walk/-/fs.walk-1.2.8.tgz", .file = "nodelib-fs.walk-1.2.8.tgz", .sha256 = "cbf9621f69b822ce97f71e842fea8e7bf9c7e986f01285689ede282092727d3d" },
+        .{ .url = "https://registry.npmjs.org/@one-ini/wasm/-/wasm-0.2.1.tgz", .file = "one-ini-wasm-0.2.1.tgz", .sha256 = "123125e661c374b8f9051a486eca726c88fe318478815168593f9c31bed8a85a" },
+        .{ .url = "https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.4.tgz", .sha256 = "9025508d9125eee531bbc49ce3ae560183975ad595f058c378bd56af4152fb16" },
+        .{ .url = "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz", .sha256 = "ef8448ec78f20b692f04fa6d01f39b5ab34c66404bea3429f5a39c6c9e0be8b4" },
+        .{ .url = "https://registry.npmjs.org/braces/-/braces-3.0.3.tgz", .sha256 = "1cd18e862c8640b4568b1425a7df4ee030ff201d45b2da8f9f222d2987494ffc" },
+        .{ .url = "https://registry.npmjs.org/commander/-/commander-14.0.3.tgz", .sha256 = "5849703c500e0f324eb01340d8bda1f9ec48fc37bb7be9712eb0dd52aad92f6c" },
+        .{ .url = "https://registry.npmjs.org/editorconfig/-/editorconfig-3.0.2.tgz", .sha256 = "f7df2a485de4c64d4ce676270fb9eff6d007ac2f865974a278e4e87b483e0cde" },
+        .{ .url = "https://registry.npmjs.org/fast-glob/-/fast-glob-3.3.3.tgz", .sha256 = "5571ed1750bd1e77a0e4b5fea6e9afb3f2eb390a9576358c9aaacd04d3f60de8" },
+        .{ .url = "https://registry.npmjs.org/fastq/-/fastq-1.15.0.tgz", .sha256 = "5cea29fedceb5f58e0cd30417d2ac181ea2a5fbf1e3077db8927d98a86535512" },
+        .{ .url = "https://registry.npmjs.org/fill-range/-/fill-range-7.1.1.tgz", .sha256 = "1a6c3a3446cb1d693cf6b62785e2f6d8f9596305aff474dd2b31b2d8d427593c" },
+        .{ .url = "https://registry.npmjs.org/fuzzy-search/-/fuzzy-search-3.2.1.tgz", .sha256 = "9e88cb4421f6052e38d0dc4bf384e3b6df2c5c36782a415c08c03a74096b64ae" },
+        .{ .url = "https://registry.npmjs.org/glob-parent/-/glob-parent-5.1.2.tgz", .sha256 = "9616afebd18b93592a79d48cce6a841604593ae90563f0ec5554a07b6952d6d5" },
+        .{ .url = "https://registry.npmjs.org/is-extglob/-/is-extglob-2.1.1.tgz", .sha256 = "8c5d4286146ad62fc1096981700ce1c22a167708926fca01f9ca74f9bb50bc19" },
+        .{ .url = "https://registry.npmjs.org/is-glob/-/is-glob-4.0.3.tgz", .sha256 = "3fe453fb193bb58f6f0505dfb1151230935380b5b55e1f9864261c2aafc1bec6" },
+        .{ .url = "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz", .sha256 = "7b75c1057198cf97696909a9bee176c9c5e9bcb5b03bf3ecef2f484defadd51e" },
+        .{ .url = "https://registry.npmjs.org/merge2/-/merge2-1.4.1.tgz", .sha256 = "b8381291c9b3c859c5b58e75da8bdde64b424344054893c774c68c3c443d7881" },
+        .{ .url = "https://registry.npmjs.org/micromatch/-/micromatch-4.0.8.tgz", .sha256 = "c78d05f20aff3bc95f024b19e53f72998cfc5f69c42b126c49dff8b1b271bc46" },
+        .{ .url = "https://registry.npmjs.org/minimatch/-/minimatch-10.2.6.tgz", .sha256 = "5a3d2c8074a28229665727e47b8a1090941856a7962905efe05d20d3760355f8" },
+        .{ .url = "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz", .sha256 = "4c843ba015bec815ac52116162559ab7b4b4efbd3b86f7fcf38f3d770decace6" },
+        .{ .url = "https://registry.npmjs.org/queue-microtask/-/queue-microtask-1.2.3.tgz", .sha256 = "ffaf0a20a201865e143aa27e57a83bf69a75547729a65cd3180bcba4f0f29ecd" },
+        .{ .url = "https://registry.npmjs.org/reusify/-/reusify-1.0.4.tgz", .sha256 = "aa500cd517fa2fa7aeabb96a02baf85d9f0d02a29e2a99c77516053304a133c4" },
+        .{ .url = "https://registry.npmjs.org/run-parallel/-/run-parallel-1.2.0.tgz", .sha256 = "6ba231f5377e0b18ef7ab0c65ca895708e21f1abff5999b24629436b0ff77ac8" },
+        .{ .url = "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz", .sha256 = "d85045d4300d7d57c891336b95df532e73f34c22ffcd222452b6d08b9d127d5d" },
+        .{ .url = "https://registry.npmjs.org/to-regex-range/-/to-regex-range-5.0.1.tgz", .sha256 = "a63a255ec20a935c3a3334a6645f9245db36e2319ddf1eb6bc0eab2bfe5b42d7" },
+        .{ .url = "https://registry.npmjs.org/turndown/-/turndown-7.2.4.tgz", .sha256 = "05f61bc3f0aeca5e5cd7f1b5492e26b9040bb00708cd41fb1b0f7b216e296fa0" },
+        .{ .url = "https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-9.0.2.tgz", .sha256 = "146324fd6311a6b791f57d99906033778ea1d64cada1f5f71707df677e9f04dd" },
+        .{ .url = "https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.18.3.tgz", .sha256 = "7ea23f403fcd2678d8c220b749d225e59c03a14cd9269ce947304b5179e1769f" },
+        .{ .url = "https://registry.npmjs.org/vscode-languageserver-textdocument/-/vscode-languageserver-textdocument-1.0.14.tgz", .sha256 = "7d060cfb6ecada7632b8f408bc2ed3dcae16713a0c99ca396cbe4fedbd91092b" },
+        .{ .url = "https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.18.3.tgz", .sha256 = "8f61029dba7382ef8edeb75022f085daba1e456602aec84899279dc01a26c1cf" },
+        .{ .url = "https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-10.1.1.tgz", .sha256 = "df9ae342fa8ce417ad9484af94242a1bf33943ee8c668f9feaa4ad4460cf30be" },
+        .{ .url = "https://registry.npmjs.org/web-tree-sitter/-/web-tree-sitter-0.27.0.tgz", .sha256 = "266e839d9d7f89c84ba6ce089ffdec9599b0a668c010308f857baad0570a0d50" },
+        .{ .url = "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz", .sha256 = "9e1f1a05f0dd0c1dab64ee91ceb9bf55cd44d35368c70edda80a2fdc70a88377" },
+    },
+    // ShellCheck is what the server runs for diagnostics and quick fixes.
+    // shfmt (formatting) is used when it is installed. get-options.sh is a
+    // bash script it runs for option completion.
+    .depends = .{ "nodejs", "shellcheck", "bash" },
+    // node reads each dependency's name from its package.json.
+    .build_depends = .{"nodejs"},
+}

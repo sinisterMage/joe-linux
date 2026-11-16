@@ -1,0 +1,27 @@
+.{
+    .name = "gn",
+    // GN has no releases; upstream identifies a build by its commit
+    // position, the number of commits since the tag "initial-commit", which
+    // gn --version prints ("2615 (2e3ba8239556)"). The version is that
+    // number behind "0.", as Gentoo and Arch number gn.
+    .version = "0.2615",
+    .release = 1,
+    .description = "GN (Generate Ninja), the meta-build system of Chromium, generating Ninja build files",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream (https://gn.googlesource.com/gn) publishes no tarballs,
+        // and the archives its Gitiles serves are not byte-stable. This is
+        // Debian's upstream tarball of commit
+        // 2e3ba82395563cae2b82db1a55df4757a6aeabc2 (2026-11-03, "Fix how
+        // the regeneration command writes gn's own paths"), the newest
+        // Debian has packaged: Debian's archive never changes a file once
+        // published, and its checksum is in the signed .dsc of
+        // generate-ninja 0.0~git20261103.2e3ba823-1. Its contents are
+        // identical to `git archive` of that commit (checked).
+        .{ .url = "https://deb.debian.org/debian/pool/main/g/generate-ninja/generate-ninja_0.0~git20261103.2e3ba823.orig.tar.gz", .file = "gn-0.2615.tar.gz", .sha256 = "f16dc8eec21ce54cc97bde91da47f408101d8c2332190f0e2ca9146597bf5865" },
+    },
+    // libstdc++ and libgcc_s (gcc): linked dynamically rather than
+    // upstream's static libstdc++.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "python", "ninja" },
+}

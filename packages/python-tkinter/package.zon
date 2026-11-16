@@ -1,0 +1,15 @@
+.{
+    .name = "python-tkinter",
+    .version = "3.15.2",
+    .release = 1,
+    .description = "Python's interface to Tk (the _tkinter module), for tkinter, IDLE and turtle",
+    .license = "PSF-2.0",
+    .sources = .{
+        // The same source as the python package.
+        .{ .url = "https://www.python.org/ftp/python/3.15.2/Python-3.15.2.tar.xz", .sha256 = "8b5536d280142ecf6cdfe15d12a21ba1c65e300bbf7b28a8d0cdb849575797de" },
+    },
+    // The python package ships the tkinter, idlelib and turtledemo modules;
+    // this adds the extension they import, built for this Python version.
+    .depends = .{ "python >=3.15 <3.16", "glibc", "tcl", "tk" },
+    .build_depends = .{ "pkgconf", "util-linux" },
+}

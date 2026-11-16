@@ -1,0 +1,27 @@
+.{
+    .name = "php",
+    .version = "8.5.12",
+    .release = 1,
+    .description = "PHP scripting language: the command line interpreter, FastCGI process manager, CGI and phpdbg",
+    .license = "PHP-3.01",
+    .sources = .{
+        // Checked against the book's MD5 (0e61535c499c8d4f50a434238d216e5c).
+        .{ .url = "https://www.php.net/distributions/php-8.5.12.tar.xz", .sha256 = "08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209" },
+    },
+    // Every extension is compiled into the programs, so each of them links
+    // all of these: libxml2 (DOM, SimpleXML, XML, SOAP), libxslt (XSL),
+    // OpenSSL, PCRE2, SQLite, zlib, bzip2, curl, Enchant, GMP, ICU and
+    // libstdc++ (intl), Oniguruma (mbstring regex), libsodium, Argon2,
+    // libzip, GD's libpng, libjpeg-turbo, libwebp, FreeType and libavif,
+    // libffi, GDBM and LMDB (DBA), readline and ncurses (php -a), and for
+    // php-fpm libsystemd and libacl.
+    .depends = .{
+        "glibc",    "gcc",       "libxml2",       "libxslt",  "openssl",
+        "pcre2",    "sqlite",    "zlib",          "bzip2",    "curl",
+        "enchant",  "gmp",       "icu",           "oniguruma", "libsodium",
+        "argon2",   "libzip",    "libpng",        "libjpeg-turbo", "libwebp",
+        "freetype", "libavif",   "libffi",        "gdbm",     "lmdb",
+        "readline", "ncurses",   "systemd",       "acl",
+    },
+    .build_depends = .{"pkgconf"},
+}

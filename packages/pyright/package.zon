@@ -1,0 +1,15 @@
+.{
+    .name = "pyright",
+    .version = "1.1.414",
+    .release = 1,
+    .description = "Static type checker and language server for Python (pyright, pyright-langserver)",
+    .license = "MIT",
+    .sources = .{
+        // The npm package: pyright and its language server bundled into
+        // JavaScript, with the typeshed stubs. It has no dependencies
+        // besides node (fsevents, its one optional dependency, is for
+        // macOS). Checked against the registry's SHA-512 integrity.
+        .{ .url = "https://registry.npmjs.org/pyright/-/pyright-1.1.414.tgz", .sha256 = "bf5f473f6167c0d14175492c3263d783b4489a6956e1c06c18e15228e3a3fa42" },
+    },
+    .depends = .{"nodejs"},
+}

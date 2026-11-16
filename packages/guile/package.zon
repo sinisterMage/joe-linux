@@ -1,0 +1,17 @@
+.{
+    .name = "guile",
+    .version = "3.0.11",
+    .release = 1,
+    .description = "GNU Ubiquitous Intelligent Language for Extensions, the GNU Scheme implementation",
+    .license = "LGPL-3.0-or-later AND GPL-3.0-or-later",
+    .sources = .{
+        // Checked against the book's MD5 (f215f364387f6c9b008efaa11e8079dc).
+        .{ .url = "https://ftpmirror.gnu.org/guile/guile-3.0.11.tar.xz", .sha256 = "818c79d236657a7fa96fb364137cc7b41b3bdee0d65c6174ca03769559579460" },
+    },
+    // libguile links the collector (gc), libunistring, GMP, libffi and
+    // libcrypt (libxcrypt, for the crypt procedure); the guile-readline
+    // extension links readline and ncurses (configure adds -lncurses for
+    // tgoto).
+    .depends = .{ "glibc", "gc", "libunistring", "gmp", "libffi", "libxcrypt", "readline", "ncurses" },
+    .build_depends = .{"pkgconf"},
+}

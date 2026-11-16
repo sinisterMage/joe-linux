@@ -1,0 +1,23 @@
+.{
+    .name = "maven",
+    .version = "3.10.1",
+    .release = 1,
+    .description = "Apache Maven, the build and dependency management tool for Java projects (mvn)",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Checked against upstream's .sha512.
+        .{ .url = "https://archive.apache.org/dist/maven/maven-3/3.10.1/source/apache-maven-3.10.1-src.tar.gz", .sha256 = "440846130652a1764c207e076209e71cd2d6bb8fcc45e0f8f224f669231b9951" },
+        // Maven builds with Maven. Like go's and rust's stage0, this is
+        // upstream's binary release of the previous version, used only to
+        // build the one above (its README asks for Maven 3.9.0 or later);
+        // nothing of it is installed. Checked against upstream's .sha512.
+        .{ .url = "https://archive.apache.org/dist/maven/maven-3/3.10.0/binaries/apache-maven-3.10.0-bin.tar.gz", .sha256 = "a46cc51bc74fa23fd267c7a0b9132b146dcf526da60d31aa5174e565632e9e0e" },
+    },
+    // The stage0 Maven downloads the plugins and libraries the build needs
+    // from Maven Central, at the versions the POMs fix; they are not
+    // vendored yet.
+    .network = true,
+    // Pure Java; mvn is a shell script that runs java.
+    .depends = .{"openjdk"},
+    .build_depends = .{"openjdk"},
+}

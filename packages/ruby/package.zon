@@ -1,0 +1,18 @@
+.{
+    .name = "ruby",
+    .version = "4.0.9",
+    .release = 1,
+    .description = "The Ruby programming language, with RubyGems, Bundler and the bundled gems",
+    .license = "Ruby OR BSD-2-Clause",
+    .sources = .{
+        // Checked against the book's MD5 (bfcbb1f74060e9201e9fd154c85176f3).
+        .{ .url = "https://cache.ruby-lang.org/pub/ruby/4.0/ruby-4.0.9.tar.xz", .sha256 = "a8057adb39f51ad6dc3106237504c93dd792bb515837b4fe7817ae21ed7e51f4" },
+    },
+    // libruby links GMP (Bignum) and libcrypt (String#crypt), and libgcc_s
+    // for the Rust code of YJIT. The extensions link zlib, OpenSSL, libyaml
+    // (psych) and libffi (the fiddle gem).
+    .depends = .{ "glibc", "gcc", "gmp", "libxcrypt", "zlib", "openssl", "libyaml", "libffi" },
+    // YJIT is written in Rust; a release build compiles it with rustc
+    // alone, without cargo or crates.
+    .build_depends = .{ "rust", "pkgconf" },
+}
