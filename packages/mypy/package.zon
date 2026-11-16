@@ -1,0 +1,15 @@
+.{
+    .name = "mypy",
+    .version = "2.4.1",
+    .release = 1,
+    .description = "Optional static type checker for Python, with the mypyc compiler",
+    // The bundled typeshed stubs are Apache-2.0; three mypyc runtime files
+    // are under the PSF license.
+    .license = "MIT AND PSF-2.0 AND Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/m/mypy/mypy-2.4.1.tar.gz", .sha256 = "63b590965691e540a335fa74dadf31a7069142f6b72e234689bbd244edf55623" },
+    },
+    // ast-serialize is the native parser, on by default since mypy 2.
+    .depends = .{ "python", "typing-extensions", "mypy-extensions", "pathspec", "librt", "ast-serialize" },
+    .build_depends = .{ "python", "setuptools" },
+}

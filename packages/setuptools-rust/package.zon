@@ -1,0 +1,13 @@
+.{
+    .name = "setuptools-rust",
+    .version = "1.12.1",
+    .release = 1,
+    .description = "Setuptools plugin for building Python extensions written in Rust",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/setuptools_rust/setuptools_rust-1.12.1.tar.gz", .sha256 = "85ae70989d96c9cfeb5ef79cf3bac2d5200bc5564f720a06edceedbdf6664640" },
+    },
+    // It runs cargo and rustc to build the extensions.
+    .depends = .{ "python", "setuptools", "semantic-version", "rust" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm" },
+}

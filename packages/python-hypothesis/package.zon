@@ -1,0 +1,19 @@
+.{
+    .name = "python-hypothesis",
+    .version = "6.170.15",
+    .release = 1,
+    .description = "Property-based testing library for Python",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/h/hypothesis/hypothesis-6.170.15.tar.gz", .sha256 = "a4a57e5fb106ecb29cad37e22e411d957e20d933bfb9fb029e1999b1deb8a0b6" },
+    },
+    // Hypothesis is moving its engine to Rust: the sdist builds a pyo3
+    // extension (hypothesis._native) with maturin, and cargo downloads the
+    // crates it depends on from crates.io; they are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding. The command-line tool, the ghostwriter
+    // and the integrations (numpy, pandas, django, ...) are extras whose
+    // modules are imported only when used; none is packaged here.
+    .depends = .{ "glibc", "gcc", "python", "sortedcontainers" },
+    .build_depends = .{ "python", "maturin", "rust" },
+}

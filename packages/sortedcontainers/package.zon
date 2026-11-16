@@ -1,0 +1,12 @@
+.{
+    .name = "sortedcontainers",
+    .version = "2.4.0",
+    .release = 1,
+    .description = "Pure-Python sorted list, sorted dict and sorted set types",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sortedcontainers/sortedcontainers-2.4.0.tar.gz", .sha256 = "25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

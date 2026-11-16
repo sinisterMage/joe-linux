@@ -1,0 +1,12 @@
+.{
+    .name = "mypy-extensions",
+    .version = "1.2.0",
+    .release = 1,
+    .description = "Type system extensions for programs checked with mypy",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/m/mypy-extensions/mypy_extensions-1.2.0.tar.gz", .sha256 = "c6e275a07f1c2fc096b62940452d0eaa3f3af7de45d704787866240a7c6d5a51" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

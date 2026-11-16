@@ -1,0 +1,14 @@
+.{
+    .name = "sphinxcontrib-qthelp",
+    .version = "2.0.0",
+    .release = 1,
+    .description = "Sphinx extension that outputs QtHelp documents",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sphinxcontrib-qthelp/sphinxcontrib_qthelp-2.0.0.tar.gz", .sha256 = "4fe7d0ac8fc171045be623aba3e2a8f613f8682731f9153bb2e40ece16b9bbab" },
+    },
+    // Sphinx loads it; it does not depend on sphinx itself (that would be a
+    // cycle, as in the book).
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

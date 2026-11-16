@@ -1,0 +1,14 @@
+.{
+    .name = "sphinxcontrib-htmlhelp",
+    .version = "2.1.0",
+    .release = 1,
+    .description = "Sphinx extension that renders HTML help files",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sphinxcontrib-htmlhelp/sphinxcontrib_htmlhelp-2.1.0.tar.gz", .sha256 = "c9e2916ace8aad64cc13a0d233ee22317f2b9025b9cf3295249fa985cc7082e9" },
+    },
+    // Sphinx loads it; it does not depend on sphinx itself (that would be a
+    // cycle, as in the book).
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

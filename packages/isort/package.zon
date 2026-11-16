@@ -1,0 +1,12 @@
+.{
+    .name = "isort",
+    .version = "9.0.2",
+    .release = 1,
+    .description = "Python utility and library that sorts imports",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/i/isort/isort-9.0.2.tar.gz", .sha256 = "d2298980ce44350f11d9d24c8150eaef1883431ec203dddbb4e9b5c3ceb54c70" },
+    },
+    .depends = .{ "python", "mypy-extensions" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs" },
+}

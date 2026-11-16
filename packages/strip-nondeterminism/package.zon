@@ -1,0 +1,19 @@
+.{
+    .name = "strip-nondeterminism",
+    .version = "1.15.1",
+    .release = 1,
+    .description = "Tool that strips timestamps and other nondeterministic information from build outputs",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // The release tarball from reproducible-builds.org, checked against
+        // its detached signature (.asc) by Chris Lamb's key
+        // C2FE4BD271C139B86C533E461E953E27D4311E58.
+        .{ .url = "https://reproducible-builds.org/_lfs/releases/strip-nondeterminism/strip-nondeterminism-1.15.1.tar.bz2", .sha256 = "b8046b0faf182aff8de68abf8318d2b913637f4c23961cf61c47402af132a237" },
+    },
+    // file(1) identifies files whose name does not tell their type;
+    // Archive::Zip handles zip, jar and similar archives. Archive::Cpio (for
+    // .cpio files) is optional: without it those files are left alone, and it
+    // is not packaged.
+    .depends = .{ "perl", "perl-archive-zip", "file" },
+    .build_depends = .{"perl"},
+}

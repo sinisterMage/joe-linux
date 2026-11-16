@@ -1,0 +1,17 @@
+.{
+    .name = "ast-serialize",
+    .version = "0.13.1",
+    .release = 1,
+    .description = "Python parser and serializer of mypy's native AST format, written in Rust",
+    // Includes a copy of Ruff's parser crates (crates/), also MIT.
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/ast-serialize/ast_serialize-0.13.1.tar.gz", .sha256 = "401cc84e8888d4d76f2c8d296fa006ed1a5ff993b6aff90dd777c03973efd025" },
+    },
+    // cargo downloads the crates ast-serialize depends on from crates.io;
+    // they are not vendored yet.
+    .network = true,
+    // A pyo3 extension module (abi3); libgcc_s (gcc) for unwinding.
+    .depends = .{ "glibc", "gcc", "python" },
+    .build_depends = .{ "python", "maturin", "rust" },
+}

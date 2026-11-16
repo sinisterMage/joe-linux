@@ -1,0 +1,15 @@
+.{
+    .name = "sphinxcontrib-jsmath",
+    .version = "1.0.1",
+    .release = 1,
+    .description = "Sphinx extension that renders display math in HTML with JavaScript (jsMath)",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sphinxcontrib-jsmath/sphinxcontrib-jsmath-1.0.1.tar.gz", .sha256 = "a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/sphinxcontrib-jsmath-1.0.1-sphinx9_fixes-1.patch", .sha256 = "71f2f672f92a68a16222ef2da8391904972a7be199cf86244e5737285540739e" },
+    },
+    // Sphinx loads it; it does not depend on sphinx itself (that would be a
+    // cycle, as in the book).
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

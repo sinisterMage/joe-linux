@@ -1,0 +1,16 @@
+.{
+    .name = "python-black",
+    .version = "26.10.1",
+    .release = 1,
+    .description = "Uncompromising Python code formatter",
+    // blib2to3 is a fork of the standard library's lib2to3 (PSF license).
+    .license = "MIT AND PSF-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/b/black/black-26.10.1.tar.gz", .sha256 = "5f9f83beae62437e060dafd53d7f1fc327e3d3494f74d72ee5c2b73eb90fc4e7" },
+    },
+    // blackd (the HTTP server) needs aiohttp, Jupyter notebook support needs
+    // ipython and tokenize-rt; those extras are not packaged, and the rest
+    // of black works without them.
+    .depends = .{ "python", "click", "mypy-extensions", "packaging", "pathspec", "platformdirs", "pytokens" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs", "hatch-fancy-pypi-readme" },
+}

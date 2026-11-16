@@ -1,0 +1,14 @@
+.{
+    .name = "coverage",
+    .version = "7.17.3",
+    .release = 1,
+    .description = "Code coverage measurement for Python",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/coverage/coverage-7.17.3.tar.gz", .sha256 = "6695d1bb2a9a2fbd7806d69d78cf30f35eb0f65045da0ec5b5045242fadd6a78" },
+    },
+    // The C tracer is an extension module (coverage.tracer). The toml extra
+    // is only for Python before 3.11.
+    .depends = .{ "glibc", "python" },
+    .build_depends = .{ "python", "setuptools" },
+}

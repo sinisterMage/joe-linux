@@ -1,0 +1,14 @@
+.{
+    .name = "markdown-it-py",
+    .version = "4.3.0",
+    .release = 1,
+    .description = "Python port of the markdown-it Markdown parser",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/m/markdown-it-py/markdown_it_py-4.3.0.tar.gz", .sha256 = "91a58fa5b72c71a40cf7177250fd767480d7a2bb3ac426ccfb76fb90305fdaaa" },
+    },
+    // The linkify and plugins extras (linkify-it-py, mdit-py-plugins) are
+    // not packaged.
+    .depends = .{ "python", "mdurl" },
+    .build_depends = .{ "python", "flit-core" },
+}

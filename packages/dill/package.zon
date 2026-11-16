@@ -1,0 +1,13 @@
+.{
+    .name = "dill",
+    .version = "0.4.1",
+    .release = 1,
+    .description = "Python serialization that extends pickle to almost every Python object",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/d/dill/dill-0.4.1.tar.gz", .sha256 = "423092df4182177d4d8ba8290c8a5b640c66ab35ec7da59ccfa00f6fa3eea5fa" },
+    },
+    // The get_objgraph script draws with objgraph, which is not packaged.
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

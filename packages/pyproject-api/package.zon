@@ -1,0 +1,14 @@
+.{
+    .name = "pyproject-api",
+    .version = "1.12.5",
+    .release = 1,
+    .description = "Python API to the PEP 517 build hooks of pyproject.toml projects",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyproject-api/pyproject_api-1.12.5.tar.gz", .sha256 = "0795693708f631af4c665ab02a315edc0fb97471f1d52e4a6179ed60504e96bb" },
+    },
+    .depends = .{ "python", "packaging" },
+    // pyproject.toml asks for hatchling >= 1.32.4; the packaged 1.32.0 is
+    // not checked against it (no build isolation).
+    .build_depends = .{ "python", "hatchling", "hatch-vcs", "hatch-fancy-pypi-readme" },
+}

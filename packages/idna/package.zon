@@ -1,0 +1,12 @@
+.{
+    .name = "idna",
+    .version = "3.18",
+    .release = 1,
+    .description = "Internationalized Domain Names in Applications (IDNA, RFC 5891) for Python",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/i/idna/idna-3.18.tar.gz", .sha256 = "ffb385a7e039654cef1ab9ef32c6fafe283c0c0467bba1d9029738ce4a14a848" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

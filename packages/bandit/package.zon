@@ -1,0 +1,15 @@
+.{
+    .name = "bandit",
+    .version = "1.9.4",
+    .release = 1,
+    .description = "Security-oriented static analyser for Python code",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/b/bandit/bandit-1.9.4.tar.gz", .sha256 = "b589e5de2afe70bd4d53fa0c1da6199f4085af666fde00e8a034f152a52cd628" },
+    },
+    // The toml extra is only for Python before 3.11. bandit-baseline needs
+    // GitPython and SARIF output needs sarif-om and jschema-to-python; those
+    // extras are not packaged.
+    .depends = .{ "python", "pyyaml", "stevedore", "rich" },
+    .build_depends = .{ "python", "pbr", "setuptools" },
+}

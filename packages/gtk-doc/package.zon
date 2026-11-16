@@ -1,0 +1,28 @@
+.{
+    .name = "gtk-doc",
+    .version = "1.37.0",
+    .release = 2,
+    .description = "Generator of API documentation from comments in C code, used by GLib-based libraries",
+    // The manual is under the GNU Free Documentation License.
+    .license = "GPL-2.0-or-later AND GFDL-1.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gtk-doc/1.37/gtk-doc-1.37.0.tar.xz", .sha256 = "2facfb530ddcd20c03ed4758ef934e832626c393e2cacd23fc1249b7ed0e4246" },
+    },
+    // The gtkdoc-* programs are Python: mkhtml2 uses lxml, highlighting
+    // pygments; mkhtml and mkman run xsltproc with the DocBook stylesheets;
+    // gtkdoc-scangobj compiles and runs a program against GObject, with
+    // pkg-config finding its flags. PDF output (dblatex or fop) is not
+    // available.
+    .depends = .{
+        "python",
+        "pygments",
+        "lxml",
+        "libxslt",
+        "docbook-xml",
+        "docbook-xsl-nons",
+        "glib",
+        "pkgconf",
+    },
+    // itstool and gettext (msgfmt) build the translated user manual.
+    .build_depends = .{ "meson", "ninja", "python", "pygments", "libxslt", "pkgconf", "itstool", "gettext" },
+}

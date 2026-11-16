@@ -1,0 +1,13 @@
+.{
+    .name = "rich",
+    .version = "15.0.0",
+    .release = 1,
+    .description = "Python library for rich text, tables, progress bars and syntax highlighting in the terminal",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/r/rich/rich-15.0.0.tar.gz", .sha256 = "edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36" },
+    },
+    // The Jupyter extra (ipywidgets) is not packaged.
+    .depends = .{ "python", "markdown-it-py", "pygments" },
+    .build_depends = .{ "python", "poetry-core" },
+}

@@ -1,0 +1,18 @@
+.{
+    .name = "maturin",
+    .version = "1.16.0",
+    .release = 1,
+    .description = "Build and publish Rust crates with pyo3, cffi and uniffi bindings as Python packages",
+    .license = "MIT OR Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/PyO3/maturin/archive/v1.16.0/maturin-1.16.0.tar.gz", .sha256 = "b22d15b7dc4f27af50b831af0866bcd901bcce2433182c5b2f252dd420531c0d" },
+    },
+    // cargo downloads the crates maturin depends on from crates.io; they are
+    // not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; libzstd for zstd-compressed zip entries
+    // (see build.sh). maturin runs cargo to build every package, so rust is
+    // needed at run time.
+    .depends = .{ "glibc", "gcc", "zstd", "python", "rust" },
+    .build_depends = .{ "python", "setuptools", "setuptools-rust", "rust", "pkgconf" },
+}

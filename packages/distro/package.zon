@@ -1,0 +1,12 @@
+.{
+    .name = "distro",
+    .version = "1.9.0",
+    .release = 1,
+    .description = "Python library and command that report Linux distribution information",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/d/distro/distro-1.9.0.tar.gz", .sha256 = "2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

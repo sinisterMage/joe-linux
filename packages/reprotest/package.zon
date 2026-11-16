@@ -1,0 +1,15 @@
+.{
+    .name = "reprotest",
+    .version = "0.7.33",
+    .release = 1,
+    .description = "Builds software twice under varied conditions and checks the results are identical",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/r/reprotest/reprotest-0.7.33.tar.gz", .sha256 = "8428bebeb6f7508e02b3b552837097c11437345ef6f5e56e12889c74dee4a023" },
+    },
+    // diffoscope compares the two builds unless --no-diffoscope is given (then
+    // diff -ru). The tools behind single variations (faketime, disorderfs,
+    // unshare, setarch, sudo, ...) are used when installed and not required.
+    .depends = .{ "python", "rstr", "distro", "diffoscope", "diffutils" },
+    .build_depends = .{ "python", "setuptools" },
+}

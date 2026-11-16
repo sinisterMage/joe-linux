@@ -1,0 +1,14 @@
+.{
+    .name = "sphinxcontrib-devhelp",
+    .version = "2.0.0",
+    .release = 1,
+    .description = "Sphinx extension that outputs Devhelp documents",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sphinxcontrib-devhelp/sphinxcontrib_devhelp-2.0.0.tar.gz", .sha256 = "411f5d96d445d1d73bb5d52133377b4248ec79db5c793ce7dbe59e074b4dd1ad" },
+    },
+    // Sphinx loads it; it does not depend on sphinx itself (that would be a
+    // cycle, as in the book).
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

@@ -1,0 +1,19 @@
+.{
+    .name = "atool",
+    .version = "0.39.0",
+    .release = 1,
+    .description = "Script that manages file archives of many formats through one interface (aunpack, apack, als)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its detached signature (.sig) by the maintainer's
+        // key 4E6E6521EF300E30457D7AFB8AAAC30E7088EFCB, listed on the
+        // project's Savannah page.
+        .{ .url = "https://download.savannah.nongnu.org/releases/atool/atool-0.39.0.tar.gz", .sha256 = "aaf60095884abb872e25f8e919a8a63d0dabaeca46faeba87d12812d6efc703b" },
+    },
+    // atool runs the archiver each format needs, found at run time; tar,
+    // gzip, bzip2 and xz cover the common ones, and file(1) identifies
+    // archives whose extension is unknown. Others (zip, 7z, rar, ...) are
+    // used when installed.
+    .depends = .{ "perl", "file", "tar", "gzip", "bzip2", "xz" },
+    .build_depends = .{"perl"},
+}

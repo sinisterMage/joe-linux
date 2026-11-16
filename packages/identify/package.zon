@@ -1,0 +1,14 @@
+.{
+    .name = "identify",
+    .version = "2.6.20",
+    .release = 1,
+    .description = "Python library that identifies file types by name, contents and shebang",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/i/identify/identify-2.6.20.tar.gz", .sha256 = "ad729860a923858d26917c2f4fb0a1d83d27a75b1e090c06440c573f048f3285" },
+    },
+    // License identification (the "license" extra) needs ukkonen, which is
+    // not packaged; everything else works without it.
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "python-cram",
+    .version = "0.7",
+    .release = 1,
+    .description = "Functional tests for command-line programs written as shell transcripts",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/cram/cram-0.7.tar.gz", .sha256 = "7da7445af2ce15b90aad5ec4792f857cef5786d71f14377e9eb994d8b8337f2f" },
+    },
+    // Tests run in /bin/sh unless --shell names another shell.
+    .depends = .{ "python", "bash" },
+    .build_depends = .{ "python", "setuptools" },
+}

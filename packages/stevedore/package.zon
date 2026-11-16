@@ -1,0 +1,12 @@
+.{
+    .name = "stevedore",
+    .version = "5.10.0",
+    .release = 1,
+    .description = "Python library that manages dynamic plugins through entry points",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/stevedore/stevedore-5.10.0.tar.gz", .sha256 = "6005f32c09dc3159802a61c04862770e439e32db22f6da78ba56e8a735466882" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "pbr", "setuptools" },
+}

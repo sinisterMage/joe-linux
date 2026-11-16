@@ -1,0 +1,12 @@
+.{
+    .name = "rstr",
+    .version = "3.2.2",
+    .release = 1,
+    .description = "Python library that generates random strings, including strings matching a regex",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/r/rstr/rstr-3.2.2.tar.gz", .sha256 = "c4a564d4dfb4472d931d145c43d1cf1ad78c24592142e7755b8866179eeac012" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel" },
+}

@@ -1,0 +1,16 @@
+.{
+    .name = "requests",
+    .version = "2.34.2",
+    .release = 1,
+    .description = "HTTP library for Python",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/r/requests/requests-2.34.2.tar.gz", .sha256 = "f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/requests-use_system_certs-2.patch", .sha256 = "e8f41cd1e4787270010978a26da5fca37626b03fcc59883fb57c2ef164f944b8" },
+    },
+    // With the book's patch requests verifies TLS against the system bundle
+    // that make-ca installs (/etc/pki/tls/certs/ca-bundle.crt), or the one
+    // _PIP_STANDALONE_CERT names, instead of the certifi module.
+    .depends = .{ "python", "charset-normalizer", "idna", "urllib3", "make-ca" },
+    .build_depends = .{ "python", "setuptools" },
+}

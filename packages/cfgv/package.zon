@@ -1,0 +1,12 @@
+.{
+    .name = "cfgv",
+    .version = "3.5.0",
+    .release = 1,
+    .description = "Python library that validates configuration and reports readable errors",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/cfgv/cfgv-3.5.0.tar.gz", .sha256 = "d5b1034354820651caa73ede66a6294d6e95c1b00acc5e9b098e917404669132" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

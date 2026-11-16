@@ -1,0 +1,17 @@
+.{
+    .name = "meson-python",
+    .version = "0.20.0",
+    .release = 1,
+    .description = "Python build backend (PEP 517) for Meson projects",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/m/meson_python/meson_python-0.20.0.tar.gz", .sha256 = "6d9726ae6cd37e22f210c74b364b30180a68c20442e97ff09f3c566a414af738" },
+    },
+    // meson-python runs meson (and through it ninja) to build every wheel,
+    // and patchelf to fix the RPATH of extension modules that link a library
+    // built in the same project (the book's "recommended (runtime)").
+    .depends = .{ "python", "meson", "packaging", "pyproject-metadata", "patchelf" },
+    // It builds itself with its own backend (backend-path), so its run-time
+    // dependencies are needed to build it as well.
+    .build_depends = .{ "python", "meson", "ninja", "packaging", "pyproject-metadata" },
+}

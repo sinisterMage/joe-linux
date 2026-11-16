@@ -1,0 +1,12 @@
+.{
+    .name = "cachetools",
+    .version = "8.0.0",
+    .release = 1,
+    .description = "Extensible memoizing collections and decorators for Python",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/cachetools/cachetools-8.0.0.tar.gz", .sha256 = "5ed01bd676800d51f0025605e4fd8ad0891550513e7b0a4c3da478463764e5c3" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "setuptools-scm" },
+}

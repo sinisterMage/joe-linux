@@ -1,0 +1,15 @@
+.{
+    .name = "python-pylint",
+    .version = "4.1.4",
+    .release = 1,
+    .description = "Static code analyser and linter for Python",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pylint/pylint-4.1.4.tar.gz", .sha256 = "4c9176dc6c9f1b98b742195f01899b290369d5a27b4b41d1014c17f2f96b26f1" },
+    },
+    // The spelling checker needs pyenchant (the "spelling" extra), which is
+    // not packaged; pyreverse runs graphviz's dot, when installed, only for
+    // image output formats.
+    .depends = .{ "python", "astroid", "dill", "isort", "mccabe", "platformdirs", "tomlkit" },
+    .build_depends = .{ "python", "setuptools" },
+}

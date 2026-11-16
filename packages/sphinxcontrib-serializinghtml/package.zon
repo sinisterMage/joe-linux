@@ -1,0 +1,14 @@
+.{
+    .name = "sphinxcontrib-serializinghtml",
+    .version = "2.0.0",
+    .release = 1,
+    .description = "Sphinx extension that outputs serialized HTML (JSON and pickle)",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sphinxcontrib-serializinghtml/sphinxcontrib_serializinghtml-2.0.0.tar.gz", .sha256 = "e9d912827f872c029017a53f0ef2180b327c3f7fd23c87229f7a8e8b70031d4d" },
+    },
+    // Sphinx loads it; it does not depend on sphinx itself (that would be a
+    // cycle, as in the book).
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

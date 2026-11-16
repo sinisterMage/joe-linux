@@ -1,0 +1,12 @@
+.{
+    .name = "imagesize",
+    .version = "1.4.1",
+    .release = 1,
+    .description = "Python module that reads image sizes and DPI from file headers",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/i/imagesize/imagesize-1.4.1.tar.gz", .sha256 = "69150444affb9cb0d5cc5a92b3676f0b2fb7cd9ae39e947a5e11a36b4497cd4a" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

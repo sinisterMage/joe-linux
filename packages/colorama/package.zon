@@ -1,0 +1,12 @@
+.{
+    .name = "colorama",
+    .version = "0.4.6",
+    .release = 1,
+    .description = "Cross-platform coloured terminal text for Python",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/colorama/colorama-0.4.6.tar.gz", .sha256 = "08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "hatchling" },
+}

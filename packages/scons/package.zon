@@ -1,0 +1,12 @@
+.{
+    .name = "scons",
+    .version = "4.11.1",
+    .release = 1,
+    .description = "Software construction tool configured with Python scripts (SConstruct files)",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/scons/SCons-4.11.1.tar.gz", .sha256 = "4210d1a80a62e986029208117991b6347ccaaaab37b67463a3ff31ee065dc487" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "snowballstemmer",
+    .version = "3.1.1",
+    .release = 1,
+    .description = "Snowball stemming algorithms for many languages, in Python",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/snowballstemmer/snowballstemmer-3.1.1.tar.gz", .sha256 = "e07bbc54a0d798fe6010a12398422e62a8bfbba95c394fd0956ef58cb4d3e260" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}
