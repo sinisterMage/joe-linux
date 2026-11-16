@@ -1,0 +1,16 @@
+.{
+    .name = "doxygen",
+    .version = "1.18.0",
+    .release = 1,
+    .description = "Generates documentation from annotated C, C++ and other sources",
+    .license = "GPL-2.0-only",
+    .sources = .{
+        .{ .url = "https://doxygen.nl/files/doxygen-1.18.0.src.tar.gz", .sha256 = "a1deed70a6785bbec95a2b2a9e419dc7f7b223a9d74a8644ae611c8e2dcdd354" },
+    },
+    // Graphviz's dot draws the diagrams when a Doxyfile asks for them
+    // (HAVE_DOT); it is optional and not depended on.
+    .depends = .{ "glibc", "gcc" },
+    // Python runs the code generators; CMake insists on git for the
+    // version information.
+    .build_depends = .{ "cmake", "python", "flex", "bison", "git" },
+}

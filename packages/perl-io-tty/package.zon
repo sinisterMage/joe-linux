@@ -1,0 +1,12 @@
+.{
+    .name = "perl-io-tty",
+    .version = "1.31",
+    .release = 1,
+    .description = "Perl modules IO::Tty and IO::Pty for pseudo-terminals (XS)",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IO-Tty-1.31.tar.gz", .sha256 = "d597af221628571cbecf35b44520148c44798dfc8a9867774e60453f79d25ff7" },
+    },
+    .depends = .{ "glibc", "perl" },
+    .build_depends = .{"perl"},
+}

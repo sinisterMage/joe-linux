@@ -1,0 +1,13 @@
+.{
+    .name = "dos2unix",
+    .version = "7.5.7",
+    .release = 1,
+    .description = "Converts text files between DOS, Mac and Unix line endings",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/dos2unix/dos2unix-7.5.7.tar.gz", .sha256 = "669ee27120ae71589f638fe3a167d6ea54f8633f5ab1b282551bd7a7c9510dfa" },
+    },
+    .depends = .{"glibc"},
+    // msgfmt for the translations.
+    .build_depends = .{"gettext"},
+}

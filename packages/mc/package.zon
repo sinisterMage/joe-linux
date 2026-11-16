@@ -1,0 +1,18 @@
+.{
+    .name = "mc",
+    .version = "4.8.33",
+    .release = 1,
+    .description = "Midnight Commander, a two-panel text-mode file manager with an editor, viewer and archive browsing",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "http://ftp.midnight-commander.org/mc-4.8.33.tar.xz", .sha256 = "cae149d42f844e5185d8c81d7db3913a8fa214c65f852200a9d896b468af164c" },
+    },
+    // libssh2 for the SFTP file system; e2fsprogs (libe2p) for editing
+    // ext2/3/4 file attributes, which configure uses whenever it finds it.
+    // The archive helpers for zip, patches and Debian packages are Perl
+    // scripts. The three Python helpers (S3, BitTorrent files and C64 disk
+    // images) are rarely used and S3 needs boto besides; Python is not
+    // required for them.
+    .depends = .{ "glibc", "glib", "ncurses", "libssh2", "e2fsprogs", "perl" },
+    .build_depends = .{"pkgconf"},
+}

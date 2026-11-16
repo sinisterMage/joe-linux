@@ -1,0 +1,25 @@
+.{
+    .name = "graphviz",
+    .version = "16.1.1",
+    .release = 2,
+    .description = "Graph visualization tools (dot, neato and others) and libraries",
+    .license = "EPL-1.0",
+    .sources = .{
+        .{ .url = "https://gitlab.com/graphviz/graphviz/-/archive/16.1.1/graphviz-16.1.1.tar.bz2", .sha256 = "dd83d4ed90d92ab84fd512d17b5bb6b002ee72a5d7009a9c8824afaa3fbc0083" },
+    },
+    // libltdl (libtool) loads the plugins; expat parses HTML-like labels;
+    // zlib compresses SVGZ. The plugins: Cairo and Pango for PNG, PDF, PS
+    // and SVG; GDK (GTK 3 and gdk-pixbuf) for JPEG, BMP, ICO and TIFF;
+    // librsvg, Poppler and Ghostscript for SVG, PDF and PostScript images in
+    // graphs; libwebp for WebP; Xlib for showing a graph in a window.
+    .depends = .{
+        "glibc",       "gcc",      "libtool",
+        "zlib",        "expat",    "cairo",
+        "pango",       "glib",     "fontconfig",
+        "freetype",    "harfbuzz", "gdk-pixbuf",
+        "gtk3",        "librsvg",  "poppler",
+        "libwebp",     "libx11",   "libxrender",
+        "ghostscript",
+    },
+    .build_depends = .{ "cmake", "pkgconf", "bison", "flex", "python" },
+}

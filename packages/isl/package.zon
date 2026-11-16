@@ -1,0 +1,12 @@
+.{
+    .name = "isl",
+    .version = "0.28",
+    .release = 1,
+    .description = "Integer set library for polyhedral analysis, as used by compiler loop optimizers",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://libisl.sourceforge.io/isl-0.28.tar.xz", .sha256 = "3dc31b8e1b18329e42d5dfbf84dd55e15c59b61569a2ab246f61497d9592f727" },
+    },
+    .depends = .{ "glibc", "gmp" },
+}

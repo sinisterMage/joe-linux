@@ -1,0 +1,19 @@
+.{
+    .name = "moreutils",
+    .version = "0.70",
+    .release = 1,
+    .description = "Unix tools nobody thought to write: sponge, ts, vidir, chronic, ifne, pee and others",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream (Joey Hess, also its Debian maintainer) publishes the
+        // release through Debian: checked against the SHA-256 in
+        // moreutils_0.70-1.dsc.
+        .{ .url = "https://deb.debian.org/debian/pool/main/m/moreutils/moreutils_0.70.orig.tar.xz", .sha256 = "a844c5e3360a73d12c0a5624750ecc1969d64afea2e84925328f137576e2eb55" },
+    },
+    // ts, vidir, vipe, zrun, chronic and combine are Perl. chronic needs
+    // IPC::Run; ts -r needs Date::Parse (perl-timedate) and Time::Duration.
+    .depends = .{ "glibc", "perl", "perl-ipc-run", "perl-timedate", "perl-time-duration" },
+    // The manual pages of the C programs are DocBook, checked by xmllint and
+    // turned into man pages by xsltproc.
+    .build_depends = .{ "libxml2", "libxslt", "docbook-xml", "docbook-xsl-nons" },
+}

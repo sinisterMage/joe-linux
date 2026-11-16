@@ -1,0 +1,13 @@
+.{
+    .name = "dtc",
+    .version = "1.8.1",
+    .release = 1,
+    .description = "Device tree compiler (dtc) and libfdt, the library for flattened device trees",
+    .license = "GPL-2.0-or-later AND (GPL-2.0-or-later OR BSD-2-Clause)",
+    .sources = .{
+        .{ .url = "https://kernel.org/pub/software/utils/dtc/dtc-1.8.1.tar.xz", .sha256 = "23526015a6f1550e0541a53fe7acea1b5a11e3697cdf3a3bdc076abc38f6045d" },
+    },
+    // libyaml for YAML output (dtc -O yaml); dtdiff is a bash script.
+    .depends = .{ "glibc", "libyaml", "bash" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "flex", "bison" },
+}

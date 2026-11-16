@@ -1,0 +1,15 @@
+.{
+    .name = "doctest",
+    .version = "2.5.3",
+    .release = 1,
+    .description = "Header-only C++ testing framework with tests written next to the code they test",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the SHA-256 digest GitHub publishes for the
+        // release asset.
+        .{ .url = "https://github.com/doctest/doctest/releases/download/v2.5.3/doctest-v2.5.3.tar.gz", .sha256 = "eb4a39729d091e43d4d593888bf4d145ee9a0f0e13f7404484b6f2fb60d5d50f" },
+    },
+    // Headers, a pkg-config file and CMake files only.
+    .depends = .{},
+    .build_depends = .{ "cmake", "ninja" },
+}

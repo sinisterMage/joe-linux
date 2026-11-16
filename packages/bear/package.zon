@@ -1,0 +1,19 @@
+.{
+    .name = "bear",
+    .version = "4.2.4",
+    .release = 1,
+    .description = "Generates a compilation database (compile_commands.json) by watching a build",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/rizsotto/Bear/archive/4.2.4/Bear-4.2.4.tar.gz", .sha256 = "1a771dba88f9687e58b6c35537336bab7a26dc196b2d37f868c7a83a310ab959" },
+    },
+    // cargo downloads the crates Bear depends on from crates.io; they are
+    // not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for Rust's standard library, in the programs and in
+    // the library Bear preloads into the build's processes.
+    .depends = .{ "glibc", "gcc" },
+    // The preload library must be linked with lld (or mold): GNU ld cannot
+    // combine rustc's version script with Bear's.
+    .build_depends = .{ "rust", "lld" },
+}

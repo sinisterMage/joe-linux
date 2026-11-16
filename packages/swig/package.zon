@@ -1,0 +1,13 @@
+.{
+    .name = "swig",
+    .version = "4.5.1",
+    .release = 1,
+    .description = "Generates bindings for C and C++ libraries to Python, Perl, Tcl, Lua and other languages",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/swig/swig-4.5.1.tar.gz", .sha256 = "7fec50b27deddab5455a9633780b6341eddfb96215a7619e93a76eb27178f653" },
+    },
+    // pcre2 for regular expressions in %rename; zlib for the compression in
+    // ccache-swig, the compiler cache for SWIG's output.
+    .depends = .{ "glibc", "gcc", "pcre2", "zlib" },
+}

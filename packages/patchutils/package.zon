@@ -1,0 +1,15 @@
+.{
+    .name = "patchutils",
+    .version = "0.4.5",
+    .release = 1,
+    .description = "Programs that manipulate patches: interdiff, combinediff, filterdiff, splitdiff and others",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against Tim Waugh's signature (patchutils-0.4.5.tar.xz.sig).
+        .{ .url = "https://github.com/twaugh/patchutils/releases/download/0.4.5/patchutils-0.4.5.tar.xz", .sha256 = "8386a35a4d2d3cbc28fdcc93c5be007c382c78e3ee079070139f0d822e013325" },
+    },
+    // pcre2 (libpcre2-posix) for the regular expressions of grepdiff;
+    // interdiff and combinediff run diff and patch; several of the
+    // helper scripts are Perl or bash.
+    .depends = .{ "glibc", "pcre2", "diffutils", "patch", "perl", "bash" },
+}

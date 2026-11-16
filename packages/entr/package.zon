@@ -1,0 +1,12 @@
+.{
+    .name = "entr",
+    .version = "5.9",
+    .release = 1,
+    .description = "Runs a command whenever one of the files it is given changes",
+    .license = "ISC",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://eradman.com/entrproject/code/entr-5.9.tar.gz", .sha256 = "0ef2ce7db728167844a91904944cd07c7ccc6fd3041b849cad861224d106a845" },
+    },
+    .depends = .{"glibc"},
+}

@@ -1,0 +1,16 @@
+.{
+    .name = "cgdb",
+    .version = "0.8.0",
+    .release = 1,
+    .description = "Curses front end to GDB with a split source window",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against upstream's cgdb-0.8.0.tar.gz.sha1.
+        .{ .url = "https://github.com/cgdb/cgdb/releases/download/v0.8.0/cgdb-0.8.0.tar.gz", .sha256 = "0d38b524d377257b106bad6d856d8ae3304140e1ee24085343e6ddf1b65811f1" },
+    },
+    // cgdb runs gdb.
+    .depends = .{ "glibc", "gcc", "ncurses", "readline", "gdb" },
+    // configure insists on flex and makeinfo, even with the lexers and the
+    // Info manual already made.
+    .build_depends = .{ "flex", "texinfo" },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "sparse",
+    .version = "0.6.4",
+    .release = 1,
+    .description = "Semantic checker for C, used on the Linux kernel's address-space and lock annotations",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the SHA-256 in kernel.org's sha256sums.asc for the
+        // sparse releases.
+        .{ .url = "https://www.kernel.org/pub/software/devel/sparse/dist/sparse-0.6.4.tar.xz", .sha256 = "6ab28b4991bc6aedbd73550291360aa6ab3df41f59206a9bde9690208a6e387c" },
+    },
+    // libxml2 for c2xml, sqlite for semind (the source indexer). cgcc is a
+    // Perl script that runs sparse and then gcc; sparse reads GCC's own
+    // headers from the directory it found at build time.
+    .depends = .{ "glibc", "libxml2", "sqlite", "gcc", "perl" },
+    .build_depends = .{"pkgconf"},
+}

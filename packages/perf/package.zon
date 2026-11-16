@@ -1,0 +1,31 @@
+.{
+    .name = "perf",
+    .version = "7.3.1",
+    .release = 1,
+    .description = "Linux performance analysis tool: CPU counters, sampling profiler and tracing (perf)",
+    .license = "GPL-2.0-only",
+    .sources = .{
+        // The kernel source the linux recipe builds; perf is in tools/perf.
+        .{ .url = "https://www.kernel.org/pub/linux/kernel/v7.x/linux-7.3.1.tar.xz", .sha256 = "fa595aad93734f829c963c2a90ef7c3673224fd7fdae7b49406e397cde2de231" },
+    },
+    // libelf (elfutils) for symbols; zlib, xz and zstd for compressed
+    // modules and perf.data; libunwind for DWARF call graphs; libLLVM (llvm,
+    // with libstdc++ from gcc) for disassembly and source lines; libpython
+    // and libperl for "perf script" in those languages. perf-archive and
+    // the test scripts are shell.
+    .depends = .{
+        "glibc",     "gcc",  "elfutils",
+        "zlib",      "xz",   "zstd",
+        "libunwind", "llvm", "python",
+        "perl",      "bash",
+    },
+    // clang (llvm) compiles the BPF skeletons and bpftool, built from the
+    // same tree only to generate them, uses OpenSSL; Python runs jevents.py
+    // and builds the Python module with setuptools; the JVMTI agent needs
+    // OpenJDK's headers; asciidoctor makes the manual pages.
+    .build_depends = .{
+        "flex",    "bison",      "pkgconf",
+        "python",  "setuptools", "llvm",
+        "openssl", "openjdk",    "asciidoctor",
+    },
+}

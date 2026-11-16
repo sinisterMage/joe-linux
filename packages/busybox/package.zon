@@ -1,0 +1,15 @@
+.{
+    .name = "busybox",
+    .version = "1.38.0",
+    .release = 1,
+    .description = "Single binary with small versions of the common Unix utilities, for rescue work",
+    .license = "GPL-2.0-only",
+    .sources = .{
+        // Checked against upstream's busybox-1.38.0.tar.bz2.sha256.
+        .{ .url = "https://busybox.net/downloads/busybox-1.38.0.tar.bz2", .sha256 = "34f9ea6ff8636f2c9241153b9114eefa9e65674a45318ae1ef95bb5f31c53bb2" },
+    },
+    // libcrypt (libxcrypt) is linked when the build finds it.
+    .depends = .{ "glibc", "libxcrypt" },
+    // pod2man for the manual page.
+    .build_depends = .{"perl"},
+}

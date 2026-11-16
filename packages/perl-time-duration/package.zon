@@ -1,0 +1,12 @@
+.{
+    .name = "perl-time-duration",
+    .version = "1.21",
+    .release = 1,
+    .description = "Perl module Time::Duration, which describes durations in rounded English such as 3 hours ago",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/N/NE/NEILB/Time-Duration-1.21.tar.gz", .sha256 = "fe340eba8765f9263694674e5dff14833443e19865e5ff427bbd79b7b5f8a9b8" },
+    },
+    .depends = .{"perl"},
+    .build_depends = .{"perl"},
+}

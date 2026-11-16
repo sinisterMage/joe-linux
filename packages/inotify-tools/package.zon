@@ -1,0 +1,17 @@
+.{
+    .name = "inotify-tools",
+    .version = "4.26.282",
+    .release = 1,
+    .description = "Command-line programs (inotifywait, inotifywatch) and a library for watching files with inotify",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against upstream's checksums.txt.
+        .{ .url = "https://github.com/inotify-tools/inotify-tools/releases/download/4.26.282/inotify-tools-4.26.282.tar.gz", .sha256 = "656d4d7a1628bd253aa1cdb56dba0db728fa2e5b76cc5dc2f73321c05c8a33c9" },
+        // The one crate it depends on, at the version and checksum in
+        // upstream's Cargo.lock, so that cargo needs no network.
+        .{ .url = "https://static.crates.io/crates/libc/libc-0.2.183.crate", .sha256 = "b5b646652bf6661599e1da8901b3b9522896f01e736bad5f723fe7a3a27f899d" },
+    },
+    // libgcc_s (gcc) for Rust's standard library.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{"rust"},
+}

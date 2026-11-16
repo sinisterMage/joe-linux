@@ -1,0 +1,12 @@
+.{
+    .name = "unifdef",
+    .version = "2.12",
+    .release = 1,
+    .description = "Removes #ifdef'ed lines from C sources while leaving the rest alone",
+    .license = "BSD-2-Clause AND BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://dotat.at/prog/unifdef/unifdef-2.12.tar.gz", .sha256 = "fba564a24db7b97ebe9329713ac970627b902e5e9e8b14e19e024eb6e278d10b" },
+    },
+    // unifdefall runs the C preprocessor (cc -E) to list the macros.
+    .depends = .{ "glibc", "gcc" },
+}

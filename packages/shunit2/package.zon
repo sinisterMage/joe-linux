@@ -1,0 +1,14 @@
+.{
+    .name = "shunit2",
+    .version = "2.1.8",
+    .release = 1,
+    .description = "xUnit-style unit testing framework for POSIX shell scripts",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/kward/shunit2/archive/v2.1.8/shunit2-2.1.8.tar.gz", .sha256 = "b2fed28ba7282e4878640395284e43f08a029a6c27632df73267c8043c71b60c" },
+    },
+    // A shell library, sourced by test scripts (". shunit2" finds it on
+    // PATH); it uses only POSIX shell utilities.
+    .depends = .{},
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "datamash",
+    .version = "1.9",
+    .release = 1,
+    .description = "GNU datamash: numeric, textual and statistical operations on columns of text",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Checked against its GNU signature (gnu-keyring.gpg).
+        .{ .url = "https://ftpmirror.gnu.org/datamash/datamash-1.9.tar.gz", .sha256 = "f382ebda03650dd679161f758f9c0a6cc9293213438d4a77a8eda325aacb87d2" },
+    },
+    .depends = .{"glibc"},
+}

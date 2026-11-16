@@ -1,0 +1,13 @@
+.{
+    .name = "perl-ipc-run",
+    .version = "20260402.0",
+    .release = 1,
+    .description = "Perl module IPC::Run, which runs and interacts with child processes, with pipes and pseudo-terminals",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        .{ .url = "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20260402.0.tar.gz", .sha256 = "d6a326a8b1ffb19495dea4ff5a09ef138bf3562ab1b069d3fb7efbc77b9f6aca" },
+    },
+    // IO::Pty for the '<pty<' and '>pty>' redirections.
+    .depends = .{ "perl", "perl-io-tty" },
+    .build_depends = .{"perl"},
+}

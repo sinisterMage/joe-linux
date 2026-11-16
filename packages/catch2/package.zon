@@ -1,0 +1,13 @@
+.{
+    .name = "catch2",
+    .version = "3.16.1",
+    .release = 1,
+    .description = "Catch2, a unit testing and micro-benchmarking framework for C++",
+    .license = "BSL-1.0",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/catchorg/Catch2/archive/v3.16.1/Catch2-3.16.1.tar.gz", .sha256 = "d16bd1b8b2364918bd472cb216394acb93bde6784890df0d91bccfb3f28d777d" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

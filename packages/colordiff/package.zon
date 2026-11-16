@@ -1,0 +1,13 @@
+.{
+    .name = "colordiff",
+    .version = "1.0.22",
+    .release = 1,
+    .description = "Wrapper for diff that colours its output",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against Dave Ewart's signature (colordiff-1.0.22.tar.gz.sig).
+        .{ .url = "https://www.colordiff.org/colordiff-1.0.22.tar.gz", .sha256 = "f96f73c54521c53f14dc164d5a3920c9ca21a0e5f8e9613f43812a98af3e22af" },
+    },
+    // A Perl script that runs diff; cdiff pipes it through less.
+    .depends = .{ "perl", "diffutils", "less" },
+}

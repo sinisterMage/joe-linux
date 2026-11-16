@@ -1,0 +1,13 @@
+.{
+    .name = "cmocka",
+    .version = "2.0.2",
+    .release = 1,
+    .description = "Unit testing framework for C with support for mock objects",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Checked against Andreas Schneider's signature (cmocka-2.0.2.tar.xz.asc).
+        .{ .url = "https://cmocka.org/files/2.0/cmocka-2.0.2.tar.xz", .sha256 = "39f92f366bdf3f1a02af4da75b4a5c52df6c9f7e736c7d65de13283f9f0ef416" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "cmake", "ninja" },
+}
