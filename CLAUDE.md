@@ -112,4 +112,5 @@ Recipes follow Linux From Scratch and Beyond LFS (systemd, development branch). 
 - dave's systemd units are in `system/`. They are installed by both `packages/dave/build.sh` (real images) and `image/add-dave.sh` (scaffold); adding or renaming a unit means editing both. Units are enabled by shipping symlinks.
 - `packages/joe-installer/files/` is likewise populated with a copy of `installer/`.
 - `packages/joe-release/build.sh` holds the kernel's and dave's versions, because releases are named J<revision>-<kernel>-<dave>[-<stage>] (README.md, "Releases"). Changing either version means changing it there too and bumping `joe-release`'s `.release`; `tests/vm/live.py` checks they agree.
+- `packages/gcc-fortran` builds the same GCC source as `packages/gcc` and pins `gcc =VERSION` in its `depends`; changing gcc's version means changing both.
 - `packages/dave/files/` is populated by `build-packages.sh` with the freshly built binary and `system/*`. dave is cross-built on the host because joe does not package Zig. A dave change reaches an image only after the `dave` package is rebuilt, which needs a `.release` bump in `packages/dave/package.zon`.
