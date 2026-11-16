@@ -1,0 +1,14 @@
+.{
+    .name = "gcc-fortran",
+    .version = "16.2.0",
+    .release = 1,
+    .description = "Fortran compiler of the GNU compiler collection (gfortran) and its run-time library",
+    .license = "GPL-3.0-or-later AND GPL-3.0-or-later WITH GCC-exception-3.1",
+    .sources = .{
+        // The same source as the gcc package; the two must be the same version.
+        .{ .url = "https://ftpmirror.gnu.org/gcc/gcc-16.2.0/gcc-16.2.0.tar.xz", .sha256 = "e6738e29597f733270731aa90600f37ffdc045079dfc27ec7e8192cc81085c3e" },
+    },
+    // f951 is driven by gcc's own driver, assembler and linker set-up, and
+    // libgfortran uses libquadmath, which the gcc package ships.
+    .depends = .{ "gcc =16.2.0", "glibc", "gmp", "mpfr", "mpc", "zlib", "zstd" },
+}
