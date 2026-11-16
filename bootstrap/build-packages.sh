@@ -81,7 +81,9 @@ while read -r name flag; do
     fi
 
     [[ $flag == build-only ]] && continue
-    if ! "$dave" --root "$root" list | grep -qx "$name $version\( .*\)\{0,1\}"; then
+    # Not grep -q: it would exit at the first match, and under pipefail the
+    # list command's SIGPIPE would count as "not installed".
+    if ! "$dave" --root "$root" list | grep -x "$name $version\( .*\)\{0,1\}" >/dev/null; then
         echo "    installing $name $version into the build root"
         "$dave" --root "$root" --overwrite install "$name=$version" >/dev/null
     fi

@@ -44,8 +44,10 @@ if [[ $PKG_NAME != joe-filesystem ]]; then
 fi
 
 # Libtool archives only cause trouble; documentation readers are not shipped yet.
+# Only gtk-doc's html directory is API documentation: gtk-doc itself keeps its
+# Python modules and stylesheets beside it in /usr/share/gtk-doc.
 find . -name '*.la' -delete
-rm -rf usr/share/doc usr/share/info usr/share/gtk-doc
+rm -rf usr/share/doc usr/share/info usr/share/gtk-doc/html
 
 # Python byte code. A .pyc file normally records its source file's mtime and
 # is used only while the source still has it; dave does not keep file times,
