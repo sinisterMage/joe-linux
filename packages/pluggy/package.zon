@@ -1,7 +1,7 @@
 .{
     .name = "pluggy",
     .version = "1.6.0",
-    .release = 1,
+    .release = 2,
     .description = "Plugin and hook calling mechanisms for Python",
     .license = "MIT",
     .sources = .{

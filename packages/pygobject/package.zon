@@ -1,7 +1,7 @@
 .{
     .name = "pygobject",
     .version = "3.58.1",
-    .release = 1,
+    .release = 2,
     .description = "Python bindings for GObject and GObject Introspection",
     .license = "LGPL-2.1-or-later",
     .sources = .{

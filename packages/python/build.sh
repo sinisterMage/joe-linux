@@ -9,7 +9,10 @@ build() {
     # sandbox. It can return once builds are reproducible.
     # There is no system mpdecimal: build _decimal from the bundled copy
     # (the default would silently fall back to the slow pure-Python decimal).
+    # _tkinter is left out: it would make every Python installation carry Tk
+    # and X11's libraries. The python-tkinter package adds it.
     ./configure --prefix=/usr \
+        py_cv_module__tkinter=n/a \
         --enable-shared \
         --with-system-expat \
         --without-system-libmpdec \

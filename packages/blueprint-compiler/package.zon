@@ -1,7 +1,7 @@
 .{
     .name = "blueprint-compiler",
     .version = "0.22.2",
-    .release = 1,
+    .release = 2,
     .description = "Compiler for Blueprint, a markup language for GTK user interfaces",
     .license = "LGPL-3.0-or-later",
     .sources = .{

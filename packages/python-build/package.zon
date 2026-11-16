@@ -1,7 +1,7 @@
 .{
     .name = "python-build",
     .version = "1.6.1",
-    .release = 1,
+    .release = 2,
     .description = "Simple, correct build frontend for Python packages (PEP 517)",
     .license = "MIT",
     .sources = .{

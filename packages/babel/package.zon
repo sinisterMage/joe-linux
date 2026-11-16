@@ -1,7 +1,7 @@
 .{
     .name = "babel",
     .version = "2.18.0",
-    .release = 1,
+    .release = 2,
     .description = "Internationalisation utilities for Python, with the CLDR locale data",
     .license = "BSD-3-Clause",
     .sources = .{

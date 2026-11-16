@@ -1,7 +1,7 @@
 .{
     .name = "hatch-vcs",
     .version = "0.5.0",
-    .release = 1,
+    .release = 2,
     .description = "Hatch plugin for versioning with version control systems",
     .license = "MIT",
     .sources = .{

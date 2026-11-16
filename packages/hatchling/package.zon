@@ -1,7 +1,7 @@
 .{
     .name = "hatchling",
     .version = "1.32.0",
-    .release = 1,
+    .release = 2,
     .description = "Extensible, standards-compliant build backend for Python projects",
     .license = "MIT",
     .sources = .{

@@ -1,7 +1,7 @@
 .{
     .name = "make",
     .version = "4.4.1",
-    .release = 1,
+    .release = 2,
     .description = "Program that controls the building of other programs",
     .license = "GPL-3.0-or-later",
     .sources = .{

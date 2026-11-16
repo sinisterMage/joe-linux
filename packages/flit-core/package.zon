@@ -1,7 +1,7 @@
 .{
     .name = "flit-core",
     .version = "4.2.0",
-    .release = 1,
+    .release = 2,
     .description = "Build backend for simple Python packages",
     .license = "BSD-3-Clause",
     .sources = .{

@@ -1,7 +1,7 @@
 .{
     .name = "diffoscope",
     .version = "339",
-    .release = 1,
+    .release = 2,
     .description = "In-depth comparison of files, archives and directories",
     .license = "GPL-3.0-or-later",
     .sources = .{

@@ -1,7 +1,7 @@
 .{
     .name = "pytest",
     .version = "9.2.0",
-    .release = 1,
+    .release = 2,
     .description = "Testing framework for Python",
     .license = "MIT",
     .sources = .{

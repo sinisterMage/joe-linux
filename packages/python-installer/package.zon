@@ -1,7 +1,7 @@
 .{
     .name = "python-installer",
     .version = "1.1.0",
-    .release = 1,
+    .release = 2,
     .description = "Library for installing Python wheels",
     .license = "MIT",
     .sources = .{

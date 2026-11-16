@@ -1,7 +1,7 @@
 .{
     .name = "markupsafe",
     .version = "3.0.4",
-    .release = 1,
+    .release = 2,
     .description = "Python module that escapes text for safe use in HTML and XML",
     .license = "BSD-3-Clause",
     .sources = .{

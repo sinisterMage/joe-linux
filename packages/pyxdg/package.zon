@@ -1,7 +1,7 @@
 .{
     .name = "pyxdg",
     .version = "0.28",
-    .release = 1,
+    .release = 2,
     .description = "Python implementation of the freedesktop.org base directory, menu and desktop entry specifications",
     .license = "LGPL-2.0-only",
     .sources = .{

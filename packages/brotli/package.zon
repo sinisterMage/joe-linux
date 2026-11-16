@@ -1,7 +1,7 @@
 .{
     .name = "brotli",
     .version = "1.2.1",
-    .release = 1,
+    .release = 2,
     .description = "Brotli compression library, command line tool and Python module",
     .license = "MIT",
     .sources = .{

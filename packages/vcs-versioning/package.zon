@@ -1,7 +1,7 @@
 .{
     .name = "vcs-versioning",
     .version = "2.2.4",
-    .release = 1,
+    .release = 2,
     .description = "Version numbers from version control metadata, the core of setuptools-scm",
     .license = "MIT",
     .sources = .{

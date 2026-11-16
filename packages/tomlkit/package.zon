@@ -1,7 +1,7 @@
 .{
     .name = "tomlkit",
     .version = "0.15.1",
-    .release = 1,
+    .release = 2,
     .description = "Style-preserving TOML library for Python",
     .license = "MIT",
     .sources = .{

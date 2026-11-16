@@ -1,7 +1,7 @@
 .{
     .name = "setuptools-scm",
     .version = "10.1.2",
-    .release = 1,
+    .release = 2,
     .description = "Python package versions from git or Mercurial metadata",
     .license = "MIT",
     .sources = .{

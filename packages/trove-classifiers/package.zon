@@ -1,7 +1,7 @@
 .{
     .name = "trove-classifiers",
     .version = "2026.6.1.19",
-    .release = 1,
+    .release = 2,
     .description = "Canonical list of the classifiers used on PyPI",
     .license = "Apache-2.0",
     .sources = .{

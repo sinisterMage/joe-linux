@@ -1,7 +1,7 @@
 .{
     .name = "speech-dispatcher",
     .version = "0.12.1",
-    .release = 1,
+    .release = 2,
     .description = "Common interface to speech synthesisers, with its Python bindings",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{

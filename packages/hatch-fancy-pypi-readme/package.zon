@@ -1,7 +1,7 @@
 .{
     .name = "hatch-fancy-pypi-readme",
     .version = "25.1.0",
-    .release = 1,
+    .release = 2,
     .description = "Hatch plugin that assembles the readme field of a project's metadata",
     .license = "MIT",
     .sources = .{

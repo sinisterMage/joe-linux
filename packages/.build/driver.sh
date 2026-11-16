@@ -47,6 +47,51 @@ fi
 find . -name '*.la' -delete
 rm -rf usr/share/doc usr/share/info usr/share/gtk-doc
 
+# Python byte code. A .pyc file normally records its source file's mtime and
+# is used only while the source still has it; dave does not keep file times,
+# so on an installed system every .pyc would be stale. Python would then
+# compile every module again on each import, and when run by root it would
+# write unsealed .pyc files that a privileged Python is not allowed to load.
+# So each .pyc records a hash of its source instead (PEP 552,
+# "checked-hash"): the code inside is unchanged, only the header is. When
+# python itself is being packaged, the interpreter just built does it, so
+# the hashes match its version.
+if [[ -n $(find . -path '*/__pycache__/*.pyc' -print -quit) ]]; then
+    python=(python3)
+    if [[ -x usr/bin/python3 ]]; then
+        python=(env "LD_LIBRARY_PATH=$DESTDIR/usr/lib" "$DESTDIR/usr/bin/python3")
+    fi
+    "${python[@]}" -I -S - <<'EOF'
+import importlib.util, os, sys
+tag = "." + sys.implementation.cache_tag
+done = other = 0
+for top, dirs, files in os.walk("."):
+    if os.path.basename(top) != "__pycache__":
+        continue
+    for name in files:
+        if not name.endswith(".pyc") or tag not in name:
+            continue
+        path = os.path.join(top, name)
+        source = os.path.join(os.path.dirname(top), name[:name.index(tag)] + ".py")
+        with open(path, "rb") as f:
+            header = f.read(16)
+        if header[:4] != importlib.util.MAGIC_NUMBER:
+            other += 1
+            continue
+        if int.from_bytes(header[4:8], "little") != 0 or not os.path.exists(source):
+            continue  # already hash-based, or no source to check against
+        with open(source, "rb") as f:
+            digest = importlib.util.source_hash(f.read())
+        with open(path, "r+b") as f:
+            f.seek(4)
+            f.write((0b11).to_bytes(4, "little") + digest)
+        done += 1
+print(f"python byte code: {done} files made hash-based", file=sys.stderr)
+if other:
+    print(f"python byte code: {other} files are for another Python version", file=sys.stderr)
+EOF
+fi
+
 # Strip debugging symbols unless the recipe opts out with NOSTRIP=1.
 if [[ -z ${NOSTRIP:-} ]]; then
     while IFS= read -r -d '' f; do

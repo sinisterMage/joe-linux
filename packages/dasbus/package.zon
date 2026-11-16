@@ -1,7 +1,7 @@
 .{
     .name = "dasbus",
     .version = "1.7",
-    .release = 1,
+    .release = 2,
     .description = "D-Bus library for Python built on GLib and PyGObject",
     .license = "LGPL-2.1-or-later",
     .sources = .{

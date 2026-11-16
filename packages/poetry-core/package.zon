@@ -1,7 +1,7 @@
 .{
     .name = "poetry-core",
     .version = "2.4.1",
-    .release = 1,
+    .release = 2,
     .description = "Poetry's PEP 517 build backend",
     .license = "MIT AND BSD-3-Clause AND (Apache-2.0 OR BSD-2-Clause)",
     .sources = .{

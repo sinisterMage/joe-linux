@@ -1,7 +1,7 @@
 .{
     .name = "filelock",
     .version = "4.2.10",
-    .release = 1,
+    .release = 2,
     .description = "Platform-independent file locking for Python",
     .license = "MIT",
     .sources = .{

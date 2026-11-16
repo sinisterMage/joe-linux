@@ -1,7 +1,7 @@
 .{
     .name = "setuptools",
     .version = "84.2.1",
-    .release = 1,
+    .release = 2,
     .description = "Library for building, packaging and installing Python projects",
     .license = "MIT",
     .sources = .{
