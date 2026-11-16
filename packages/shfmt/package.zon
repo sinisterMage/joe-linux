@@ -1,0 +1,19 @@
+.{
+    .name = "shfmt",
+    .version = "3.14.1",
+    .release = 1,
+    .description = "Shell script formatter for POSIX shell, Bash, mksh and Zsh",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // The mvdan/sh repository, which shfmt is part of. Upstream
+        // publishes no checksum for the source archive.
+        .{ .url = "https://github.com/mvdan/sh/archive/v3.14.1/shfmt-3.14.1.tar.gz", .sha256 = "ec4bdb88ab6c95686be3a4eeb4ad77d2b49d33d2ed7b0a65035cd52d2d87c443" },
+    },
+    // go downloads the modules shfmt depends on; they are not vendored yet.
+    .network = true,
+    // Built without cgo, as upstream does, so no library is linked; as a
+    // position-independent executable it is still relocated by glibc's
+    // dynamic loader.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

@@ -1,0 +1,20 @@
+.{
+    .name = "gh",
+    .version = "2.104.0",
+    .release = 1,
+    .description = "GitHub's official command line tool",
+    .license = "MIT",
+    .sources = .{
+        // Upstream's checksums file covers only the binary packages, not the
+        // source archive.
+        .{ .url = "https://github.com/cli/cli/archive/v2.104.0/gh-2.104.0.tar.gz", .sha256 = "779060cbdc5a354fa2fc8afb56e9277f64a29ac599daefd941558356509081e4" },
+    },
+    // go downloads the modules gh depends on; they are not vendored yet.
+    .network = true,
+    // Built without cgo, as upstream's Linux builds are, so no library is
+    // linked; as a position-independent executable it is still relocated by
+    // glibc's dynamic loader. gh runs git for clone, checkout, push and
+    // credential setup.
+    .depends = .{ "glibc", "git" },
+    .build_depends = .{"go"},
+}

@@ -1,0 +1,19 @@
+.{
+    .name = "git-delta",
+    .version = "0.20.1",
+    .release = 1,
+    .description = "Syntax-highlighting pager for git, diff and grep output (delta)",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/dandavison/delta/archive/0.20.1/git-delta-0.20.1.tar.gz", .sha256 = "d9d502396e3595ee8fd926f1ed2e54ac9935baabd3569a3753efab36304f90fa" },
+    },
+    // cargo downloads the crates delta depends on from crates.io; they are
+    // not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; libgit2 (without HTTPS or SSH, which
+    // delta does not use) and its zlib for reading git configuration and
+    // repositories; Oniguruma for the syntax definitions' regular
+    // expressions. less is the pager delta runs by default.
+    .depends = .{ "glibc", "gcc", "libgit2", "zlib", "oniguruma", "less" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

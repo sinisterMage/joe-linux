@@ -1,0 +1,19 @@
+.{
+    .name = "bat",
+    .version = "0.26.1",
+    .release = 1,
+    .description = "cat clone with syntax highlighting and Git integration",
+    .license = "MIT OR Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/sharkdp/bat/archive/v0.26.1/bat-0.26.1.tar.gz", .sha256 = "4474de87e084953eefc1120cf905a79f72bbbf85091e30cf37c9214eafcaa9c9" },
+    },
+    // cargo downloads the crates bat depends on from crates.io; they are not
+    // vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; libgit2 (without HTTPS or SSH) and its
+    // zlib for showing Git modifications; Oniguruma for the syntax
+    // definitions' regular expressions. less is the pager bat runs by
+    // default.
+    .depends = .{ "glibc", "gcc", "libgit2", "zlib", "oniguruma", "less" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

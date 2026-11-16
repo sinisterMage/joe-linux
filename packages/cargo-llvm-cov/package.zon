@@ -1,0 +1,21 @@
+.{
+    .name = "cargo-llvm-cov",
+    .version = "0.9.1",
+    .release = 1,
+    .description = "Cargo subcommand for LLVM source-based code coverage",
+    .license = "Apache-2.0 OR MIT",
+    .sources = .{
+        // The crate as published on crates.io, with the SHA-256 the index
+        // gives for it. The GitHub archive has no Cargo.lock; the crate
+        // carries the one upstream published with the release.
+        .{ .url = "https://static.crates.io/crates/cargo-llvm-cov/cargo-llvm-cov-0.9.1.crate", .sha256 = "5e00647cc92940c4dd82249c480fe08fd3809767e89f056bcec46d8a7962ea5b" },
+    },
+    // cargo downloads the crates cargo-llvm-cov depends on from crates.io;
+    // they are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding. It runs cargo and rustc to build with
+    // instrumentation, and LLVM's llvm-profdata and llvm-cov (the LLVM rustc
+    // is built against) to merge profiles and write reports.
+    .depends = .{ "glibc", "gcc", "rust", "llvm" },
+    .build_depends = .{"rust"},
+}

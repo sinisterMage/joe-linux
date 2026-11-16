@@ -1,0 +1,16 @@
+.{
+    .name = "taplo",
+    .version = "0.10.0",
+    .release = 1,
+    .description = "TOML toolkit: formatter, linter and language server",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://github.com/tamasfe/taplo/archive/0.10.0/taplo-0.10.0.tar.gz", .sha256 = "c2f7b3234fc62000689a476b462784db4d1bb2be6edcc186654b211f691efaf8" },
+    },
+    // cargo downloads the crates taplo depends on from crates.io; they are
+    // not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding. TLS is rustls with ring, compiled in.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{"rust"},
+}

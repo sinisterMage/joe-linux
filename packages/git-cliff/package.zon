@@ -1,0 +1,18 @@
+.{
+    .name = "git-cliff",
+    .version = "2.14.2",
+    .release = 1,
+    .description = "Highly customizable changelog generator that follows Conventional Commits",
+    .license = "MIT OR Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/orhun/git-cliff/archive/v2.14.2/git-cliff-2.14.2.tar.gz", .sha256 = "fbbb1f8ade8e9affeaacd632bedc94ac898fb726516f2f5a86d1bfba947635f4" },
+    },
+    // cargo downloads the crates git-cliff depends on from crates.io; they
+    // are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; libgit2 (without HTTPS or SSH) and its
+    // zlib for reading the history; zstd for compressed API responses from
+    // the remote integrations. TLS is rustls with ring, compiled in.
+    .depends = .{ "glibc", "gcc", "libgit2", "zlib", "zstd" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

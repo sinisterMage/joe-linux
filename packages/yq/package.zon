@@ -1,0 +1,21 @@
+.{
+    .name = "yq",
+    .version = "4.54.3",
+    .release = 1,
+    .description = "Portable command-line YAML, JSON, XML, CSV, TOML and properties processor",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no checksum for the source archive.
+        .{ .url = "https://github.com/mikefarah/yq/archive/v4.54.3/yq-4.54.3.tar.gz", .sha256 = "93143d49b2a3bd6cb723477f585366b29f70c636af4653191d61b49b0c47de7f" },
+        // The manual page upstream builds with pandoc (which has no recipe)
+        // for each release; its SHA-256 is in the release's checksums file.
+        .{ .url = "https://github.com/mikefarah/yq/releases/download/v4.54.3/yq_man_page_only.tar.gz", .sha256 = "23f2af15723d51db671a647f17dc386678d9ca85bc314025db466b102d47c1f3", .file = "yq-4.54.3-man-page.tar.gz" },
+    },
+    // go downloads the modules yq depends on; they are not vendored yet.
+    .network = true,
+    // Built without cgo, as upstream does, so no library is linked; as a
+    // position-independent executable it is still relocated by glibc's
+    // dynamic loader.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

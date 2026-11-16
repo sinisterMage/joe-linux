@@ -1,0 +1,20 @@
+.{
+    .name = "fzf",
+    .version = "0.75.0",
+    .release = 1,
+    .description = "Command-line fuzzy finder",
+    .license = "MIT",
+    .sources = .{
+        // Upstream's checksums file covers only the binary archives, not the
+        // source archive.
+        .{ .url = "https://github.com/junegunn/fzf/archive/v0.75.0/fzf-0.75.0.tar.gz", .sha256 = "165f6e0c1b9ba082346233681e3f1d1374e37f9fd3c1d7b6dfe09659ab893faa" },
+    },
+    // go downloads the modules fzf depends on; they are not vendored yet.
+    .network = true,
+    // Built without cgo, as upstream does, so no library is linked; as a
+    // position-independent executable it is still relocated by glibc's
+    // dynamic loader. fzf-tmux and fzf-preview.sh are bash scripts;
+    // fzf-tmux drives tmux, which only matters inside a tmux session.
+    .depends = .{ "glibc", "bash" },
+    .build_depends = .{"go"},
+}

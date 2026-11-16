@@ -1,0 +1,19 @@
+.{
+    .name = "git-absorb",
+    .version = "0.9.0",
+    .release = 1,
+    .description = "git commit --fixup, but automatic (git absorb)",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/tummychow/git-absorb/archive/0.9.0/git-absorb-0.9.0.tar.gz", .sha256 = "a0f74e6306d7fbd746d2b4a6856621d46a7f82e3e88b6bb8b6fc0480cf811f53" },
+    },
+    // cargo downloads the crates git-absorb depends on from crates.io; they
+    // are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; libgit2 (without HTTPS or SSH) and its
+    // zlib. --and-rebase runs git rebase, and it is used as a git
+    // subcommand.
+    .depends = .{ "glibc", "gcc", "libgit2", "zlib", "git" },
+    // Asciidoctor for the manual page.
+    .build_depends = .{ "rust", "pkgconf", "asciidoctor" },
+}

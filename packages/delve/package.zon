@@ -1,0 +1,17 @@
+.{
+    .name = "delve",
+    .version = "1.27.2",
+    .release = 1,
+    .description = "Debugger for the Go programming language (dlv)",
+    .license = "MIT",
+    .sources = .{
+        // Upstream's signed checksums.txt covers only the binary archives,
+        // not the source archive.
+        .{ .url = "https://github.com/go-delve/delve/archive/v1.27.2/delve-1.27.2.tar.gz", .sha256 = "8ea5979dfc5978c9690dc1dd533a830815441dd33617f4a61bcdff7d2c3c7e90" },
+    },
+    // Delve vendors its Go dependencies in the archive, so the build is
+    // offline. Built with cgo, which links only glibc. dlv debug, test and
+    // trace build the program being debugged with go.
+    .depends = .{ "glibc", "go" },
+    .build_depends = .{"go"},
+}

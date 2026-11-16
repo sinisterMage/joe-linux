@@ -1,0 +1,14 @@
+.{
+    .name = "shellharden",
+    .version = "4.3.2",
+    .release = 1,
+    .description = "Syntax highlighter and semi-automatic rewriter that hardens bash scripts",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/anordal/shellharden/archive/v4.3.2/shellharden-4.3.2.tar.gz", .sha256 = "3a6721c3409c70449c24a5b33f83d0d05026f2318fe052db5c6d0834e2b29c6c" },
+    },
+    // shellharden depends on no other crate, so cargo builds it offline.
+    // libgcc_s (gcc) for unwinding.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{"rust"},
+}

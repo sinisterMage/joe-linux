@@ -1,0 +1,18 @@
+.{
+    .name = "cargo-deny",
+    .version = "0.20.2",
+    .release = 1,
+    .description = "Cargo plugin for linting dependencies: licenses, bans, advisories and sources",
+    .license = "MIT OR Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/EmbarkStudios/cargo-deny/archive/0.20.2/cargo-deny-0.20.2.tar.gz", .sha256 = "31fc1d33fae8d5b4264db8ed5c6c070c27cd2f869cc6d2983ac03548c5a81c8e" },
+    },
+    // cargo downloads the crates cargo-deny depends on from crates.io; they
+    // are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; zstd for the compressed license texts
+    // the spdx crate detects licenses with. It runs cargo metadata to read a
+    // project, and git to fetch advisory databases.
+    .depends = .{ "glibc", "gcc", "zstd", "rust", "git" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

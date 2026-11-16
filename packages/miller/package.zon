@@ -1,0 +1,20 @@
+.{
+    .name = "miller",
+    .version = "6.22.0",
+    .release = 1,
+    .description = "Like awk, sed, cut, join and sort for name-indexed data such as CSV, TSV and JSON (mlr)",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // The source tarball upstream attaches to the release (made by its
+        // create-release-tarball script). The release's checksums file
+        // covers only the binary packages, not this tarball.
+        .{ .url = "https://github.com/johnkerl/miller/releases/download/v6.22.0/miller-6.22.0.tar.gz", .sha256 = "a6fba59814a49821896be2096aab80eb4818eb26fd2bfce72a231623be38b246" },
+    },
+    // go downloads the modules miller depends on; they are not vendored
+    // yet.
+    .network = true,
+    // Built without cgo, so no library is linked; as a position-independent
+    // executable it is still relocated by glibc's dynamic loader.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "fd",
+    .version = "10.5.2",
+    .release = 1,
+    .description = "Simple, fast and user-friendly alternative to find",
+    .license = "MIT OR Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/sharkdp/fd/archive/v10.5.2/fd-10.5.2.tar.gz", .sha256 = "8991b6504cac33c00528050622dfe3f2a0db1be1a6faf99f69b46d1a8f737dc5" },
+    },
+    // cargo downloads the crates fd depends on from crates.io; they are not
+    // vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding. jemalloc is linked in statically.
+    .depends = .{ "glibc", "gcc" },
+    // make for the copy of jemalloc that tikv-jemalloc-sys builds.
+    .build_depends = .{ "rust", "make" },
+}
