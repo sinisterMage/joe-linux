@@ -1,12 +1,12 @@
 .{
     .name = "upower",
     .version = "1.91.5",
-    .release = 1,
+    .release = 2,
     .description = "Power management abstraction: batteries, line power and lid state over D-Bus",
     .license = "GPL-2.0-or-later",
     .sources = .{
         .{ .url = "https://gitlab.freedesktop.org/upower/upower/-/archive/v1.91.5/upower-v1.91.5.tar.bz2", .sha256 = "c465a1c7fc05d00ac2bc7321c19b9b7e479410d8392bd7eb3e714275729629fd" },
     },
-    .depends = .{ "glibc", "glib", "libgudev", "polkit", "systemd", "dbus" },
+    .depends = .{ "glibc", "glib", "libgudev", "polkit", "systemd", "dbus", "libimobiledevice", "usbmuxd" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
 }

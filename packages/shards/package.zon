@@ -1,0 +1,15 @@
+.{
+    .name = "shards",
+    .version = "0.20.0",
+    .release = 1,
+    .description = "Dependency manager for the Crystal language",
+    .license = "Apache-2.0 AND MIT",
+    .sources = .{
+        // No separate upstream checksum for the GitHub archive. Upstream
+        // vendors crystal-molinillo 0.2.0 source, matching shard.lock.
+        .{ .url = "https://github.com/crystal-lang/shards/archive/v0.20.0/shards-0.20.0.tar.gz", .sha256 = "8655b87761016409e4411056e350b24e7fe79eae3f227b3354b181a03f14d5da" },
+    },
+    // git is the default source resolver; crystal runs builds and scripts.
+    // Mercurial and Fossil repositories additionally require their own VCS.
+    .depends = .{ "glibc", "gcc", "gc", "pcre2", "libyaml", "git", "crystal" },
+}

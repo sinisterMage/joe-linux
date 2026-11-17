@@ -1,8 +1,8 @@
 build() {
     mkdir build
     cd build
-    # libimobiledevice does not exist; the installed tests need
-    # python-dbusmock and umockdev.
+    # Mobile-device battery queries use libimobiledevice; installed tests
+    # need python-dbusmock and umockdev.
     meson setup .. \
         --prefix=/usr \
         --buildtype=release \
@@ -11,7 +11,7 @@ build() {
         -D man=false \
         -D introspection=enabled \
         -D polkit=enabled \
-        -D idevice=disabled \
+        -D idevice=enabled \
         -D installed_tests=false \
         -D zshcompletiondir=no
     ninja

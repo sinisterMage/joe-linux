@@ -16,12 +16,11 @@ build() {
     # Mobile broadband goes through ModemManager, and Bluetooth dial-up
     # networking through BlueZ.
     #
-    # Switched off because what they need does not exist: ofono, PPP,
-    # Open vSwitch and nm-cloud-setup (jansson), teamd, nmtui (newt),
-    # SELinux, audit, CLAT (libbpf), firewalld, dhcpcd, Qt examples. NBFT
-    # stays off as in the book. The paths of iptables, nft and dnsmasq are
-    # given so that the build root is not searched for them; they are used
-    # only for connection sharing, if ever installed.
+    # PPP supports dial-up and PPPoE. Install the firewalld sharing zone;
+    # firewalld remains optional and is contacted only when running.
+    # Open vSwitch, ofono, teamd, nmtui (newt), SELinux, audit and CLAT
+    # remain off. NBFT stays off as in the book. The paths of iptables,
+    # nft and dnsmasq are fixed for optional connection-sharing helpers.
     #
     # jansson has no switch: it is used if the build root has it.
     meson setup .. \
@@ -60,7 +59,8 @@ build() {
         -D modem_manager=true \
         -D ofono=false \
         -D bluez5_dun=true \
-        -D ppp=false \
+        -D ppp=true \
+        -D pppd=/usr/sbin/pppd \
         -D ovs=false \
         -D teamdctl=false \
         -D nmtui=false \
@@ -69,7 +69,7 @@ build() {
         -D clat=false \
         -D selinux=false \
         -D libaudit=no \
-        -D firewalld_zone=false \
+        -D firewalld_zone=true \
         -D ifcfg_rh=false \
         -D ifupdown=false \
         -D qt=false \

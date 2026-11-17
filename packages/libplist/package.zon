@@ -1,0 +1,14 @@
+.{
+    .name = "libplist",
+    .version = "2.8.1",
+    .release = 3,
+    .description = "Library for Apple's binary, XML, JSON and OpenStep property lists",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // Checked against the digest GitHub publishes for the release asset.
+        .{ .url = "https://github.com/libimobiledevice/libplist/releases/download/2.8.1/libplist-2.8.1.tar.bz2", .sha256 = "2a1792e5820e1657c173735fde75baeebd6dd967d2ac47be1e3891ddc64ebefa" },
+    },
+    // libplist++ is C++ (gcc). python: the Cython bindings, the plist module.
+    .depends = .{ "glibc", "gcc", "python" },
+    .build_depends = .{ "pkgconf", "python", "cython" },
+}

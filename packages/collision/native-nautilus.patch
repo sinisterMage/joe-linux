@@ -1,0 +1,42 @@
+Use the native installation directly and pass file paths as subprocess argv.
+Shell interpolation cannot correctly preserve arbitrary selected filenames.
+
+--- a/nautilus-extension/collision-extension.py
++++ b/nautilus-extension/collision-extension.py
+@@ -5,5 +5,4 @@
+-from subprocess import Popen, check_call, CalledProcessError
++from subprocess import Popen
+ from urllib.parse import urlparse, unquote
+-from shutil import which
+ from gi import require_version
+ from gettext import textdomain, gettext
+@@ -24,13 +23,2 @@
+-def get_collision():
+-    try:
+-        check_call("flatpak list --columns=application | grep \"dev.geopjr.Collision\" &> /dev/null", shell=True)
+-        return "flatpak run --file-forwarding dev.geopjr.Collision"
+-    except CalledProcessError:
+-        if which("collision") is not None:
+-            return "collision"
+-        else:
+-            return False
+-
+ class NautilusCollision(Nautilus.MenuProvider, GObject.GObject):
+-    collision = get_collision()
+ 
+@@ -44,8 +32,3 @@
+     def openWithCollision(self, menu, files):
+-        args = [self.collision]
+-        for file in files:
+-            file_path = repr(unquote(urlparse(file.get_uri()).path))
+-            if self.collision != "collision":
+-                file_path = "@@ " + file_path + " @@"
+-            args.append(file_path)
+-        Popen(" ".join(args), shell=True)  # Collision need to be in your PATH
++        paths = [unquote(urlparse(file.get_uri()).path) for file in files]
++        Popen(["collision", *paths])
+@@ -58,3 +41,3 @@
+         # The option doesn't appear when a folder is selected
+-        if self.collision == False or any(x.is_directory() for x in files): 
++        if any(x.is_directory() for x in files):
+             return ()

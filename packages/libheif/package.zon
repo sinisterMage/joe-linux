@@ -1,0 +1,22 @@
+.{
+    .name = "libheif",
+    .version = "1.23.7",
+    .release = 1,
+    .description = "HEIF and AVIF image file format decoder and encoder library and tools",
+    .license = "LGPL-3.0-or-later AND MIT",
+    .sources = .{
+        .{ .url = "https://github.com/strukturag/libheif/releases/download/v1.23.7/libheif-1.23.7.tar.gz", .sha256 = "f7483e818503ea6224c8863e4a56ac02c7089021a98472c811c12aa19faf2475" },
+    },
+    // The codecs: libde265 (HEVC decoding), x265 (HEVC encoding), x264
+    // (AVC encoding), libaom (AV1 both ways), dav1d (AV1 decoding, a
+    // plugin), OpenJPEG (JPEG 2000, a plugin) and libjpeg-turbo (JPEG).
+    // libsharpyuv is libwebp's. The heif-enc and heif-dec tools also read
+    // and write PNG, TIFF and WebP. The library is C++.
+    .depends = .{
+        "glibc",   "gcc",           "libde265", "x265",
+        "x264",    "libaom",        "dav1d",    "openjpeg",
+        "libjpeg-turbo", "libpng",  "tiff",     "libwebp",
+        "zlib",
+    },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "libtatsu",
+    .version = "1.1.1",
+    .release = 1,
+    .description = "Library for Apple's Tatsu signing server, used to personalize firmware and disk images",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the digest GitHub publishes for the release asset.
+        .{ .url = "https://github.com/libimobiledevice/libtatsu/releases/download/1.1.1/libtatsu-1.1.1.tar.bz2", .sha256 = "18f471f131c1d55ccc02fa09565d870030c6ce92f737b89fe1b3849941ebb303" },
+    },
+    .depends = .{ "glibc", "libplist", "curl" },
+    .build_depends = .{"pkgconf"},
+}

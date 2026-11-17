@@ -1,7 +1,7 @@
 .{
     .name = "networkmanager",
     .version = "1.58.1",
-    .release = 3,
+    .release = 4,
     .description = "Network connection manager with the nmcli command line client",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{
@@ -10,7 +10,7 @@
     .depends = .{ "glibc", "glib", "systemd", "dbus", "libndp", "curl", "libpsl", "nss", "nspr", "readline", "util-linux", "polkit", "kmod", "wpa_supplicant",
         // Mobile broadband through ModemManager, with its provider
         // database; dial-up networking over Bluetooth through BlueZ.
-        "modemmanager", "mobile-broadband-provider-info", "bluez",
+        "modemmanager", "mobile-broadband-provider-info", "bluez", "ppp",
         // Found and used whenever it is installed (JSON in team and nm-cloud
         // configurations); there is no switch for it.
         "jansson" },

@@ -1,0 +1,27 @@
+.{
+    .name = "libimobiledevice",
+    .version = "1.4.0",
+    .release = 2,
+    .description = "Library and tools that talk to iPhones, iPads and other Apple devices",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // Checked against the digest GitHub publishes for the release asset.
+        .{ .url = "https://github.com/libimobiledevice/libimobiledevice/releases/download/1.4.0/libimobiledevice-1.4.0.tar.bz2", .sha256 = "23cc0077e221c7d991bd0eb02150a0d49199bcca1ddf059edccee9ffd914939d" },
+    },
+    // The library is LGPL; the idevice* tools are GPL. OpenSSL does the
+    // pairing cryptography; libtatsu is for ideviceimagemounter, readline for
+    // afcclient's prompt, python for the Cython bindings (the imobiledevice
+    // module). USB devices are reached through usbmuxd, which itself links
+    // this library and so cannot be a dependency of it.
+    .depends = .{
+        "glibc",
+        "libplist",
+        "libusbmuxd",
+        "libimobiledevice-glue",
+        "libtatsu",
+        "openssl",
+        "readline",
+        "python",
+    },
+    .build_depends = .{ "pkgconf", "python", "cython" },
+}

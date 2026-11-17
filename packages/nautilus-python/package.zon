@@ -1,0 +1,13 @@
+.{
+    .name = "nautilus-python",
+    .version = "4.2.0",
+    .release = 1,
+    .description = "Python extension support for GNOME Files",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Verified against download.gnome.org's published .sha256sum.
+        .{ .url = "https://download.gnome.org/sources/nautilus-python/4.2/nautilus-python-4.2.0.tar.xz", .sha256 = "a45b9b407a6d11328afb4d8a9ea014758c100d77e845ccb280882d2f7e4adfbc" },
+    },
+    .depends = .{ "glibc", "glib", "nautilus", "python", "pygobject" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

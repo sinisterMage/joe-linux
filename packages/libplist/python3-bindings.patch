@@ -1,0 +1,41 @@
+--- a/cython/plist.pyx
++++ b/cython/plist.pyx
+@@ -607,5 +607,6 @@
+         for key, item in value.items():
+             c_node = native_to_plist_t(item)
+-            plist_dict_set_item(node, key, c_node)
++            encoded_key = key.encode('utf-8') if isinstance(key, unicode) else key
++            plist_dict_set_item(node, encoded_key, c_node)
+             c_node = NULL
+     return node
+@@ -716,5 +717,6 @@
+             n = plist_t_to_node(native_to_plist_t(value), False)
+ 
+-        plist_dict_set_item(self._c_node, key, n._c_node)
++        encoded_key = key.encode('utf-8') if isinstance(key, unicode) else key
++        plist_dict_set_item(self._c_node, encoded_key, n._c_node)
+         self._map[key] = n
+ 
+@@ -850,6 +852,10 @@
+     if isinstance(native, Node):
+         node = native
+         return plist_copy(node._c_node)
++    if isinstance(native, unicode):
++        return plist_new_string(native.encode('utf-8'))
++    if PY_MAJOR_VERSION >= 3 and isinstance(native, bytes):
++        return plist_new_data(native, len(native))
+     if isinstance(native, basestring):
+         return plist_new_string(native)
+     if isinstance(native, bool):
+@@ -901,4 +907,4 @@
+ cpdef object load(fp, fmt=None, use_builtin_types=True, dict_type=dict):
+-    is_binary = fp.read(6) == 'bplist'
++    is_binary = fp.read(6) == b'bplist'
+     fp.seek(0)
+ 
+@@ -928,4 +934,4 @@
+ cpdef object loads(data, fmt=None, use_builtin_types=True, dict_type=dict):
+-    is_binary = data[0:6] == 'bplist'
++    is_binary = data[0:6] == b'bplist'
+ 
+     cdef object cb = None

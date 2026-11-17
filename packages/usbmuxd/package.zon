@@ -1,0 +1,17 @@
+.{
+    .name = "usbmuxd",
+    .version = "1.1.1",
+    .release = 1,
+    .description = "Daemon multiplexing connections to iPhones and iPads over USB",
+    .license = "GPL-2.0-only OR GPL-3.0-only",
+    .sources = .{
+        // Upstream publishes no checksum for this 2020 release asset (GitHub
+        // computes digests only for newer uploads).
+        .{ .url = "https://github.com/libimobiledevice/usbmuxd/releases/download/1.1.1/usbmuxd-1.1.1.tar.bz2", .sha256 = "c0ec9700172bf635ccb5bed98daae607d2925c2bc3597f25706ecd9dfbfd2d9e" },
+    },
+    // libimobiledevice is for the preflight worker, which starts pairing
+    // (the device's "Trust this computer?" question) as soon as a device
+    // is plugged in.
+    .depends = .{ "glibc", "libusb", "libplist", "libimobiledevice" },
+    .build_depends = .{"pkgconf"},
+}

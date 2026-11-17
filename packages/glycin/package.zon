@@ -1,7 +1,7 @@
 .{
     .name = "glycin",
     .version = "2.2.6",
-    .release = 1,
+    .release = 2,
     .description = "Sandboxed image loading library and its loaders",
     .license = "MPL-2.0 OR LGPL-2.1-or-later",
     .sources = .{
@@ -10,9 +10,9 @@
     // cargo downloads the crates glycin depends on from crates.io; the
     // tarball does not vendor them.
     .network = true,
-    // The loaders run inside bubblewrap. libjxl and librsvg (with cairo)
-    // are linked by the JPEG XL and SVG loaders. Little CMS, which the book
-    // lists, is not linked by this version (no lcms crate in Cargo.lock).
-    .depends = .{ "glibc", "gcc", "glib", "fontconfig", "libseccomp", "libjxl", "librsvg", "cairo", "bubblewrap" },
+    // The loaders run inside bubblewrap. HEIF/AVIF links libheif, JPEG XL
+    // links libjxl, and SVG links librsvg with cairo. Little CMS, which the
+    // book lists, is not linked by this version (no lcms crate in Cargo.lock).
+    .depends = .{ "glibc", "gcc", "glib", "fontconfig", "libseccomp", "libheif >=1.20", "libjxl", "librsvg", "cairo", "bubblewrap" },
     .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "vala" },
 }

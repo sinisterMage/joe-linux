@@ -1,0 +1,13 @@
+.{
+    .name = "libimobiledevice-glue",
+    .version = "1.3.3",
+    .release = 1,
+    .description = "Common code shared by the libimobiledevice libraries and tools",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the digest GitHub publishes for the release asset.
+        .{ .url = "https://github.com/libimobiledevice/libimobiledevice-glue/releases/download/1.3.3/libimobiledevice-glue-1.3.3.tar.bz2", .sha256 = "920ce01382a32695f49b23292b4979a03f0afd16c58e8755d8b7f41804acc1a9" },
+    },
+    .depends = .{ "glibc", "libplist" },
+    .build_depends = .{"pkgconf"},
+}
