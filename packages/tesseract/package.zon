@@ -1,0 +1,18 @@
+.{
+    .name = "tesseract",
+    .version = "5.5.3",
+    .release = 1,
+    .description = "Optical character recognition engine and command-line program",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://github.com/tesseract-ocr/tesseract/archive/5.5.3/tesseract-5.5.3.tar.gz", .sha256 = "9218e62793116d42a9f6d14cd9348518b27f382096eea3d0f2d1a24616bb5884" },
+    },
+    // C++ with OpenMP (GCC's libgomp); leptonica reads the images,
+    // libarchive opens compressed models and libcurl fetches images given
+    // as URLs. Without language data it recognises nothing:
+    // tesseract-data-eng is English plus orientation and script detection.
+    .depends = .{ "glibc", "gcc", "leptonica", "libarchive", "curl", "tesseract-data-eng" },
+    // autogen.sh regenerates the build system, as the book does;
+    // asciidoctor makes the manual page.
+    .build_depends = .{ "autoconf", "automake", "libtool", "pkgconf", "asciidoctor" },
+}

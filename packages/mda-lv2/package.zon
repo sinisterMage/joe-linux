@@ -1,0 +1,16 @@
+.{
+    .name = "mda-lv2",
+    .version = "1.2.12",
+    .release = 1,
+    .description = "LV2 port of Paul Kellett's MDA audio plugins",
+    .license = "GPL-2.0-or-later OR MIT",
+    .sources = .{
+        // Checked against upstream's detached signature (.sig, David
+        // Robillard's key 907D226E7E13FA337F014A083672782A9BF368F3).
+        .{ .url = "https://download.drobilla.net/mda-lv2-1.2.12.tar.xz", .sha256 = "8f2090433e60e90d9c4d0326970c845a3cb471951657cd9355d3dbca4040b873" },
+    },
+    // Plugins only, loaded by an LV2 host (lilv) that brings the
+    // specification bundles.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "lv2" },
+}

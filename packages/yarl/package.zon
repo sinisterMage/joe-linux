@@ -1,0 +1,16 @@
+.{
+    .name = "yarl",
+    .version = "1.25.1",
+    .release = 1,
+    .description = "URL parsing and manipulation library for Python, used by aiohttp",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/y/yarl/yarl-1.25.1.tar.gz", .sha256 = "03dd38de09bc213e9a8b29761eec33ee1d5318dac0e49d8af36e4d27830e23a7" },
+    },
+    // A C extension made with Cython, with a pure-Python fallback.
+    .depends = .{ "glibc", "python", "idna", "multidict", "propcache" },
+    // Its in-tree build backend (packaging/pep517_backend) wraps
+    // setuptools, runs Cython on the .pyx files and reads its options with
+    // expandvars.
+    .build_depends = .{ "python", "setuptools", "wheel", "cython", "expandvars" },
+}

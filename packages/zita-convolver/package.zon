@@ -1,0 +1,13 @@
+.{
+    .name = "zita-convolver",
+    .version = "4.0.3",
+    .release = 1,
+    .description = "Fast, partitioned convolution engine library",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum; the SHA-512 matches Arch's.
+        .{ .url = "https://kokkinizita.linuxaudio.org/linuxaudio/downloads/zita-convolver-4.0.3.tar.bz2", .sha256 = "9aa11484fb30b4e6ef00c8a3281eebcfad9221e3937b1beb5fe21b748d89325f" },
+    },
+    .depends = .{ "glibc", "gcc", "fftw" },
+    .build_depends = .{},
+}

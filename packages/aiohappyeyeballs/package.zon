@@ -1,0 +1,12 @@
+.{
+    .name = "aiohappyeyeballs",
+    .version = "2.7.1",
+    .release = 1,
+    .description = "Happy Eyeballs (RFC 8305) connection racing for asyncio",
+    .license = "PSF-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/aiohappyeyeballs/aiohappyeyeballs-2.7.1.tar.gz", .sha256 = "065665c041c42a5938ed220bdcd7230f22527fbec085e1853d2402c8a3615d9d" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "poetry-core" },
+}

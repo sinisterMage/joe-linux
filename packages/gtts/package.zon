@@ -1,0 +1,15 @@
+.{
+    .name = "gtts",
+    .version = "2.5.4",
+    .release = 1,
+    .description = "Python library and CLI for Google Translate text-to-speech (gTTS)",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/g/gtts/gtts-2.5.4.tar.gz", .sha256 = "f5737b585f6442f677dbe8773424fd50697c75bdf3e36443585e30a8d48c1884" },
+    },
+    // click: only gtts-cli uses it. Upstream asks for click <8.2; the
+    // click recipe is newer (pip does not check, as it installs with
+    // --no-deps).
+    .depends = .{ "python", "requests", "click" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

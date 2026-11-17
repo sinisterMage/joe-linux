@@ -1,0 +1,16 @@
+.{
+    .name = "drawing",
+    .version = "1.0.2",
+    .release = 1,
+    .description = "Simple image editor for drawing and annotating pictures",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/maoschanz/drawing/archive/1.0.2/drawing-1.0.2.tar.gz", .sha256 = "539e7e28fe4db96cfedd4477e217d5d48b9422ad8c98f33d8ae46120b2d5738b" },
+    },
+    // A Python program using GTK 3, GdkPixbuf and Pango through PyGObject,
+    // drawing with pycairo.
+    .depends = .{ "python", "pygobject", "pycairo", "glib", "gtk3", "gdk-pixbuf", "pango" },
+    // itstool translates the help pages; appstream provides the gettext
+    // rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "gettext", "itstool", "appstream" },
+}

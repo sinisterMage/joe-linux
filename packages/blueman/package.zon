@@ -1,0 +1,24 @@
+.{
+    .name = "blueman",
+    .version = "2.4.6",
+    .release = 1,
+    .description = "GTK Bluetooth manager and tray applet for BlueZ",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum; this is the SHA-256 digest GitHub
+        // records for the release asset.
+        .{ .url = "https://github.com/blueman-project/blueman/releases/download/2.4.6/blueman-2.4.6.tar.xz", .sha256 = "c712a737f9855906684c074d166d4f10c7f165378af96612818bbffcfbf8e566" },
+    },
+    // Written in Python over PyGObject (GTK 3, Pango, NM for Bluetooth
+    // network connections), with a small C module linking libbluetooth.
+    // At run time it loads libpulse with ctypes (audio profiles), runs ip
+    // (iproute2) and dhcpcd for Bluetooth networking, and asks polkit to
+    // authorise its root D-Bus service, blueman-mechanism.
+    .depends = .{
+        "glibc",  "python",    "glib",       "bluez",    "pygobject",
+        "pycairo", "gtk3",     "pango",      "gdk-pixbuf", "networkmanager",
+        "pulseaudio", "iproute2", "dhcpcd",  "polkit",
+    },
+    // cython compiles the C module.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "cython", "gettext" },
+}

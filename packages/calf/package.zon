@@ -1,0 +1,14 @@
+.{
+    .name = "calf",
+    .version = "0.90.9",
+    .release = 1,
+    .description = "Calf Studio Gear, a suite of LV2 audio effect and instrument plugins",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // GitHub publishes no checksum for archives.
+        .{ .url = "https://github.com/calf-studio-gear/calf/archive/0.90.9/calf-0.90.9.tar.gz", .sha256 = "2d304eed88e87438b2b8857a2f4480046bf4003bce2e17a042abdbbf7d59122f" },
+    },
+    // libcalf links expat (presets) and FluidSynth (its synthesiser plugin).
+    .depends = .{ "glibc", "gcc", "expat", "fluidsynth" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "lv2" },
+}

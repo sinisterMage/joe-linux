@@ -1,0 +1,23 @@
+.{
+    .name = "libimagequant",
+    // The version of the imagequant library this builds (see the source
+    // comment): the C library's own crate is imagequant-sys 4.1.0, and its
+    // Cargo.lock pins imagequant 4.4.0.
+    .version = "4.4.0",
+    .release = 1,
+    .description = "High-quality palette quantization library (the engine of pngquant), with its C API",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // The C API crate as published on crates.io, with the SHA-256 the
+        // index gives for it; it carries a Cargo.lock. (The 4.4.1 tag on
+        // GitHub has no Cargo.lock to build it locked, and 4.4.1 only
+        // retunes the quantizer's colour selection.)
+        .{ .url = "https://static.crates.io/crates/imagequant-sys/imagequant-sys-4.1.0.crate", .sha256 = "b5361d7aab1d0c5623172cd6d18920bf21ef56f6e21d7290f1e31e0794c4a76e" },
+    },
+    // cargo downloads the crates it depends on (imagequant, rayon, ...)
+    // from crates.io; they are not vendored yet.
+    .network = true,
+    // gcc: libgcc_s.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "rust", "cargo-c" },
+}

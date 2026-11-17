@@ -1,0 +1,12 @@
+.{
+    .name = "mutagen",
+    .version = "1.48.1",
+    .release = 1,
+    .description = "Python module for reading and writing audio metadata tags",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/m/mutagen/mutagen-1.48.1.tar.gz", .sha256 = "8f95637ab9f6f305cec6bd1294e197debe207998e3e068596563c74f86b0a173" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

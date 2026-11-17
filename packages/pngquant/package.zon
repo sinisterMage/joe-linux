@@ -1,0 +1,19 @@
+.{
+    .name = "pngquant",
+    .version = "3.0.3",
+    .release = 1,
+    .description = "Lossy PNG compressor: converts 24/32-bit PNG images to 8-bit palettes",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // The crate as published on crates.io, with the SHA-256 the index
+        // gives for it; it carries upstream's Cargo.lock.
+        .{ .url = "https://static.crates.io/crates/pngquant/pngquant-3.0.3.crate", .sha256 = "68a12bdd8825f9989f4ee9a6ab0b42727dae57728b939ef63453366697a07232" },
+    },
+    // cargo downloads the crates pngquant depends on (libimagequant among
+    // them) from crates.io; they are not vendored yet.
+    .network = true,
+    // libpng and lcms2 are the system libraries, found by libpng-sys and
+    // lcms2-sys with pkg-config. gcc: libgcc_s.
+    .depends = .{ "glibc", "gcc", "libpng", "lcms2", "zlib" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

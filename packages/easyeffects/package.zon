@@ -1,0 +1,31 @@
+.{
+    .name = "easyeffects",
+    .version = "7.2.5",
+    .release = 1,
+    .description = "Audio effects for PipeWire applications: equaliser, compressor, noise reduction and more",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // GitHub publishes no checksum for archives.
+        .{ .url = "https://github.com/wwmm/easyeffects/archive/v7.2.5/easyeffects-7.2.5.tar.gz", .sha256 = "d86877b12648a24b3b21a56d16d5680ee2585d575878ecdcea1b9bd9bb428191" },
+    },
+    // Most effects are LV2 plugins that EasyEffects loads through lilv:
+    // lsp-plugins (equaliser, compressors, gate, expander, limiter, filter,
+    // delay, loudness), calf (bass enhancer, exciter, de-esser, reverb,
+    // stereo tools) and mda-lv2 (bass loudness). The maximizer needs
+    // zam-plugins and the noise remover the DeepFilterNet LADSPA plugin,
+    // which joe does not package; EasyEffects shows those two as not
+    // installed. Its own effects use the libraries linked below
+    // (zita-convolver, libbs2b, rnnoise, speexdsp, soundtouch, libebur128).
+    .depends = .{
+        "glibc",       "gcc",            "glib",          "gtk4",
+        "libadwaita",  "cairo",          "pango",         "libsigcxx",
+        "pipewire",    "lilv",           "libbs2b",       "libsndfile",
+        "fftw",        "libebur128",     "libsamplerate", "soundtouch",
+        "speexdsp",    "fmt",            "gsl",           "onetbb",
+        "zita-convolver", "rnnoise",
+        "lsp-plugins", "calf",           "mda-lv2",
+    },
+    // ladspa-sdk: only ladspa.h, for the DeepFilterNet wrapper. itstool and
+    // gettext build the help pages.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "nlohmann-json", "ladspa-sdk", "lv2" },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "pillow",
+    .version = "13.0.0",
+    .release = 2,
+    .description = "Python imaging library (the maintained fork of PIL)",
+    .license = "MIT-CMU",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pillow/pillow-13.0.0.tar.gz", .sha256 = "cdcd1ba258178f7356d74170c9a81ba4eab6a5d55748bc402a5a2a6fe6be3510" },
+    },
+    // The image formats and text layout the C extensions link: JPEG, TIFF,
+    // WebP, JPEG 2000 (openjpeg), AVIF, colour management (lcms2), FreeType
+    // fonts with system Raqm layout, palette quantisation with libimagequant,
+    // and screen grabs through libxcb.
+    .depends = .{ "glibc", "python", "zlib", "libjpeg-turbo", "tiff", "libwebp", "openjpeg", "libavif", "lcms2", "freetype", "harfbuzz", "fribidi", "libraqm", "libimagequant", "libxcb" },
+    // setup.py finds the libraries with pkg-config.
+    .build_depends = .{ "python", "setuptools", "wheel", "pkgconf", "pybind11" },
+}

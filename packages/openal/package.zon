@@ -1,0 +1,18 @@
+.{
+    .name = "openal",
+    .version = "1.25.2",
+    .release = 1,
+    .description = "OpenAL Soft, a software implementation of the OpenAL 3D audio API",
+    .license = "LGPL-2.0-or-later AND BSD-3-Clause AND MIT",
+    .sources = .{
+        // OpenAL Soft's own release tarball; upstream publishes no
+        // checksum for it.
+        .{ .url = "https://openal-soft.org/openal-releases/openal-soft-1.25.2.tar.bz2", .sha256 = "1dbaac44e7579d5bc8847ca8db4b2e8b9fd3961041f35ee20def4958301e1089" },
+    },
+    // libopenal links libc, libm, libstdc++ and libgcc_s; the audio back
+    // ends are loaded with dlopen. PipeWire is the desktop's sound server
+    // and ALSA the fallback without one; libpulse and D-Bus (RTKit) are
+    // used when present.
+    .depends = .{ "glibc", "gcc", "pipewire", "alsa-lib" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "pulseaudio", "dbus" },
+}

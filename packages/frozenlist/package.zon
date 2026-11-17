@@ -1,0 +1,16 @@
+.{
+    .name = "frozenlist",
+    .version = "1.8.0",
+    .release = 1,
+    .description = "Immutable list type for Python, used by aiohttp",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/f/frozenlist/frozenlist-1.8.0.tar.gz", .sha256 = "3ede829ed8d842f6cd48fc7081d7a41001a56f1f38603f9d49bf3020d59a31ad" },
+    },
+    // A C extension made with Cython, with a pure-Python fallback.
+    .depends = .{ "glibc", "python" },
+    // Its in-tree build backend (packaging/pep517_backend) wraps
+    // setuptools, runs Cython on the .pyx files and reads its options with
+    // expandvars.
+    .build_depends = .{ "python", "setuptools", "wheel", "cython", "expandvars" },
+}

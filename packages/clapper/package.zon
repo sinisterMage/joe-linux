@@ -1,0 +1,19 @@
+.{
+    .name = "clapper",
+    .version = "0.10.0",
+    .release = 1,
+    .description = "GTK 4 media player and the GStreamer playback libraries it is built on",
+    // The libraries and the GStreamer plugin are LGPL, the application GPL.
+    .license = "LGPL-2.1-or-later AND GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/Rafostar/clapper/archive/0.10.0/clapper-0.10.0.tar.gz", .sha256 = "344c0f20e540a63c6fb44cdd5de88c168ed145bb66c1307e79b2b08124780118" },
+    },
+    // gst-plugins-base: libgstaudio, libgstvideo, libgstpbutils, libgsttag
+    // and libgstgl (the clappersink's GL importers). graphviz (libgvc,
+    // libcgraph) draws the application's pipeline preview. Playing media
+    // needs the decoders and demuxers of gst-plugins-good and gst-libav.
+    .depends = .{ "glibc", "glib", "gstreamer", "gst-plugins-base", "gst-plugins-good", "gst-libav", "gtk4", "libadwaita", "pango", "graphene", "graphviz" },
+    // vala for the vapi files; appstream provides the gettext rules for
+    // the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "vala", "appstream" },
+}

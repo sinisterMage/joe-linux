@@ -1,0 +1,14 @@
+.{
+    .name = "rnnoise",
+    .version = "0.2",
+    .release = 1,
+    .description = "Noise suppression library based on a recurrent neural network",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Xiph publishes no checksum for the release tarball. The tarball,
+        // unlike a git checkout, carries the trained model (rnnoise_data.c).
+        .{ .url = "https://github.com/xiph/rnnoise/releases/download/v0.2/rnnoise-0.2.tar.gz", .sha256 = "90fce4b00b9ff24c08dbfe31b82ffd43bae383d85c5535676d28b0a2b11c0d37" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{"pkgconf"},
+}

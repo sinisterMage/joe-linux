@@ -1,0 +1,22 @@
+.{
+    .name = "dialect",
+    .version = "2.6.1",
+    .release = 2,
+    .description = "Translation application using online translation services",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/dialect-app/dialect/archive/2.6.1/dialect-2.6.1.tar.gz", .sha256 = "9efd2695b1339d7b98a4207ced8e49202a2cf3ba233900da141eccad555805be" },
+        // Exact po gitlink from the 2.6.1 tag, including UI and CLDR translations.
+        .{ .url = "https://github.com/dialect-app/po/archive/bd426bd3adc9917429290f4b6da378076ecf7e2e/dialect-po-bd426bd3adc9917429290f4b6da378076ecf7e2e.tar.gz", .sha256 = "25f7f39ac14dc64a03fc4b7d0cc036b898cefba1ad37c9666beaf5a4804b50a4" },
+    },
+    // A Python program using these libraries through PyGObject: GTK 4,
+    // libadwaita, GtkSourceView, libsoup (the services' web APIs),
+    // libsecret (API keys) and libspelling. Text-to-speech fetches MP3 from
+    // Google (gtts) and plays it with GStreamer's playbin (gst-plugins-base;
+    // the MP3 decoder and audio sink are in gst-plugins-good). The Bing
+    // provider parses pages with Beautiful Soup.
+    .depends = .{ "python", "pygobject", "glib", "gtk4", "libadwaita", "gtksourceview5", "libsoup", "libsecret", "libspelling", "gstreamer", "gst-plugins-base", "gst-plugins-good", "gtts", "beautifulsoup4" },
+    // meson checks the pkg-config files of the libraries above; appstream
+    // provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "blueprint-compiler", "appstream" },
+}

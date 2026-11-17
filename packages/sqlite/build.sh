@@ -11,6 +11,7 @@ build() {
         CPPFLAGS="-D SQLITE_ENABLE_COLUMN_METADATA=1 \
                   -D SQLITE_ENABLE_UNLOCK_NOTIFY=1 \
                   -D SQLITE_ENABLE_DBSTAT_VTAB=1 \
+                  -D SQLITE_ENABLE_RTREE=1 \
                   -D SQLITE_SECURE_DELETE=1"
     make LDFLAGS.rpath=""
 }

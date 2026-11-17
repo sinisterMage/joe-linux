@@ -1,0 +1,7 @@
+The C++ binding links the core library; recursive builds must wait for it.
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -251,2 +251,2 @@
+-all-recursive:
++all-recursive: lib/$(PALIB)
+ 	if test -n "$(SUBDIRS)" ; then for dir in "$(SUBDIRS)"; do $(MAKE) -C $$dir all; done ; fi

@@ -1,0 +1,12 @@
+.{
+    .name = "aiohttp-retry",
+    .version = "2.9.1",
+    .release = 1,
+    .description = "Retrying client for aiohttp",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/aiohttp-retry/aiohttp_retry-2.9.1.tar.gz", .sha256 = "8eb75e904ed4ee5c2ec242fefe85bf04240f685391c4879d8f541d6028ff01f1" },
+    },
+    .depends = .{ "python", "aiohttp" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

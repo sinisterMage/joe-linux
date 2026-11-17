@@ -37,11 +37,9 @@ build() {
     # muse_deps. Code that the build compiles in comes from the archives in
     # offline-deps/ (EXTDEPS_CACHE), verified against their pinned hashes:
     # Nyquist, PFFFT, the tempo estimator, picojson and tft, which have no
-    # system form, and these five, which would otherwise be looked for on
-    # the system and have no recipe: the LV2 host libraries (lilv, serd,
-    # sord, sratom, suil, zix), the VST3 SDK, RapidJSON, pugixml and utfcpp,
-    # and SBSMS (the time stretching of the Sliding Stretch effect, which is
-    # compiled whether or not SBSMS is enabled).
+    # system form, the LV2 host SDK, VST3 SDK, pugixml and utfcpp. RapidJSON
+    # comes from the system headers. SBSMS (the Sliding Stretch effect) is
+    # compiled whether or not SBSMS is enabled.
     # libid3tag's library is named id3tag; muse_deps looks for "libid3tag".
     #
     # Switched off: crash reporting (crashpad), update checks, audio.com
@@ -66,7 +64,7 @@ build() {
         -D EXTDEPS_OVERRIDE_ALL=SYSTEM \
         -D EXTDEPS_OVERRIDE_LV2SDK=REBUILD \
         -D EXTDEPS_OVERRIDE_VST3SDK=REBUILD \
-        -D EXTDEPS_OVERRIDE_RAPIDJSON=REBUILD \
+        -D EXTDEPS_OVERRIDE_RAPIDJSON=SYSTEM \
         -D EXTDEPS_OVERRIDE_PUGIXML=REBUILD \
         -D EXTDEPS_OVERRIDE_UTFCPP=REBUILD \
         -D libid3tag_LIB_libid3tag=/usr/lib/libid3tag.so \

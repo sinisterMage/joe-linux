@@ -1,0 +1,12 @@
+.{
+    .name = "aiofiles",
+    .version = "25.1.0",
+    .release = 1,
+    .description = "File operations for asyncio",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/aiofiles/aiofiles-25.1.0.tar.gz", .sha256 = "a8d728f0a29de45dc521f18f07297428d56992a742f0cd2701ba86e44d23d5b2" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs" },
+}

@@ -1,0 +1,15 @@
+.{
+    .name = "libbs2b",
+    .version = "3.1.0",
+    .release = 1,
+    .description = "Bauer stereophonic-to-binaural DSP library, a crossfeed for headphone listening",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the MD5 SourceForge lists for the file.
+        .{ .url = "https://downloads.sourceforge.net/project/bs2b/libbs2b/3.1.0/libbs2b-3.1.0.tar.bz2", .sha256 = "4799974becdeeedf0db00115bc63f60ea3fe4b25f1dfdb6903505839a720e46f" },
+    },
+    // libsndfile is for the bs2bconvert tool; the library itself has a C++
+    // part (bs2bclass), hence gcc.
+    .depends = .{ "glibc", "gcc", "libsndfile" },
+    .build_depends = .{ "autoconf", "automake", "libtool", "pkgconf" },
+}

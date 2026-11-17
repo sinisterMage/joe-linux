@@ -1,0 +1,13 @@
+.{
+    .name = "scikit-build-core",
+    .version = "1.1.2",
+    .release = 1,
+    .description = "Python build backend for CMake-based extension modules",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/scikit-build-core/scikit_build_core-1.1.2.tar.gz", .sha256 = "7893709119c5ab1be75cd10442383132c9433b9f104dacef5185949efbea7974" },
+    },
+    // It runs cmake and ninja to build the packages that use it.
+    .depends = .{ "python", "packaging", "pathspec", "cmake", "ninja" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs" },
+}

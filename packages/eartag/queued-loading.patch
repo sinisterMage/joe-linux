@@ -1,0 +1,43 @@
+Initialize batch state before scheduling workers: a producer can enqueue and
+finish without suspending, before _run_multitasker starts. Resetting then loses
+the queued item count and completion event and leaves the file view loading.
+
+--- a/src/utils/asynctask.py
++++ b/src/utils/asynctask.py
+@@ -226,12 +226,6 @@
+ 
+     async def _run_multitasker(self):
+         async with self.running_lock:
+-            self.n_items = 0
+-            self.n_done = 0
+-            self._queue_target = set()
+-            self._queue_actual = set()
+-            self.queue_done_event.clear()
+-            self.clear_errors()
+             self._is_running = True
+             self.emit("task-started")
+             async with asyncio.TaskGroup() as tg:
+@@ -258,6 +252,15 @@
+             self._is_running = False
+             self.emit_task_done()
+ 
++    def _prepare_workers(self):
++        self.n_items = 0
++        self.n_done = 0
++        self._queue_target = set()
++        self._queue_actual = set()
++        self.queue_done_event.clear()
++        self.clear_errors()
++
+     def spawn_workers(self):
+         """Start the task by spawning workers."""
++        self._prepare_workers()
+         event_loop.create_task(self._run_multitasker())
+@@ -267,6 +270,7 @@
+         Version of spawn_workers for use with async functions (usually task
+         groups).
+         """
++        self._prepare_workers()
+         await self._run_multitasker()
+ 
+     def run(self):

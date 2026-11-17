@@ -1,0 +1,16 @@
+.{
+    .name = "lsp-plugins",
+    .version = "1.2.37",
+    .release = 1,
+    .description = "Linux Studio Plugins: equalisers, compressors, gates, limiters and other audio effects, as LV2 plugins",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        // Checked against the SHA-256 GitHub lists for the release asset.
+        .{ .url = "https://github.com/lsp-plugins/lsp-plugins/releases/download/1.2.37/lsp-plugins-src-1.2.37.tar.gz", .sha256 = "ae7f22b249b41a37db965229ae2ab7237330f83279369f9961277d8bf10d2df4" },
+    },
+    // Without their own interfaces the LV2 plugins still draw LV2 inline
+    // displays with Cairo, and read audio files with libsndfile. The LV2
+    // headers come bundled (modules/lsp-3rd-party).
+    .depends = .{ "glibc", "gcc", "cairo", "libsndfile" },
+    .build_depends = .{"pkgconf"},
+}

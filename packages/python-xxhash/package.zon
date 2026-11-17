@@ -1,0 +1,15 @@
+.{
+    .name = "python-xxhash",
+    .version = "4.1.0",
+    .release = 1,
+    .description = "Python binding for the xxHash hash algorithms",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/x/xxhash/xxhash-4.1.0.tar.gz", .sha256 = "c9b288e4c1f5dae54417bc8a05e6f6daf505783d916b4783f4dd2f2e7d5db486" },
+    },
+    // PyPI's name is xxhash, which is the C library's recipe here. The
+    // extension links the system libxxhash (xxhash) instead of the copy in
+    // deps/.
+    .depends = .{ "glibc", "python", "xxhash" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

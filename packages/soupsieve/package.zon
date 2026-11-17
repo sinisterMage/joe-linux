@@ -1,0 +1,12 @@
+.{
+    .name = "soupsieve",
+    .version = "4.1.1",
+    .release = 1,
+    .description = "CSS selector implementation for Beautiful Soup",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/soupsieve/soupsieve-4.1.1.tar.gz", .sha256 = "b296bd2d2f65b1a78149f3d7bf6736a147d2c9e2dfbde0e4404639d748a02e03" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "hatchling" },
+}

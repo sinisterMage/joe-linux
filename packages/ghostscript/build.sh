@@ -3,6 +3,9 @@ prepare() {
     # and zlib instead of the copies in the tarball.
     rm -rf freetype lcms2mt jpeg libpng openjpeg
     rm -rf zlib
+    # configure selects shared OCR libraries only when both bundled source
+    # directories are absent. Its tessocr.cpp supports the Tesseract 5 API.
+    rm -rf tesseract leptonica
 }
 
 build() {
@@ -12,8 +15,11 @@ build() {
     #   Ghostscript is here for printing and conversion;
     # - libidn and libpaper have no recipe.
     ./configure --prefix=/usr \
+        --libdir=/usr/lib \
         --disable-compile-inits \
         --with-system-libtiff \
+        --with-tesseract \
+        --with-tessdata=/usr/share/tessdata \
         --enable-cups \
         --enable-fontconfig \
         --enable-openjpeg \
@@ -23,6 +29,9 @@ build() {
         --without-libidn \
         --without-libpaper \
         CFLAGS="${CFLAGS:--g -O3} -fPIC"
+    # --with-tesseract permits a silent fallback when pkg-config fails;
+    # this recipe requires system OCR, not a build without the devices.
+    grep -q '^OCR_SHARED=1$' Makefile
     make
     # libgs.so, which the book builds too.
     make so

@@ -1,0 +1,15 @@
+.{
+    .name = "aiohttp",
+    .version = "3.14.5",
+    .release = 1,
+    .description = "Asynchronous HTTP client and server for asyncio",
+    .license = "Apache-2.0 AND MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/aiohttp/aiohttp-3.14.5.tar.gz", .sha256 = "5558a7f5a05af9ecf744af91e5baefc436f93c9333e656c27ec253f9a6bbe178" },
+    },
+    // The C extensions (HTTP parser, writer, WebSocket) are shipped
+    // pre-generated from Cython; the HTTP parser compiles in the copy of
+    // llhttp in vendor/ (MIT), which has no recipe of its own.
+    .depends = .{ "glibc", "python", "aiohappyeyeballs", "aiosignal", "attrs", "frozenlist", "multidict", "propcache", "yarl" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

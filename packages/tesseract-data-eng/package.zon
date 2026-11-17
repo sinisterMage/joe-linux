@@ -1,0 +1,15 @@
+.{
+    .name = "tesseract-data-eng",
+    .version = "4.1.0",
+    .release = 1,
+    .description = "Tesseract OCR data: English, and orientation and script detection",
+    .license = "Apache-2.0",
+    .sources = .{
+        // The "fast" (integer) models of upstream's tessdata_fast 4.1.0
+        // release, which Debian and Arch ship; the files are taken from the
+        // tag. Upstream publishes no checksum, but both match the Git blob
+        // ids the repository lists for them at that tag.
+        .{ .url = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/eng.traineddata", .file = "tessdata_fast-4.1.0-eng.traineddata", .sha256 = "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2" },
+        .{ .url = "https://github.com/tesseract-ocr/tessdata_fast/raw/4.1.0/osd.traineddata", .file = "tessdata_fast-4.1.0-osd.traineddata", .sha256 = "9cf5d576fcc47564f11265841e5ca839001e7e6f38ff7f7aacf46d15a96b00ff" },
+    },
+}

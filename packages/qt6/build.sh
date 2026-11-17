@@ -6,9 +6,8 @@
 # - Only the modules joe's programs use are built (-submodules builds those
 #   and what they need): Qt Quick, its controls and shader tools (the
 #   installer, installer/), Qt Wayland (applications in a GNOME session),
-#   Qt SVG (icons), from Qt Tools only the Linguist programs (lrelease,
-#   lupdate) that applications such as KeePassXC translate themselves with,
-#   and Qt 5 Compat and Qt Network Authorization, which Audacity uses.
+#   Qt SVG (icons), Qt Image Formats, Qt Tools' Linguist and Help programs,
+#   Qt 5 Compat and Qt Network Authorization. Octave uses Qt Help.
 #   The book removes the modules it cannot build instead.
 #
 # What the book leaves out by default stays out: examples, tests, an rpath,
@@ -31,14 +30,21 @@ build() {
         -no-rpath \
         -no-sbom \
         -journald \
-        -submodules qtdeclarative,qtwayland,qtsvg,qttools,qt5compat,qtnetworkauth \
+        -submodules qtdeclarative,qtwayland,qtsvg,qtimageformats,qttools,qt5compat,qtnetworkauth \
         -- \
         -D FEATURE_system_doubleconversion=ON \
         -D FEATURE_cups=ON \
+        -D FEATURE_vulkan=ON \
+        -D FEATURE_jasper=OFF \
+        -D FEATURE_mng=OFF \
+        -D FEATURE_tiff=ON \
+        -D FEATURE_system_tiff=ON \
+        -D FEATURE_webp=ON \
+        -D FEATURE_system_webp=ON \
         -D FEATURE_sql_psql=OFF \
         -D FEATURE_sql_mysql=OFF \
         -D FEATURE_sql_odbc=OFF \
-        -D FEATURE_assistant=OFF \
+        -D FEATURE_assistant=ON \
         -D FEATURE_designer=OFF \
         -D FEATURE_qdoc=OFF \
         -D FEATURE_clang=OFF \

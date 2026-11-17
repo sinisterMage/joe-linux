@@ -1,16 +1,16 @@
 .{
     .name = "ghostscript",
     .version = "10.08.0",
-    .release = 1,
+    .release = 2,
     .description = "Interpreter for PostScript and PDF, with the libgs library",
     .license = "AGPL-3.0-or-later",
     .sources = .{
         .{ .url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10080/ghostscript-10.08.0.tar.xz", .sha256 = "c20492bc8ebb96c87fa2e52a0926e1cda8cde95d66145e018ac713fed5da38cf" },
     },
     // The bundled copies of the libraries the book removes are replaced by
-    // these; jbig2dec, the OCR engine (Tesseract, Leptonica) and brotli are
-    // the bundled ones, as on the book's page. The OCR code is C++. CUPS is
-    // linked for the cups and pwgraster output devices that cups-filters
+    // these; jbig2dec and brotli remain bundled, as on the book's page.
+    // OCR uses system Tesseract and Leptonica. The OCR code is C++. CUPS
+    // is linked for the cups and pwgraster output devices that cups-filters
     // uses.
     .depends = .{
         "glibc",
@@ -25,6 +25,8 @@
         "fontconfig",
         "cups",
         "dbus",
+        "tesseract",
+        "leptonica",
     },
     .build_depends = .{ "pkgconf" },
 }

@@ -1,0 +1,16 @@
+.{
+    .name = "propcache",
+    .version = "0.5.4",
+    .release = 1,
+    .description = "Fast cached properties for Python, used by yarl",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/propcache/propcache-0.5.4.tar.gz", .sha256 = "ff6b113f50bc066a698db5d944d2c6dc7507168dd3341e255a8892fd0715a558" },
+    },
+    // A C extension made with Cython, with a pure-Python fallback.
+    .depends = .{ "glibc", "python" },
+    // Its in-tree build backend (packaging/pep517_backend) wraps
+    // setuptools, runs Cython on the .pyx files and reads its options with
+    // expandvars.
+    .build_depends = .{ "python", "setuptools", "wheel", "cython", "expandvars" },
+}

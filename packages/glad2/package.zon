@@ -1,0 +1,14 @@
+.{
+    .name = "glad2",
+    .version = "2.0.8",
+    .release = 1,
+    .description = "OpenGL, OpenGL ES, EGL, GLX, WGL and Vulkan loader generator (glad 2) for Python",
+    // glad itself is MIT; the Khronos specifications it carries
+    // (glad/files) are Apache-2.0 and their headers MIT.
+    .license = "MIT AND Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/g/glad2/glad2-2.0.8.tar.gz", .sha256 = "b84079b9fa404f37171b961bdd1d8da21370e6c818defb8481c5b3fe3d6436da" },
+    },
+    .depends = .{ "python", "jinja2" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

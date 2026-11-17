@@ -1,0 +1,31 @@
+.{
+    .name = "mpv",
+    .version = "0.42.0",
+    .release = 2,
+    .description = "Command-line media player, and libmpv for programs that embed it",
+    // Built with -D gpl=true (the default); without it mpv is LGPL.
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // GitHub publishes no checksum for archives; this is the book's
+        // archive and matches its MD5.
+        .{ .url = "https://github.com/mpv-player/mpv/archive/v0.42.0/mpv-0.42.0.tar.gz", .sha256 = "bcfebbfa2b65a6d88dc97ea18117831072373e38b5785a2afb874ed4df5070dd" },
+    },
+    // mesa: EGL, GBM and OpenGL. libva covers VA-API on DRM, Wayland and
+    // X11; libdrm and libdisplay-info the DRM output. libx11, libxext,
+    // libxpresent, libxrandr and libxscrnsaver are what the X11 output
+    // requires, libxv the xv output and libxfixes the X11 clipboard.
+    .depends = .{
+        "glibc",       "ffmpeg",          "libplacebo",    "libass",
+        "luajit",      "uchardet",        "lcms2",         "libjpeg-turbo",
+        "zlib",        "libarchive",      "curl",          "libdvdread",
+        "libdvdnav",   "alsa-lib",        "pipewire",      "pulseaudio",
+        "libdrm",      "libdisplay-info", "mesa",          "libva",
+        "wayland",     "libxkbcommon",    "libx11",        "libxext",
+        "libxpresent", "libxrandr",       "libxscrnsaver", "libxv",
+        "libxfixes", "vulkan-icd-loader", "sdl2", "openal",
+    },
+    // python runs the build's code generators; docutils' rst2man makes the
+    // manual page; wayland-protocols (and wayland's wayland-scanner) the
+    // Wayland protocol code.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "docutils", "wayland-protocols", "vulkan-headers" },
+}

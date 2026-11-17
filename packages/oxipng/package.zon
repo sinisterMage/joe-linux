@@ -1,0 +1,20 @@
+.{
+    .name = "oxipng",
+    .version = "10.2.1",
+    .release = 1,
+    .description = "Multithreaded lossless PNG and APNG optimiser",
+    .license = "MIT",
+    .sources = .{
+        // The crate as published on crates.io, with the SHA-256 the index
+        // gives for it; it carries upstream's Cargo.lock.
+        .{ .url = "https://static.crates.io/crates/oxipng/oxipng-10.2.1.crate", .sha256 = "52a88e3e5c2ad82e691b219e2b45a90eb5a51d26a434c7e191563e957a48e07a" },
+    },
+    // cargo downloads the crates oxipng depends on from crates.io; they are
+    // not vendored yet.
+    .network = true,
+    // libdeflate: the system library (the system-libdeflate feature)
+    // instead of the copy the libdeflater crate would compile in. gcc:
+    // libgcc_s.
+    .depends = .{ "glibc", "gcc", "libdeflate" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

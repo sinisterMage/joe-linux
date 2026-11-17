@@ -1,0 +1,16 @@
+.{
+    .name = "pybind11",
+    .version = "3.1.0",
+    .release = 2,
+    .description = "Header-only C++ library for Python bindings, with its CMake and pkg-config files and pybind11-config",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pybind11/pybind11-3.1.0.tar.gz", .sha256 = "a1cc06b524ab3edca51f8ad3895f9c4fa20b8b19283173dff4ae781449dc9639" },
+    },
+    // A pure Python package carrying the C++ headers; "pybind11-config"
+    // tells Meson and CMake where they are (and where its CMake package
+    // and pybind11.pc are). Projects that use it list it in build_depends.
+    .depends = .{"python"},
+    // scikit-build-core runs cmake and ninja to lay out the wheel.
+    .build_depends = .{ "python", "scikit-build-core", "cmake", "ninja" },
+}

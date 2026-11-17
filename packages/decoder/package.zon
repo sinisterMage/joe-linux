@@ -1,0 +1,21 @@
+.{
+    .name = "decoder",
+    .version = "0.10.0",
+    .release = 1,
+    .description = "Scan and generate QR codes",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/api/v4/projects/World%2Fdecoder/packages/generic/release-assets/0%2E10%2E0/decoder-0%2E10%2E0%2Etar%2Exz", .sha256 = "0ab592e47ee206a0b87cd7fdbc6eafd87618b137d082f7a5975e416157591829", .file = "decoder-0.10.0.tar.xz" },
+    },
+    // The release tarball vendors its crates, so the build is offline.
+    //
+    // gst-plugins-base: libgstvideo, libgstpbutils, libgstaudio for the
+    // camera view (the aperture crate), which also runs camerabin
+    // (gst-plugins-bad) and gtk4paintablesink (gst-plugin-gtk4) and finds
+    // the camera through PipeWire's GStreamer plugin. QR codes are decoded
+    // by the rqrr crate, not zbar; the history database is an SQLite that
+    // sqlx compiles in.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "gstreamer", "gst-plugins-base", "gst-plugins-bad", "gst-plugin-gtk4", "pipewire" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

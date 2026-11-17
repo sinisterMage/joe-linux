@@ -1,0 +1,19 @@
+.{
+    .name = "eartag",
+    .version = "1.0.3",
+    .release = 2,
+    .description = "Audio file tag editor",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/World/eartag/-/archive/1.0.3/eartag-1.0.3.tar.gz", .sha256 = "80854b588af057c8b86f6f9f8bb8bcfb06a1c13997d0228cd3f6e6f56a1ec4c3" },
+    },
+    // A Python program using GTK 4 and libadwaita through PyGObject.
+    // mutagen reads and writes the tags, Pillow and filetype handle cover
+    // pictures and file types, aiofiles and python-xxhash load and compare
+    // files. Identifying files goes to AcoustID and MusicBrainz with
+    // pyacoustid (fingerprints from chromaprint's fpcalc), aiohttp and
+    // aiohttp-retry.
+    .depends = .{ "python", "pygobject", "glib", "gtk4", "libadwaita", "gdk-pixbuf", "pango", "mutagen", "pillow", "filetype", "aiofiles", "python-xxhash", "pyacoustid", "chromaprint", "aiohttp", "aiohttp-retry" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "gettext", "blueprint-compiler", "appstream" },
+}

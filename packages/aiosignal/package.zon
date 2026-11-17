@@ -1,0 +1,12 @@
+.{
+    .name = "aiosignal",
+    .version = "1.4.0",
+    .release = 1,
+    .description = "Callback registration for asyncio signals, used by aiohttp",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/aiosignal/aiosignal-1.4.0.tar.gz", .sha256 = "f47eecd9468083c2029cc99945502cb7708b082c232f9aca65da147157b251c7" },
+    },
+    .depends = .{ "python", "frozenlist" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

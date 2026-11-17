@@ -1,7 +1,7 @@
 .{
     .name = "audacity",
     .version = "4.0.2",
-    .release = 1,
+    .release = 2,
     .description = "Multitrack audio editor and recorder",
     .license = "GPL-3.0-only AND GPL-2.0-or-later",
     .sources = .{
@@ -25,5 +25,5 @@
         "systemd",    "libx11",     "ffmpeg",
     },
     // git applies the build's patches to the bundled sources.
-    .build_depends = .{ "cmake", "ninja", "pkgconf", "git" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "git", "rapidjson" },
 }

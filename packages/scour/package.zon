@@ -1,0 +1,12 @@
+.{
+    .name = "scour",
+    .version = "0.38.2",
+    .release = 1,
+    .description = "SVG optimiser and cleaner (scour)",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/scour/scour-0.38.2.tar.gz", .sha256 = "6881ec26660c130c5ecd996ac6f6b03939dd574198f50773f2508b81a68e0daf" },
+    },
+    .depends = .{ "python", "six" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

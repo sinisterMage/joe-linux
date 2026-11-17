@@ -1,0 +1,12 @@
+.{
+    .name = "six",
+    .version = "1.17.0",
+    .release = 1,
+    .description = "Python 2 and 3 compatibility utilities",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/six/six-1.17.0.tar.gz", .sha256 = "ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

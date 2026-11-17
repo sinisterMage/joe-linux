@@ -1,0 +1,21 @@
+.{
+    .name = "libplacebo",
+    .version = "7.387.0",
+    .release = 2,
+    .description = "GPU-accelerated video and image rendering primitives, the renderer behind mpv",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // GitHub publishes no checksum for archives; this is the book's
+        // archive and matches its MD5.
+        .{ .url = "https://github.com/haasn/libplacebo/archive/v7.387.0/libplacebo-7.387.0.tar.gz", .sha256 = "f9e62d3774a9c4cfd198ec3abaa88294aaade2e31c04d5ab02bcf4abc98b1df5" },
+    },
+    // gcc: libstdc++ (the number formatting in convert.cc). mesa: the
+    // built-in GL loader opens libEGL and libGL at run time when the caller
+    // does not hand it a loader of its own. lcms2: ICC profiles and colour
+    // management; libunwind: stack traces in error messages; xxhash: faster
+    // shader cache hashing.
+    .depends = .{ "glibc", "gcc", "lcms2", "libunwind", "xxhash", "mesa", "vulkan-icd-loader", "shaderc" },
+    // python, jinja2 and glad2 generate the OpenGL loader; fast_float is
+    // header-only.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "jinja2", "glad2", "fast_float", "vulkan-headers" },
+}
