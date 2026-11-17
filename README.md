@@ -21,10 +21,10 @@ The idea of snapshot-based upgrades without immutability comes from
 
 joe Linux builds from source into two systems that boot in a virtual machine:
 
-- a **console system** of about 70 packages, with sudo, an editor, the
+- a **console system**, with sudo, an editor, the
   manual and ssh, whose upgrade, rollback and recovery behaviour is exercised
   end to end by `make test-joe`;
-- a **GNOME desktop** of about 355 packages: GDM, GNOME Shell on Wayland,
+- a **GNOME desktop**: GDM, GNOME Shell on Wayland,
   Firefox, Files, Terminal, Text Editor, Settings and the usual small
   applications (documents, images, video, music, archives, disks, maps,
   weather, clocks, calculator), with fonts for most scripts, spell checking
@@ -32,8 +32,8 @@ joe Linux builds from source into two systems that boot in a virtual machine:
   and mobile broadband. `make test-desktop` starts every one of them, with
   the security module both logging and enforcing.
 
-The repository holds about 630 packages in all; what neither system
-includes is a `dave install` away. That covers development tools and
+The repository also provides packages beyond those images, a `dave install`
+away. That covers development tools and
 toolchains (gdb, valgrind, Go, Zig, OpenJDK, GHC, uv, ripgrep, ShellCheck),
 servers (PostgreSQL, BIND, unbound, nginx, Samba, NFS, WireGuard, nftables)
 and applications such as LibreOffice, GIMP, Inkscape, VLC, Audacity,
