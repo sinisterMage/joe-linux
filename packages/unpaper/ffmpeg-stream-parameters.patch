@@ -1,0 +1,15 @@
+--- a/file.c
++++ b/file.c
+@@ -207,6 +207,12 @@
+     errOutput("unable to open codec: %s", errbuff);
+   }
+ 
++  ret = avcodec_parameters_from_context(video_st->codecpar, codec_ctx);
++  if (ret < 0) {
++    av_strerror(ret, errbuff, sizeof(errbuff));
++    errOutput("unable to set output stream parameters: %s", errbuff);
++  }
++
+   if (verbose >= VERBOSE_MORE)
+     av_dump_format(out_ctx, 0, filename, 1);
+ 

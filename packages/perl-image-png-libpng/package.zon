@@ -1,0 +1,14 @@
+.{
+    .name = "perl-image-png-libpng",
+    .version = "0.60",
+    .release = 1,
+    .description = "Perl interface to libpng",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/B/BK/BKB/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/B/BK/BKB/Image-PNG-Libpng-0.60.tar.gz", .sha256 = "44025e774afd0567bf35c5a203bc6fb410334fd7ace2a49dba328f11ecc02ffb" },
+    },
+    .depends = .{ "glibc", "libpng", "perl", "zlib" },
+    .build_depends = .{ "gcc", "make", "pkgconf" },
+}

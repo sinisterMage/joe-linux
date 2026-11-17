@@ -1,0 +1,19 @@
+.{
+    .name = "m17n-lib",
+    .version = "1.8.7",
+    .release = 2,
+    .description = "Multilingual text processing library: input methods and text layout for many scripts",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against upstream's OpenPGP signature (Mike Fabian,
+        // 1038AFCA745D84B3B422AE2E6F0ADE6E8BB76242).
+        .{ .url = "https://download.savannah.nongnu.org/releases/m17n/m17n-lib-1.8.7.tar.gz", .sha256 = "a72cf78e40198020aa05217b9839dd260b94d4f2dc59a5a8d60bae7b84104caa" },
+    },
+    // m17n-db is the data every part of the library reads. libxml2 reads
+    // the data files; the GUI level (text layout and drawing) links
+    // FreeType, Fontconfig and FriBidi; the Anthy module gives the Anthy
+    // based Japanese input methods.
+    .depends = .{ "glibc", "m17n-db", "libxml2", "freetype", "fontconfig", "fribidi", "anthy", "libxft" },
+    // configure asks the m17n-db program where the data is.
+    .build_depends = .{ "pkgconf", "gettext", "m17n-db" },
+}

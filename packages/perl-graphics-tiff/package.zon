@@ -1,0 +1,14 @@
+.{
+    .name = "perl-graphics-tiff",
+    .version = "21",
+    .release = 1,
+    .description = "Perl extension for the libtiff library",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/R/RA/RATCLIFFE/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/R/RA/RATCLIFFE/Graphics-TIFF-21.tar.gz", .sha256 = "aba8afcc07148df418a2c519e8415deccef6f6c260475e0acc0a4167b31f1119" },
+    },
+    .depends = .{ "glibc", "perl", "perl-readonly", "tiff" },
+    .build_depends = .{ "gcc", "make", "perl-extutils-depends", "perl-extutils-pkgconfig", "pkgconf" },
+}

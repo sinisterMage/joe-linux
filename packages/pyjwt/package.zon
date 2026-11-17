@@ -1,0 +1,15 @@
+.{
+    .name = "pyjwt",
+    .version = "2.15.1",
+    .release = 1,
+    .description = "JSON Web Token implementation in Python",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyjwt/pyjwt-2.15.1.tar.gz", .sha256 = "4f259e80cdfb6b3fc18a7de51fd1ef9ec79652f25019bae68975ca2468a34df8" },
+    },
+    // The RSA and elliptic-curve algorithms use cryptography when it is
+    // installed (upstream's optional "crypto" extra); the HMAC ones need
+    // nothing.
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

@@ -1,0 +1,24 @@
+.{
+    .name = "shortwave",
+    .version = "5.1.0",
+    .release = 1,
+    .description = "Find and listen to internet radio stations",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/World/Shortwave/-/archive/5.1.0/Shortwave-5.1.0.tar.gz", .sha256 = "ce4a97beea1092bf7527d0d495f10ea7c6d2f48b31cf3259ee943f1d3602849b", .file = "shortwave-5.1.0.tar.gz" },
+    },
+    // cargo downloads the crates Shortwave depends on from crates.io; the
+    // release, a git archive, does not vendor them.
+    .network = true,
+    // sqlite holds the library (diesel); openssl is reqwest's TLS; libshumate
+    // draws the station map; station logos are loaded with libglycin and
+    // libglycin-gtk4. gst-plugins-base: libgstaudio. Playing streams needs
+    // souphttpsrc and the decoders of gst-plugins-good, gst-plugins-bad and
+    // gst-libav.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "sqlite", "openssl", "libshumate", "glycin", "glycin-gtk4", "gstreamer", "gst-plugins-base", "gst-plugins-good", "gst-plugins-bad", "gst-libav", "dbus" },
+    // meson.build asks for lcms2 and libseccomp, which the glycin crate
+    // once linked (it now uses libglycin), and for dbus-1, though D-Bus is
+    // spoken by the zbus crate. appstream provides the gettext rules for
+    // the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream", "lcms2", "libseccomp" },
+}

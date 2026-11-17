@@ -1,0 +1,13 @@
+.{
+    .name = "libserialport",
+    .version = "0.1.2",
+    .release = 1,
+    .description = "Minimal cross-platform library for discovering and using serial ports, from the sigrok project",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for the source archive.
+        .{ .url = "https://sigrok.org/download/source/libserialport/libserialport-0.1.2.tar.gz", .sha256 = "5deb92b5ca72c0347b07b786848350deca2dcfd975ce613b8e0e1d947a4b4ca9" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{},
+}

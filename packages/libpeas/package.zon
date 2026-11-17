@@ -1,0 +1,16 @@
+.{
+    .name = "libpeas",
+    .version = "1.38.1",
+    .release = 1,
+    .description = "GObject plugin engine, 1.x series (libpeas-1.0 and its GTK 3 widgets)",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libpeas/1.38/libpeas-1.38.1.tar.xz", .sha256 = "e82fd328adcac1aba34b64136bdfcbbacf2b3258a8bc4e5f480a72502a611ae9" },
+    },
+    // gtk3: libpeas-gtk-1.0 (the plugin manager widgets). python and
+    // pygobject: the Python 3 plugin loader, which embeds the interpreter.
+    .depends = .{ "glibc", "glib", "gtk3", "python", "pygobject", "cairo", "pango", "gdk-pixbuf" },
+    // glib provides g-ir-scanner and glib-compile-resources; libxml2 the
+    // xmllint that glib-compile-resources runs.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "libxml2" },
+}

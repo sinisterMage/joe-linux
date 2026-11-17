@@ -1,0 +1,15 @@
+.{
+    .name = "libdex",
+    .version = "1.2.0",
+    .release = 1,
+    .description = "Deferred execution library for GNOME: futures, fibers and asynchronous I/O",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libdex/1.2/libdex-1.2.0.tar.xz", .sha256 = "69f5b244c21f6402831c3ab8af85a01772f72fb118677388436f12f32bfb06d9" },
+    },
+    // gcc: libatomic.
+    .depends = .{ "glibc", "glib", "gcc" },
+    // glib provides g-ir-scanner and gdbus-codegen; python installs the
+    // PyGObject override and the gdbus-codegen extension.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala" },
+}

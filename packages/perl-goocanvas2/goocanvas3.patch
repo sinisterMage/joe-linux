@@ -1,0 +1,10 @@
+--- a/lib/GooCanvas2.pm
++++ b/lib/GooCanvas2.pm
+@@ -42,6 +42,6 @@
+ 	Glib::Object::Introspection->setup(
+ 		basename => 'GooCanvas',
+-		version => '2.0',
++		version => '3.0',
+ 		package => 'GooCanvas2',
+ 		name_corrections => \%_NAME_CORRECTIONS,
+ 		class_static_methods =>\@_CLASS_STATIC_METHODS,

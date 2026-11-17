@@ -1,7 +1,7 @@
 .{
     .name = "vlc",
     .version = "3.0.24",
-    .release = 1,
+    .release = 2,
     .description = "Media player and streaming server",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{
@@ -23,6 +23,9 @@
         "libxpm", "libxinerama", "mesa", "pulseaudio", "alsa-lib", "soxr",
         "avahi", "libxml2", "libgcrypt", "libgpg-error", "gnutls", "libsecret",
         "libnotify", "gtk3", "protobuf", "abseil-cpp", "qt6", "ncurses",
+        "libass", "taglib", "speex", "speexdsp", "libtheora", "twolame",
+        "fluidsynth", "libsamplerate", "chromaprint", "libdvdnav", "srt",
+        "librist", "libmtp",
     },
     // luac compiles the Lua scripts, protoc the Chromecast protocol, qmake6
     // and moc the Qt interface; xorgproto is checked for by the XCB modules.

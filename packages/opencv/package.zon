@@ -1,0 +1,29 @@
+.{
+    .name = "opencv",
+    .version = "4.13.0",
+    .release = 1,
+    .description = "Open Source Computer Vision Library: image processing, video I/O, feature detection, DNN inference",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Checked against the book's MD5.
+        .{ .url = "https://github.com/opencv/opencv/archive/4.13.0/opencv-4.13.0.tar.gz", .sha256 = "1d40ca017ea51c533cf9fd5cbde5b5fe7ae248291ddf2af99d4c17cf8e13017d" },
+        // The book's required patch (building with FFmpeg 9), checked
+        // against its MD5.
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/opencv-4.13.0-ffmpeg-9.0.patch", .sha256 = "8b4f4d8582433d703b8b281f71dc32f4c789b3bf51666dc59de9d2844d966c53" },
+    },
+    // Image codecs (zlib, libjpeg, libpng, libtiff, libwebp, OpenJPEG,
+    // OpenEXR with Imath, libavif, libjxl); video I/O through FFmpeg
+    // (libavcodec, libavformat, libavutil, libswscale) and GStreamer
+    // (gstreamer, and libgstapp, libgstvideo, libgstaudio, libgstpbutils,
+    // libgstriff from gst-plugins-base); highgui windows through GTK 3;
+    // parallel loops through oneTBB. gcc: libstdc++.
+    .depends = .{
+        "glibc",     "gcc",       "zlib",      "libjpeg-turbo",
+        "libpng",    "tiff",      "libwebp",   "openjpeg",
+        "openexr",   "imath",     "libavif",   "libjxl",
+        "ffmpeg",    "gstreamer", "gst-plugins-base",
+        "gtk3",      "glib",      "cairo",     "gdk-pixbuf",
+        "onetbb",
+    },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

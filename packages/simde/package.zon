@@ -1,0 +1,14 @@
+.{
+    .name = "simde",
+    .version = "0.8.2",
+    .release = 1,
+    .description = "Portable implementations of SIMD instruction sets, as C headers",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives.
+        .{ .url = "https://github.com/simd-everywhere/simde/archive/v0.8.2/simde-0.8.2.tar.gz", .sha256 = "ed2a3268658f2f2a9b5367628a85ccd4cf9516460ed8604eed369653d49b25fb" },
+    },
+    // Headers and simde.pc only: nothing is linked.
+    .depends = .{},
+    .build_depends = .{ "meson", "ninja" },
+}

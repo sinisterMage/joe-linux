@@ -1,0 +1,18 @@
+.{
+    .name = "libwpd",
+    .version = "0.10.3",
+    .release = 1,
+    .description = "Library for importing WordPerfect documents, with the wpd2html, wpd2text and wpd2raw converters",
+    .license = "MPL-2.0 OR LGPL-2.1-or-later",
+    .sources = .{
+        // Upstream publishes no checksum; this is the same tarball, with the
+        // same SHA-256, that LibreOffice's download.lst records (and that
+        // packages/libreoffice bundles).
+        .{ .url = "https://downloads.sourceforge.net/libwpd/libwpd-0.10.3.tar.xz", .sha256 = "2465b0b662fdc5d4e3bebcdc9a79027713fb629ca2bff04a3c9251fdec42dd09" },
+    },
+    // librevenge (the converters also use librevenge-stream and
+    // librevenge-generators); gcc: libstdc++.
+    .depends = .{ "glibc", "gcc", "librevenge" },
+    // boost: spirit, header-only.
+    .build_depends = .{ "boost", "pkgconf" },
+}

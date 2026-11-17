@@ -1,0 +1,9 @@
+--- a/Makefile.PL
++++ b/Makefile.PL
+@@ -140,6 +140,5 @@
+ mkdir 'build', 0777;
+ 
+-compile_test_libraries();
+ 
+ my $have_gi_1_60 = ExtUtils::PkgConfig->atleast_version('gobject-introspection-1.0', '1.60.0');
+ if (!$have_gi_1_60) {

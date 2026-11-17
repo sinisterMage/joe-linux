@@ -1,0 +1,17 @@
+.{
+    .name = "sdl2-mixer",
+    .version = "2.8.2",
+    .release = 1,
+    .description = "Audio mixing and music playback library for SDL 2 (SDL2_mixer)",
+    .license = "Zlib",
+    .sources = .{
+        // The SDL 2 release series. Checked against the SHA-256 digest
+        // GitHub gives for the release asset.
+        .{ .url = "https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.8.2/SDL2_mixer-2.8.2.tar.gz", .sha256 = "938dff531d00ace2296557a6599abe6f34599e2f34f0a4a08a397e2ccac8b8f7" },
+    },
+    // Linked directly: libFLAC (flac), libxmp (MOD, XM, IT, S3M, ...),
+    // libmpg123, libfluidsynth (MIDI with SoundFonts), libopusfile and
+    // libopus, libvorbisfile and libvorbis (with libogg), libwavpack.
+    .depends = .{ "glibc", "sdl2", "flac", "libxmp", "mpg123", "fluidsynth", "opusfile", "opus", "libvorbis", "libogg", "wavpack" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

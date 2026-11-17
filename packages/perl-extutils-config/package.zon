@@ -1,0 +1,14 @@
+.{
+    .name = "perl-extutils-config",
+    .version = "0.010",
+    .release = 1,
+    .description = "A wrapper for perl's configuration",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/L/LE/LEONT/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/ExtUtils-Config-0.010.tar.gz", .sha256 = "82e7e4e90cbe380e152f5de6e3e403746982d502dd30197a123652e46610c66d" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

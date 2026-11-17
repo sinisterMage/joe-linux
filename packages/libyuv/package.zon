@@ -1,0 +1,24 @@
+.{
+    .name = "libyuv",
+    // libyuv makes no releases; upstream numbers its tree by LIBYUV_VERSION
+    // in include/libyuv/version.h (1982 here). The version is Debian's:
+    // 0.0.<LIBYUV_VERSION>.<commit date>.
+    .version = "0.0.1982.20261111",
+    .release = 1,
+    .description = "Google's library for YUV and RGB conversion, scaling and rotation of video frames",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream (https://chromium.googlesource.com/libyuv/libyuv)
+        // publishes no tarballs, and the archives its Gitiles serves are not
+        // byte-stable. This is Debian's upstream tarball of commit
+        // 209763ad77fed3df2d57503d3ef40761e9473649 (2026-11-11, "Make row
+        // and scale functions bit-exact across ISAs"): Debian never changes
+        // a published file, and its checksum is in the signed .dsc of
+        // libyuv 0.0.1982.20261111-1. Its contents are identical to
+        // Gitiles' archive of that commit (checked).
+        .{ .url = "https://deb.debian.org/debian/pool/main/liby/libyuv/libyuv_0.0.1982.20261111.orig.tar.xz", .file = "libyuv-0.0.1982.20261111.tar.xz", .sha256 = "7da0e0a3da5b15c61a552f4a6a5bb7342a823bdfe82561eccc9f0ad69c1047ed" },
+    },
+    // libjpeg-turbo: MJPEG decoding (libyuv links libjpeg); gcc: libstdc++.
+    .depends = .{ "glibc", "gcc", "libjpeg-turbo" },
+    .build_depends = .{ "cmake", "ninja" },
+}

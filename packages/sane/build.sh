@@ -1,3 +1,12 @@
+prepare() {
+    # glibc's C23 strchr returns const char * for a const argument; the
+    # gphoto2 backend casts its own writable string to const before writing
+    # through the result.
+    sed -i "s/\*strchr ((const char \*) folder_list\[n\], ' ') = '\\\\0';/*strchr (folder_list[n], ' ') = '\\\\0';/" \
+        backend/gphoto2.c
+    grep -q "\*strchr (folder_list\[n\], ' ') = " backend/gphoto2.c
+}
+
 build() {
     # The book runs configure as the scanner group (sg scanner) only to give
     # the lock directory that group, which tmpfiles.d does here instead.
@@ -7,9 +16,8 @@ build() {
     # that directory here, as other distributions put them.
     # Stated rather than detected: Avahi, libusb, libcurl, Poppler's GLib
     # binding, USB record/replay (libxml2) and systemd (saned socket
-    # activation) are on; Net-SNMP, libgphoto2 and v4l-utils have no
-    # recipe. libieee1284 (parallel-port scanners) has no switch and no
-    # recipe either.
+    # activation) are on, with camera and video backends through libgphoto2
+    # and v4l-utils. Net-SNMP and libieee1284 remain unavailable.
     PYTHON=python3 ./configure --prefix=/usr \
         --sysconfdir=/etc \
         --localstatedir=/var \
@@ -23,8 +31,8 @@ build() {
         --with-usb-record-replay=yes \
         --with-systemd=yes \
         --with-snmp=no \
-        --without-gphoto2 \
-        --without-v4l
+        --with-gphoto2 \
+        --with-v4l
     make
 }
 

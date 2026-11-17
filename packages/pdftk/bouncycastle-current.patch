@@ -1,0 +1,44 @@
+--- a/java/com/gitlab/pdftk_java/com/lowagie/text/pdf/PdfPKCS7.java
++++ b/java/com/gitlab/pdftk_java/com/lowagie/text/pdf/PdfPKCS7.java
+@@ -90,6 +90,7 @@
+ import org.bouncycastle.asn1.ASN1Sequence;
+ import org.bouncycastle.asn1.ASN1Set;
+ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
++import org.bouncycastle.asn1.ASN1OctetString;
+ import org.bouncycastle.asn1.DEROctetString;
+ import org.bouncycastle.asn1.DERTaggedObject;
+ import org.bouncycastle.asn1.ASN1Integer;
+@@ -225,7 +226,7 @@
+         ASN1ObjectIdentifier objId = (ASN1ObjectIdentifier)signedData.getObjectAt(0);
+         if (!objId.getId().equals(ID_PKCS7_SIGNED_DATA))
+             throw new SecurityException("Not a valid PKCS#7 object - not signed data");
+-        ASN1Sequence content = (ASN1Sequence)((DERTaggedObject)signedData.getObjectAt(1)).getObject();
++        ASN1Sequence content = ASN1Sequence.getInstance((ASN1TaggedObject)signedData.getObjectAt(1), true);
+         // the positions that we care are:
+         //     0 - version
+         //     1 - digestAlgorithms
+@@ -258,13 +259,13 @@
+         // the possible ID_PKCS7_DATA
+         ASN1Sequence rsaData = (ASN1Sequence)content.getObjectAt(2);
+         if (rsaData.size() > 1) {
+-            DEROctetString rsaDataContent = (DEROctetString)((DERTaggedObject)rsaData.getObjectAt(1)).getObject();
++            ASN1OctetString rsaDataContent = ASN1OctetString.getInstance((ASN1TaggedObject)rsaData.getObjectAt(1), true);
+             RSAdata = rsaDataContent.getOctets();
+         }
+         
+         // the signerInfos
+         int next = 3;
+-        while (content.getObjectAt(next) instanceof DERTaggedObject)
++        while (content.getObjectAt(next) instanceof ASN1TaggedObject)
+             ++next;
+         ASN1Set signerInfos = (ASN1Set)content.getObjectAt(next);
+         if (signerInfos.size() != 1)
+@@ -294,7 +295,7 @@
+         next = 3;
+         if (signerInfo.getObjectAt(next) instanceof ASN1TaggedObject) {
+             ASN1TaggedObject tagsig = (ASN1TaggedObject)signerInfo.getObjectAt(next);
+-            ASN1Sequence sseq = (ASN1Sequence)tagsig.getObject();
++            ASN1Set sseq = ASN1Set.getInstance(tagsig, false);
+             ByteArrayOutputStream bOut = new ByteArrayOutputStream();            
+             ASN1OutputStream dout = ASN1OutputStream.create(bOut);
+             try {

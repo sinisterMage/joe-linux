@@ -1,0 +1,16 @@
+.{
+    .name = "wimlib",
+    .version = "1.14.5",
+    .release = 1,
+    .description = "Library and wimlib-imagex tool for Windows Imaging (WIM) archives",
+    // The programs are GPL-3.0-or-later; libwim may be used under either
+    // licence when, as here, it is not linked with libntfs-3g.
+    .license = "GPL-3.0-or-later AND (LGPL-2.1-or-later OR GPL-3.0-or-later)",
+    .sources = .{
+        // Upstream publishes no checksum or signature.
+        .{ .url = "https://wimlib.net/downloads/wimlib-1.14.5.tar.gz", .sha256 = "84221a3abd5b91228f15f8e6065c335a336237b5738197b75bf419eea561a194" },
+    },
+    // fuse3 for wimmount.
+    .depends = .{ "glibc", "fuse3" },
+    .build_depends = .{ "pkgconf" },
+}

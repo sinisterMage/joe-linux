@@ -1,0 +1,14 @@
+.{
+    .name = "mediainfo",
+    .version = "26.10",
+    .release = 1,
+    .description = "Command-line tool showing technical and tag information about video and audio files",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // MediaArea publishes no checksums for its source archives.
+        .{ .url = "https://mediaarea.net/download/source/mediainfo/26.10/mediainfo_26.10.tar.xz", .sha256 = "82f6bce8e58818509022f0bbcc87fce0c6da21822fb2a2a9573b5e3950d8e5f6" },
+    },
+    // gcc: libstdc++.
+    .depends = .{ "glibc", "gcc", "libmediainfo", "libzen" },
+    .build_depends = .{ "autoconf", "automake", "libtool", "pkgconf" },
+}

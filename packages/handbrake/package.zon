@@ -1,0 +1,50 @@
+.{
+    .name = "handbrake",
+    .version = "1.11.2",
+    .release = 1,
+    .description = "Video transcoder, with a GTK 4 interface (ghb) and HandBrakeCLI",
+    // HandBrake is GPL-2.0-only. Linked into it statically (see build.sh):
+    // FFmpeg (GPL build), x265 and libdvdread/libdvdnav (GPL-2.0-or-later),
+    // libbluray (LGPL-2.1-or-later), dav1d (BSD-2-Clause), SVT-AV1
+    // (BSD-3-Clause-Clear) and zimg (WTFPL).
+    .license = "GPL-2.0-only",
+    .sources = .{
+        // Checked against the HandBrake Team's signature (.sig, key
+        // 1629C061B3DDE7EB4AE34B81021DB8B44E4A8645) and GitHub's digest.
+        .{ .url = "https://github.com/HandBrake/HandBrake/releases/download/1.11.2/HandBrake-1.11.2-source.tar.bz2", .sha256 = "12b046350f2422dc28783ff94229aff4ba5fe5e683431e057355d36163b2593a" },
+        // The libraries HandBrake builds itself, from HandBrake's mirror of
+        // them; each checksum is the one in contrib/NAME/module.defs, which
+        // the build checks again. x265 and zimg are snapshots that exist
+        // only there.
+        .{ .url = "https://github.com/HandBrake/HandBrake-contribs/releases/download/contribs2/ffmpeg-8.0.2.tar.bz2", .file = "handbrake-contrib-ffmpeg-8.0.2.tar.bz2", .sha256 = "2a8b8840c0bc78f5ed1576f98eba7df00c05f87fd6d07fad16efcd9333016edf" },
+        .{ .url = "https://github.com/HandBrake/HandBrake-contribs/releases/download/contribs2/x265-snapshot-20260216-13309.tar.gz", .file = "handbrake-contrib-x265-snapshot-20260216-13309.tar.gz", .sha256 = "a0882bb90826da62a96676c1a7cb7a7beb7f1db901f2775299cbeed03c3eb2a2" },
+        .{ .url = "https://github.com/HandBrake/HandBrake-contribs/releases/download/contribs2/SVT-AV1-v4.1.0.tar.gz", .file = "handbrake-contrib-SVT-AV1-v4.1.0.tar.gz", .sha256 = "6c4c0c44ff0ba3d136d6f57f3a707f9de8e9c866f50f809c1d22a43f0d8c9583" },
+        .{ .url = "https://github.com/HandBrake/HandBrake-contribs/releases/download/contribs2/dav1d-1.5.3.tar.bz2", .file = "handbrake-contrib-dav1d-1.5.3.tar.bz2", .sha256 = "e099f53253f6c247580c554d53a13f1040638f2066edc3c740e4c2f15174ce22" },
+        .{ .url = "https://github.com/HandBrake/HandBrake-contribs/releases/download/contribs2/zimg-snapshot-20250624.tar.gz", .file = "handbrake-contrib-zimg-snapshot-20250624.tar.gz", .sha256 = "19a96cdc266466be58be86a9271bedb1f080bf4cc14f5ed58ac39dc5b970fd17" },
+        .{ .url = "https://github.com/HandBrake/HandBrake-contribs/releases/download/contribs2/libdvdread-7.0.1.tar.bz2", .file = "handbrake-contrib-libdvdread-7.0.1.tar.bz2", .sha256 = "b69f74d9ceea1ed173b579deba99f669c2cb42f3fd06d7d23b33ff222aa63763" },
+        .{ .url = "https://github.com/HandBrake/HandBrake-contribs/releases/download/contribs2/libdvdnav-7.0.0.tar.bz2", .file = "handbrake-contrib-libdvdnav-7.0.0.tar.bz2", .sha256 = "1363cdfaf6e92c0b574579299b5480f5867fb32989451468a28f3f402ec48787" },
+        .{ .url = "https://github.com/HandBrake/HandBrake-contribs/releases/download/contribs2/libbluray-1.4.0.tar.xz", .file = "handbrake-contrib-libbluray-1.4.0.tar.xz", .sha256 = "77937baf07eadda4b2b311cf3af4c50269d2ea3165041f5843d96476c4c92777" },
+    },
+    // What the bundled libraries and libhb link from the system: libass for
+    // subtitles; x264, Theora, Vorbis, libvpx, LAME, Opus and Speex for
+    // encoding and decoding; jansson for job descriptions and presets;
+    // libjpeg-turbo (TurboJPEG) for preview images; bzip2, zlib and xz for
+    // FFmpeg's demuxers. The GTK interface adds GTK 4, GLib, Pango,
+    // gdk-pixbuf and libxml2. gst-libav decodes the encoded preview clip,
+    // which GTK plays through GStreamer.
+    .depends = .{
+        "glibc",     "gcc",       "libass",        "x264",
+        "libtheora", "libvorbis", "libogg",        "libvpx",
+        "lame",      "opus",      "speex",         "jansson",
+        "libjpeg-turbo", "bzip2", "zlib",          "xz",
+        "gtk4",      "glib",      "pango",         "gdk-pixbuf",
+        "libxml2",   "gst-libav",
+    },
+    // autoconf, automake and libtool regenerate zimg's build system; nasm
+    // assembles FFmpeg, x265, dav1d and SVT-AV1; HandBrake's own build is
+    // driven by Python, its GTK interface by Meson.
+    .build_depends = .{
+        "python", "autoconf", "automake", "libtool", "cmake",
+        "meson",  "ninja",    "nasm",     "pkgconf", "gettext",
+    },
+}

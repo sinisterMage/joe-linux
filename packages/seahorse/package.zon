@@ -1,0 +1,18 @@
+.{
+    .name = "seahorse",
+    .version = "47.0.1",
+    .release = 1,
+    .description = "GNOME application for managing passwords, PGP keys, SSH keys and certificates",
+    .license = "GPL-2.0-or-later AND LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/seahorse/47/seahorse-47.0.1.tar.xz", .sha256 = "9c1917e4a61f7febb787849ce36ce717fce706c346880b991d056d54dadbcacc" },
+    },
+    // gnupg's gpg and openssh's ssh and ssh-keygen are run for PGP and SSH
+    // keys; gnome-keyring holds the passwords. libsoup talks HKP to key
+    // servers, openldap LDAP, and avahi shares keys over DNS-SD.
+    .depends = .{ "glibc", "glib", "gtk3", "libhandy", "gcr", "libsecret", "libpwquality", "gpgme", "gnupg", "openssh", "gnome-keyring", "libsoup", "openldap", "avahi", "cairo", "pango", "gdk-pixbuf" },
+    // gnupg and openssh are also looked for by meson; python runs the
+    // GnuPG version check; itstool translates the help; libxslt and the
+    // DocBook files make the manual page.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext", "itstool", "libxml2", "python", "gnupg", "openssh", "libxslt", "docbook-xsl-nons", "docbook-xml", "appstream" },
+}

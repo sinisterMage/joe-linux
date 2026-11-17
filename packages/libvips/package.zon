@@ -1,0 +1,27 @@
+.{
+    .name = "libvips",
+    .version = "8.18.7",
+    .release = 1,
+    .description = "Fast, low-memory image processing library, with the vips and vipsthumbnail programs",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the .sha256sum file published with the release.
+        .{ .url = "https://github.com/libvips/libvips/releases/download/v8.18.7/vips-8.18.7.tar.xz", .sha256 = "5baaead3b0bb20ffdb9e9ff09aa9fda08620923df77b63b436654cb5e0b3bf94" },
+    },
+    // libvips and libvips-cpp, and the modules it loads from
+    // usr/lib/vips-modules-8.18 (HEIF, JPEG XL, ImageMagick, PDF through
+    // poppler). gcc: libstdc++ (libvips-cpp, highway).
+    .depends = .{
+        "glibc",      "gcc",        "glib",       "expat",
+        "zlib",       "libarchive", "fftw",       "libexif",
+        "fontconfig", "pango",      "cairo",      "harfbuzz",
+        "freetype",   "highway",    "lcms2",      "libimagequant",
+        "libjpeg-turbo", "libpng",  "tiff",       "libwebp",
+        "openjpeg",   "openexr",    "imath",      "libraw",
+        "librsvg",    "libheif",    "libjxl",     "poppler",
+        "imagemagick",
+    },
+    // glib: g-ir-scanner (introspection), which needs python. gettext:
+    // msgfmt for the translations.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext" },
+}

@@ -1,0 +1,29 @@
+.{
+    .name = "rhythmbox",
+    .version = "3.5.1",
+    .release = 1,
+    .description = "Music player and library organizer for GNOME, with podcasts and internet radio",
+    .license = "GPL-2.0-or-later WITH GStreamer-exception-2008",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/rhythmbox/3.5/rhythmbox-3.5.1.tar.xz", .sha256 = "8ee7d1714481956023b464264ebe0bd50217d4b472b1c5b3a6254ff8da924093" },
+    },
+    // tdb holds the music library; totem-pl-parser reads and writes
+    // playlists; libpeas loads the plugins, with its Python loader for the
+    // Python ones (pygobject); libgudev and libmtp find portable players and
+    // phones; grilo browses media sources; libsecret keeps service
+    // passwords; libnotify shows the playing song. Playback is GStreamer,
+    // with the good plugins for the usual formats.
+    .depends = .{
+        "glibc",            "glib",      "gtk3",
+        "cairo",            "pango",     "gdk-pixbuf",
+        "libx11",           "gstreamer", "gst-plugins-base",
+        "gst-plugins-good", "json-glib", "libpeas",
+        "libsoup",          "libxml2",   "tdb",
+        "totem-pl-parser",  "libgudev",  "libmtp",
+        "grilo",            "libsecret", "libnotify",
+        "python",           "pygobject",
+    },
+    // itstool builds the help; appstream provides the gettext rules for
+    // the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "appstream" },
+}

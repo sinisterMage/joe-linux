@@ -1,0 +1,14 @@
+.{
+    .name = "hyphen",
+    .version = "2.8.10",
+    .release = 1,
+    .description = "Hyphenation library using TeX hyphenation patterns, with the American English patterns",
+    .license = "(GPL-2.0-or-later OR LGPL-2.1-or-later OR MPL-1.1) AND LicenseRef-ushyphmax",
+    .sources = .{
+        // Upstream publishes no checksum for its release tarballs.
+        .{ .url = "https://github.com/hunspell/hyphen/releases/download/v2.8.10/hyphen-2.8.10.tar.gz", .sha256 = "a51c876e588108695e88450310d9b3ea9d94d30bcd455c9a2bad2ffed09c1160" },
+    },
+    // perl runs substrings.pl, the installed tool that converts TeX
+    // patterns into hyphen's dictionary format.
+    .depends = .{ "glibc", "perl" },
+}

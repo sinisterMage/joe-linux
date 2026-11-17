@@ -1,0 +1,15 @@
+.{
+    .name = "tdb",
+    .version = "1.4.15",
+    .release = 2,
+    .description = "Trivial Database, Samba's small key-value store, as a shared library",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        // Checked against upstream's signature (Samba Library Distribution
+        // Key, 9147 A339 7195 18EE 9011 BCB5 4793 9161 1308 4025).
+        .{ .url = "https://www.samba.org/ftp/tdb/tdb-1.4.15.tar.gz", .sha256 = "fba09d8df1f1b9072aeae8e78b2bd43c5afef20b2f6deefa633aa14a377a8dd2" },
+    },
+    .depends = .{ "glibc", "libbsd" },
+    // waf, Samba's build system, is Python.
+    .build_depends = .{"python"},
+}

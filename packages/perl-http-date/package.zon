@@ -1,0 +1,14 @@
+.{
+    .name = "perl-http-date",
+    .version = "6.08",
+    .release = 1,
+    .description = "HTTP::Date - date conversion routines",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/O/OA/OALDERS/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/O/OA/OALDERS/HTTP-Date-6.08.tar.gz", .sha256 = "b57d80ca6d821c6949ca48b27467d45aba7a9c77346562306facca781a003e44" },
+    },
+    .depends = .{ "perl", "perl-timedate" },
+    .build_depends = .{ "make" },
+}

@@ -1,0 +1,41 @@
+.{
+    .name = "imagemagick",
+    // Upstream's 7.1.2-35; dave versions cannot contain "-". Newer than
+    // the book's 7.1.2-13, for the security fixes released since.
+    .version = "7.1.2.35",
+    .release = 2,
+    .description = "Image conversion, editing and composition library and tools (magick)",
+    .license = "ImageMagick",
+    .sources = .{
+        // Upstream's release archive, checked against its PGP signature
+        // (ImageMagick-7.1.2-35.tar.xz.asc, ImageMagick's code signing key
+        // D8272EF51DA223E4D05B466989AB63D48277377A, which also signs the
+        // book's 7.1.2-13 archive). download.imagemagick.org keeps every
+        // release; the tarball attached to the GitHub release is a
+        // different file.
+        .{ .url = "https://download.imagemagick.org/archive/releases/ImageMagick-7.1.2-35.tar.xz", .sha256 = "fce4636c81a3a4670ece47927f7ff924b94f09f8c7a92e6443579899713fd564" },
+    },
+    // MagickCore links the delegate libraries below (the coders are
+    // loadable modules, opened through libtool's libltdl); Magick++ is C++
+    // and OpenMP comes from GCC's libgomp. pango and librsvg bring in glib,
+    // harfbuzz, gdk-pixbuf and cairo; OpenEXR brings Imath. The X11 tools
+    // (display, animate, import) use libX11, libXext and libXt.
+    // Ghostscript is linked (libgs) for PostScript and PDF.
+    .depends = .{
+        "glibc",      "gcc",           "libtool",
+        "zlib",       "bzip2",         "xz",
+        "zstd",       "libzip",        "libjpeg-turbo",
+        "libpng",     "tiff",          "libwebp",
+        "libheif",    "libraw",        "libjxl",
+        "openjpeg",   "openexr",       "imath",
+        "lcms2",      "freetype",      "fontconfig",
+        "libxml2",    "librsvg",       "cairo",
+        "pango",      "harfbuzz",      "glib",
+        "gdk-pixbuf", "fftw",          "ghostscript",
+        "libx11",     "libxext",       "libxt",
+        "libsm",      "libice",
+        "perl",      "djvulibre",     "jbigkit",    "libwmf",
+        "libraqm",   "jemalloc",      "dejavu-fonts",
+    },
+    .build_depends = .{ "pkgconf", "perl" },
+}

@@ -1,0 +1,15 @@
+.{
+    .name = "redland",
+    .version = "1.0.17",
+    .release = 1,
+    .description = "Redland librdf, the RDF library for storing and querying RDF graphs, with the rdfproc tool",
+    .license = "LGPL-2.1-or-later OR GPL-2.0-or-later OR Apache-2.0",
+    .sources = .{
+        // Checked against the book's MD5 (e5be03eda13ef68aabab6e42aa67715e).
+        .{ .url = "https://download.librdf.org/source/redland-1.0.17.tar.gz", .sha256 = "de1847f7b59021c16bdc72abb4d8e2d9187cd6124d69156f3326dd34ee043681" },
+    },
+    // libltdl (libtool) loads the storage modules in /usr/lib/redland;
+    // SQLite is the persistent storage.
+    .depends = .{ "glibc", "raptor", "rasqal", "libtool", "sqlite" },
+    .build_depends = .{"pkgconf"},
+}

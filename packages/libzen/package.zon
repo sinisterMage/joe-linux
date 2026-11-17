@@ -1,0 +1,16 @@
+.{
+    .name = "libzen",
+    .version = "0.4.41",
+    .release = 1,
+    .description = "ZenLib, MediaArea's C++ utility library used by MediaInfo",
+    .license = "Zlib",
+    .sources = .{
+        // MediaArea publishes no checksums for its source archives.
+        .{ .url = "https://mediaarea.net/download/source/libzen/0.4.41/libzen_0.4.41.tar.xz", .sha256 = "933bad3b7ecd29dc6bdc88a83645c83dfd098c15b0b90d6177a37fa1536704e8" },
+    },
+    // gcc: libstdc++.
+    .depends = .{ "glibc", "gcc" },
+    // The archive carries only configure.ac and Makefile.am: autogen.sh
+    // generates the rest.
+    .build_depends = .{ "autoconf", "automake", "libtool", "pkgconf" },
+}

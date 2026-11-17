@@ -1,0 +1,18 @@
+.{
+    .name = "libwebsockets",
+    .version = "5.1.0",
+    .release = 1,
+    .description = "Lightweight C library for WebSocket, HTTP/1, HTTP/2 and MQTT clients and servers",
+    .license = "MIT AND BSD-2-Clause AND BSD-3-Clause AND Zlib AND CC0-1.0 AND OFL-1.1",
+    .sources = .{
+        // Upstream tags releases (v5.1.0, on the v5.1-stable branch) and
+        // publishes no checksum for the archive.
+        .{ .url = "https://github.com/warmcat/libwebsockets/archive/v5.1.0/libwebsockets-5.1.0.tar.gz", .sha256 = "9acbba00aaa9e6178ae09c6f920d95449b527c1417e81d2cdd4103bc6d64d13f" },
+    },
+    // OpenSSL for TLS, zlib for permessage-deflate and zipped file serving,
+    // libcap to drop privileges. Each event library is linked only by its
+    // runtime-loaded plugin (libwebsockets-evlib_uv.so and so on): libuv,
+    // libev, libevent, GLib and systemd's sd-event.
+    .depends = .{ "glibc", "openssl", "zlib", "libcap", "libuv", "libev", "libevent", "glib", "systemd" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

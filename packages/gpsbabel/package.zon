@@ -1,0 +1,13 @@
+.{
+    .name = "gpsbabel",
+    .version = "1.10.0",
+    .release = 1,
+    .description = "GPS waypoint, route and track converter with Qt graphical interface",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its release-tag archive; re-downloaded from upstream.
+        .{ .url = "https://github.com/GPSBabel/gpsbabel/archive/gpsbabel_1_10_0/gpsbabel-1.10.0.tar.gz", .sha256 = "a89756fb988a54f5c5f371413845b9aecb66628a594cd83bd529c0f18382c968" },
+    },
+    .depends = .{ "glibc", "gcc", "qt6", "qt6-serialport", "zlib", "libusb" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

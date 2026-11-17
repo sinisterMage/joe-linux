@@ -20,4 +20,7 @@ build() {
 package() {
     cd build
     DESTDIR="$DESTDIR" ninja install
+    # libnma still installs nm-applet's settings schema, an older copy, "to
+    # avoid breaking on upgrades"; network-manager-applet ships its own.
+    rm "$DESTDIR/usr/share/glib-2.0/schemas/org.gnome.nm-applet.gschema.xml"
 }

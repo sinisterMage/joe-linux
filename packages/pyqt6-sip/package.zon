@@ -1,0 +1,13 @@
+.{
+    .name = "pyqt6-sip",
+    .version = "13.13.1",
+    .release = 1,
+    .description = "The sip module support library for PyQt6 (PyQt6.sip)",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyqt6_sip/pyqt6_sip-13.13.1.tar.gz", .sha256 = "83c3c9cb93b6c631af7048084fb0f234b610a01edbf9b2b44c4ee4bda4197efe" },
+    },
+    // A C extension module, PyQt6/sip.*.so.
+    .depends = .{ "glibc", "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

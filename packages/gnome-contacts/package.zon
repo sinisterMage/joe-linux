@@ -1,0 +1,19 @@
+.{
+    .name = "gnome-contacts",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME Contacts, an address book",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-contacts/51/gnome-contacts-51.0.tar.xz", .sha256 = "c8b60752f65a966e0a2c0cbf7c1e1607ee3b4a49318b50b19bdad2ab7fc6706d" },
+    },
+    // Contacts come from evolution-data-server through folks; glycin loads
+    // avatars and qrencode shares a contact as a QR code. Taking an avatar
+    // with the camera goes through the camera portal (libportal) into a
+    // GStreamer pipeline of pipewiresrc (pipewire), videoconvert and
+    // glsinkbin (gst-plugins-base) and gtk4paintablesink (gst-plugin-gtk4).
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "folks", "libgee", "evolution-data-server", "gnome-online-accounts", "glycin", "glycin-gtk4", "libportal", "gstreamer", "gst-plugins-base", "gst-plugin-gtk4", "pipewire", "qrencode", "pango", "cairo", "gdk-pixbuf", "graphene" },
+    // libxslt and the DocBook files make the manual page; appstream
+    // provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext", "blueprint-compiler", "libxslt", "docbook-xsl-nons", "docbook-xml", "appstream" },
+}

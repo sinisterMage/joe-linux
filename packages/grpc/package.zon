@@ -1,0 +1,21 @@
+.{
+    .name = "grpc",
+    .version = "1.85.2",
+    .release = 1,
+    .description = "Google's RPC framework: the C core and C++ libraries and grpc_cpp_plugin",
+    .license = "Apache-2.0 AND BSD-3-Clause AND MPL-2.0 AND MIT AND BSD-2-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/grpc/grpc/archive/v1.85.2/grpc-1.85.2.tar.gz", .sha256 = "a2d40910e72038dd5e7a0dbe785ec2a1944992fd4559cb4c67b892124a7b03c4" },
+        // The grpc-proto submodule (the channelz, health, load balancer,
+        // RLS and reflection protocols), which the archive leaves empty and
+        // CMake needs even without tests. This is the commit and SHA-256
+        // that grpc's CMakeLists.txt pins for it.
+        .{ .url = "https://github.com/grpc/grpc-proto/archive/dd549fc4ed04b60b0fdd3866b82ef0a7c87c6e4f.tar.gz", .file = "grpc-proto-dd549fc4ed04b60b0fdd3866b82ef0a7c87c6e4f.tar.gz", .sha256 = "6aaa807572edfe307eaddc15161ce684d02d054e3fca36b38993efc85575ddfa" },
+    },
+    // The system's Abseil, protobuf (libprotobuf, and libprotoc for the
+    // plugin), RE2, c-ares, OpenSSL and zlib instead of the submodules;
+    // libsystemd for socket activation (sd_listen_fds).
+    .depends = .{ "glibc", "gcc", "abseil-cpp", "protobuf", "re2", "c-ares", "openssl", "zlib", "systemd" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

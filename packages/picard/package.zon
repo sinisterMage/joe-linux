@@ -1,0 +1,26 @@
+.{
+    .name = "picard",
+    .version = "3.0.5",
+    .release = 1,
+    .description = "MusicBrainz Picard, a tagger that identifies music files against the MusicBrainz database",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/picard/picard-3.0.5.tar.gz", .sha256 = "6f60791c1838621b502d2134ebc92c1b1365827408ef256ad9ea4af08cb7ebd1" },
+    },
+    // Required by upstream: PyQt6, mutagen, PyYAML, pygit2 (the plugin
+    // system), tomlkit, charset-normalizer, discid (CD lookups), Markdown
+    // (the built-in documentation), PyJWT ("add cluster as release").
+    // shtab: picard-cli's completions command. chromaprint: fpcalc, run to
+    // fingerprint files for AcoustID. The embedded player is PyQt6's
+    // QtMultimedia (qt6-multimedia, through pyqt6). One small C extension
+    // (picard.util._astrcmp) links glibc.
+    .depends = .{
+        "glibc",   "python",  "pyqt6",   "mutagen",            "pyyaml",
+        "pygit2",  "tomlkit", "discid",  "charset-normalizer", "markdown",
+        "pyjwt",   "shtab",   "chromaprint",
+    },
+    // gettext: msgfmt compiles the translations, the desktop file and the
+    // AppStream metadata. Generating the shell completions imports picard's
+    // command line, which needs PyQt6 and shtab.
+    .build_depends = .{ "python", "setuptools", "wheel", "gettext", "pyqt6", "shtab" },
+}

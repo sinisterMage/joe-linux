@@ -1,0 +1,23 @@
+.{
+    .name = "mupdf",
+    .version = "1.26.12",
+    .release = 2,
+    .description = "Lightweight PDF, XPS and e-book library, viewers and the mutool toolkit",
+    .license = "AGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.mupdf.com/downloads/archive/mupdf-1.26.12-source.tar.gz", .sha256 = "6baf910928f404167ba49be6340195dec340795724722b331f5a2143f5aa0d01" },
+    },
+    // libmupdf links the system libraries chosen in build.sh, plus
+    // OpenSSL's libcrypto (PDF signatures, found by pkg-config) and, for
+    // OCR, Tesseract and leptonica (C++). mupdf-x11 and mupdf-x11-curl
+    // use X11 (and libcurl); mupdf-gl uses OpenGL through the freeglut
+    // copy in the tarball.
+    .depends = .{
+        "glibc",    "gcc",         "freetype",      "harfbuzz",
+        "brotli",   "libjpeg-turbo", "openjpeg",    "zlib",
+        "openssl",  "curl",        "libarchive",    "tesseract",
+        "leptonica", "libx11",     "libxext",       "libxrandr",
+        "mesa",     "gumbo-parser",
+    },
+    .build_depends = .{ "pkgconf", "binutils" },
+}

@@ -1,0 +1,18 @@
+.{
+    .name = "zim",
+    .version = "0.77.2",
+    .release = 1,
+    .description = "Desktop wiki: linked notes kept as plain text files",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives.
+        .{ .url = "https://github.com/zim-desktop-wiki/zim-desktop-wiki/archive/0.77.2/zim-desktop-wiki-0.77.2.tar.gz", .sha256 = "59586bb272b49e4c876870301a7cc71c92f15de5ad5ea6612fba1f8613061d50" },
+    },
+    // A Python program using GTK 3 through PyGObject. Of the optional
+    // dependencies its README lists, pyxdg (XDG paths), Pillow (more image
+    // formats) and xdg-utils (opening files and links) have recipes. The
+    // plugins' own extras (graphviz, git, scrot, LaTeX...) are not pulled in.
+    .depends = .{ "python", "pygobject", "pycairo", "glib", "gtk3", "pango", "gdk-pixbuf", "pyxdg", "pillow", "xdg-utils" },
+    // setup.py imports zim to write the manual page, which loads GTK.
+    .build_depends = .{ "python", "setuptools", "wheel", "pygobject", "gtk3", "pyxdg" },
+}

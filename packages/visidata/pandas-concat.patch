@@ -1,0 +1,12 @@
+--- a/visidata/loaders/_pandas.py
++++ b/visidata/loaders/_pandas.py
+@@ -335,7 +335,8 @@
+     def addRows(self, rows, index=None, undo=True):
+         pd = vd.importExternal('pandas')
+         if index is None:
+-            self.df = self.df.append(pd.DataFrame(rows))
++            index = self.nRows
++            self.df = pd.concat((self.df, pd.DataFrame(rows)))
+         else:
+             self.df = pd.concat((self.df.iloc[0:index], pd.DataFrame(rows), self.df.iloc[index:]))
+         self.df.index = pd.RangeIndex(self.nRows)

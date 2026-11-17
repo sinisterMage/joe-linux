@@ -1,0 +1,16 @@
+.{
+    .name = "pdftk",
+    .version = "3.3.3",
+    .release = 2,
+    .description = "pdftk-java: merge, split, rotate, encrypt, fill forms and edit the metadata of PDF files",
+    // pdftk is GPL; its fork of iText is LGPL. Java libraries are separate,
+    // source-built dependencies rather than bundled binary jars.
+    .license = "GPL-2.0-or-later AND LGPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives.
+        .{ .url = "https://gitlab.com/pdftk-java/pdftk/-/archive/v3.3.3/pdftk-v3.3.3.tar.gz", .file = "pdftk-3.3.3.tar.gz", .sha256 = "9c947de54658539e3a136e39f9c38ece1cf2893d143abb7f5bf3a2e3e005b286" },
+    },
+    // Java; /usr/bin/pdftk is a script that runs java.
+    .depends = .{ "openjdk", "bouncycastle >=1.87", "commons-lang3 >=3.22.0" },
+    .build_depends = .{"openjdk"},
+}

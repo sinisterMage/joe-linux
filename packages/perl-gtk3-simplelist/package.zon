@@ -1,0 +1,14 @@
+.{
+    .name = "perl-gtk3-simplelist",
+    .version = "0.21",
+    .release = 1,
+    .description = "A simple interface to Gtk3's complex MVC list widget",
+    .license = "LGPL-2.1-or-later OR Artistic-2.0",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/T/TV/TVIGNAUD/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/T/TV/TVIGNAUD/Gtk3-SimpleList-0.21.tar.gz", .sha256 = "1d4465100bf3bc0474a29469a406fd033562b6e3736188121000372ab2ada884" },
+    },
+    .depends = .{ "perl", "perl-gtk3" },
+    .build_depends = .{ "make" },
+}

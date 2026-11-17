@@ -1,0 +1,15 @@
+.{
+    .name = "ibus-hangul",
+    .version = "1.5.5",
+    .release = 1,
+    .description = "Korean input for IBus, using libhangul",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its release tarballs.
+        .{ .url = "https://github.com/libhangul/ibus-hangul/releases/download/1.5.5/ibus-hangul-1.5.5.tar.xz", .sha256 = "a5aac88286cd18960229860e3e1a778978a7aeaa484ad9acfa48284b87fdc3bb" },
+    },
+    // The engine is C; its preferences (ibus-setup-hangul) are Python on
+    // PyGObject and GTK 3.
+    .depends = .{ "glibc", "glib", "ibus", "libhangul", "python", "pygobject", "gtk3" },
+    .build_depends = .{ "pkgconf", "gettext", "python", "automake" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "perl-locale-codes",
+    .version = "3.91",
+    .release = 1,
+    .description = "a distribution of modules to handle locale codes",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/S/SB/SBECK/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/S/SB/SBECK/Locale-Codes-3.91.tar.gz", .sha256 = "5ebbb252bb296e6a2ce4cf544ee378919252c4b7e4ffecd9afd67a5735b57749" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

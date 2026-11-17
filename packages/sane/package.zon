@@ -1,7 +1,7 @@
 .{
     .name = "sane",
     .version = "1.4.0",
-    .release = 1,
+    .release = 2,
     .description = "Scanner Access Now Easy: the scanner backends, libsane and saned",
     .license = "GPL-2.0-or-later WITH SANE-exception",
     .sources = .{
@@ -24,6 +24,8 @@
         "poppler",
         "glib",
         "systemd",
+        "libgphoto2",
+        "v4l-utils",
     },
     .build_depends = .{ "pkgconf", "python", "gettext" },
 }

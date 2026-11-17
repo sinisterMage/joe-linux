@@ -1,0 +1,14 @@
+.{
+    .name = "perl-carp-clan",
+    .version = "6.08",
+    .release = 1,
+    .description = "Report errors from perspective of caller of a \"clan\" of modules",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/E/ET/ETHER/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/Carp-Clan-6.08.tar.gz", .sha256 = "c75f92e34422cc5a65ab05d155842b701452434e9aefb649d6e2289c47ef6708" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

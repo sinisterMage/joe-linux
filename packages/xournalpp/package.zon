@@ -1,0 +1,26 @@
+.{
+    .name = "xournalpp",
+    .version = "1.3.8",
+    .release = 1,
+    .description = "Handwritten note taking and PDF annotation with pen and tablet support",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its source archives.
+        .{ .url = "https://github.com/xournalpp/xournalpp/archive/v1.3.8/xournalpp-1.3.8.tar.gz", .sha256 = "e6f64f1aa3cd58a5221200af3b907f96471fb04144fa29084febea6b44e52bc0" },
+    },
+    // C++ on GTK 3; Poppler's GLib bindings render PDF backgrounds,
+    // librsvg the SVG icons and page templates, libzip and libxml2 read and
+    // write .xopp files, qpdf exports PDFs, Lua runs the plugins,
+    // GtkSourceView 4 highlights the LaTeX editor and libXi handles pen
+    // input on X11.
+    .depends = .{
+        "glibc",   "gcc",      "glib",    "gtk3",
+        "cairo",   "pango",    "gdk-pixbuf", "poppler",
+        "librsvg", "libxml2",  "libzip",  "zlib",
+        "qpdf",    "lua",      "gtksourceview4", "libx11",
+        "libxi",
+    },
+    // help2man makes the manual pages from --help; gettext compiles the
+    // translations, with appstream's ITS rules for the metainfo file.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "gettext", "help2man", "appstream" },
+}

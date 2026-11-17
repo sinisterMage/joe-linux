@@ -1,0 +1,14 @@
+.{
+    .name = "mandoc",
+    .version = "1.14.6",
+    .release = 1,
+    .description = "mandoc, the mdoc and man formatter and checker, with man, apropos and soelim renamed beside man-db and groff (mman, mapropos, msoelim)",
+    .license = "ISC AND BSD-2-Clause AND BSD-3-Clause",
+    .sources = .{
+        // Checked against upstream's mandoc-1.14.6.sha256.
+        .{ .url = "https://mandoc.bsd.lv/snapshots/mandoc-1.14.6.tar.gz", .sha256 = "8bf0d570f01e70a6e124884088870cbed7537f36328d512909eb10cd53179d9c" },
+    },
+    // zlib reads compressed manual pages; mman pages through less.
+    .depends = .{ "glibc", "zlib", "less" },
+    .build_depends = .{},
+}

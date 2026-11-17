@@ -1,0 +1,14 @@
+.{
+    .name = "perl-lwp-mediatypes",
+    .version = "6.05",
+    .release = 1,
+    .description = "guess media type for a file or a URL",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/O/OA/OALDERS/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/O/OA/OALDERS/LWP-MediaTypes-6.05.tar.gz", .sha256 = "abb2dcfbf069317fe65b098e3b2ad58c5eb33e9a839b9190cce6d371f8966cc1" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

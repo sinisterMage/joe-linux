@@ -1,0 +1,21 @@
+.{
+    .name = "snapshot",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME camera application for taking pictures and videos",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/snapshot/51/snapshot-51.0.tar.xz", .sha256 = "3e64fa4cd1a742ae34b6f6d8e6d9614a2d3eab88a1b0071c11ab53617eb214c2" },
+    },
+    // The release tarball vendors its crates, so the build is offline.
+    //
+    // Pictures are shown with libglycin and libglycin-gtk4. gst-plugins-base:
+    // libgstvideo, libgstpbutils, libgstaudio. The book's run-time
+    // dependencies: gtk4paintablesink (gst-plugin-gtk4), the camera through
+    // PipeWire's GStreamer plugin and xdg-desktop-portal-gnome, and
+    // xdg-user-dirs for the Pictures and Videos folders; camerabin comes
+    // from gst-plugins-bad.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "glycin", "glycin-gtk4", "gstreamer", "gst-plugins-base", "gst-plugins-bad", "gst-plugin-gtk4", "pipewire", "xdg-desktop-portal-gnome", "xdg-user-dirs" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

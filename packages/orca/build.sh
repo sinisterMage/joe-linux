@@ -7,6 +7,10 @@ build() {
     # crates cargo would fetch from crates.io; builds are offline. spiel is experimental and has no
     # recipe. setup itself checks, through Python, for the Atspi overrides,
     # GTK 3, PyGObject and dasbus.
+    # Braille is selected by importing brlapi/louis, not a Meson option.
+    # Require both bindings rather than let their optional probes hide a
+    # broken BRLTTY or liblouis installation.
+    python3 -c 'import brlapi, louis'
     meson setup .. \
         --prefix=/usr \
         --libdir=lib \

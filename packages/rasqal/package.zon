@@ -1,0 +1,16 @@
+.{
+    .name = "rasqal",
+    .version = "0.9.33",
+    .release = 1,
+    .description = "RDF query library for SPARQL and RDQL, with the roqet tool",
+    .license = "LGPL-2.1-or-later OR GPL-2.0-or-later OR Apache-2.0",
+    .sources = .{
+        // Checked against the book's MD5 (1f5def51ca0026cd192958ef07228b52).
+        .{ .url = "https://download.librdf.org/source/rasqal-0.9.33.tar.gz", .sha256 = "6924c9ac6570bd241a9669f83b467c728a322470bf34f4b2da4f69492ccfd97c" },
+    },
+    // libgcrypt for the SPARQL hash functions, libuuid (util-linux) for
+    // UUID(), MPFR (on GMP) for xsd:decimal, libxml2 for reading SPARQL XML
+    // results.
+    .depends = .{ "glibc", "raptor", "libgcrypt", "util-linux", "mpfr", "gmp", "libxml2" },
+    .build_depends = .{"pkgconf"},
+}

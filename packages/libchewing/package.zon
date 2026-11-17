@@ -1,0 +1,23 @@
+.{
+    .name = "libchewing",
+    .version = "0.13.1",
+    .release = 1,
+    .description = "Intelligent Zhuyin (bopomofo) input library for Traditional Chinese, with its dictionaries",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the release's libchewing-0.13.1.tar.zst.sha256.
+        .{ .url = "https://codeberg.org/chewing/libchewing/releases/download/v0.13.1/libchewing-0.13.1.tar.zst", .sha256 = "c897a5d0aadfdeb07784e1411ceac0efef2c97bea8143fb3b1dcde8274e14fc0" },
+        // Corrosion, the CMake module that builds the Rust crates, at the
+        // release CMakeLists.txt pins (v0.5.1, commit b1fab72); CMake
+        // would otherwise clone it from GitHub. Upstream publishes no
+        // checksum for the archive.
+        .{ .url = "https://github.com/corrosion-rs/corrosion/archive/v0.5.1/corrosion-0.5.1.tar.gz", .sha256 = "843334a9f0f5efbc225dccfa88031fe0f2ec6fd787ca1e7d55ed27b2c25d9c97" },
+    },
+    // cargo downloads the crates libchewing depends on from crates.io
+    // (Cargo.lock); they are not vendored yet.
+    .network = true,
+    // The library is Rust behind a C interface; the user's phrases are
+    // kept in SQLite (the system library, not rusqlite's bundled copy).
+    .depends = .{ "glibc", "gcc", "sqlite" },
+    .build_depends = .{ "cmake", "ninja", "rust", "pkgconf" },
+}

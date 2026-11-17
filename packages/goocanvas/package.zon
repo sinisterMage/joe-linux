@@ -1,0 +1,13 @@
+.{
+    .name = "goocanvas",
+    .version = "3.0.0",
+    .release = 1,
+    .description = "GTK 3 canvas widget with GObject Introspection bindings",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        // Verified against download.gnome.org/sources/goocanvas/3.0/goocanvas-3.0.0.sha256sum.
+        .{ .url = "https://download.gnome.org/sources/goocanvas/3.0/goocanvas-3.0.0.tar.xz", .sha256 = "670a7557fe185c2703a14a07506156eceb7cea3b4bf75076a573f34ac52b401a" },
+    },
+    .depends = .{ "glibc", "gtk3", "glib", "cairo", "pango", "gdk-pixbuf", "at-spi2-core" },
+    .build_depends = .{ "gcc", "make", "pkgconf", "gettext", "python" },
+}

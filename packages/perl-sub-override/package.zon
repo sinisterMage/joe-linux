@@ -1,0 +1,14 @@
+.{
+    .name = "perl-sub-override",
+    .version = "0.12",
+    .release = 1,
+    .description = "Perl extension for easily overriding subroutines",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/M/MV/MVSJES/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/M/MV/MVSJES/Sub-Override-0.12.tar.gz", .sha256 = "d922dc6ef0e51f6385e111310845c3393be6b7a4d4ebda2a9e47c05bf62f79e3" },
+    },
+    .depends = .{ "perl", "perl-test-fatal" },
+    .build_depends = .{ "make" },
+}

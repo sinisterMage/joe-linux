@@ -1,0 +1,22 @@
+.{
+    .name = "pdfarranger",
+    .version = "1.14.0",
+    .release = 1,
+    .description = "Merge, split, rotate, crop and rearrange the pages of PDF documents",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives.
+        .{ .url = "https://github.com/pdfarranger/pdfarranger/archive/1.14.0/pdfarranger-1.14.0.tar.gz", .sha256 = "9f6f7f00664adcd470069cbe2b05e41bd1e9bbe4506856a8029c56353eacee7d" },
+    },
+    // A Python program using GTK 3 (and libhandy, when present) through
+    // PyGObject, Poppler's GLib bindings to render pages and pikepdf to
+    // write them; img2pdf lets it import images.
+    .depends = .{
+        "python",   "pygobject", "pycairo",   "glib",
+        "gtk3",     "libhandy",  "poppler",   "pango",
+        "gdk-pixbuf", "pikepdf", "img2pdf",   "python-dateutil",
+        "packaging",
+    },
+    // msgfmt compiles the translations.
+    .build_depends = .{ "python", "setuptools", "wheel", "gettext" },
+}

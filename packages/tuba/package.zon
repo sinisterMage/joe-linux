@@ -1,0 +1,25 @@
+.{
+    .name = "tuba",
+    .version = "0.10.3",
+    .release = 1,
+    .description = "GTK 4 client for Mastodon and other fediverse services",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        // Upstream publishes no checksum for its source archive.
+        .{ .url = "https://github.com/GeopJr/Tuba/archive/v0.10.3/Tuba-0.10.3.tar.gz", .sha256 = "397297bbd140a2b2c90024392dbc5f8a77bc6a10472308c7741c7913e82eb050" },
+    },
+    // libsoup talks to the servers and json-glib parses their answers;
+    // libsecret keeps the account tokens; ICU breaks text for the
+    // composer's character count; GtkSourceView and libspelling are the
+    // composer; Clapper (on GStreamer) plays videos and audio; gexiv2
+    // reads the description of attached images as their alt text.
+    .depends = .{
+        "glibc",    "glib",     "gtk4",      "libadwaita", "gtksourceview5", "libspelling",
+        "libgee",   "libsoup",  "json-glib", "libxml2",    "libsecret",      "icu",
+        "clapper",  "gstreamer", "gexiv2",   "cairo",      "pango",          "gdk-pixbuf",
+        "graphene",
+    },
+    // glib provides glib-compile-resources; appstream provides the gettext
+    // rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext", "appstream" },
+}

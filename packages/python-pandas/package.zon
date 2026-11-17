@@ -1,0 +1,13 @@
+.{
+    .name = "python-pandas",
+    .version = "3.1.1",
+    .release = 1,
+    .description = "Data frames and time series analysis for Python",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Verified against the PyPI source distribution SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/17/ca/24c6bc92aca3d366146358e47f1d374c0e1a50763ef226fc71eff20a63fb/pandas-3.1.1.tar.gz", .sha256 = "05fed3e3b7c99b226f160e29d7d6cb7ef39638c758cbfe42b3f24ba34f04b859" },
+    },
+    .depends = .{ "glibc", "gcc", "python", "python-numpy", "python-dateutil", "tzdata" },
+    .build_depends = .{ "python", "meson-python", "meson", "ninja", "cython", "versioneer", "wheel" },
+}

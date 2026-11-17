@@ -1,0 +1,14 @@
+.{
+    .name = "perl-uri",
+    .version = "5.40",
+    .release = 1,
+    .description = "Uniform Resource Identifiers (absolute and relative)",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/O/OA/OALDERS/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/O/OA/OALDERS/URI-5.40.tar.gz", .sha256 = "ef5d2ef099a1a24a6e83ffe543de73337805d3d39c00b84fa205d725ad1a1b63" },
+    },
+    .depends = .{ "perl", "perl-mime-base32" },
+    .build_depends = .{ "make" },
+}

@@ -1,0 +1,19 @@
+.{
+    .name = "libvisio",
+    .version = "0.1.12",
+    .release = 1,
+    .description = "Library for importing Microsoft Visio drawings, with the vsd2xhtml, vsd2text and vsd2raw converters",
+    .license = "MPL-2.0",
+    .sources = .{
+        // Upstream publishes no checksum; checked against the SHA-256 that
+        // LibreOffice's download.lst records for this tarball.
+        .{ .url = "https://dev-www.libreoffice.org/src/libvisio/libvisio-0.1.12.tar.xz", .sha256 = "f59fa2e3baf95475256fe84ea0aa1214f43940bae94424f4026b2d633933df01" },
+    },
+    // librevenge (and -stream, -generators for the converters), libxml2
+    // (VDX and VSDX are XML), ICU (text encodings); gcc: libstdc++.
+    .depends = .{ "glibc", "gcc", "librevenge", "libxml2", "icu" },
+    // boost: header-only parts. gperf and perl regenerate the XML token
+    // tables if their sources are newer than the generated copies shipped
+    // in the tarball.
+    .build_depends = .{ "boost", "gperf", "perl", "pkgconf" },
+}

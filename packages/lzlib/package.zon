@@ -1,0 +1,14 @@
+.{
+    .name = "lzlib",
+    .version = "1.16",
+    .release = 1,
+    .description = "In-memory compression and decompression library for the lzip format",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // Checked against upstream's detached GPG signature
+        // (lzlib-1.16.tar.gz.sig, key 25B62C9821501AA0, Antonio Diaz Diaz).
+        .{ .url = "https://download.savannah.gnu.org/releases/lzip/lzlib/lzlib-1.16.tar.gz", .sha256 = "203228de911780309dad6813e51541d7ea89469784f01cb661edba080ff1b038" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{},
+}

@@ -247,7 +247,7 @@ publishes the medium with the repository (see infra/build-machine).
 A release is named **J*X*-*Y*-*Z***, with a stage such as `-alpha1` before it
 is final:
 
-| Part | Is | In J1-7.3.1-0.2.1-alpha2 |
+| Part | Is | In J1-7.3.1-0.2.1-alpha3 |
 |------|----|--------------------------|
 | J | joe, the distribution | J |
 | *X* | the system revision | 1 |
@@ -256,7 +256,7 @@ is final:
 
 `packages/joe-release` writes the name into `os-release` and the build machine
 names the installation medium after it. Its package version is the revision
-and stage alone (`1alpha2`), which dave orders before the final `1`.
+and stage alone (`1alpha3`), which dave orders before the final `1`.
 
 ## Living in it
 

@@ -1,0 +1,34 @@
+.{
+    .name = "solaar",
+    .version = "1.1.20",
+    .release = 1,
+    .description = "Manager for Logitech receivers, keyboards, mice and tablets",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against PyPI's sha256 digest. The sdist carries the
+        // compiled translations.
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/solaar/solaar-1.1.20.tar.gz", .sha256 = "68b07ba8861747d988098759df49864b4d3ba7ae263ba79c25385980ee96555d" },
+    },
+    // A GTK 3 program in Python. pyudev finds and watches the receivers
+    // (hidraw devices); evdev and python-xlib carry out the rule engine's
+    // key and mouse actions, psutil its process conditions; dbus-python
+    // follows suspend and Bluetooth connections; libnotify shows
+    // notifications. It carries its own copy of hid-parser. A tray icon
+    // would need AppIndicator, which joe does not package; Solaar then
+    // falls back to a GTK status icon.
+    .depends = .{
+        "python",
+        "pygobject",
+        "pycairo",
+        "gtk3",
+        "libnotify",
+        "dbus-python",
+        "evdev",
+        "pyudev",
+        "pyyaml",
+        "python-xlib",
+        "psutil",
+        "typing-extensions",
+    },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

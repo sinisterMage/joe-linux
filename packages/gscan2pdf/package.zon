@@ -1,0 +1,30 @@
+.{
+    .name = "gscan2pdf",
+    .version = "2.13.5",
+    .release = 1,
+    .description = "Scan, clean and OCR document pages into searchable PDF and DjVu files",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Verified detached upstream signature (gscan2pdf-2.13.5.tar.xz.asc):
+        // Jeffrey Ratcliffe, 463293E4AE33871846F30227B321F203110FCAF3.
+        // SHA-256 also matches Arch PKGBUILD and FreeBSD graphics/gscan2pdf/distinfo.
+        .{ .url = "https://downloads.sourceforge.net/gscan2pdf/gscan2pdf-2.13.5.tar.xz", .sha256 = "0d4304f6723d076f868feb013e3d7be925dfbb10dcdc23177dbcbf6606b7d5fa" },
+    },
+    // Runtime imports were checked in bin/ and lib/, not only Makefile.PL:
+    // upstream omits UUID, HTML parsing, Locale::Codes, ProcessTable/ImageView.
+    // ImageMagick must be built with its matching vendor-installed PerlMagick.
+    .depends = .{
+        "perl", "perl-glib", "perl-gtk3", "perl-goocanvas2",
+        "perl-gtk3-simplelist", "perl-gtk3-imageview", "perl-image-sane",
+        "perl-config-general", "perl-date-calc", "perl-data-uuid",
+        "perl-filesys-df", "perl-html-parser", "perl-list-moreutils",
+        "perl-locale-codes", "perl-locale-gettext", "perl-log-log4perl",
+        "perl-pdf-builder", "perl-proc-processtable", "perl-readonly",
+        "perl-set-intspan", "perl-try-tiny",
+        "sane", "sane-airscan", "imagemagick", "librsvg", "tiff",
+        "tesseract", "tesseract-data-eng", "unpaper", "djvulibre",
+        "poppler", "ghostscript", "pdftk", "fontconfig", "noto-fonts",
+        "file", "which", "xz", "xdg-utils", "hicolor-icon-theme",
+    },
+    .build_depends = .{ "make", "gettext", "perl-sub-override", "perl-ipc-system-simple" },
+}

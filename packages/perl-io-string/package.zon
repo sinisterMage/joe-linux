@@ -1,0 +1,14 @@
+.{
+    .name = "perl-io-string",
+    .version = "1.08",
+    .release = 1,
+    .description = "Emulate file interface for in-core strings",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/G/GA/GAAS/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/G/GA/GAAS/IO-String-1.08.tar.gz", .sha256 = "2a3f4ad8442d9070780e58ef43722d19d1ee21a803bf7c8206877a10482de5a0" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

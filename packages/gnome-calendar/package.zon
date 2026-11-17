@@ -1,0 +1,16 @@
+.{
+    .name = "gnome-calendar",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME Calendar",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-calendar/51/gnome-calendar-51.0.tar.xz", .sha256 = "77c290450c40834392cdea2c40451561e98f43d5dae93cd9e915051a6708dc30" },
+    },
+    // Calendars are read and written through evolution-data-server (whose
+    // calendar factory does the work, online accounts included); libgweather
+    // and geoclue give the weather forecast.
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "evolution-data-server", "libical", "libsoup", "libgweather", "geoclue", "fribidi", "gsettings-desktop-schemas", "pango", "cairo", "gdk-pixbuf", "graphene" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "gumbo-parser",
+    .version = "0.14.1",
+    .release = 1,
+    .description = "HTML5 parsing library in pure C99",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Codeberg's archive of the tag. Upstream publishes no checksum for
+        // it.
+        .{ .url = "https://codeberg.org/gumbo-parser/gumbo-parser/archive/0.14.1.tar.gz", .file = "gumbo-parser-0.14.1.tar.gz", .sha256 = "ba5d13b9b508ec693613b3b61518163aced38f8e885f7e28dc047348a4e61365" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

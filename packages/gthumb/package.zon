@@ -1,0 +1,30 @@
+.{
+    .name = "gthumb",
+    .version = "4.0.3",
+    .release = 1,
+    .description = "Image viewer, editor, browser and organizer for GNOME",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gthumb/4.0/gthumb-4.0.3.tar.xz", .sha256 = "37d17c8eab0010b001d7a6cda776d81c73fb169abc28f9a930e0afc57ac8978d" },
+    },
+    // gThumb 4 is written in Vala (with C and some C++ for Exiv2) for GTK 4
+    // and libadwaita. Every image format it can read is on: PNG, JPEG,
+    // WebP, SVG (librsvg), HEIF and AVIF (libheif), JPEG XL, TIFF, GIF
+    // (giflib) and camera RAW (LibRaw). Exiv2 reads and writes metadata,
+    // lcms2 and colord handle colour profiles, libportal sets the desktop
+    // background. GStreamer reads videos' metadata and thumbnails, with the
+    // good and libav plugins for the usual formats.
+    .depends = .{
+        "glibc",            "gcc",           "glib",
+        "gtk4",             "libadwaita",    "cairo",
+        "pango",            "gdk-pixbuf",    "zlib",
+        "libpng",           "libjpeg-turbo", "lcms2",
+        "colord",           "exiv2",         "libwebp",
+        "librsvg",          "libheif",       "libjxl",
+        "tiff",             "giflib",        "libraw",
+        "libportal",        "gstreamer",     "gst-plugins-base",
+        "gst-plugins-good", "gst-libav",     "gsettings-desktop-schemas",
+    },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext", "appstream" },
+}

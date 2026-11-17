@@ -1,0 +1,16 @@
+.{
+    .name = "errands",
+    .version = "51.1.2",
+    .release = 1,
+    .description = "Personal task manager with CalDAV and online-account sync",
+    .license = "Zlib",
+    .sources = .{
+        .{ .url = "https://github.com/mrvladus/Errands/archive/51.1.2/errands-51.1.2.tar.gz", .sha256 = "f20d58fef63a8e0054a5272fa14e29903017278f0b05266895b20ecae9aa2ead" },
+    },
+    // Tasks are kept and synchronised through evolution-data-server
+    // (libecal, libical); gnome-online-accounts supplies the accounts,
+    // libsecret the CalDAV passwords and libportal the background portal.
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "gtksourceview5", "libsecret", "libportal", "evolution-data-server", "libical", "gnome-online-accounts", "json-glib", "pango", "cairo", "gdk-pixbuf", "graphene" },
+    // glib provides glib-compile-resources.
+    .build_depends = .{ "make", "pkgconf", "blueprint-compiler", "gettext" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "libdwarf",
+    .version = "2.3.3",
+    .release = 1,
+    .description = "Library for reading DWARF debugging information, and the dwarfdump tool",
+    .license = "LGPL-2.1-only AND BSD-2-Clause AND GPL-2.0-only",
+    .sources = .{
+        // Checked against the SHA-512 on https://www.prevanders.net/dwarf.html.
+        .{ .url = "https://github.com/davea42/libdwarf-code/releases/download/v2.3.3/libdwarf-2.3.3.tar.xz", .sha256 = "bde13d1c49be6f2467326a6e0b3919247471455d16eefc3c6be26c7d4baca36a" },
+    },
+    // zlib and zstd decompress compressed debug sections.
+    .depends = .{ "glibc", "zlib", "zstd" },
+    .build_depends = .{"pkgconf"},
+}

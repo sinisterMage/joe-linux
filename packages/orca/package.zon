@@ -1,7 +1,7 @@
 .{
     .name = "orca",
     .version = "51.1",
-    .release = 2,
+    .release = 3,
     .description = "Screen reader for GNOME",
     .license = "LGPL-2.1-or-later",
     .sources = .{
@@ -13,8 +13,9 @@
     // speech output. dasbus is required; babel (language names),
     // setproctitle (so that the process is called orca, which Chromium
     // checks to turn on accessibility) and psutil (system information
-    // commands) are optional upstream and wanted here. Braille (brlapi,
-    // liblouis) and mouse review under X11 (libwnck) are not available.
+    // commands) are optional upstream and wanted here. BRLTTY supplies
+    // brlapi for braille displays; liblouis supplies contracted braille.
+    // Mouse review under X11 (libwnck) is not available.
     .depends = .{
         "python",
         "pygobject",
@@ -29,6 +30,8 @@
         "babel",
         "setproctitle",
         "psutil",
+        "brltty",
+        "liblouis",
     },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "python" },
 }

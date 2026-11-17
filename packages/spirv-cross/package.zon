@@ -1,0 +1,16 @@
+.{
+    .name = "spirv-cross",
+    .version = "1.4.363.0",
+    .release = 1,
+    .description = "Parses SPIR-V and translates it to GLSL, HLSL, MSL and C++, with reflection",
+    .license = "Apache-2.0",
+    .sources = .{
+        // The tag of the Vulkan SDK release that spirv-headers, spirv-tools
+        // and the Vulkan packages are at; SPIRV-Cross makes no other
+        // releases. GitHub's archive of the tag, for which upstream
+        // publishes no checksum.
+        .{ .url = "https://github.com/KhronosGroup/SPIRV-Cross/archive/vulkan-sdk-1.4.363.0/SPIRV-Cross-vulkan-sdk-1.4.363.0.tar.gz", .sha256 = "f708982e88b763ef5b0394ed468fc2c3628f68cdab89f2e7a946cd628c04e721" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

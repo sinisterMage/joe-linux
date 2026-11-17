@@ -1,0 +1,13 @@
+.{
+    .name = "jbigkit",
+    .version = "2.2",
+    .release = 1,
+    .description = "JBIG1 (ITU-T T.82 and T.85) bi-level image compression libraries and the pbmtojbg and jbgtopbm converters",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum or signature.
+        .{ .url = "https://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.2.tar.gz", .sha256 = "3302109c93b7befbffa3cfe8bceb4355f19dea0ee7dcb5f33710b1648bf6645c" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{},
+}

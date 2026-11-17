@@ -1,0 +1,15 @@
+.{
+    .name = "websocketpp",
+    .version = "0.8.2",
+    .release = 1,
+    .description = "WebSocket client and server library for C++, as headers",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives.
+        .{ .url = "https://github.com/zaphoyd/websocketpp/archive/0.8.2/websocketpp-0.8.2.tar.gz", .sha256 = "6ce889d85ecdc2d8fa07408d6787e7352510750daa66b5ad44aacb47bea76755" },
+    },
+    // Headers and CMake files only. Programs using them compile in either
+    // Boost.Asio or standalone asio (the asio package), and OpenSSL for TLS.
+    .depends = .{},
+    .build_depends = .{ "cmake", "ninja" },
+}

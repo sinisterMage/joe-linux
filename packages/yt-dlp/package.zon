@@ -1,0 +1,29 @@
+.{
+    .name = "yt-dlp",
+    .version = "2026.10.26",
+    .release = 1,
+    .description = "Command-line downloader for audio and video from YouTube and many other sites",
+    .license = "Unlicense",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/y/yt-dlp/yt_dlp-2026.10.26.tar.gz", .sha256 = "abe5c6b94c3b2f0560500add1c42e0a97641752743a5b65588ac2007a6e23eb6" },
+    },
+    // Upstream's "default" extra, as far as joe has it: brotli (its Python
+    // module), mutagen (embedding thumbnails and tags), pycryptodomex
+    // (AES-encrypted streams), requests and urllib3 (HTTP), websockets
+    // (live streams), and yt-dlp-ejs, the scripts that solve YouTube's
+    // JavaScript challenges, run with Node.js. certifi is left out: without
+    // it yt-dlp uses the system's certificates (make-ca, through Python's
+    // ssl module). FFmpeg merges separate video and audio streams and does
+    // the conversions (--extract-audio, --remux-video, ...).
+    //
+    // Not included: curl-cffi (browser impersonation; no recipe) and
+    // secretstorage (reading Chromium's cookies from the keyring; no
+    // recipe; Firefox's cookies work without it).
+    .depends = .{
+        "python",        "brotli",     "mutagen",
+        "pycryptodomex", "requests",   "urllib3",
+        "websockets",    "yt-dlp-ejs", "nodejs",
+        "ffmpeg",
+    },
+    .build_depends = .{ "python", "hatchling" },
+}

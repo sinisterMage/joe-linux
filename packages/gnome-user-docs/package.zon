@@ -1,0 +1,15 @@
+.{
+    .name = "gnome-user-docs",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME desktop help and system administration guide",
+    .license = "CC-BY-3.0",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-user-docs/51/gnome-user-docs-51.0.tar.xz", .sha256 = "bf3ebd7fa1da70617884b07392de8d605305cfef71c2e883749cb08ff0d6a7d1" },
+    },
+    // Data only: Mallard pages under usr/share/help, read by a help
+    // browser (Yelp, which has no recipe yet).
+    // itstool translates the pages (it needs libxml2's Python module, which
+    // is its own dependency); gettext compiles the translations.
+    .build_depends = .{ "meson", "ninja", "itstool", "gettext", "libxml2" },
+}

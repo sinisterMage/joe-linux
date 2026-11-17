@@ -1,0 +1,13 @@
+.{
+    .name = "regex",
+    .version = "2026.11.15",
+    .release = 1,
+    .description = "Alternative regular expression module for Python, compatible with re",
+    .license = "Apache-2.0 AND CNRI-Python",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/r/regex/regex-2026.11.15.tar.gz", .sha256 = "d6ec7e29e62ebf93ab2a593d1137022b6025497d8610e5cb666d52f9ee5bb0ce" },
+    },
+    // The _regex extension module is C and links only libc.
+    .depends = .{ "glibc", "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

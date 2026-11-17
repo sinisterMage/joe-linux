@@ -1,0 +1,14 @@
+.{
+    .name = "perl-list-moreutils-xs",
+    .version = "0.430",
+    .release = 1,
+    .description = "Provide the stuff missing in List::Util in XS",
+    .license = "Apache-2.0",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/R/RE/REHSACK/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/List-MoreUtils-XS-0.430.tar.gz", .sha256 = "e8ce46d57c179eecd8758293e9400ff300aaf20fefe0a9d15b9fe2302b9cb242" },
+    },
+    .depends = .{ "glibc", "perl" },
+    .build_depends = .{ "gcc", "make" },
+}

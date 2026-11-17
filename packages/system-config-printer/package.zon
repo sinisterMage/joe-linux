@@ -1,0 +1,25 @@
+.{
+    .name = "system-config-printer",
+    .version = "1.5.18",
+    .release = 2,
+    .description = "Graphical tool to add, configure and troubleshoot CUPS printers, with its print-queue applet",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream signs its release archives but publishes no checksum.
+        .{ .url = "https://github.com/OpenPrinting/system-config-printer/releases/download/v1.5.18/system-config-printer-1.5.18.tar.xz", .sha256 = "b1a69e1b4ec2add569a87aeca811a37c5361ee6ae327ec852b79e64223e34bee" },
+    },
+    // Python using GTK 3 (with libhandy when present), libnotify,
+    // libsecret and polkit through PyGObject; pycups talks to CUPS and
+    // dbus-python to the session and system buses. It runs CUPS's own
+    // tools as well. Left without: SMB browsing (pysmbc) and installing
+    // drivers through PackageKit, which have no recipe; both are optional.
+    .depends = .{
+        "python",  "pygobject", "pycairo",   "dbus-python",
+        "pycups",  "glib",      "gtk3",      "gdk-pixbuf",
+        "pango",   "libhandy",  "libnotify", "libsecret",
+        "polkit",  "cups", "cups-pk-helper",
+    },
+    // msgfmt translates the desktop files and metainfo;
+    // desktop-file-install installs the desktop files.
+    .build_depends = .{ "python", "setuptools", "pkgconf", "gettext", "desktop-file-utils", "cups", "glib" },
+}

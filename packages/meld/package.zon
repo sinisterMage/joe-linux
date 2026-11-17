@@ -1,0 +1,17 @@
+.{
+    .name = "meld",
+    .version = "3.24.1",
+    .release = 1,
+    .description = "Visual diff and merge tool for files, directories and version-controlled trees",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/meld/3.24/meld-3.24.1.tar.xz", .sha256 = "29dfee0d857b89c2fa4dad7c9fb9e48506d8bde3f71b6634798659e6697c6b1e" },
+    },
+    // A Python program using GTK 3 and GtkSourceView 4 through PyGObject,
+    // and drawing with pycairo.
+    .depends = .{ "python", "pygobject", "pycairo", "glib", "gtk3", "gtksourceview4", "pango", "gsettings-desktop-schemas" },
+    // meson checks the pkg-config files of the libraries above; itstool
+    // translates the help pages; appstream provides the gettext rules for
+    // the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "appstream" },
+}

@@ -1,0 +1,23 @@
+.{
+    .name = "newsflash",
+    .version = "6.0.2",
+    .release = 1,
+    .description = "Feed reader for RSS and Atom feeds, locally or through online feed services",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.com/api/v4/projects/8320003/packages/generic/newsflash/6.0.2/newsflash-6.0.2.tar.xz", .sha256 = "4765a37a2780fdf7737c2d2c730b2d4cfb91f72703c07797c924574f6ef1e7cd" },
+    },
+    // The release tarball vendors its crates (html2gtk, a git dependency,
+    // included), so the build is offline.
+    //
+    // Articles are shown by the html2gtk crate, which uses GtkSourceView
+    // for code blocks; videos play through Clapper's libraries. Images are
+    // decoded by the glycin crate, which is compiled in: the glycin package
+    // supplies the sandboxed loaders it starts, and libseccomp and
+    // fontconfig are linked for it. The database is an SQLite that rusqlite
+    // and sqlx compile in, and TLS is rustls with aws-lc (compiled in).
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "gtksourceview5", "clapper", "gstreamer", "glycin", "libseccomp", "fontconfig" },
+    // The interface is written in Blueprint, which gtk4-rs compiles while
+    // building; appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream", "blueprint-compiler" },
+}

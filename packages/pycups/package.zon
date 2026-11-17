@@ -1,0 +1,13 @@
+.{
+    .name = "pycups",
+    .version = "2.0.4",
+    .release = 1,
+    .description = "Python bindings for the CUPS API",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pycups/pycups-2.0.4.tar.gz", .sha256 = "843e385c1dbf694996ca84ef02a7f30c28376035588f5fbeacd6bae005cf7c8d" },
+    },
+    // A C extension linking libcups.
+    .depends = .{ "glibc", "python", "cups" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

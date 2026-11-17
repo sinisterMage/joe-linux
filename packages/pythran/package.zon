@@ -1,0 +1,13 @@
+.{
+    .name = "pythran",
+    .version = "0.19.0",
+    .release = 1,
+    .description = "Ahead of time compiler for numerical Python kernels",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Verified against the PyPI source distribution SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/bb/a3/03098a8a5d2c9f801c227cf941d85976934f5f47307ef3d819734370acdc/pythran-0.19.0.tar.gz", .sha256 = "18a096daa8b4bbe3ace06ce5d7325be5ff57aec4cf67b91834cf1b757b3e5392" },
+    },
+    .depends = .{ "python", "python-numpy", "ply", "gast", "beniget", "setuptools", "gcc" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

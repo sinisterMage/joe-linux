@@ -1,0 +1,14 @@
+.{
+    .name = "perl-html-tagset",
+    .version = "3.24",
+    .release = 1,
+    .description = "Data tables useful in parsing HTML",
+    .license = "Artistic-2.0",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/P/PE/PETDANCE/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/P/PE/PETDANCE/HTML-Tagset-3.24.tar.gz", .sha256 = "eb89e145a608ed1f8f141a57472ee5f69e67592a432dcd2e8b1dbb445f2b230b" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

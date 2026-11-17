@@ -1,0 +1,16 @@
+.{
+    .name = "libmspack",
+    // Upstream's own version string: every libmspack release is an
+    // "alpha", which its home page says is about the API being incomplete,
+    // not about robustness.
+    .version = "0.12alpha",
+    .release = 1,
+    .description = "Library for Microsoft compression formats: CAB, CHM, SZDD, KWAJ and Exchange OAB",
+    .license = "LGPL-2.1-only",
+    .sources = .{
+        // Upstream publishes no checksum or signature.
+        .{ .url = "https://www.cabextract.org.uk/libmspack/libmspack-0.12alpha.tar.gz", .sha256 = "1834d1079a6e8db9546fa95d3a1fc2cf676124a8a60bbdd7f30b2db4eb4ad683" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{},
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "pyhibp",
+    .version = "4.2.0",
+    .release = 1,
+    .description = "Python interface to the Have I Been Pwned API",
+    .license = "AGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyhibp/pyhibp-4.2.0.tar.gz", .sha256 = "825c383e0ac43ac3438dad82e5ddb45773754fbb1b5c3b8ac56669483f2c67ed" },
+    },
+    .depends = .{ "python", "requests" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

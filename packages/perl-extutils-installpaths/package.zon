@@ -1,0 +1,14 @@
+.{
+    .name = "perl-extutils-installpaths",
+    .version = "0.015",
+    .release = 1,
+    .description = "Build.PL install path logic made easy",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/L/LE/LEONT/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/ExtUtils-InstallPaths-0.015.tar.gz", .sha256 = "7d64eb2dfa87ead010cdf55c8a1bdfde50b7b5852d7cb8cf2304f55bea2eb007" },
+    },
+    .depends = .{ "perl", "perl-extutils-config" },
+    .build_depends = .{ "make" },
+}

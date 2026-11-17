@@ -1,0 +1,12 @@
+.{
+    .name = "markdown",
+    .version = "3.10.2",
+    .release = 1,
+    .description = "Python implementation of John Gruber's Markdown",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/M/Markdown/markdown-3.10.2.tar.gz", .sha256 = "994d51325d25ad8aa7ce4ebaec003febcce822c3f8c911e3b17c52f7f589f950" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

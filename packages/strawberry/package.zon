@@ -1,0 +1,29 @@
+.{
+    .name = "strawberry",
+    .version = "1.2.31",
+    .release = 1,
+    .description = "Music player and music collection organizer",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its releases.
+        .{ .url = "https://github.com/strawberrymusicplayer/strawberry/releases/download/1.2.31/strawberry-1.2.31.tar.xz", .sha256 = "cffc0cd453f3126a930b9e67f547e54d9fde0c8754fdead8185d2b2f5c68c037" },
+    },
+    // Linked: Qt (with its SQLite driver for the collection database),
+    // GStreamer for playback, TagLib for tags, ICU and uchardet for text
+    // encodings, OpenSSL's libcrypto, ALSA and libpulse to list output
+    // devices, libsecret for passwords, chromaprint for fingerprints, FFTW for
+    // the moodbar, libebur128 for loudness, libmtp for MTP devices,
+    // libX11-xcb for global shortcuts under X11, KDSingleApplication. The
+    // GStreamer plugin sets (base, good; libav for AAC, ALAC and WMA) are what
+    // plays the music.
+    .depends = .{
+        "glibc",        "gcc",               "qt6",               "kdsingleapplication",
+        "glib",         "gstreamer",         "gst-plugins-base",  "gst-plugins-good",
+        "gst-libav",    "taglib",            "sqlite",            "icu",
+        "uchardet",     "openssl",           "alsa-lib",          "pulseaudio",
+        "libsecret",    "chromaprint",       "fftw",              "libebur128",
+        "libmtp",       "libx11",
+    },
+    // boost and sparsehash are header-only.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "boost", "sparsehash" },
+}

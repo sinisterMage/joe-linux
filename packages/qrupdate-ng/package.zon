@@ -1,0 +1,13 @@
+.{
+    .name = "qrupdate-ng",
+    .version = "1.3.1",
+    .release = 1,
+    .description = "Fast updates of QR and Cholesky decompositions",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Verified against GitHub upstream release asset SHA-256.
+        .{ .url = "https://github.com/mpimd-csc/qrupdate-ng/releases/download/v1.3.1/qrupdate-ng-1.3.1.tar.gz", .sha256 = "7c6b3c6d96eb7941379899d8a5940cf9aeee2ee66729179aeac024ff8e309c6a" },
+    },
+    .depends = .{ "glibc", "gcc", "gcc-fortran", "openblas", "lapack" },
+    .build_depends = .{ "cmake", "ninja" },
+}

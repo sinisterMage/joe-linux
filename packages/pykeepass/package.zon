@@ -1,0 +1,12 @@
+.{
+    .name = "pykeepass",
+    .version = "4.2.0",
+    .release = 1,
+    .description = "Python library for KeePass databases (KDBX 3 and 4)",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pykeepass/pykeepass-4.2.0.tar.gz", .sha256 = "0e40eabdac19a511a2be4e550984cbf01f1fd8ec9d9055456136fab266e5cc66" },
+    },
+    .depends = .{ "python", "construct", "argon2-cffi", "pycryptodomex", "lxml", "pyotp" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

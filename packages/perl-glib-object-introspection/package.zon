@@ -1,0 +1,14 @@
+.{
+    .name = "perl-glib-object-introspection",
+    .version = "0.052",
+    .release = 1,
+    .description = "Dynamically create Perl language bindings",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/X/XA/XAOC/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/X/XA/XAOC/Glib-Object-Introspection-0.052.tar.gz", .sha256 = "555b4f1308939bb3141ea4570ad12e04e27c23329c302c9dc8725409e1049111" },
+    },
+    .depends = .{ "glib", "glibc", "libffi", "perl", "perl-extutils-depends", "perl-extutils-pkgconfig", "perl-glib" },
+    .build_depends = .{ "gcc", "make", "patch", "pkgconf" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "perl-config-general",
+    .version = "2.67",
+    .release = 1,
+    .description = "Generic Config Module",
+    .license = "Artistic-2.0",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/T/TL/TLINDEN/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/T/TL/TLINDEN/Config-General-2.67.tar.gz", .sha256 = "473d65127b23dac0e8039c01e28bc4072cb9a6e93e81a1ea4893cea08c698db0" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "pytesseract",
+    .version = "0.3.13",
+    .release = 2,
+    .description = "Python wrapper for the Tesseract OCR engine",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pytesseract/pytesseract-0.3.13.tar.gz", .sha256 = "4bf5f880c99406f52a3cfc2633e42d9dc67615e69d8a509d74867d3baddb5db9" },
+    },
+    // OCR runs the system Tesseract program.
+    .depends = .{ "python", "packaging", "pillow", "tesseract" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

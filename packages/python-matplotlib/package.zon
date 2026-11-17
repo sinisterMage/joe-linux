@@ -1,0 +1,13 @@
+.{
+    .name = "python-matplotlib",
+    .version = "3.11.2",
+    .release = 1,
+    .description = "Publication quality scientific plotting for Python",
+    .license = "PSF-2.0",
+    .sources = .{
+        // Verified against the PyPI source distribution SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/e7/c8/9aa712a0afb882649424dd8de8ad9aa6235e796e84c6052e8f6dc1598d0d/matplotlib-3.11.2.tar.gz", .sha256 = "cec596316640f2b394b8f0daa0ea61a8eae82d017b620b9f202befb972a59ea4" },
+    },
+    .depends = .{ "glibc", "gcc", "python", "python-numpy", "contourpy", "cycler", "fonttools", "kiwisolver", "packaging", "pillow", "pyparsing", "python-dateutil", "freetype", "libraqm", "qhull", "python-tkinter", "pygobject", "pycairo", "gtk3", "gtk4", "pyqt6" },
+    .build_depends = .{ "python", "meson-python", "meson", "ninja", "pybind11", "setuptools-scm", "pkgconf" },
+}

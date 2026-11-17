@@ -1,0 +1,16 @@
+.{
+    .name = "pikepdf",
+    .version = "10.18.2",
+    .release = 1,
+    .description = "Python library for reading, writing and repairing PDF files, built on qpdf",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pikepdf/pikepdf-10.18.2.tar.gz", .sha256 = "b32ee8b0ffe606059dbf3386ebe1dae6e2601098277e22e8c75c2ee982436b43" },
+    },
+    // The _core extension is C++ and links libqpdf; Pillow, lxml and
+    // packaging are what the Python side imports.
+    .depends = .{ "glibc", "gcc", "python", "qpdf", "pillow", "lxml", "packaging" },
+    // Since 10.x pikepdf binds qpdf with nanobind (not pybind11), built
+    // through scikit-build-core.
+    .build_depends = .{ "python", "scikit-build-core", "nanobind", "cmake", "ninja" },
+}

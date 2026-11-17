@@ -1,0 +1,15 @@
+.{
+    .name = "gnome-shell-extensions",
+    .version = "51.0",
+    .release = 1,
+    .description = "Optional GNOME Shell extensions maintained with GNOME Shell",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-shell-extensions/51/gnome-shell-extensions-51.0.tar.xz", .sha256 = "3c078d7b88faee3d0f68adcee1392b1bed84731b91a337ec894cc88aa8a8b813" },
+    },
+    // JavaScript run by GNOME Shell, whose major version (51) the
+    // metadata names exactly. System Monitor uses libgtop through GTop;
+    // the Applications menu uses gnome-menus through GMenu.
+    .depends = .{ "gnome-shell >=51 <52", "libgtop", "gnome-menus" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "systemd" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "msgpack-c",
+    .version = "7.0.2",
+    .release = 1,
+    .description = "MessagePack binary serialisation library for C",
+    .license = "BSL-1.0",
+    .sources = .{
+        // The C library's release (tag c-7.0.2; the C++ library is the
+        // separate msgpack-cxx). The asset's SHA-256 as GitHub lists it.
+        .{ .url = "https://github.com/msgpack/msgpack-c/releases/download/c-7.0.2/msgpack-c-7.0.2.tar.gz", .sha256 = "6ae50f69612871aa01de76bec904165cd2a2fc30ff9f653f2f60a663c5c1a86c" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "cmake", "ninja" },
+}

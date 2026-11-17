@@ -1,0 +1,16 @@
+.{
+    .name = "libmythes",
+    .version = "1.2.7",
+    .release = 1,
+    .description = "MyThes thesaurus library, with an English thesaurus taken from WordNet",
+    .license = "LicenseRef-MyThes AND LicenseRef-WordNet",
+    .sources = .{
+        // Upstream publishes no checksum for its release tarballs.
+        .{ .url = "https://github.com/hunspell/mythes/releases/download/v1.2.7/mythes-1.2.7.tar.xz", .sha256 = "861af73ad57ee240647a79a64e31f214de6d63ea53e406d2d4c1f730706dd921" },
+    },
+    // perl runs th_gen_idx.pl, the installed tool that indexes a thesaurus.
+    .depends = .{ "glibc", "gcc", "perl" },
+    // configure insists on Hunspell, which only the example program (not
+    // built or installed) uses.
+    .build_depends = .{ "pkgconf", "hunspell" },
+}

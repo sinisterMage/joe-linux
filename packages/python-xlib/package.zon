@@ -1,0 +1,15 @@
+.{
+    .name = "python-xlib",
+    .version = "0.33",
+    .release = 1,
+    .description = "X11 client library for Python, speaking the protocol itself",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against PyPI's sha256 digest.
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/python-xlib/python-xlib-0.33.tar.gz", .sha256 = "55af7906a2c75ce6cb280a584776080602444f75815a7aff4d287bb2d7018b32" },
+    },
+    // Pure Python; it talks to the X server over its socket and links
+    // nothing.
+    .depends = .{ "python", "six" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

@@ -1,0 +1,21 @@
+.{
+    .name = "impression",
+    .version = "3.8.0",
+    .release = 1,
+    .description = "Write disk images to drives to create bootable media",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.com/-/project/46498291/uploads/eec3c4a1c94d2979e2728aa2ab12f650/impression-3.8.0.tar.xz", .sha256 = "a429f9a23bf12f2c839aca713a484e756d5dc3b6ddf3f71fdd4c387758b0c56d" },
+    },
+    // The release tarball vendors its crates, so the build is offline.
+    //
+    // openssl is reqwest's TLS for downloading distribution images. Drives
+    // are listed and opened through udisks over D-Bus (the udisks2 crate);
+    // xz images are unpacked by running xzcat, the list of downloadable
+    // systems by running tar. Windows install media are read with libcdio's
+    // libudf and their install.wim split into FAT32-sized parts by wimlib.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "openssl", "udisks", "xz", "tar", "libcdio", "wimlib" },
+    // The interface is written in Blueprint; appstream provides the gettext
+    // rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream", "blueprint-compiler" },
+}

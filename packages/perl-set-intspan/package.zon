@@ -1,0 +1,14 @@
+.{
+    .name = "perl-set-intspan",
+    .version = "1.19",
+    .release = 1,
+    .description = "Manages sets of integers, newsrc style",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/S/SW/SWMCD/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/S/SW/SWMCD/Set-IntSpan-1.19.tar.gz", .sha256 = "11b7549b13ec5d87cc695dd4c777cd02983dd5fe9866012877fb530f48b3dfd0" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

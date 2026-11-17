@@ -1,0 +1,14 @@
+.{
+    .name = "perl-list-moreutils",
+    .version = "0.430",
+    .release = 1,
+    .description = "Provide the stuff missing in List::Util",
+    .license = "Apache-2.0",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/R/RE/REHSACK/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/List-MoreUtils-0.430.tar.gz", .sha256 = "63b1f7842cd42d9b538d1e34e0330de5ff1559e4c2737342506418276f646527" },
+    },
+    .depends = .{ "perl", "perl-exporter-tiny", "perl-list-moreutils-xs" },
+    .build_depends = .{ "make" },
+}

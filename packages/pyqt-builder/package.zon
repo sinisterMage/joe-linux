@@ -1,0 +1,12 @@
+.{
+    .name = "pyqt-builder",
+    .version = "1.21.0",
+    .release = 1,
+    .description = "The build system for PyQt and for bindings of Qt libraries (sip's project format for Qt)",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyqt_builder/pyqt_builder-1.21.0.tar.gz", .sha256 = "673efa27237a81ffefc7d9a6419565600a129b4f4cf4d358c89a348b39b3a454" },
+    },
+    .depends = .{ "python", "packaging", "sip" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel" },
+}

@@ -1,0 +1,24 @@
+.{
+    .name = "warp",
+    .version = "1.0.0",
+    .release = 1,
+    .description = "Send files securely over the internet or the local network with Magic Wormhole",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/World/warp/-/archive/v1.0.0/warp-v1.0.0.tar.gz", .sha256 = "4feb6cfafd7dc520cf9858ed6db8d03b1b005afa50af1268f00ab086ad654301", .file = "warp-1.0.0.tar.gz" },
+    },
+    // cargo downloads the crates Warp depends on from crates.io; the
+    // release, a git archive, does not vendor them.
+    .network = true,
+    // The Magic Wormhole protocol is the magic-wormhole crate (pure Rust).
+    // gst-plugins-base: libgstvideo, libgstpbutils, libgstaudio for the QR
+    // code scanner (the aperture crate, which decodes with rqrr rather than
+    // zbar); it also runs camerabin (gst-plugins-bad) and gtk4paintablesink
+    // (gst-plugin-gtk4) and finds the camera through PipeWire's GStreamer
+    // plugin.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "gstreamer", "gst-plugins-base", "gst-plugins-bad", "gst-plugin-gtk4", "pipewire" },
+    // python runs build-aux/meson-cargo-manifest.py, which reads the name
+    // and version from Cargo.toml; itstool builds the help pages; appstream
+    // provides the gettext rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream", "itstool", "python" },
+}

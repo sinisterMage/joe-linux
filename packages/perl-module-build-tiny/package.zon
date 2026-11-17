@@ -1,0 +1,14 @@
+.{
+    .name = "perl-module-build-tiny",
+    .version = "0.053",
+    .release = 1,
+    .description = "A tiny replacement for Module::Build",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/L/LE/LEONT/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-Tiny-0.053.tar.gz", .sha256 = "3726d622da6f655e88fdf89e4fd597709c44970b47de65082003e8d86b5e193a" },
+    },
+    .depends = .{ "perl", "perl-extutils-config", "perl-extutils-helpers", "perl-extutils-installpaths" },
+    .build_depends = .{  },
+}

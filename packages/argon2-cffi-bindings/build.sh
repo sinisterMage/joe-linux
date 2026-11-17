@@ -3,7 +3,8 @@
 build() {
     # Link the system libargon2 instead of compiling the bundled copy.
     export ARGON2_CFFI_USE_SYSTEM=1
-    pip3 wheel -w dist --no-cache-dir --no-build-isolation --no-deps "$PWD"
+    # CMake stages the wheel itself, not under the package's exported DESTDIR.
+    env -u DESTDIR pip3 wheel -w dist --no-cache-dir --no-build-isolation --no-deps "$PWD"
 }
 
 package() {

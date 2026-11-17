@@ -1,0 +1,15 @@
+.{
+    .name = "opus-tools",
+    .version = "0.2",
+    .release = 1,
+    .description = "Command-line tools for Opus audio files: opusenc, opusdec and opusinfo",
+    // opusinfo is GPL (the GPL 2 text is in COPYING); the rest BSD-2-Clause.
+    .license = "BSD-2-Clause AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://downloads.xiph.org/releases/opus/opus-tools-0.2.tar.gz", .sha256 = "b4e56cb00d3e509acfba9a9b627ffd8273b876b4e2408642259f6da28fa0ff86" },
+    },
+    // opusfile also provides libopusurl (opusdec and opusinfo open URLs).
+    // flac: opusenc reads FLAC input.
+    .depends = .{ "glibc", "opus", "opusfile", "libopusenc", "libogg", "flac" },
+    .build_depends = .{"pkgconf"},
+}

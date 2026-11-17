@@ -1,0 +1,14 @@
+.{
+    .name = "perl-data-uuid",
+    .version = "1.227",
+    .release = 1,
+    .description = "Globally/Universally Unique Identifiers (GUIDs/UUIDs)",
+    .license = "NTP",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/G/GT/GTERMARS/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/G/GT/GTERMARS/Data-UUID-1.227.tar.gz", .sha256 = "95bda7276265f57bc48ffdeddec5ef28cd6f765e3a183757fa5f09f0ce6b98ac" },
+    },
+    .depends = .{ "glibc", "perl" },
+    .build_depends = .{ "gcc", "make" },
+}

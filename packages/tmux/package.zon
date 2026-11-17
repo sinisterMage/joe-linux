@@ -1,7 +1,7 @@
 .{
     .name = "tmux",
     .version = "3.8",
-    .release = 1,
+    .release = 2,
     .description = "Terminal multiplexer",
     .license = "ISC",
     .sources = .{
@@ -9,7 +9,7 @@
     },
     // libsystemd for socket activation and for putting panes in their own
     // cgroups.
-    .depends = .{ "glibc", "libevent", "ncurses", "systemd" },
+    .depends = .{ "glibc", "libevent", "ncurses", "systemd", "utf8proc", "jemalloc" },
     // configure insists on a yacc even though cmd-parse.c is shipped.
     .build_depends = .{ "pkgconf", "bison" },
 }

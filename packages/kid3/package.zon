@@ -1,0 +1,23 @@
+.{
+    .name = "kid3",
+    .version = "3.10.2",
+    .release = 1,
+    .description = "Editor for the tags of audio files, with a Qt interface (kid3-qt) and a command line (kid3-cli)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against the SHA-256 download.kde.org publishes beside it.
+        .{ .url = "https://download.kde.org/stable/kid3/3.10.2/kid3-3.10.2.tar.xz", .sha256 = "ce776b87de4f7f35cc5223bc85c16c76c2afb9298b1a73fa795738be165037bb" },
+    },
+    // taglib: the tags of every format; libogg, libvorbis, flac: the
+    // separate Ogg/FLAC tag plugin; chromaprint and ffmpeg: identifying files
+    // by their sound (AcoustID); qt6-multimedia: the player; readline:
+    // kid3-cli's line editing.
+    .depends = .{
+        "glibc",     "gcc",        "qt6",       "qt6-multimedia", "taglib",
+        "zlib",      "libogg",     "libvorbis", "flac",           "chromaprint",
+        "ffmpeg",    "readline",
+    },
+    // The manual pages and the handbook are DocBook, turned into roff and
+    // HTML with xsltproc by Python scripts.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "python", "libxslt", "docbook-xsl-nons" },
+}

@@ -1,0 +1,85 @@
+Build with libical 4: libical-glib defines ICalTime's autoptr itself and
+replaces the by-day accessors with generic by-rule arrays and
+i_cal_errno_return with i_cal_error_icalerrno.
+
+Upstream: https://gitlab.gnome.org/GNOME/gnome-calendar/-/merge_requests/763
+(draft, unchanged; every change is guarded by ICAL_CHECK_VERSION).
+
+diff --git a/src/core/gcal-recurrence.c b/src/core/gcal-recurrence.c
+index 3d271036673638884e1da05d5ebb02d9152174e9..a28f9acdcb868339b4706945ad5e9bc3334bdd1f 100644
+--- a/src/core/gcal-recurrence.c
++++ b/src/core/gcal-recurrence.c
+@@ -185,6 +185,14 @@ gcal_recurrence_parse_recurrence_rules (ECalComponent *comp)
+ 
+       case I_CAL_WEEKLY_RECURRENCE:
+         {
++#if ICAL_CHECK_VERSION(4, 0, 0)
++          if (i_cal_recurrence_get_by_array_size (rrule, I_CAL_BY_DAY) == 5 &&
++              i_cal_recurrence_get_by (rrule, I_CAL_BY_DAY, 0) == I_CAL_MONDAY_WEEKDAY &&
++              i_cal_recurrence_get_by (rrule, I_CAL_BY_DAY, 1) == I_CAL_TUESDAY_WEEKDAY &&
++              i_cal_recurrence_get_by (rrule, I_CAL_BY_DAY, 2) == I_CAL_WEDNESDAY_WEEKDAY &&
++              i_cal_recurrence_get_by (rrule, I_CAL_BY_DAY, 3) == I_CAL_THURSDAY_WEEKDAY &&
++              i_cal_recurrence_get_by (rrule, I_CAL_BY_DAY, 4) == I_CAL_FRIDAY_WEEKDAY)
++#else
+           if (i_cal_recurrence_get_by_day (rrule, 0) == I_CAL_MONDAY_WEEKDAY &&
+               i_cal_recurrence_get_by_day (rrule, 1) == I_CAL_TUESDAY_WEEKDAY &&
+               i_cal_recurrence_get_by_day (rrule, 2) == I_CAL_WEDNESDAY_WEEKDAY &&
+@@ -192,6 +200,7 @@ gcal_recurrence_parse_recurrence_rules (ECalComponent *comp)
+               i_cal_recurrence_get_by_day (rrule, 4) == I_CAL_FRIDAY_WEEKDAY &&
+               i_cal_recurrence_get_by_day (rrule, 5) != I_CAL_SATURDAY_WEEKDAY &&
+               i_cal_recurrence_get_by_day (rrule, 6) != I_CAL_SUNDAY_WEEKDAY)
++#endif
+             {
+               recur->frequency = GCAL_RECURRENCE_MON_FRI;
+             }
+@@ -289,11 +298,20 @@ gcal_recurrence_to_rrule (GcalRecurrence *recur)
+     case GCAL_RECURRENCE_MON_FRI:
+       {
+         i_cal_recurrence_set_freq (rrule, I_CAL_WEEKLY_RECURRENCE);
++#if ICAL_CHECK_VERSION(4, 0, 0)
++        i_cal_recurrence_resize_by_array (rrule, I_CAL_BY_DAY, 5);
++        i_cal_recurrence_set_by (rrule, I_CAL_BY_DAY, 0, I_CAL_MONDAY_WEEKDAY);
++        i_cal_recurrence_set_by (rrule, I_CAL_BY_DAY, 1, I_CAL_TUESDAY_WEEKDAY);
++        i_cal_recurrence_set_by (rrule, I_CAL_BY_DAY, 2, I_CAL_WEDNESDAY_WEEKDAY);
++        i_cal_recurrence_set_by (rrule, I_CAL_BY_DAY, 3, I_CAL_THURSDAY_WEEKDAY);
++        i_cal_recurrence_set_by (rrule, I_CAL_BY_DAY, 4, I_CAL_FRIDAY_WEEKDAY);
++#else
+         i_cal_recurrence_set_by_day (rrule, 0, I_CAL_MONDAY_WEEKDAY);
+         i_cal_recurrence_set_by_day (rrule, 1, I_CAL_TUESDAY_WEEKDAY);
+         i_cal_recurrence_set_by_day (rrule, 2, I_CAL_WEDNESDAY_WEEKDAY);
+         i_cal_recurrence_set_by_day (rrule, 3, I_CAL_THURSDAY_WEEKDAY);
+         i_cal_recurrence_set_by_day (rrule, 4, I_CAL_FRIDAY_WEEKDAY);
++#endif
+         break;
+       }
+ 
+diff --git a/src/gui/importer/gcal-importer.c b/src/gui/importer/gcal-importer.c
+index 7b0bbf10526be8849cc6b86b71cf6e1141b2677c..ec2b27419200f5481f006cdecaa64b2b6cbe3082 100644
+--- a/src/gui/importer/gcal-importer.c
++++ b/src/gui/importer/gcal-importer.c
+@@ -147,7 +147,11 @@ read_file_in_thread (GTask        *task,
+   g_assert (g_utf8_validate (contents, length, NULL));
+ 
+   component = i_cal_parser_parse_string (contents);
++#if ICAL_CHECK_VERSION(4, 0, 0)
++  ical_error = i_cal_error_icalerrno ();
++#else
+   ical_error = i_cal_errno_return ();
++#endif
+ 
+   if (ical_error != I_CAL_NO_ERROR)
+     {
+diff --git a/src/utils/gcal-utils.h b/src/utils/gcal-utils.h
+index 2c7d47e3ee0a29476fc2c6721fbaae75f260d155..d2b31e8438c57b0e5a76e7f9b1f8c875ce1ecc0d 100644
+--- a/src/utils/gcal-utils.h
++++ b/src/utils/gcal-utils.h
+@@ -51,7 +51,9 @@ typedef void (*GcalAskRecurrenceCallback) (GcalEvent             *event,
+                                            GcalRecurrenceModType  modtype,
+                                            gpointer               user_data);
+ 
++#if !ICAL_CHECK_VERSION(4, 0, 0)
+ G_DEFINE_AUTOPTR_CLEANUP_FUNC (ICalTime, g_object_unref)
++#endif
+ 
+ gchar*               gcal_get_weekday                            (gint                i);
+ 

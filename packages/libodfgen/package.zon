@@ -1,0 +1,14 @@
+.{
+    .name = "libodfgen",
+    .version = "0.1.9",
+    .release = 1,
+    .description = "Library generating OpenDocument (ODT, ODG, ODP, ODS) files from librevenge documents",
+    .license = "MPL-2.0 OR LGPL-2.1-or-later",
+    .sources = .{
+        // Upstream publishes no checksum; checked against the SHA-256 that
+        // LibreOffice's download.lst records for this tarball.
+        .{ .url = "https://downloads.sourceforge.net/libwpd/libodfgen-0.1.9.tar.xz", .sha256 = "b68ec10c23b8ac7abed8dfeb181b8592714c1e5bd33997ced0ee8bd6c4612bc5" },
+    },
+    .depends = .{ "glibc", "gcc", "librevenge", "libxml2" },
+    .build_depends = .{ "pkgconf" },
+}

@@ -1,0 +1,26 @@
+.{
+    .name = "libgphoto2",
+    .version = "2.5.34",
+    .release = 1,
+    .description = "Library for accessing digital cameras over USB, serial ports and the network",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the digest GitHub publishes for the release asset.
+        .{ .url = "https://github.com/gphoto/libgphoto2/releases/download/v2.5.34/libgphoto2-2.5.34.tar.xz", .sha256 = "51993f5d9bfb6b4e5925cbbe5883085791bff6f81bcacb8ffe1b783ce76d586a" },
+    },
+    // The camera and port drivers are modules loaded with libltdl (libtool).
+    // libexif reads thumbnails and dates from EXIF data, libjpeg-turbo and
+    // tiff are used by some camera drivers, curl and libxml2 by the Lumix and
+    // Olympus Wi-Fi drivers, libusb for USB cameras.
+    .depends = .{
+        "glibc",
+        "libtool",
+        "libexif",
+        "libjpeg-turbo",
+        "tiff",
+        "curl",
+        "libxml2",
+        "libusb",
+    },
+    .build_depends = .{ "pkgconf", "gettext" },
+}

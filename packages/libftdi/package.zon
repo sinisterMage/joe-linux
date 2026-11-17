@@ -1,0 +1,19 @@
+.{
+    .name = "libftdi",
+    .version = "1.5",
+    .release = 1,
+    .description = "libftdi1, a library for FTDI USB serial and FIFO chips, with its C++ binding and the ftdi_eeprom tool",
+    .license = "LGPL-2.0-only AND GPL-2.0-only",
+    .sources = .{
+        // Checked against upstream's detached signature (.sig, Intra2net's
+        // key 3CEA9B8868BC3852618EB5B4707F91A424F006F5).
+        .{ .url = "https://www.intra2net.com/en/developer/libftdi/download/libftdi1-1.5.tar.bz2", .sha256 = "7c7091e9c86196148bd41177b4590dccb1510bfe6cea5bf7407ff194482eb049" },
+    },
+    // libusb for the devices, libstdc++ (gcc) for libftdipp1, libconfuse
+    // for ftdi_eeprom's configuration files.
+    .depends = .{ "glibc", "gcc", "libusb", "libconfuse" },
+    // Boost is header-only here: libftdipp1 uses boost::shared_ptr, and
+    // its public ftdi.hpp includes the Boost header, so whatever builds
+    // against libftdipp1 needs boost among its own build_depends.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "boost" },
+}

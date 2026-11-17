@@ -1,0 +1,17 @@
+.{
+    .name = "ibus-anthy",
+    .version = "1.5.18",
+    .release = 1,
+    .description = "Japanese kana-kanji input for IBus, using Anthy",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against the release's ibus-anthy-1.5.18.tar.gz.sum.
+        .{ .url = "https://github.com/ibus/ibus-anthy/releases/download/1.5.18/ibus-anthy-1.5.18.tar.gz", .sha256 = "cad0d6e2c6fd27ea71299efdfa19954ad098fa9e54c6a232161bd25786c492e6" },
+    },
+    // The engine and its preferences (ibus-setup-anthy, GTK 3) are Python
+    // on PyGObject; they reach Anthy through libanthygobject and its
+    // introspection data, built here.
+    .depends = .{ "glibc", "glib", "anthy", "ibus", "python", "pygobject", "gtk3", "pango" },
+    // configure imports IBus through PyGObject to check its features.
+    .build_depends = .{ "pkgconf", "gettext", "python", "pygobject", "ibus" },
+}

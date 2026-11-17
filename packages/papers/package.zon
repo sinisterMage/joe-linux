@@ -1,0 +1,24 @@
+.{
+    .name = "papers",
+    .version = "51.1",
+    .release = 1,
+    .description = "GNOME document viewer for PDF, TIFF and comic books",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/papers/51/papers-51.1.tar.xz", .sha256 = "ac0db229883b3d2aacbbda1700dc12aa69716664df201120926096f066e4796b" },
+    },
+    // cargo downloads the crates the application and the thumbnailer depend
+    // on from crates.io; the tarball does not vendor them (Cargo.lock pins
+    // them).
+    .network = true,
+    // The document libraries are C: exempi reads XMP metadata, poppler
+    // renders PDF, libarchive opens comic books, tiff TIFF, libspelling
+    // checks spelling in annotations. nautilus: the document properties
+    // page in Files. The application and thumbnailer are Rust (gcc:
+    // libgcc_s); passwords are kept in the Secret Service (gnome-keyring)
+    // through the oo7 crate.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "exempi", "zlib", "poppler", "libarchive", "tiff", "libspelling", "nautilus", "gnome-keyring", "gsettings-desktop-schemas", "adwaita-icon-theme" },
+    // glib provides g-ir-scanner; itstool translates the help pages;
+    // appstream (appstreamcli, required) the metainfo rules.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "itstool", "blueprint-compiler", "appstream" },
+}

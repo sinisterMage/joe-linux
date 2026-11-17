@@ -1,7 +1,7 @@
 .{
     .name = "argon2-cffi-bindings",
     .version = "26.2.0",
-    .release = 1,
+    .release = 2,
     .description = "Low-level CFFI bindings for the Argon2 password hash",
     .license = "MIT",
     .sources = .{

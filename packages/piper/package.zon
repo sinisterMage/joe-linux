@@ -1,0 +1,28 @@
+.{
+    .name = "piper",
+    .version = "0.8",
+    .release = 1,
+    .description = "Configures gaming mice: buttons, resolutions and lights, through ratbagd",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum or release tarball, only the tag.
+        .{ .url = "https://github.com/libratbag/piper/archive/0.8/piper-0.8.tar.gz", .sha256 = "78becb1861f102057f7cac26c90bde2f4ef5027680c0d2758a7c2700b51dd73d" },
+    },
+    // A GTK 3 program in Python. It does nothing without ratbagd
+    // (libratbag), which it calls over D-Bus; lxml reads its device
+    // drawings, librsvg draws them, evdev names key codes.
+    .depends = .{
+        "python",
+        "pygobject",
+        "pycairo",
+        "gtk3",
+        "librsvg",
+        "lxml",
+        "evdev",
+        "libratbag",
+    },
+    // xmllint (libxml2) strips the interface files compiled into the
+    // resource bundle; appstream provides the gettext rules for the
+    // metainfo file.
+    .build_depends = .{ "meson", "ninja", "python", "lxml", "glib", "gettext", "libxml2", "appstream" },
+}

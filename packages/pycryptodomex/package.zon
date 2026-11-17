@@ -1,0 +1,14 @@
+.{
+    .name = "pycryptodomex",
+    .version = "3.24.2",
+    .release = 1,
+    .description = "Self-contained cryptographic library for Python, in the Cryptodome namespace",
+    .license = "BSD-2-Clause AND Unlicense",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pycryptodomex/pycryptodomex-3.24.2.tar.gz", .sha256 = "e4dbc29e2575365d15e272f769329106277649aea081e2119cf43d66950f8f8f" },
+    },
+    // The C extensions carry their own cryptographic code. gmp speeds up
+    // big-integer arithmetic; it is loaded at run time when present.
+    .depends = .{ "glibc", "python", "gmp" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

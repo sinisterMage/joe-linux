@@ -1,0 +1,14 @@
+.{
+    .name = "perl-filesys-df",
+    .version = "0.92",
+    .release = 1,
+    .description = "Perl extension for filesystem disk space information",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/I/IG/IGUTHRIE/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/I/IG/IGUTHRIE/Filesys-Df-0.92.tar.gz", .sha256 = "fe89cbb427e0e05f1cd97c2dd6d3866ac6b21bc7a85734ede159bdc35479552a" },
+    },
+    .depends = .{ "glibc", "perl" },
+    .build_depends = .{ "gcc", "make" },
+}

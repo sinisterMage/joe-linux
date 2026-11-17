@@ -1,0 +1,13 @@
+.{
+    .name = "pypandoc",
+    .version = "1.17",
+    .release = 1,
+    .description = "Python wrapper around pandoc",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pypandoc/pypandoc-1.17.tar.gz", .sha256 = "51179abfd6e582a25ed03477541b48836b5bba5a4c3b282a547630793934d799" },
+    },
+    // pypandoc runs the pandoc program it finds on the PATH.
+    .depends = .{ "python", "pandoc" },
+    .build_depends = .{ "python", "hatchling" },
+}

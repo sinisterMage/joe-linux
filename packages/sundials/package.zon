@@ -1,0 +1,13 @@
+.{
+    .name = "sundials",
+    .version = "7.9.0",
+    .release = 1,
+    .description = "Suite of nonlinear and differential algebraic equation solvers",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Verified against GitHub upstream release asset SHA-256.
+        .{ .url = "https://github.com/llnl/sundials/releases/download/v7.9.0/sundials-7.9.0.tar.gz", .sha256 = "13f898a27b48fe3449483f9e438a800ed545abf93bc2e2ceec2d1e00ae8db5ef" },
+    },
+    .depends = .{ "glibc", "gcc", "gcc-fortran", "openblas", "lapack", "suitesparse" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

@@ -1,0 +1,18 @@
+.{
+    .name = "thrift",
+    .version = "0.25.0",
+    .release = 2,
+    .description = "Apache Thrift RPC framework: the thrift compiler and the C++ and C (GLib) libraries",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Checked against the SHA-512 Apache publishes beside the tarball.
+        .{ .url = "https://downloads.apache.org/thrift/0.25.0/thrift-0.25.0.tar.gz", .sha256 = "66da4707214c54c94bac082103dc67adaf9e08925662700f269170a7b534b214" },
+    },
+    // libthrift (OpenSSL for TSSLSocket), libthriftnb (libevent),
+    // libthriftz (zlib), libthrift_c_glib and libthrift_c_glib_zlib (GLib).
+    .depends = .{ "glibc", "gcc", "openssl", "libevent", "zlib", "glib" },
+    // bison and flex generate the compiler's parser. Boost is used as
+    // headers only (also by some of the installed headers, so programs
+    // built against libthrift need boost as well).
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "bison", "flex", "boost" },
+}

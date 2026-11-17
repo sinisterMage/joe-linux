@@ -1,0 +1,18 @@
+.{
+    .name = "libpinyin",
+    .version = "2.10.3",
+    .release = 1,
+    .description = "Library for intelligent sentence-based Chinese pinyin input, with its language model",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its release tarballs. 2.10 is
+        // the stable series; 2.11.9x are development releases. The tarball
+        // carries the language model (data/interpolation2.text), so the
+        // build does not download it.
+        .{ .url = "https://github.com/libpinyin/libpinyin/releases/download/2.10.3/libpinyin-2.10.3.tar.gz", .sha256 = "3fe786ff2c2059bdbdf9d8d752db691a516a941a977521955fe0af3f0b4db299" },
+    },
+    // The phrase databases are Kyoto Cabinet files (Berkeley DB, the other
+    // choice, has no recipe).
+    .depends = .{ "glibc", "gcc", "glib", "kyotocabinet" },
+    .build_depends = .{"pkgconf"},
+}

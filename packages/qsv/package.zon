@@ -1,0 +1,23 @@
+.{
+    .name = "qsv",
+    .version = "28.0.0",
+    .release = 1,
+    .description = "Fast toolkit of commands for querying, transforming and validating CSV data",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no checksum for the source archive.
+        .{ .url = "https://github.com/dathere/qsv/archive/28.0.0/qsv-28.0.0.tar.gz", .sha256 = "7a0efbab2d7cd7923ac4d8613d3eff4b4aa6383993f5e1d8edc393208265348f" },
+    },
+    // cargo downloads the crates qsv depends on from crates.io, and the
+    // forks Cargo.toml patches in from GitHub; they are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; zstd for .zst inputs and get's
+    // compressed cache (build.sh asks its crate for the system one);
+    // make-ca: the CA certificates read for HTTPS (get, describegpt, remote
+    // lookup tables). jemalloc and AWS-LC (rustls) are the crates' own
+    // static copies.
+    .depends = .{ "glibc", "gcc", "zstd", "make-ca" },
+    // cmake: aws-lc-sys builds AWS-LC with the cc crate, and with CMake if
+    // that is not possible.
+    .build_depends = .{ "rust", "pkgconf", "cmake" },
+}

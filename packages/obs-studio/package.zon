@@ -1,0 +1,31 @@
+.{
+    .name = "obs-studio",
+    .version = "33.0.1",
+    .release = 1,
+    .description = "OBS Studio: video recording and live streaming",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // The release's source tarball, which carries the obs-browser,
+        // obs-websocket and libdshowcapture submodules; checked against the
+        // SHA-256 GitHub lists for the release asset.
+        .{ .url = "https://github.com/obsproject/obs-studio/releases/download/33.0.1/OBS-Studio-33.0.1-Sources.tar.gz", .sha256 = "c8d3a8f69a0f17970ac0a8f2a2462f1bc4dacd324f6da0c4b408d442d4798913" },
+    },
+    .depends = .{
+        "glibc",        "gcc",          "qt6",         "ffmpeg",       "x264",
+        "jansson",      "zlib",         "curl",        "mbedtls",      "util-linux",
+        "libx11",       "libxcb",       "libxkbcommon", "wayland",     "mesa",
+        "libdrm",       "glib",         "pulseaudio",  "pipewire",     "alsa-lib",
+        "systemd",      "v4l-utils",    "libva",       "pciutils",     "speexdsp",
+        "freetype",     "fontconfig",   "luajit",      "python",       "qrcodegen",
+        "srt",          "librist",
+    },
+    // simde, uthash, asio, websocketpp and nlohmann-json are headers;
+    // extra-cmake-modules finds Wayland; swig writes the Lua and Python
+    // bindings for scripts. vlc provides the headers of the VLC video source,
+    // which loads libvlc only when such a source is used (see build.sh).
+    .build_depends = .{
+        "cmake",        "ninja",        "pkgconf",     "extra-cmake-modules",
+        "swig",         "simde",        "uthash",      "asio",         "websocketpp",
+        "nlohmann-json", "vlc",
+    },
+}

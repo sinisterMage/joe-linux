@@ -1,0 +1,16 @@
+.{
+    .name = "ipp-usb",
+    .version = "0.9.34",
+    .release = 1,
+    .description = "Daemon that makes IPP-over-USB printers and scanners available as network devices",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives. Its one
+        // Go dependency (goipp) is vendored in the archive, so the build
+        // needs no network.
+        .{ .url = "https://github.com/OpenPrinting/ipp-usb/archive/0.9.34/ipp-usb-0.9.34.tar.gz", .sha256 = "4f0ada8593fda3f4239a50fcf24a625842143039de97708281e7b8c0cdff201a" },
+    },
+    // cgo: it talks to devices with libusb and announces them with Avahi.
+    .depends = .{ "glibc", "libusb", "avahi" },
+    .build_depends = .{ "go", "pkgconf" },
+}

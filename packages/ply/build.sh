@@ -1,0 +1,11 @@
+# Not in the book: the newest release on PyPI (upstream makes no newer
+# ones; 3.11 is what every distribution ships), built as a wheel and
+# installed like the book's Python modules.
+build() {
+    pip3 wheel -w dist --no-cache-dir --no-build-isolation --no-deps "$PWD"
+}
+
+package() {
+    pip3 install --no-index --no-deps --no-user --ignore-installed --no-warn-script-location \
+        --root "$DESTDIR" --find-links dist ply
+}

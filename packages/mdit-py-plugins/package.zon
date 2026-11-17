@@ -1,0 +1,12 @@
+.{
+    .name = "mdit-py-plugins",
+    .version = "0.7.0",
+    .release = 1,
+    .description = "Collection of plugins for markdown-it-py",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/ad/a4/77a4e1be19fd9b08993c76d5e54979ac836b327754f1f5fecfed1b56cc67/mdit_py_plugins-0.7.0.tar.gz", .sha256 = "26d2179227aaf4d1dc7acffe7a738cbd15cade6b5a61cff0a2cbf9fed93efede" },
+    },
+    .depends = .{ "python", "markdown-it-py" },
+    .build_depends = .{ "python", "setuptools", "wheel", "flit-core" },
+}

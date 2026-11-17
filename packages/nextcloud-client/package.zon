@@ -1,0 +1,21 @@
+.{
+    .name = "nextcloud-client",
+    .version = "35.0.3",
+    .release = 1,
+    .description = "Nextcloud desktop synchronisation client",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // A GitHub tag archive: upstream publishes no tarball and no checksum.
+        .{ .url = "https://github.com/nextcloud/desktop/archive/v35.0.3/nextcloud-desktop-35.0.3.tar.gz", .sha256 = "8e79f3df02e04740e03cf1d254c9016265ce2fac88cbd3a745c41d9659fc0134" },
+    },
+    // qt6-websockets: push notifications (required, with no switch). libp11: end-to-end encryption keys on hardware tokens;
+    // libcloudproviders: the account in GNOME Files' sidebar; libcanberra:
+    // the ringtone for incoming Talk calls.
+    .depends = .{
+        "glibc",       "gcc",      "qt6",       "qt6-websockets", "qtkeychain", "kdsingleapplication",
+        "karchive",    "libp11",   "openssl",   "sqlite",     "zlib",
+        "libcloudproviders", "glib", "dbus",    "libcanberra",
+    },
+    // Qt's lrelease (in qt6) compiles the translations.
+    .build_depends = .{ "cmake", "extra-cmake-modules", "pkgconf" },
+}

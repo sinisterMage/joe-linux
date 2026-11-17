@@ -1,0 +1,17 @@
+.{
+    .name = "libp11",
+    .version = "0.4.21",
+    .release = 1,
+    .description = "PKCS#11 wrapper library and OpenSSL provider for hardware tokens",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the release's detached signature
+        // (libp11-0.4.21.tar.gz.asc, Michał Trojnara's key
+        // AC915EA30645D9D3D4DAE4FEB1048932DD3AAAA3).
+        .{ .url = "https://github.com/OpenSC/libp11/releases/download/libp11-0.4.21/libp11-0.4.21.tar.gz", .sha256 = "efdb523aef8613d447e6a2d38227d4b389866f4bcf4b503130acd7f759490847" },
+    },
+    // p11-kit's proxy module is the default PKCS#11 module, loaded at run
+    // time.
+    .depends = .{ "glibc", "openssl", "p11-kit" },
+    .build_depends = .{"pkgconf"},
+}

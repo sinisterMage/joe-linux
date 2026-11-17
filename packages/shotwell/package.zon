@@ -1,0 +1,35 @@
+.{
+    .name = "shotwell",
+    .version = "33.2",
+    .release = 1,
+    .description = "Photo manager for GNOME: import, organize, edit and share photos",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/shotwell/33.2/shotwell-33.2.tar.xz", .sha256 = "d5fa762dc1e735b6e1936cce889497c58a9b5e33e93970723375bc4aff8d629f" },
+    },
+    // Shotwell 33 is GTK 4, written in Vala; it no longer uses WebKitGTK
+    // (signing in to the web services opens the default browser).
+    // libportal sets the desktop background; libgphoto2 imports from
+    // cameras and libgudev notices them; gexiv2 and libexif read and write
+    // metadata; LibRaw develops RAW photos; libwebp reads WebP. The
+    // publishing plugins (Flickr, Google Photos, Piwigo, YouTube, Gallery
+    // 3, Tumblr) use libsoup, json-glib, libxml2, libsecret for their
+    // passwords and gcr for certificate errors.
+    // GStreamer imports videos and makes their thumbnails, with the good
+    // and libav plugins for the usual formats. dconf is for the settings
+    // migration helper.
+    .depends = .{
+        "glibc",            "glib",             "gtk4",
+        "cairo",            "pango",            "gdk-pixbuf",
+        "libgee",           "sqlite",           "libsoup",
+        "json-glib",        "libxml2",          "libsecret",
+        "gcr4",             "libportal",        "libgphoto2",
+        "libgudev",         "gexiv2",           "libexif",
+        "libraw",           "libwebp",          "gstreamer",
+        "gst-plugins-base", "gst-plugins-good", "gst-libav",
+        "dconf",
+    },
+    // itstool builds the help; appstream provides the gettext rules for
+    // the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext", "itstool", "appstream" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "libhangul",
+    .version = "0.2.0",
+    .release = 1,
+    .description = "Hangul composition library for Korean input methods, with its hanja dictionary",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for its release tarballs.
+        .{ .url = "https://github.com/libhangul/libhangul/releases/download/libhangul-0.2.0/libhangul-0.2.0.tar.gz", .sha256 = "ea04e6a0cf4840a2a3b5641c1761068c78691036db839d0838f4e7a6553a5120" },
+    },
+    .depends = .{"glibc"},
+    // msgfmt translates the keyboard descriptions.
+    .build_depends = .{ "pkgconf", "gettext" },
+}

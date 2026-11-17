@@ -1,0 +1,13 @@
+.{
+    .name = "kiwisolver",
+    .version = "1.5.1",
+    .release = 1,
+    .description = "Cassowary constraint solver for Python",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Verified against the PyPI source distribution SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/ba/07/bd78e6a8fae171ea041ef5bba3ed21a003522fa088834b069b1909981f30/kiwisolver-1.5.1.tar.gz", .sha256 = "f1303ef2eec81262a4b708c3e858afe58d7c75ad91c1c05266eda7673369859a" },
+    },
+    .depends = .{ "glibc", "gcc", "python" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel", "cppy" },
+}

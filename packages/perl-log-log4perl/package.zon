@@ -1,0 +1,14 @@
+.{
+    .name = "perl-log-log4perl",
+    .version = "1.58",
+    .release = 1,
+    .description = "Log4j implementation for Perl",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/M/MS/MSCHILLI/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/M/MS/MSCHILLI/Log-Log4perl-1.58.tar.gz", .sha256 = "48765ea8efb096fec1418e6b1ef8379845c607506fe7e63561cd1b41dd3efef6" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

@@ -1,0 +1,16 @@
+.{
+    .name = "zxcvbn-rs-py",
+    .version = "0.3.0",
+    .release = 1,
+    .description = "Python bindings for zxcvbn-rs, a password strength estimator",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/z/zxcvbn-rs-py/zxcvbn_rs_py-0.3.0.tar.gz", .sha256 = "d2742680823a174823f070a734074bbe8c1604f1313c08170b158026e36c73a0" },
+    },
+    // cargo downloads the crates zxcvbn-rs-py depends on from crates.io;
+    // they are not vendored yet.
+    .network = true,
+    // A pyo3 extension module; libgcc_s (gcc) for unwinding.
+    .depends = .{ "glibc", "gcc", "python" },
+    .build_depends = .{ "python", "maturin", "rust" },
+}

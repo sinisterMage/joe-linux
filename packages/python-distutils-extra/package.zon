@@ -1,0 +1,16 @@
+.{
+    .name = "python-distutils-extra",
+    .version = "3.5",
+    .release = 1,
+    .description = "setuptools extensions that build translations, desktop files and icons for Python applications",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream is Debian (it is a native package and not on PyPI);
+        // checked against the SHA-256 in the archive's signed .dsc.
+        .{ .url = "https://deb.debian.org/debian/pool/main/p/python-distutils-extra/python-distutils-extra_3.5.tar.xz", .sha256 = "0ca718b79d056c5031c82fbd0f201617f7dd6472a2955f22e8cfceb42737aaea" },
+    },
+    // A package's setup.py runs it while building: it calls intltool-update
+    // and intltool-merge, and gettext's msgfmt, to build translations.
+    .depends = .{ "python", "setuptools", "intltool", "gettext" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

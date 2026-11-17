@@ -1,0 +1,14 @@
+.{
+    .name = "rocksdb",
+    .version = "11.13.2",
+    .release = 1,
+    .description = "Embeddable persistent key-value store for fast storage, from Meta",
+    .license = "(GPL-2.0-only OR Apache-2.0) AND BSD-3-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/facebook/rocksdb/archive/v11.13.2/rocksdb-11.13.2.tar.gz", .sha256 = "6f12f408c4876175b1de73cfefcdd1baf0001ad8d799c1a09320d96e4fd213b5" },
+    },
+    // The compression libraries it can use for SST files.
+    .depends = .{ "glibc", "gcc", "snappy", "lz4", "zlib", "zstd", "bzip2" },
+    .build_depends = .{ "cmake", "ninja" },
+}

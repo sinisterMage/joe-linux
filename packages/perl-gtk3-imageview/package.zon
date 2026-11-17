@@ -1,0 +1,14 @@
+.{
+    .name = "perl-gtk3-imageview",
+    .version = "12",
+    .release = 1,
+    .description = "Image viewer widget for Gtk3",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/A/AS/ASOKOLOV/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/A/AS/ASOKOLOV/Gtk3-ImageView-12.tar.gz", .sha256 = "c04ee10f8ce55133d7f997cc88768a21a93496b5408aed806afcf77fc87a9fa9" },
+    },
+    .depends = .{ "perl", "perl-cairo", "perl-glib", "perl-gtk3", "perl-readonly" },
+    .build_depends = .{ "make" },
+}

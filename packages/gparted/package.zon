@@ -1,0 +1,28 @@
+.{
+    .name = "gparted",
+    .version = "1.8.1",
+    .release = 1,
+    .description = "Graphical partition editor",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://downloads.sourceforge.net/gparted/gparted-1.8.1.tar.gz", .sha256 = "67388ac405f9fe92a40636cb03b0e1e0bb6403ad89ccc174b2ff190ef6f32349" },
+    },
+    // GParted does its work by running each file system's own tools, which
+    // it finds at run time: e2fsprogs, dosfstools and mtools (FAT labels),
+    // btrfs-progs, cryptsetup (LUKS), lvm2's dmsetup, util-linux (blkid,
+    // mkswap, mount) and udevadm. The gparted script asks pkexec for root,
+    // uses pidof (procps-ng) and masks mount units with systemctl while it
+    // runs. Not packaged, so not offered: ntfs-3g, exfatprogs, xfsprogs,
+    // f2fs-tools, jfsutils, nilfs-utils, udftools, mdadm and LVM2's lvm.
+    .depends = .{
+        "glibc",     "gcc",        "glib",       "gtk3",       "gtkmm3",
+        "glibmm2.4", "cairomm1.0", "pangomm1.4", "atkmm1.6",   "libsigcxx2",
+        "cairo",     "pango",      "gdk-pixbuf", "parted",     "util-linux",
+        "polkit",    "procps-ng",  "systemd",    "e2fsprogs",  "dosfstools",
+        "mtools",    "btrfs-progs", "cryptsetup", "lvm2",
+    },
+    // configure runs pkexec --version to decide whether to use pkexec and
+    // install the polkit action, so polkit must be in the build root.
+    // itstool and xmllint (libxml2) build the help pages.
+    .build_depends = .{ "pkgconf", "gettext", "polkit", "itstool", "libxml2" },
+}

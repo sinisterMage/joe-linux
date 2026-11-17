@@ -1,0 +1,18 @@
+.{
+    .name = "librevenge",
+    .version = "0.0.6",
+    .release = 1,
+    .description = "Base library of the document import filters (libwpd, libvisio, libodfgen and friends)",
+    .license = "MPL-2.0 OR LGPL-2.1-or-later",
+    .sources = .{
+        // Upstream publishes no checksum; this is the same tarball, with the
+        // same SHA-256, that LibreOffice's download.lst records (and that
+        // packages/libreoffice bundles).
+        .{ .url = "https://downloads.sourceforge.net/libwpd/librevenge-0.0.6.tar.bz2", .sha256 = "52a65e904d255dbdd97a8b7bb28d6574e14f999eb01416aff004502406d0904d" },
+    },
+    // librevenge-stream links zlib; gcc: libstdc++.
+    .depends = .{ "glibc", "gcc", "zlib" },
+    // boost: header-only parts (string algorithms, spirit, base64
+    // iterators).
+    .build_depends = .{ "boost", "pkgconf" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "websockets",
+    .version = "17.4",
+    .release = 1,
+    .description = "WebSocket client and server library for Python, built on asyncio",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/w/websockets/websockets-17.4.tar.gz", .sha256 = "09d3939b70df0c8ad2da145ebd50978bccaee1d565e838b0e7921a34d38571eb" },
+    },
+    // The speedups extension (frame masking in C) links only glibc.
+    .depends = .{ "python", "glibc" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

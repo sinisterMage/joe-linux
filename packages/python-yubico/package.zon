@@ -1,0 +1,12 @@
+.{
+    .name = "python-yubico",
+    .version = "1.3.3",
+    .release = 1,
+    .description = "Python library for talking to YubiKeys",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/python-yubico/python-yubico-1.3.3.tar.gz", .sha256 = "d8466427aa5922ac5d4b7e9c65b693108427cf537d653d68cb212c0713e8e6f5" },
+    },
+    .depends = .{ "python", "pyusb" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

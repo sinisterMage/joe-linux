@@ -1,0 +1,13 @@
+.{
+    .name = "pyusb",
+    .version = "1.3.1",
+    .release = 1,
+    .description = "USB access for Python",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyusb/pyusb-1.3.1.tar.gz", .sha256 = "3af070b607467c1c164f49d5b0caabe8ac78dbed9298d703a8dbf9df4052d17e" },
+    },
+    // Pure Python: it loads libusb-1.0 with ctypes.
+    .depends = .{ "python", "libusb" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel" },
+}

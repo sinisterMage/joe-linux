@@ -1,0 +1,14 @@
+.{
+    .name = "perl-locale-gettext",
+    .version = "1.07",
+    .release = 1,
+    .description = "Perl bindings for POSIX i18n gettext functions",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/P/PV/PVANDRY/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/P/PV/PVANDRY/Locale-gettext-1.07.tar.gz", .sha256 = "909d47954697e7c04218f972915b787bd1244d75e3bd01620bc167d5bbc49c15" },
+    },
+    .depends = .{ "glibc", "perl" },
+    .build_depends = .{ "gcc", "make" },
+}

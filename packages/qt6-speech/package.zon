@@ -1,0 +1,13 @@
+.{
+    .name = "qt6-speech",
+    .version = "6.12.0",
+    .release = 2,
+    .description = "Qt text to speech with Speech Dispatcher",
+    .license = "LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only",
+    .sources = .{
+        // Verified against Qt's adjacent md5sums.txt.
+        .{ .url = "https://download.qt.io/archive/qt/6.12/6.12.0/submodules/qtspeech-everywhere-src-6.12.0.tar.xz", .sha256 = "9a60ce5bee54a9343740feab2582bffb996812f43d6c5585aade26dbd04933db" },
+    },
+    .depends = .{ "glibc", "gcc", "qt6 =6.12.0", "qt6-multimedia =6.12.0", "speech-dispatcher" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

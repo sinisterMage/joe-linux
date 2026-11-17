@@ -1,0 +1,14 @@
+.{
+    .name = "sip",
+    .version = "6.17.3",
+    .release = 1,
+    .description = "Generator of Python bindings for C and C++ libraries (sip-build and its tools)",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sip/sip-6.17.3.tar.gz", .sha256 = "e3b5c2d1429a96f2e1fc25b69d4ceb232bc8b7f2395e864c904cec28905642b5" },
+    },
+    // Pure Python; it drives setuptools when it builds a binding, so that is
+    // needed at run time (upstream's metadata says so).
+    .depends = .{ "python", "packaging", "setuptools" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel" },
+}

@@ -1,14 +1,13 @@
 # Not in the book: the newest upstream release, built as its README says.
 build() {
-    # Not available: utf8proc (tmux uses the C library's wcwidth instead),
-    # utempter (utmp records for panes), jemalloc. Sixel image support
-    # needs nothing extra.
+    # utf8proc supplies Unicode width data and jemalloc the allocator.
+    # utempter (utmp records for panes) remains unavailable.
     ./configure --prefix=/usr \
         --enable-systemd \
         --enable-sixel \
-        --disable-utf8proc \
+        --enable-utf8proc \
         --disable-utempter \
-        --disable-jemalloc
+        --enable-jemalloc
     make
 }
 

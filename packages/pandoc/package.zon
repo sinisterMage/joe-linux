@@ -1,0 +1,23 @@
+.{
+    .name = "pandoc",
+    .version = "3.14",
+    .release = 1,
+    .description = "Universal document converter between markup formats",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // No checksum is published for the source archive.
+        .{ .url = "https://github.com/jgm/pandoc/archive/3.14/pandoc-3.14.tar.gz", .sha256 = "e4c4292642531b94793c2f5dea38f3b8d5424b2d048818a4d047f8b8320b999a" },
+    },
+    // cabal downloads the Hackage libraries pandoc is built from (aeson,
+    // skylighting, texmath, hslua and the rest); they are not vendored yet.
+    .network = true,
+    // The Haskell libraries (and the Lua interpreter, which hslua carries)
+    // are linked in statically. What remains is what every GHC program
+    // links, libgmp (ghc-bignum) and libffi (the runtime system), and
+    // zlib, which the zlib and digest libraries take from the system.
+    // make-ca: the CA certificates pandoc reads when it fetches images and
+    // other resources over HTTPS.
+    .depends = .{ "glibc", "gmp", "libffi", "zlib", "make-ca" },
+    // pkgconf: the Haskell zlib and digest libraries find zlib with it.
+    .build_depends = .{ "ghc", "cabal-install", "pkgconf" },
+}

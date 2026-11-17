@@ -1,0 +1,21 @@
+.{
+    .name = "pika-backup",
+    .version = "0.8.4",
+    .release = 1,
+    .description = "Back up personal data with BorgBackup",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/World/pika-backup/-/archive/0.8.4/pika-backup-0.8.4.tar.gz", .sha256 = "6792477694441e2e3ee8dbb49b445b0f1787d9ed9a49d0c7bcd320c953b587c9" },
+    },
+    // cargo downloads the crates pika-backup depends on from crates.io;
+    // the release, a git archive, does not vendor them.
+    .network = true,
+    // openssl is the oo7 crate's cryptography for passwords kept in the
+    // Secret Service. Backups are made by running borg; repositories on
+    // other machines are reached with ssh and sftp.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "openssl", "borg", "openssh" },
+    // python runs build-aux/meson-cargo-manifest.py, which reads the
+    // version from Cargo.toml; itstool builds the help pages; appstream
+    // provides the gettext rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream", "itstool", "python" },
+}

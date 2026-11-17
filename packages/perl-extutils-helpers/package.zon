@@ -1,0 +1,14 @@
+.{
+    .name = "perl-extutils-helpers",
+    .version = "0.028",
+    .release = 1,
+    .description = "Various portability utilities for module builders",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/L/LE/LEONT/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/ExtUtils-Helpers-0.028.tar.gz", .sha256 = "c8574875cce073e7dc5345a7b06d502e52044d68894f9160203fcaab379514fe" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

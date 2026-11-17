@@ -1,0 +1,13 @@
+.{
+    .name = "visidata",
+    .version = "3.5",
+    .release = 1,
+    .description = "Terminal spreadsheet for exploring and arranging tabular data",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/d9/1c/df4179d28dd544646e643e1608cb1dd54ffed6cb00259880e65617452273/visidata-3.5.tar.gz", .sha256 = "0ed3d90688d5310664a728446afb8e5ff4ef366aa71fb1c75d0002fa1170bd81" },
+    },
+    .depends = .{ "python", "python-dateutil", "standard-mailcap", "openpyxl", "xlrd", "lxml", "requests", "urllib3", "pyyaml", "python-numpy", "python-pandas", "python-matplotlib", "fonttools", "msgpack", "brotli", "beautifulsoup4", "tabulate", "wcwidth", "psutil", "mutagen", "tmux" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

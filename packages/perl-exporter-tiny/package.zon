@@ -1,0 +1,14 @@
+.{
+    .name = "perl-exporter-tiny",
+    .version = "1.006003",
+    .release = 1,
+    .description = "an exporter with the features of Sub::Exporter but only core dependencies",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.006003.tar.gz", .sha256 = "6499f09a6432cf87b133fb9580a8a9a9a6c566821346b1fdee95f7b64c0317b1" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

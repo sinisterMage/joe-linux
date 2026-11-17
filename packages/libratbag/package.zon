@@ -1,0 +1,29 @@
+.{
+    .name = "libratbag",
+    .version = "0.18",
+    .release = 1,
+    .description = "ratbagd, a D-Bus service that configures gaming mice, and its ratbagctl client",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no checksum or release tarball, only the tag.
+        .{ .url = "https://github.com/libratbag/libratbag/archive/v0.18/libratbag-0.18.tar.gz", .sha256 = "8a7f8bf00c21ef5ad534e2804ed537f2fc6521a3932dd822c438e561a85a1bcd" },
+    },
+    // ratbagd: libudev and libsystemd (logind) from systemd, libevdev,
+    // GLib and JSON-GLib, libunistring. ratbagctl is Python and talks to
+    // ratbagd over D-Bus with pygobject; it names key codes with evdev.
+    // liblur (Logitech Unifying receivers) and lur-command are also built.
+    .depends = .{
+        "glibc",
+        "systemd",
+        "libevdev",
+        "glib",
+        "json-glib",
+        "libunistring",
+        "python",
+        "pygobject",
+        "evdev",
+    },
+    // swig and Python's headers build the Python bindings used by the
+    // development tool ratbag-command, which is not installed.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "swig" },
+}

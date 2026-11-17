@@ -1,0 +1,20 @@
+.{
+    .name = "gradia",
+    .version = "1.13.0",
+    .release = 2,
+    .description = "Annotate, frame and polish screenshots before sharing them",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/AlexanderVanhee/Gradia/archive/v1.13.0/gradia-1.13.0.tar.gz", .sha256 = "bba20396de4b7e515597207828ef7e9f3906711a24399b39a52c7dac2333eb0b" },
+    },
+    // A Python program using these libraries through PyGObject: GTK 4,
+    // libadwaita, GtkSourceView, libsoup and libportal (screenshots through
+    // the portal); images are processed with Pillow and pycairo. It also
+    // builds a small C library of its own (gradient rendering, loaded with
+    // ctypes). pytesseract runs the system OCR engine; tesseract depends
+    // on its English/OSD language data.
+    .depends = .{ "glibc", "python", "pygobject", "pycairo", "pillow", "pytesseract", "tesseract", "glib", "gtk4", "libadwaita", "gtksourceview5", "libsoup", "libportal", "pango", "gdk-pixbuf", "graphene" },
+    // meson checks the pkg-config files of the libraries above; appstream
+    // provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "blueprint-compiler", "appstream" },
+}

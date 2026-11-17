@@ -1,0 +1,14 @@
+.{
+    .name = "perl-proc-processtable",
+    .version = "0.637",
+    .release = 1,
+    .description = "Perl extension to access the unix process table",
+    .license = "Artistic-2.0",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/J/JW/JWB/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/J/JW/JWB/Proc-ProcessTable-0.637.tar.gz", .sha256 = "d7e688b5f0bd5d38e5bb306f16f904aac93112df8eda098fefef1c810bba6f85" },
+    },
+    .depends = .{ "glibc", "perl" },
+    .build_depends = .{ "gcc", "make" },
+}

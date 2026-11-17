@@ -1,0 +1,14 @@
+.{
+    .name = "perl-font-ttf",
+    .version = "1.06",
+    .release = 1,
+    .description = "TTF font support for Perl",
+    .license = "Artistic-2.0",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/B/BH/BHALLISSY/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/B/BH/BHALLISSY/Font-TTF-1.06.tar.gz", .sha256 = "4b697d444259759ea02d2c442c9bffe5ffe14c9214084a01f743693a944cc293" },
+    },
+    .depends = .{ "perl", "perl-io-string", "perl-xml-parser" },
+    .build_depends = .{ "make" },
+}

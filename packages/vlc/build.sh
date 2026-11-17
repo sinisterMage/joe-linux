@@ -16,21 +16,24 @@ build() {
     # Avahi (network shares and Chromecast discovery), udev, libxml2,
     # libgcrypt, GnuTLS, libsecret, libnotify, Chromecast output (protobuf).
     # The teletext decoder is VLC's own (telx), as zvbi has no recipe.
+    # Tier-2 adds ASS subtitles, TagLib metadata, Speex, Theora, TwoLAME,
+    # FluidSynth MIDI, libsamplerate, Chromaprint, DVD navigation,
+    # SRT/RIST transport and MTP devices.
     #
     # Off:
     # - liba52, libmad, FAAD2, libmpeg2 and libdca: no recipes; FFmpeg
-    #   decodes AC-3, MP3, AAC, MPEG-2 and DTS. Speex, Theora, Kate, shine,
-    #   Musepack, libmodplug, Game Music Emu, sidplay, fluidsynth: no
-    #   recipes. twolame: FFmpeg already encodes MPEG audio layer II.
-    # - libdvbpsi and libebml/libmatroska: no recipes, so VLC's own MPEG-TS
-    #   and Matroska demuxers are not built; FFmpeg's demuxers open those
-    #   files instead.
-    # - VDPAU, libplacebo: no recipes. libpostproc is gone from FFmpeg.
-    # - libass, taglib, libsamplerate, JACK, libcaca, SDL_image,
-    #   spatialaudio, chromaprint, libdvdnav, libbluray, libcddb, live555,
-    #   libnfs, libdsm, libsmb2, SRT, librist, libmtp, libupnp, libmicrodns,
-    #   goom, projectM, VSXu, LIRC, aribb24/aribb25, OpenCV, IIDC/DV FireWire,
-    #   Linear Systems SDI cards, DeckLink: no recipes.
+    #   decodes AC-3, MP3, AAC, MPEG-2 and DTS. Kate, shine, Musepack,
+    #   libmodplug, Game Music Emu and sidplay also have no recipes.
+    # - libdvbpsi and libmatroska have no recipes (libebml alone is not
+    #   sufficient), so FFmpeg supplies MPEG-TS and Matroska demuxing.
+    # - libplacebo: this VLC requires >=0.2.1 and <6; joe ships 7.387.0.
+    #   VDPAU has no recipe; libpostproc is gone from FFmpeg.
+    # - SDL_image means SDL 1.2's SDL_image.pc, not the available SDL2_image.
+    #   OpenCV likewise requires opencv.pc and its old C API, not OpenCV 4.
+    # - JACK, libcaca, spatialaudio, libbluray, libcddb, live555, libnfs,
+    #   libdsm, libsmb2, libupnp, libmicrodns, goom, projectM, VSXu, LIRC,
+    #   aribb24/aribb25, IIDC/DV FireWire, Linear Systems SDI cards and
+    #   DeckLink: no recipes.
     # - smbclient: Samba is not part of joe's desktop (gvfs browses SMB).
     # - rdp: written for old FreeRDP releases (pkg-config "freerdp"); FreeRDP
     #   3 installs freerdp3 and a different API.
@@ -38,6 +41,7 @@ build() {
     # - KWallet and KDE Solid actions: there is no KDE. Wayland video output:
     #   incomplete in this release and off by default.
     BUILDCC=gcc ./configure --prefix=/usr \
+        --libdir=/usr/lib \
         --disable-static \
         --without-kde-solid \
         --enable-qt \
@@ -90,17 +94,17 @@ build() {
         --disable-faad \
         --disable-libmpeg2 \
         --disable-dca \
-        --disable-speex \
-        --disable-theora \
+        --enable-speex \
+        --enable-theora \
         --disable-kate \
         --disable-tiger \
-        --disable-twolame \
+        --enable-twolame \
         --disable-shine \
         --disable-mpc \
         --disable-mod \
         --disable-gme \
         --disable-sid \
-        --disable-fluidsynth \
+        --enable-fluidsynth \
         --disable-fluidlite \
         --disable-dvbpsi \
         --disable-matroska \
@@ -109,15 +113,15 @@ build() {
         --disable-libplacebo \
         --disable-postproc \
         --disable-vpl \
-        --disable-libass \
-        --disable-taglib \
-        --disable-samplerate \
+        --enable-libass \
+        --enable-taglib \
+        --enable-samplerate \
         --disable-jack \
         --disable-caca \
         --disable-sdl-image \
         --disable-spatialaudio \
-        --disable-chromaprint \
-        --disable-dvdnav \
+        --enable-chromaprint \
+        --enable-dvdnav \
         --disable-bluray \
         --disable-libcddb \
         --disable-live555 \
@@ -126,10 +130,10 @@ build() {
         --disable-smb2 \
         --disable-smbclient \
         --disable-freerdp \
-        --disable-srt \
-        --disable-librist \
+        --enable-srt \
+        --enable-librist \
         --disable-shout \
-        --disable-mtp \
+        --enable-mtp \
         --disable-upnp \
         --disable-microdns \
         --disable-goom \

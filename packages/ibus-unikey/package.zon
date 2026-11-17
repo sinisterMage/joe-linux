@@ -1,0 +1,17 @@
+.{
+    .name = "ibus-unikey",
+    .version = "0.7.0beta1",
+    .release = 1,
+    .description = "Vietnamese input for IBus, using the Unikey engine",
+    .license = "GPL-3.0-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // The maintained fork (vn-input), which Debian ships; the original
+        // project on Google Code ended with 0.6.1 in 2012, whose
+        // preferences need GTK 2. 0.7.0-beta1 is the fork's newest release
+        // (it has made no other). Upstream publishes no checksum.
+        .{ .url = "https://github.com/vn-input/ibus-unikey/archive/0.7.0-beta1/ibus-unikey-0.7.0-beta1.tar.gz", .sha256 = "019084058c8bf5aa13353e3eaf7ac5a9e4ac875b5e859c7ca1cf63dc0969db8f" },
+    },
+    // ibus-setup-unikey, the preferences, is GTK 3.
+    .depends = .{ "glibc", "gcc", "glib", "ibus", "gtk3" },
+    .build_depends = .{ "cmake", "pkgconf", "gettext" },
+}

@@ -1,0 +1,15 @@
+.{
+    .name = "hidapi",
+    .version = "0.16.0",
+    .release = 1,
+    .description = "Library for talking to USB and Bluetooth HID devices, through hidraw or libusb",
+    .license = "GPL-3.0-only OR BSD-3-Clause OR LicenseRef-HIDAPI",
+    .sources = .{
+        // Upstream publishes no checksum for the source archive.
+        .{ .url = "https://github.com/libusb/hidapi/archive/hidapi-0.16.0/hidapi-0.16.0.tar.gz", .sha256 = "bc599d295792fe515778f19ce86a49760b0ea5fc114e5258245d470609632bbf" },
+    },
+    // libhidapi-hidraw links libudev (systemd); libhidapi-libusb links
+    // libusb. iconv is glibc's.
+    .depends = .{ "glibc", "systemd", "libusb" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

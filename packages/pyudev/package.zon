@@ -1,0 +1,14 @@
+.{
+    .name = "pyudev",
+    .version = "0.24.5",
+    .release = 1,
+    .description = "Python bindings to libudev",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against PyPI's sha256 digest.
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyudev/pyudev-0.24.5.tar.gz", .sha256 = "4e7faaec419b81a902d057568101819f448972c0cf448bb9c22203e4fc6a8eb9" },
+    },
+    // Pure Python: libudev (systemd) is loaded with ctypes at run time.
+    .depends = .{ "python", "systemd" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

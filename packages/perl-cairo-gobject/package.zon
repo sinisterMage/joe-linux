@@ -1,0 +1,14 @@
+.{
+    .name = "perl-cairo-gobject",
+    .version = "1.005",
+    .release = 1,
+    .description = "Integrate Cairo into the Glib type system",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/X/XA/XAOC/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/X/XA/XAOC/Cairo-GObject-1.005.tar.gz", .sha256 = "8d896444d71e1d0bca3d24e31e5d82bd0d9542aaed91d1fb7eab367bce675c50" },
+    },
+    .depends = .{ "cairo", "glib", "glibc", "perl", "perl-cairo", "perl-extutils-depends", "perl-extutils-pkgconfig", "perl-glib" },
+    .build_depends = .{ "gcc", "make", "pkgconf" },
+}

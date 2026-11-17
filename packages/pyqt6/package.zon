@@ -1,0 +1,14 @@
+.{
+    .name = "pyqt6",
+    .version = "6.12.1",
+    .release = 2,
+    .description = "Python bindings for Qt 6",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyqt6/pyqt6-6.12.1.tar.gz", .sha256 = "17bb18b3ae953ab54b23026291ecea2579b028597b56c281a752c8ed66dd1a58" },
+    },
+    // Qt module bindings link their matching libraries; PyQt6.sip is
+    // pyqt6-sip. The qmlscene plugin also links libpython.
+    .depends = .{ "glibc", "gcc", "python", "pyqt6-sip", "qt6", "qt6-multimedia", "qt6-positioning", "qt6-serialport", "qt6-webchannel", "qt6-websockets", "qt6-speech" },
+    .build_depends = .{ "python", "sip", "pyqt-builder", "make" },
+}

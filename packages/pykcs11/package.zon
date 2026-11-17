@@ -1,0 +1,14 @@
+.{
+    .name = "pykcs11",
+    .version = "1.5.21",
+    .release = 1,
+    .description = "Python wrapper for PKCS#11 (smart cards, hardware tokens)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pykcs11/pykcs11-1.5.21.tar.gz", .sha256 = "581a52edd29d333a420b5b422dda0b88a14c5ec7fa898b58eb6969445a3e4554" },
+    },
+    // A C++ extension made with SWIG (gcc: libstdc++). The PKCS#11 module
+    // to use is loaded with dlopen at run time.
+    .depends = .{ "glibc", "gcc", "python" },
+    .build_depends = .{ "python", "setuptools", "wheel", "swig" },
+}

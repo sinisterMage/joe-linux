@@ -14,11 +14,10 @@ build() {
     # logind, libusb. Always built: trash, recent, computer, network, burn,
     # ftp, localtest.
     #
-    # Off, for lack of a recipe for the library each needs: afc
-    # (libimobiledevice), bluray (libbluray), cdda (libcdio-paranoia), dnssd
-    # (avahi), gphoto2 (libgphoto2), mtp (libmtp), nfs (libnfs), onedrive
-    # (msgraph), smb (samba), wsdd (the wsdd daemon), google (libgdata,
-    # deprecated). afp is deprecated and gcrypt only serves afp.
+    # Device backends use libimobiledevice (AFC), libgphoto2 and libmtp.
+    # Avahi finds network services; Samba provides Windows file shares.
+    # Off, for lack of a recipe: bluray, cdda, nfs, onedrive (msgraph)
+    # and wsdd. Google and AFP are deprecated upstream; gcrypt serves AFP.
     # man: would need the DocBook stylesheets at build time.
     meson setup .. \
         --prefix=/usr \
@@ -41,18 +40,18 @@ build() {
         -D keyring=true \
         -D logind=true \
         -D libusb=true \
-        -D afc=false \
+        -D afc=true \
         -D afp=false \
         -D bluray=false \
         -D cdda=false \
-        -D dnssd=false \
+        -D dnssd=true \
         -D gcrypt=false \
         -D google=false \
-        -D gphoto2=false \
-        -D mtp=false \
+        -D gphoto2=true \
+        -D mtp=true \
         -D nfs=false \
         -D onedrive=false \
-        -D smb=false \
+        -D smb=true \
         -D wsdd=false \
         -D devel_utils=false \
         -D installed_tests=false \

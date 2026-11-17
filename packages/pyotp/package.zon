@@ -1,0 +1,12 @@
+.{
+    .name = "pyotp",
+    .version = "2.12.0",
+    .release = 1,
+    .description = "Python library for one-time passwords (HOTP and TOTP)",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyotp/pyotp-2.12.0.tar.gz", .sha256 = "638ea37341567ec01277af3a16b682590d938f54f8ed3fb31963513233fd05f2" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs" },
+}

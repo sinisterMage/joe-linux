@@ -1,0 +1,14 @@
+.{
+    .name = "perl-html-parser",
+    .version = "3.86",
+    .release = 1,
+    .description = "HTML parser class",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/O/OA/OALDERS/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/O/OA/OALDERS/HTML-Parser-3.86.tar.gz", .sha256 = "5305e1d5faa70ee0aa282d85a5c9aa93911e8c7afa590ad1ced5703a544e20f6" },
+    },
+    .depends = .{ "glibc", "perl", "perl-html-tagset", "perl-http-message", "perl-uri" },
+    .build_depends = .{ "gcc", "make" },
+}

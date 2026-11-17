@@ -1,0 +1,14 @@
+.{
+    .name = "tomlplusplus",
+    .version = "3.4.0",
+    .release = 1,
+    .description = "TOML parser and serialiser for C++17 (toml++)",
+    .license = "MIT",
+    .sources = .{
+        // 3.4.0 is still upstream's latest release. Upstream publishes no
+        // checksum for the archive.
+        .{ .url = "https://github.com/marzer/tomlplusplus/archive/v3.4.0/tomlplusplus-3.4.0.tar.gz", .sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "meson", "ninja", "cmake" },
+}

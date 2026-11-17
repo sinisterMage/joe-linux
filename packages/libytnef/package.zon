@@ -1,0 +1,12 @@
+.{
+    .name = "libytnef",
+    .version = "2.1.2",
+    .release = 1,
+    .description = "TNEF attachment decoder library and tools",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/Yeraze/ytnef/archive/refs/tags/v2.1.2.tar.gz", .file = "libytnef-v2.1.2.tar.gz", .sha256 = "340f03f495884611209e9c0bc943fad06ce920e8c79655aa228d5ca7418dc360" },
+    },
+    .depends = .{ "glibc" },
+    .build_depends = .{ "autoconf", "automake", "libtool", "make" },
+}

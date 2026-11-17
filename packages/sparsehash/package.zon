@@ -1,0 +1,15 @@
+.{
+    .name = "sparsehash",
+    .version = "2.0.4",
+    .release = 1,
+    .description = "Google's memory-efficient hash map and hash set templates for C++",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for its releases.
+        .{ .url = "https://github.com/sparsehash/sparsehash/archive/sparsehash-2.0.4/sparsehash-2.0.4.tar.gz", .sha256 = "8cd1a95827dfd8270927894eb77f62b4087735cbede953884647f16c521c7e58" },
+    },
+    // Headers only, with a pkg-config file: nothing is needed at run time
+    // beyond the C++ library of whatever includes it.
+    .depends = .{},
+    .build_depends = .{},
+}

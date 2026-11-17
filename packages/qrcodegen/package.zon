@@ -1,0 +1,16 @@
+.{
+    .name = "qrcodegen",
+    .version = "1.8.0",
+    .release = 1,
+    .description = "Nayuki's QR Code generator library for C and C++ (libqrcodegen, libqrcodegencpp)",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives.
+        .{ .url = "https://github.com/nayuki/QR-Code-generator/archive/v1.8.0/QR-Code-generator-1.8.0.tar.gz", .sha256 = "2ec0a4d33d6f521c942eeaf473d42d5fe139abcfa57d2beffe10c5cf7d34ae60" },
+        // The CMake build that Fedora and Arch Linux use (upstream ships
+        // only Makefiles for static libraries); no checksum published.
+        .{ .url = "https://github.com/EasyCoding/qrcodegen-cmake/archive/v1.8.0-cmake5/qrcodegen-cmake-1.8.0-cmake5.tar.gz", .sha256 = "4934809f7aec62aafe6fc4346d6402ef6c6fa26659ba5161682b5bbac0029640" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

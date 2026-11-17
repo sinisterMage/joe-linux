@@ -1,0 +1,15 @@
+.{
+    .name = "ibus-chewing",
+    .version = "2.2.0",
+    .release = 1,
+    .description = "Traditional Chinese Zhuyin input for IBus, using libchewing",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against the release's ibus-chewing-2.2.0.tar.xz.sha256sum.
+        .{ .url = "https://codeberg.org/chewing/ibus-chewing/releases/download/v2.2.0/ibus-chewing-2.2.0.tar.xz", .sha256 = "33a6bb8f760906dce391f0243c58d2c1f8bb4a4589b00f3dfac44692b890d028" },
+    },
+    // The engine links GTK 4 as well as IBus; the preferences
+    // (ibus-setup-chewing) are a libadwaita application.
+    .depends = .{ "glibc", "glib", "ibus", "libchewing", "gtk4", "libadwaita" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

@@ -1,0 +1,19 @@
+.{
+    .name = "video-trimmer",
+    .version = "26.03.1",
+    .release = 1,
+    .description = "Cut a fragment out of a video by its start and end times",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/-/project/11135/uploads/57ef53cf5544c3a06562aaccc7ee19c6/video-trimmer-26.03.1.tar.xz", .sha256 = "3916efbed62c6e2158c181beec300fa2473ceaaf6d462a69b36d3a8c7700fb84" },
+    },
+    // The release tarball vendors its crates, so the build is offline.
+    //
+    // The video is probed and cut by running ffprobe and ffmpeg. The
+    // preview is a GtkVideo, played by GTK's GStreamer media backend, which
+    // needs the demuxers and decoders of gst-plugins-good and gst-libav.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "ffmpeg", "gstreamer", "gst-plugins-base", "gst-plugins-good", "gst-libav" },
+    // The interface is written in Blueprint; appstream provides the gettext
+    // rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream", "blueprint-compiler" },
+}

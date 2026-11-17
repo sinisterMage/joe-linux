@@ -1,0 +1,14 @@
+.{
+    .name = "obfuscate",
+    .version = "0.0.10",
+    .release = 1,
+    .description = "Censor private information in images",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/-/project/8382/uploads/7286537df58cb49424c1b4871b915421/obfuscate-0.0.10.tar.xz", .sha256 = "e439fc2e9f69a131b7c82d319e31daa4a7abf319059ec4226f686719afb785e5" },
+    },
+    // The release tarball vendors its crates, so the build is offline.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

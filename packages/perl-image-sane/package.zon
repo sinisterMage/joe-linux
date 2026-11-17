@@ -1,0 +1,14 @@
+.{
+    .name = "perl-image-sane",
+    .version = "5",
+    .release = 1,
+    .description = "Perl extension for the SANE (Scanner Access Now Easy) Project",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/R/RA/RATCLIFFE/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/R/RA/RATCLIFFE/Image-Sane-5.tar.gz", .sha256 = "229aa0e9f049efa760f3c2f6e61d9d539af43d8f764b50a6e03064b4729a35ff" },
+    },
+    .depends = .{ "glibc", "perl", "perl-exception-class", "perl-readonly", "sane" },
+    .build_depends = .{ "gcc", "make", "perl-extutils-depends", "perl-extutils-pkgconfig", "pkgconf" },
+}

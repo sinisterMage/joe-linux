@@ -1,0 +1,15 @@
+.{
+    .name = "mimalloc",
+    .version = "3.6.1",
+    .release = 1,
+    .description = "Compact general-purpose allocator with excellent performance, from Microsoft Research",
+    .license = "MIT",
+    .sources = .{
+        // The release's source asset, checked against the SHA-256 GitHub
+        // lists for it.
+        .{ .url = "https://github.com/microsoft/mimalloc/releases/download/v3.6.1/mimalloc-v3.6.1-source.tar.gz", .sha256 = "7321fbe8e3d2bb447cba127603c44450db0d8ef35e8240bb4a56a7455eba0a68" },
+    },
+    // gcc for libatomic, which the build links when the linker finds it.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

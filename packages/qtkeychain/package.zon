@@ -1,0 +1,15 @@
+.{
+    .name = "qtkeychain",
+    .version = "0.16.0",
+    .release = 1,
+    .description = "Qt API for storing passwords in the desktop's secret service",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/frankosterfeld/qtkeychain/archive/0.16.0/qtkeychain-0.16.0.tar.gz", .sha256 = "3be26ec4ae30eecf0c2ff7572ba83799791b157c76e15a05ef35f23dc25e4054" },
+    },
+    // libsecret talks to GNOME Keyring; KWallet is reached over Qt D-Bus.
+    .depends = .{ "glibc", "gcc", "qt6", "libsecret", "glib" },
+    // Qt's lrelease (in qt6) compiles the translations; the ECM modules
+    // it uses come with the source.
+    .build_depends = .{ "cmake", "pkgconf" },
+}

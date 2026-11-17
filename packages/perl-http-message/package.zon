@@ -1,0 +1,14 @@
+.{
+    .name = "perl-http-message",
+    .version = "7.04",
+    .release = 1,
+    .description = "HTTP style message (base class)",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/O/OA/OALDERS/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/O/OA/OALDERS/HTTP-Message-7.04.tar.gz", .sha256 = "699f3350dbb7bd8fdc9f3b013b0c91b7c059783708443e39bc395fa33352f006" },
+    },
+    .depends = .{ "perl", "perl-clone", "perl-encode-locale", "perl-http-date", "perl-io-html", "perl-lwp-mediatypes", "perl-uri" },
+    .build_depends = .{ "make" },
+}

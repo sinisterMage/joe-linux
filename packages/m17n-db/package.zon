@@ -1,0 +1,17 @@
+.{
+    .name = "m17n-db",
+    .version = "1.8.17",
+    .release = 1,
+    .description = "Data for the m17n library: input methods, font layout tables and character set maps",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against upstream's OpenPGP signature (Mike Fabian,
+        // 1038AFCA745D84B3B422AE2E6F0ADE6E8BB76242).
+        .{ .url = "https://download.savannah.nongnu.org/releases/m17n/m17n-db-1.8.17.tar.gz", .sha256 = "1c6259860c04c451296110802b1b6a22b7372309304c531dd0af32b33cf37406" },
+    },
+    // Data only, and the m17n-db shell script that prints its location.
+    .depends = .{},
+    // The character set maps are generated from glibc's charmaps, which
+    // glibc installs compressed with gzip.
+    .build_depends = .{ "gettext", "glibc", "gzip" },
+}

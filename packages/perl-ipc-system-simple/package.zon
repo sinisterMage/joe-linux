@@ -1,0 +1,14 @@
+.{
+    .name = "perl-ipc-system-simple",
+    .version = "1.30",
+    .release = 1,
+    .description = "Run commands simply, with detailed diagnostics",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/J/JK/JKEENAN/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/J/JK/JKEENAN/IPC-System-Simple-1.30.tar.gz", .sha256 = "22e6f5222b505ee513058fdca35ab7a1eab80539b98e5ca4a923a70a8ae9ba9e" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

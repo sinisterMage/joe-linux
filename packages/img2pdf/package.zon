@@ -1,0 +1,14 @@
+.{
+    .name = "img2pdf",
+    .version = "0.6.3",
+    .release = 1,
+    .description = "Lossless conversion of raster images to PDF (img2pdf and its Python module)",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/i/img2pdf/img2pdf-0.6.3.tar.gz", .sha256 = "219518020f5bd242bdc46493941ea3f756f664c2e86f2454721e74353f58cd95" },
+    },
+    // Pure Python. img2pdf-gui is a Tk front end and also needs
+    // python-tkinter, which is not pulled in for it.
+    .depends = .{ "python", "pillow", "pikepdf" },
+    .build_depends = .{ "python", "flit-core" },
+}

@@ -1,7 +1,7 @@
 .{
     .name = "gvfs",
     .version = "1.62.0",
-    .release = 1,
+    .release = 2,
     .description = "GIO virtual file systems: trash, recent files, network places and removable media",
     .license = "LGPL-2.0-or-later",
     .sources = .{
@@ -10,6 +10,6 @@
     // lsof is run to name the programs that keep a volume from unmounting.
     // The sftp backend runs `ssh` (openssh) when it is installed; it is not
     // listed because nothing else in gvfs needs it.
-    .depends = .{ "glibc", "glib", "dbus", "gsettings-desktop-schemas", "systemd", "gcr4", "libsecret", "libsoup", "libxml2", "libgudev", "libusb", "udisks", "fuse3", "polkit", "libcap", "libarchive", "gnome-online-accounts", "lsof" },
+    .depends = .{ "glibc", "glib", "dbus", "gsettings-desktop-schemas", "systemd", "gcr4", "libsecret", "libsoup", "libxml2", "libgudev", "libusb", "udisks", "fuse3", "polkit", "libcap", "libarchive", "gnome-online-accounts", "lsof", "libimobiledevice", "usbmuxd", "libgphoto2", "libmtp", "avahi", "samba" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
 }

@@ -1,0 +1,12 @@
+.{
+    .name = "validators",
+    .version = "0.36.0",
+    .release = 1,
+    .description = "Python data validation for humans (URLs, e-mail addresses, ...)",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/v/validators/validators-0.36.0.tar.gz", .sha256 = "92ad9ed00bbed320b784cec0ea90b213cf08904cf605b3d0852cfa4108e32a2c" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

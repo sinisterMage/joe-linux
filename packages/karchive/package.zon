@@ -1,0 +1,15 @@
+.{
+    .name = "karchive",
+    .version = "6.29.0",
+    .release = 1,
+    .description = "KDE Frameworks library for reading and writing compressed archives",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.kde.org/stable/frameworks/6.29/karchive-6.29.0.tar.xz", .sha256 = "3d66cd9d71fbbebc3cea68757111002666b366898b01178b6fa7203715574287" },
+    },
+    // gzip (zlib), bzip2, xz and zstd streams; OpenSSL for encrypted
+    // 7-Zip archives.
+    .depends = .{ "glibc", "gcc", "qt6", "zlib", "bzip2", "xz", "zstd", "openssl" },
+    // Qt's lrelease (in qt6) compiles the translations.
+    .build_depends = .{ "cmake", "extra-cmake-modules", "pkgconf" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "perl-pdf-builder",
+    .version = "3.028",
+    .release = 1,
+    .description = "Facilitates the creation and modification of PDF files",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/P/PM/PMPERRY/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/P/PM/PMPERRY/PDF-Builder-3.028.tar.gz", .sha256 = "62c5d1b7481b7b3c12c589244316b13e5cab179f6685be80840b5d0487975a8c" },
+    },
+    .depends = .{ "perl", "perl-font-ttf", "perl-graphics-tiff", "perl-image-png-libpng" },
+    .build_depends = .{ "make" },
+}

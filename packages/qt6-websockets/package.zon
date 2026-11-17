@@ -1,0 +1,14 @@
+.{
+    .name = "qt6-websockets",
+    .version = "6.12.0",
+    .release = 1,
+    .description = "Qt WebSockets: WebSocket clients and servers for Qt programs",
+    .license = "LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only",
+    .sources = .{
+        // Checked against the MD5 in download.qt.io's md5sums.txt beside it.
+        .{ .url = "https://download.qt.io/archive/qt/6.12/6.12.0/submodules/qtwebsockets-everywhere-src-6.12.0.tar.xz", .sha256 = "21690a365cd5fbfa8dea051473e98968df9f4eca0121fed7481d1215b7455a31" },
+    },
+    // Qt Network (TLS through qt6's OpenSSL) and the Qt Quick bindings.
+    .depends = .{ "glibc", "gcc", "qt6" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "qt6-serialport",
+    .version = "6.12.0",
+    .release = 1,
+    .description = "Qt serial port access module",
+    .license = "LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only",
+    .sources = .{
+        // Verified against the upstream .tar.xz.sha256 file.
+        .{ .url = "https://download.qt.io/archive/qt/6.12/6.12.0/submodules/qtserialport-everywhere-src-6.12.0.tar.xz", .sha256 = "ba8886a54eee466e57c9fa1341255cc09c462c84baab3ee7b19d67cdbcbd71c3" },
+    },
+    .depends = .{ "glibc", "gcc", "qt6 =6.12.0", "systemd" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

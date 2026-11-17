@@ -1,0 +1,15 @@
+.{
+    .name = "libmtp",
+    .version = "1.1.23",
+    .release = 1,
+    .description = "Library for the Media Transfer Protocol used by phones and music players",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the digest GitHub publishes for the release asset.
+        .{ .url = "https://github.com/libmtp/libmtp/releases/download/v1.1.23/libmtp-1.1.23.tar.gz", .sha256 = "74a2b6e8cb4a0304e95b995496ea3ac644c29371649b892b856e22f12a0bdeed" },
+    },
+    // libgcrypt is for MTPZ, the authenticated variant of MTP that
+    // Microsoft's Zune players speak.
+    .depends = .{ "glibc", "libusb", "libgcrypt" },
+    .build_depends = .{"pkgconf"},
+}

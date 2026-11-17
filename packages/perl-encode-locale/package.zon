@@ -1,0 +1,14 @@
+.{
+    .name = "perl-encode-locale",
+    .version = "1.05",
+    .release = 1,
+    .description = "Determine the locale encoding",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/G/GA/GAAS/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/G/GA/GAAS/Encode-Locale-1.05.tar.gz", .sha256 = "176fa02771f542a4efb1dbc2a4c928e8f4391bf4078473bd6040d8f11adb0ec1" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

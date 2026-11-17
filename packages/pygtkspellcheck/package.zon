@@ -1,0 +1,12 @@
+.{
+    .name = "pygtkspellcheck",
+    .version = "5.0.4",
+    .release = 1,
+    .description = "A simple but quite powerful spellchecking library for GTK written in pure Python",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/e6/88/ee26f12225d4e8e39bc0190ec7c69076554436e51407379799ca295bd7ca/pygtkspellcheck-5.0.4.tar.gz", .sha256 = "a693defede048360b6b61e7de84f4fc9d6a0421b6d908922ad0513cfd6280ce3" },
+    },
+    .depends = .{ "python", "pyenchant", "pygobject" },
+    .build_depends = .{ "python", "setuptools", "wheel", "poetry-core" },
+}

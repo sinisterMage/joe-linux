@@ -1,0 +1,13 @@
+.{
+    .name = "python-scipy",
+    .version = "1.18.1",
+    .release = 1,
+    .description = "Scientific algorithms for optimization, integration, statistics and linear algebra",
+    .license = "BSD-3-Clause AND BSL-1.0",
+    .sources = .{
+        // Verified against the PyPI source distribution SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/7e/74/66de6258867beb2ef08f35f9f2ac017a52cacd5081714d239ff1a442d458/scipy-1.18.1.tar.gz", .sha256 = "52c4b7422442aba924d03ad4019852b08a92e64ea187b933135687bfe2747307" },
+    },
+    .depends = .{ "glibc", "gcc", "gcc-fortran", "python", "python-numpy", "openblas", "lapack", "qhull" },
+    .build_depends = .{ "python", "meson-python", "meson", "ninja", "cython", "pybind11", "pythran", "pkgconf" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "perl-io-html",
+    .version = "1.004",
+    .release = 1,
+    .description = "Open an HTML file with automatic charset detection",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/C/CJ/CJM/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/C/CJ/CJM/IO-HTML-1.004.tar.gz", .sha256 = "c87b2df59463bbf2c39596773dfb5c03bde0f7e1051af339f963f58c1cbd8bf5" },
+    },
+    .depends = .{ "perl" },
+    .build_depends = .{ "make" },
+}

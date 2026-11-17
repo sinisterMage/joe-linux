@@ -1,0 +1,19 @@
+.{
+    .name = "junction",
+    .version = "1.13",
+    .release = 1,
+    .description = "Application chooser: pick which application opens a file or link",
+    .license = "GPL-3.0-only AND ISC",
+    .sources = .{
+        .{ .url = "https://github.com/sonnyp/Junction/archive/v1.13/junction-1.13.tar.gz", .sha256 = "a6ca37c95c7ee2419e9e7831c5fa848843b1e81e47ceb6241e20899c87a8235d" },
+        // The troll submodule (sonnyp's GJS helpers and the gjspack bundler)
+        // at the commit v1.13 records; GitHub's archive leaves it out.
+        .{ .url = "https://github.com/sonnyp/troll/archive/37b53b29db0b6496f31e13c7f843100db31c9eb1/troll-37b53b29db0b6496f31e13c7f843100db31c9eb1.tar.gz", .sha256 = "0082de3699e1c019336b0f8ff3dce8c8a9590cb384cb0c126e54b9090526d0d7" },
+    },
+    // A GJS program; libportal opens files and links through the portals.
+    .depends = .{ "gjs", "glib", "gtk4", "libadwaita", "libportal" },
+    // gjspack (from troll) runs under gjs and calls blueprint-compiler and
+    // glib-compile-resources; appstream provides the gettext rules for the
+    // metainfo file.
+    .build_depends = .{ "meson", "ninja", "gjs", "blueprint-compiler", "gettext", "appstream" },
+}

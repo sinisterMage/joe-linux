@@ -1,0 +1,13 @@
+.{
+    .name = "simdjson",
+    .version = "5.2.0",
+    .release = 1,
+    .description = "C++ library parsing gigabytes of JSON per second with SIMD instructions",
+    .license = "Apache-2.0 OR MIT",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/simdjson/simdjson/archive/v5.2.0/simdjson-5.2.0.tar.gz", .sha256 = "499176afd4b32fbe6f65551ef573b880407280072e1c19e22df0b45da58cdf64" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

@@ -1,0 +1,18 @@
+.{
+    .name = "switcheroo",
+    .version = "2.6.0",
+    .release = 1,
+    .description = "Convert and resize images (Converter), a front end to ImageMagick",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://gitlab.com/-/project/41292464/uploads/a31f472445361fd40b42bf6ec7309ff1/switcheroo-2.6.0.tar.xz", .sha256 = "cb1e2c27ebc421bb2823ebed3e135dc84a741921a3b5b6153c4ef7337d353eb6" },
+    },
+    // The release tarball vendors its crates, so the build is offline.
+    //
+    // Every conversion runs ImageMagick's magick program; several results
+    // are saved together by running zip.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "imagemagick", "zip" },
+    // The interface is written in Blueprint; appstream provides the gettext
+    // rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream", "blueprint-compiler" },
+}

@@ -1,0 +1,24 @@
+.{
+    .name = "resources",
+    .version = "51.0",
+    .release = 1,
+    .description = "Monitor system resources and processes",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/resources/51/resources-51.0.tar.xz", .sha256 = "ce1a01c1b772ceeb86e7a59cdb414f82f2196d50da63bae2072c7af8e3b4c735" },
+    },
+    // The release tarball vendors its crates, so the build is offline.
+    //
+    // libsoup (the soup3 crate) asks snapd about snaps. Signalling or
+    // renicing another user's processes goes through pkexec (polkit) and
+    // the helpers in /usr/libexec/resources, which the polkit policy
+    // shipped here names. It also runs lscpu (util-linux) and udevadm
+    // (systemd), and names GPUs from hwdata's pci.ids. NVIDIA's NVML is
+    // opened at run time if present. Memory module details come from
+    // dmidecode, which does not exist here; that part of the memory page
+    // stays empty.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "libsoup", "polkit", "util-linux", "systemd", "hwdata" },
+    // appstream and polkit provide the gettext rules for the metainfo and
+    // policy files.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

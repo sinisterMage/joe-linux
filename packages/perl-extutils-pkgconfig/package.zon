@@ -1,0 +1,14 @@
+.{
+    .name = "perl-extutils-pkgconfig",
+    .version = "1.16",
+    .release = 1,
+    .description = "simplistic interface to pkg-config",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // SHA-256 verified against MetaCPAN release metadata and this author's
+        // https://cpan.metacpan.org/authors/id/X/XA/XAOC/CHECKSUMS (parsed as data, never executed).
+        .{ .url = "https://cpan.metacpan.org/authors/id/X/XA/XAOC/ExtUtils-PkgConfig-1.16.tar.gz", .sha256 = "bbeaced995d7d8d10cfc51a3a5a66da41ceb2bc04fedcab50e10e6300e801c6e" },
+    },
+    .depends = .{ "perl", "pkgconf" },
+    .build_depends = .{ "make" },
+}

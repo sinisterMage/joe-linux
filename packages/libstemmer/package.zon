@@ -1,0 +1,12 @@
+.{
+    .name = "libstemmer",
+    .version = "3.2.0",
+    .release = 1,
+    .description = "Snowball stemming algorithms library",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://github.com/snowballstem/snowball/archive/refs/tags/v3.2.0.tar.gz", .file = "libstemmer-v3.2.0.tar.gz", .sha256 = "c33aea097734daae5c445efe6e399cb078f66325b40d54791df577ffaa53c2d7" },
+    },
+    .depends = .{ "glibc" },
+    .build_depends = .{ "make", "perl" },
+}

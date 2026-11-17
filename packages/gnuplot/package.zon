@@ -1,0 +1,21 @@
+.{
+    .name = "gnuplot",
+    .version = "6.0.6",
+    .release = 1,
+    .description = "Command-line driven plotting program, with Qt, X11 and cairo (PNG, PDF, SVG) terminals",
+    .license = "gnuplot",
+    .sources = .{
+        // Checked against the SHA-1 SourceForge lists for the file.
+        .{ .url = "https://downloads.sourceforge.net/project/gnuplot/gnuplot/6.0.6/gnuplot-6.0.6.tar.gz", .sha256 = "9d39d8499c9533550144092375aac45ba8bf0c18c9cee50897fe411b6d93004e" },
+    },
+    // gnuplot itself: readline (ncurses), zlib, and cairo, pango and
+    // libwebp for the pngcairo, pdfcairo, cairolatex and webp terminals;
+    // gnuplot_qt: Qt 6 (Core, Gui, Network, Svg, PrintSupport, Widgets,
+    // Core5Compat); gnuplot_x11: libX11.
+    .depends = .{
+        "glibc",   "gcc",   "readline", "ncurses", "zlib",
+        "cairo",   "pango", "glib",     "libwebp", "libx11",
+        "qt6",
+    },
+    .build_depends = .{"pkgconf"},
+}
