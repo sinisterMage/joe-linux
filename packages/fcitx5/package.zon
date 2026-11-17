@@ -1,0 +1,32 @@
+.{
+    .name = "fcitx5",
+    .version = "5.1.23",
+    .release = 1,
+    .description = "Fcitx 5, an input method framework, with its keyboard, emoji, spelling and Unicode input",
+    .license = "LGPL-2.1-or-later AND Unicode-DFS-2016 AND MIT",
+    .sources = .{
+        // Upstream's tarball with the data the build would otherwise
+        // download (the English spelling dictionary). Checked against
+        // upstream's OpenPGP signature (Weng Xuetian,
+        // 2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9).
+        .{ .url = "https://download.fcitx-im.org/fcitx5/fcitx5/fcitx5-5.1.23_dict.tar.zst", .sha256 = "fc5a451c664e1978e407567d7e3e0a8d8d2e1b7febe182aa4bb3a219090dd7d3" },
+    },
+    // Linked: libsystemd (the event loop and D-Bus), libuuid, expat and
+    // xkbcommon (the keyboard engine), zlib (emoji), Enchant (word
+    // prediction), Cairo, Pango, gdk-pixbuf, librsvg and GIO (the
+    // candidate window and themes), Wayland and XCB with xcb-imdkit (XIM
+    // for X clients). xkeyboard-config and iso-codes are read for the
+    // keyboard layouts; bash runs fcitx5-diagnose.
+    .depends = .{
+        "glibc",         "gcc",           "systemd",       "util-linux",    "expat",
+        "libxkbcommon",  "xkeyboard-config", "iso-codes",  "zlib",          "enchant",
+        "cairo",         "pango",         "gdk-pixbuf",    "librsvg",       "glib",
+        "wayland",       "libxcb",        "xcb-util",      "xcb-util-wm",   "xcb-util-keysyms",
+        "xcb-imdkit",    "libxkbfile",    "bash",
+    },
+    // nlohmann-json is header-only.
+    .build_depends = .{
+        "cmake",   "ninja",   "extra-cmake-modules", "pkgconf",  "gettext",
+        "wayland-protocols", "nlohmann-json",
+    },
+}

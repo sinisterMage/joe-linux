@@ -1,0 +1,16 @@
+.{
+    .name = "fwupd-efi",
+    .version = "1.9",
+    .release = 2,
+    .description = "UEFI program that fwupd uses to apply capsule firmware updates at boot",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/fwupd/fwupd-efi/releases/download/1.9/fwupd-efi-1.9.tar.xz", .sha256 = "0a03491d07be2ad05798cc7fecb495ac5b9d77e046b7e56988515204bea1a9ea" },
+    },
+    // fwupdx64.efi runs in the firmware, not under Linux, and links gnu-efi
+    // statically.
+    .depends = .{},
+    // python runs the scripts that add the SBAT section and convert the ELF
+    // object to PE with objcopy (binutils).
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "pefile", "gnu-efi", "binutils" },
+}

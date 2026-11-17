@@ -1,13 +1,15 @@
 .{
     .name = "espeak-ng",
     .version = "1.52.0",
-    .release = 2,
+    .release = 3,
     .description = "Compact multilingual formant speech synthesiser",
     .license = "GPL-3.0-or-later AND BSD-2-Clause",
     .sources = .{
         // Upstream publishes no source tarball for this release; this is
         // GitHub's archive of the tag.
         .{ .url = "https://github.com/espeak-ng/espeak-ng/archive/1.52.0/espeak-ng-1.52.0.tar.gz", .sha256 = "bb4338102ff3b49a81423da8a1a158b420124b055b60fa76cfb4b18677130a23" },
+        // Upstream commit adding the terminator-preserving API used by Calibre.
+        .{ .url = "https://github.com/espeak-ng/espeak-ng/commit/2108b1e8ae02f49cc909894a1024efdfde6682fd.patch", .file = "espeak-ng-phoneme-terminator.patch", .sha256 = "96cef8e2789b1e249648998a7d80fa021f589c81510b0bff59f66ea7e4fcfdad" },
     },
     .depends = .{ "glibc", "gcc" },
     .build_depends = .{ "autoconf", "automake", "libtool", "pkgconf" },

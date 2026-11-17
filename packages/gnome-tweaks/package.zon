@@ -1,0 +1,19 @@
+.{
+    .name = "gnome-tweaks",
+    .version = "49.0",
+    .release = 1,
+    .description = "Advanced GNOME settings: fonts, themes, startup applications, input devices",
+    .license = "GPL-3.0-or-later AND CC0-1.0",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-tweaks/49/gnome-tweaks-49.0.tar.xz", .sha256 = "b3909bdcb4905b68427d6ab581e01f436dff8e5c0a389b1e0b14500f18806ebb" },
+    },
+    // A Python program using these libraries through PyGObject: GTK 4,
+    // libadwaita, GUdev (input devices), libnotify, GnomeDesktop (keyboard
+    // layouts) and the GDesktopEnums schemas. sound-theme-freedesktop is
+    // the sound theme the book requires; procps-ng's ps lists running
+    // programs for the startup applications page.
+    .depends = .{ "python", "pygobject", "glib", "gtk4", "libadwaita", "libgudev", "libnotify", "gnome-desktop", "gsettings-desktop-schemas", "sound-theme-freedesktop", "procps-ng" },
+    // meson checks the pkg-config files of the libraries above;
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

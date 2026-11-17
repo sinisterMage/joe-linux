@@ -1,0 +1,15 @@
+.{
+    .name = "gnome-console",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME Console, a simple terminal emulator",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-console/51/gnome-console-51.0.tar.xz", .sha256 = "f40d13903b1f067f0c02e0812f78df8ec25d8cd129794e7e46bd56ca0c156f2f" },
+    },
+    // vte: its GTK 4 widget (vte-2.91-gtk4). libgtop finds the processes
+    // running in each tab.
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "vte", "pango", "libgtop", "pcre2", "gsettings-desktop-schemas", "cairo", "graphene" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

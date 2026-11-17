@@ -1,0 +1,16 @@
+.{
+    .name = "djvulibre",
+    .version = "3.5.30.1",
+    .release = 1,
+    .description = "DjVu document compression library and encoding, decoding and annotation tools",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Debian's upstream-source archive, verified against Checksums-Sha256
+        // in https://deb.debian.org/debian/pool/main/d/djvulibre/djvulibre_3.5.30.1-1.dsc.
+        // This archive contains source only, not Debian packaging or binaries.
+        .{ .url = "https://deb.debian.org/debian/pool/main/d/djvulibre/djvulibre_3.5.30.1.orig.tar.xz", .file = "djvulibre-3.5.30.1.tar.xz", .sha256 = "e38eae20427fa7b17787482f1dd00e88b173913d59f5f8bc5175ee40a02872f2" },
+    },
+    // djvudigital uses Ghostscript, pdftotext and shell tools; any2djvu uses curl.
+    .depends = .{ "glibc", "gcc", "libjpeg-turbo", "tiff", "bash", "ghostscript", "poppler", "gzip", "gawk", "curl" },
+    .build_depends = .{ "autoconf", "automake", "libtool", "pkgconf", "make", "librsvg" },
+}

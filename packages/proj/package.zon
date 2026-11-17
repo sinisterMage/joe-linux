@@ -1,0 +1,16 @@
+.{
+    .name = "proj",
+    .version = "9.9.0",
+    .release = 1,
+    .description = "Cartographic projections and coordinate transformations library and tools, with the EPSG database (proj.db)",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the .md5 file published beside the tarball.
+        .{ .url = "https://download.osgeo.org/proj/proj-9.9.0.tar.gz", .sha256 = "791a0610547eeabb17006cfd49cdbd2034f3240f47ed5e88a1031811f4e2bcf3" },
+    },
+    // SQLite holds proj.db; libtiff reads GeoTIFF grids; libcurl fetches
+    // grids from the CDN (projsync, PROJ_NETWORK=ON).
+    .depends = .{ "glibc", "gcc", "sqlite", "tiff", "curl" },
+    // The sqlite3 program builds proj.db; nlohmann/json is header-only.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "sqlite", "nlohmann-json" },
+}

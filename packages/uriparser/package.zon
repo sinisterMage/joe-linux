@@ -1,0 +1,13 @@
+.{
+    .name = "uriparser",
+    .version = "1.0.3",
+    .release = 1,
+    .description = "Strictly RFC 3986 compliant URI parsing and handling library in C",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // The release asset's SHA-256 as GitHub lists it.
+        .{ .url = "https://github.com/uriparser/uriparser/releases/download/uriparser-1.0.3/uriparser-1.0.3.tar.xz", .sha256 = "a327e438e238d6c9093f1845acc44dec20d4264639a3de1f3caf0927bd852e3b" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "cmake", "ninja" },
+}

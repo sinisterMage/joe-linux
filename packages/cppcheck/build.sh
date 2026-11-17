@@ -15,7 +15,7 @@ build() {
         -D HAVE_RULES=OFF \
         -D USE_MATCHCOMPILER=On \
         -D USE_BOOST=On \
-        -D USE_BUNDLED_TINYXML2=ON \
+        -D USE_BUNDLED_TINYXML2=OFF \
         -D BUILD_MANPAGE=OFF
     ninja -C build
 

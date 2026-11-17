@@ -1,0 +1,12 @@
+.{
+    .name = "wrapt",
+    .version = "2.5.2",
+    .release = 1,
+    .description = "Module for decorators, wrappers and monkey patching",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/9c/b0/f752d19e1e83ab8bd64aeccfde32ff086aee3ef08520f7340b69a8d0a4d2/wrapt-2.5.2.tar.gz", .sha256 = "551cb49e88b3722faad780303833bc4fa70685fb1773270fb98b40d39d9fddbf" },
+    },
+    .depends = .{ "python", "glibc" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

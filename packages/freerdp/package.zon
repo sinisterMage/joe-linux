@@ -1,7 +1,7 @@
 .{
     .name = "freerdp",
     .version = "3.33.1",
-    .release = 2,
+    .release = 3,
     .description = "Remote Desktop Protocol client and server libraries and tools",
     .license = "Apache-2.0",
     .sources = .{
@@ -22,6 +22,7 @@
         "libice",
         "libsm",
         "libxkbfile",
+        "uriparser",
     },
     .build_depends = .{ "cmake", "ninja", "pkgconf", "xorgproto" },
 }

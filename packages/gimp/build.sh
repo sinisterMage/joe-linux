@@ -8,8 +8,8 @@ build() {
     cd gimp-build
     # The book's options, plus every feature it leaves to detection stated:
     # on where joe has the library, off otherwise. No recipe exists for AAlib
-    # (ASCII art), cfitsio (FITS), libheif (HEIF/AVIF), libmng, libwmf or
-    # libbacktrace. Lua plug-ins need Lua 5.1 with lua-lgi, which joe lacks.
+    # (ASCII art), cfitsio (FITS), libmng or libbacktrace. Lua plug-ins need
+    # Lua 5.1 with lua-lgi, which joe lacks. HEIF/AVIF and WMF are enabled.
     # The unmaintained WebKit help browser and TWAIN plug-ins stay off, and
     # GIMP does not check for new versions: dave updates it. The
     # gi-docgen reference and the appdata validation test are not built.
@@ -45,9 +45,9 @@ build() {
         -D lua=false \
         -D aa=disabled \
         -D fits=disabled \
-        -D heif=disabled \
+        -D heif=enabled \
         -D mng=disabled \
-        -D wmf=disabled \
+        -D wmf=enabled \
         -D webkit-unmaintained=false \
         -D twain-unmaintained=false \
         -D appdata-test=disabled \

@@ -1,0 +1,14 @@
+.{
+    .name = "discid",
+    .version = "1.4.2",
+    .release = 1,
+    .description = "Python binding of libdiscid, for reading the identifiers of audio CDs",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/d/discid/discid-1.4.2.tar.gz", .sha256 = "0cbb4b96949c68cbc63c9fc4585ef9b7ec2b9d39e23bce0b4db5d61c6f7b81e6" },
+    },
+    // Pure Python: libdiscid is loaded with ctypes when the module is
+    // imported.
+    .depends = .{ "python", "libdiscid" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

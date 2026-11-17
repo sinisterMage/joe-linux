@@ -1,0 +1,13 @@
+joe's wide ncurses installs its headers directly in /usr/include.
+Keep the ncursesw backend and wide-character support; only its header path differs.
+--- a/Headers/get_curses.h
++++ b/Headers/get_curses.h
+@@ -34,7 +34,7 @@
+ #elif defined(HAVE_PKG_NCURSESW)
+ #define GOT_CURSES
+ #define GOT_CURSES_WCH
+-#include <ncursesw/ncurses.h>
++#include <ncurses.h>
+ 
+ #elif defined(HAVE_PKG_PDCURSES)
+ #define GOT_CURSES

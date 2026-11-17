@@ -1,0 +1,13 @@
+.{
+    .name = "et-xmlfile",
+    .version = "2.0.0",
+    .release = 1,
+    .description = "Streaming XML writer for the Python standard library",
+    .license = "MIT",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/d3/38/af70d7ab1ae9d4da450eeec1fa3918940a5fafb9055e934af8d6eb0c2313/et_xmlfile-2.0.0.tar.gz", .sha256 = "dab3f4764309081ce75662649be815c4c9081e88f0837825f90fd28317d4da54" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

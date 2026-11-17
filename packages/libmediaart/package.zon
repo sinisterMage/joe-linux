@@ -1,0 +1,13 @@
+.{
+    .name = "libmediaart",
+    .version = "1.9.7",
+    .release = 1,
+    .description = "Library for extracting and caching album art and other media art",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/libmediaart/1.9/libmediaart-1.9.7.tar.xz", .sha256 = "2b43dd9f54f0d8d0b89e2addb83341ab06d7b98cb1b2e704383584af9c560f6b" },
+    },
+    .depends = .{ "glibc", "glib", "gdk-pixbuf" },
+    // glib provides g-ir-scanner; vala, vapigen for the .vapi file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala" },
+}

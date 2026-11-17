@@ -1,0 +1,13 @@
+.{
+    .name = "bouncycastle",
+    .version = "1.87",
+    .release = 1,
+    .description = "Bouncy Castle Java cryptography provider",
+    .license = "MIT",
+    .sources = .{
+        // Source code only, verified against Maven Central's published SHA-256.
+        .{ .url = "https://repo1.maven.org/maven2/org/bouncycastle/bcprov-jdk18on/1.87/bcprov-jdk18on-1.87-sources.jar", .sha256 = "80f01e81d834fef90f50d1c63d5f5cb9b0fc9d5a71b6e8b105e47c88349a15db" },
+    },
+    .depends = .{"openjdk"},
+    .build_depends = .{ "openjdk", "libarchive" },
+}

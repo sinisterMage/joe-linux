@@ -1,0 +1,17 @@
+.{
+    .name = "geany",
+    .version = "2.1",
+    .release = 1,
+    .description = "Lightweight GTK text editor and development environment",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against the release's detached signature
+        // (geany-2.1.tar.bz2.sig, Colomban Wendling's key
+        // ACA0246889FB96B63382111724CCD8550E5D1CAE).
+        .{ .url = "https://download.geany.org/geany-2.1.tar.bz2", .sha256 = "6b96a8844463300c10b9692a0a5edad8236eec9e84342f575f83d4fc89331228" },
+    },
+    // The terminal panel loads libvte-2.91.so.0 (vte's GTK 3 library) at
+    // run time rather than linking it.
+    .depends = .{ "glibc", "gcc", "glib", "gtk3", "pango", "cairo", "gdk-pixbuf", "vte" },
+    .build_depends = .{ "pkgconf", "gettext" },
+}

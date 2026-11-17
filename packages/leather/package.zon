@@ -1,0 +1,13 @@
+.{
+    .name = "leather",
+    .version = "0.4.1",
+    .release = 1,
+    .description = "SVG charting library for Python",
+    .license = "MIT",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/9e/09/849cf129d7eae1e42f873f2dbd60323267c738390b686a7384fb3fb289ad/leather-0.4.1.tar.gz", .sha256 = "67119c2aee93be821f077193bd8534e296c05b38bd174d9c5a80c4aa31d1a4d3" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

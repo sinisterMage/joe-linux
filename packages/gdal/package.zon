@@ -1,0 +1,13 @@
+.{
+    .name = "gdal",
+    .version = "3.13.3",
+    .release = 1,
+    .description = "Geospatial raster and vector translation library, utilities and Python bindings",
+    .license = "MIT",
+    .sources = .{
+        // Verified against upstream gdal-3.13.3.tar.xz.md5; SHA-256 recorded here.
+        .{ .url = "https://download.osgeo.org/gdal/3.13.3/gdal-3.13.3.tar.xz", .sha256 = "a3348c2102dd91962290007d7c293b467bb1b0cd89f086f24bb97b9b653a9804" },
+    },
+    .depends = .{ "glibc", "gcc", "python", "python-numpy", "zlib", "proj", "curl", "libxml2", "expat", "libdeflate", "openssl", "tiff", "libgeotiff", "libjpeg-turbo", "libpng", "giflib", "libwebp", "openjpeg", "zstd", "json-c", "qhull", "pcre2", "sqlite", "hdf5", "netcdf", "geos", "xz", "lz4", "blosc", "libarchive", "libjxl", "openexr", "libheif", "libavif", "poppler", "unixodbc", "mariadb", "postgresql" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "swig", "python", "setuptools", "wheel" },
+}

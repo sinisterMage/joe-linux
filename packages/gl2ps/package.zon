@@ -1,0 +1,13 @@
+.{
+    .name = "gl2ps",
+    .version = "1.4.3",
+    .release = 1,
+    .description = "OpenGL vector output to PostScript, PDF and SVG",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum; SHA-256 cross-checked with MSYS2 upstream-source packaging.
+        .{ .url = "https://geuz.org/gl2ps/src/gl2ps-1.4.3.tgz", .sha256 = "2e0a5368917cf0e5467ba8618bc576f50ae9f316c61201635b09711c7908efcc" },
+    },
+    .depends = .{ "glibc", "mesa", "libpng", "zlib" },
+    .build_depends = .{ "cmake", "ninja" },
+}

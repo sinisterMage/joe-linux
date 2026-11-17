@@ -1,0 +1,14 @@
+.{
+    .name = "asio",
+    .version = "1.38.2",
+    .release = 1,
+    .description = "Asynchronous network and low-level I/O for C++, as headers (standalone, without Boost)",
+    .license = "BSL-1.0",
+    .sources = .{
+        // Checked against the SHA-1 SourceForge lists for the file.
+        .{ .url = "https://downloads.sourceforge.net/project/asio/asio/1.38.2%20%28Stable%29/asio-1.38.2.tar.bz2", .sha256 = "c04e0e66ac29741faad763a56f3c50196421d4b968009fc237c53314769bf8ad" },
+    },
+    // Headers and asio.pc only: nothing is linked.
+    .depends = .{},
+    .build_depends = .{"pkgconf"},
+}

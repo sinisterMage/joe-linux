@@ -1,0 +1,12 @@
+.{
+    .name = "uv-build",
+    .version = "0.13.8",
+    .release = 2,
+    .description = "Python build backend for uv",
+    .license = "MIT OR Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/dc/49/6565260b6a14ee119bae2e17cedbee4cc6ae2810c580885a71fd23f0ed29/uv_build-0.13.8.tar.gz", .sha256 = "038c16dc60d63c336cb5364000e11068c79dd0142682fbd4ae3e5470c11fddc5" },
+    },
+    .depends = .{ "python", "uv =0.13.8" },
+    .build_depends = .{ "python" },
+}

@@ -1,0 +1,20 @@
+.{
+    .name = "flameshot",
+    .version = "15.0.0",
+    .release = 1,
+    .description = "Screenshot program with annotation tools",
+    // Qt-Color-Widgets, compiled in, is LGPL-3.0-or-later.
+    .license = "GPL-3.0-or-later AND LGPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes checksums only for its binary packages, not for
+        // the source.
+        .{ .url = "https://github.com/flameshot-org/flameshot/archive/v15.0.0/flameshot-15.0.0.tar.gz", .sha256 = "9e38bb699a152873e9ccc4b9a54b06baa16762298444aff8c72f218a7741e146" },
+        // Qt-Color-Widgets at the commit flameshot's CMakeLists.txt fetches
+        // (GIT_TAG); it is compiled into flameshot. It makes no releases.
+        .{ .url = "https://gitlab.com/mattbas/Qt-Color-Widgets/-/archive/5d52e907e50dc88cf969b41cea44665ff6c475b1/Qt-Color-Widgets-5d52e907e50dc88cf969b41cea44665ff6c475b1.tar.gz", .sha256 = "99edd39dca0367b1cfd388bf031c4915137580bd73f87c65f7720b8a4af14efa" },
+    },
+    // On Wayland screenshots are taken through the desktop portal
+    // (xdg-desktop-portal, over Qt D-Bus).
+    .depends = .{ "glibc", "gcc", "qt6", "kdsingleapplication" },
+    .build_depends = .{ "cmake", "ninja" },
+}

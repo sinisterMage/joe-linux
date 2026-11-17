@@ -1,0 +1,12 @@
+.{
+    .name = "gmime",
+    .version = "3.2.15",
+    .release = 1,
+    .description = "MIME message parser and generator",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/jstedfast/gmime/releases/download/3.2.15/gmime-3.2.15.tar.xz", .file = "gmime-3.2.15.tar.xz", .sha256 = "84cd2a481a27970ec39b5c95f72db026722904a2ccf3fdbd57b280cf2d02b5c4" },
+    },
+    .depends = .{ "glibc", "glib", "zlib", "gpgme", "libgpg-error", "libidn2" },
+    .build_depends = .{ "pkgconf", "make", "vala" },
+}

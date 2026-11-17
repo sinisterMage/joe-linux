@@ -1,0 +1,12 @@
+.{
+    .name = "css-parser",
+    .version = "1.1.1",
+    .release = 1,
+    .description = "A CSS Cascading Style Sheets library for Python",
+    .license = "LGPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/5c/82/7652c1e14b6048349ef6977adb8b0ed21bbb86964db025dcd8504e5b916d/css_parser-1.1.1.tar.gz", .sha256 = "93c7fb08cf16d45bbb8b964b4f4899a4eb36d9be6ffef17f99ad280f4034b36c" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

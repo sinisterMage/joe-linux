@@ -1,0 +1,13 @@
+.{
+    .name = "xlrd",
+    .version = "2.0.2",
+    .release = 1,
+    .description = "Reader for legacy Excel binary workbooks",
+    .license = "BSD-3-Clause AND BSD-4-Clause",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/07/5a/377161c2d3538d1990d7af382c79f3b2372e880b65de21b01b1a2b78691e/xlrd-2.0.2.tar.gz", .sha256 = "08b5e25de58f21ce71dc7db3b3b8106c1fa776f3024c54e45b45b374e89234c9" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

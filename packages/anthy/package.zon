@@ -1,0 +1,15 @@
+.{
+    .name = "anthy",
+    .version = "1.0.0.20260213",
+    .release = 1,
+    .description = "Anthy Unicode, the maintained fork of the Anthy Japanese kana-kanji conversion engine",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // Checked against the release's anthy-unicode-1.0.0.20260213.tar.xz.sha256sum.
+        // Upstream marks every release a pre-release on GitHub; this is its
+        // newest, and the one other distributions ship.
+        .{ .url = "https://github.com/fujiwarat/anthy-unicode/releases/download/1.0.0.20260213/anthy-unicode-1.0.0.20260213.tar.xz", .sha256 = "1d79da684ba4b8bee82e55987361cceb970678045a26ad0b5435de44510b3252" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "meson", "ninja" },
+}

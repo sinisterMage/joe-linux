@@ -1,0 +1,12 @@
+.{
+    .name = "cssselect",
+    .version = "1.6.0",
+    .release = 1,
+    .description = "cssselect parses CSS3 Selectors and translates them to XPath 1.0",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/c8/8b/dc32df939ab541fca6ee8964d26aa231dbe231cdc2b2713228161441ba9c/cssselect-1.6.0.tar.gz", .sha256 = "8c83a7139e97b93aa5ebdc0f46e785f7056a08a8bf201e597a6a2629d7eb11db" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel", "hatchling" },
+}

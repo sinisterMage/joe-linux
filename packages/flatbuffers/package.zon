@@ -1,0 +1,15 @@
+.{
+    .name = "flatbuffers",
+    .version = "25.12.19",
+    .release = 1,
+    .description = "Memory-efficient serialisation library and its schema compiler (flatc), from Google",
+    .license = "Apache-2.0",
+    .sources = .{
+        // The newest release; the later "v25.12.19-2026-02-06-03fffb2" tag
+        // is an unannounced snapshot of the main branch. Upstream publishes
+        // no checksum for the source archive.
+        .{ .url = "https://github.com/google/flatbuffers/archive/v25.12.19/flatbuffers-25.12.19.tar.gz", .sha256 = "f81c3162b1046fe8b84b9a0dbdd383e24fdbcf88583b9cb6028f90d04d90696a" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

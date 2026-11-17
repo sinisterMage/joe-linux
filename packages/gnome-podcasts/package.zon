@@ -1,0 +1,23 @@
+.{
+    .name = "gnome-podcasts",
+    .version = "25.3",
+    .release = 1,
+    .description = "Subscribe to and listen to podcasts",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://gitlab.gnome.org/-/project/142/uploads/80f083d3bd4ab569baed28ca93c4e274/gnome-podcasts-25.3.tar.xz", .sha256 = "fe72a9db6dd53d4c0f43f418abbdde5aa23186c9b6d0f74195cc2114414a600c" },
+        // The releases of the openssl crates that know OpenSSL 4 (build.sh).
+        .{ .url = "https://static.crates.io/crates/openssl/openssl-0.10.82.crate", .sha256 = "4de8111e94a56adca7ebfe6c365b6d42f99deb69b74b6becacd4204e2f193aa2" },
+        .{ .url = "https://static.crates.io/crates/openssl-sys/openssl-sys-0.9.118.crate", .sha256 = "19c413d6ec9ebaf5e1c829d355cb3e9f783778d700f135be0921d52fce3c60ae" },
+    },
+    // The release tarball vendors its crates, so the build is offline.
+    //
+    // sqlite holds the subscriptions (diesel); openssl is reqwest's TLS.
+    // gst-plugins-base: libgstaudio, libgstvideo, libgstpbutils;
+    // gst-plugins-bad: libgstplay. Playing episodes needs souphttpsrc and
+    // the MP3 decoders of gst-plugins-good and gst-libav (AAC). meson.build
+    // asks for dbus-1, though D-Bus is spoken by the zbus crate.
+    .depends = .{ "glibc", "gcc", "glib", "gtk4", "libadwaita", "cairo", "pango", "gdk-pixbuf", "graphene", "sqlite", "openssl", "gstreamer", "gst-plugins-base", "gst-plugins-bad", "gst-plugins-good", "gst-libav", "dbus" },
+    // appstream provides the gettext rules for the metainfo file.
+    .build_depends = .{ "rust", "meson", "ninja", "pkgconf", "gettext", "appstream" },
+}

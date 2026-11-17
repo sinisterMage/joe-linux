@@ -1,0 +1,14 @@
+.{
+    .name = "commons-lang3",
+    .version = "3.22.0",
+    .release = 1,
+    .description = "Apache Commons Lang utilities for Java",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Source code only. Maven publishes SHA-1 (verified), but no SHA-256
+        // for this source archive; SHA-256 below records those verified bytes.
+        .{ .url = "https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.22.0/commons-lang3-3.22.0-sources.jar", .sha256 = "29c4bf0ff125a0d02364527a7f8580137d582fa2e0751395c08e193822057dc6" },
+    },
+    .depends = .{"openjdk"},
+    .build_depends = .{ "openjdk", "libarchive" },
+}

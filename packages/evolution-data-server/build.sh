@@ -3,12 +3,13 @@ build() {
     cd build
     # Everything optional is stated so that the build root cannot change the
     # result. Compared with the book:
-    # - ENABLE_OAUTH2_WEBKITGTK(4): WebKitGTK does not exist here, so there is
-    #   no built-in OAuth2 log-in window; accounts that need one are set up
-    #   through GNOME Online Accounts, which uses the web browser.
+    # - ENABLE_OAUTH2_WEBKITGTK(4): off. gnome-shell links this library, so
+    #   the built-in OAuth2 log-in window would put both WebKitGTK builds on
+    #   every desktop; accounts that need one are set up through GNOME Online
+    #   Accounts, which uses the web browser.
     # - WITH_KRB5=ON: MIT Kerberos exists (the book builds without it).
     # - ENABLE_INSTALLED_TESTS, ENABLE_TESTS, ENABLE_EXAMPLES: not shipped.
-    # - WITH_OPENLDAP, WITH_LIBDB, WITH_PHONENUMBER: do not exist here.
+    # - WITH_OPENLDAP: LDAP address books; Berkeley DB and libphonenumber remain off.
     cmake -D CMAKE_INSTALL_PREFIX=/usr \
         -D SYSCONF_INSTALL_DIR=/etc \
         -D ENABLE_GTK=ON \
@@ -27,7 +28,7 @@ build() {
         -D ENABLE_GTK_DOC=OFF \
         -D ENABLE_GI_DOCGEN=OFF \
         -D WITH_KRB5=ON \
-        -D WITH_OPENLDAP=OFF \
+        -D WITH_OPENLDAP=ON \
         -D WITH_LIBDB=OFF \
         -D WITH_PHONENUMBER=OFF \
         -W no-author -G Ninja ..

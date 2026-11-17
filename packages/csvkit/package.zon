@@ -1,0 +1,13 @@
+.{
+    .name = "csvkit",
+    .version = "2.2.0",
+    .release = 1,
+    .description = "Command-line tools for converting, querying and processing CSV data",
+    .license = "MIT",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/9a/bf/59b035abead12d9498c96dc05b965ec77683d3c794305dec2648e23830cc/csvkit-2.2.0.tar.gz", .sha256 = "147318a8dbaec07c0bbb9291c14b78de5fa32ed3d4a5c2396e52a83c0a30df6b" },
+    },
+    .depends = .{ "python", "agate >=1.12.0", "agate-dbf >=0.2.3", "agate-excel >=0.4.0", "agate-sql >=0.7.0", "openpyxl", "sqlalchemy", "xlrd" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

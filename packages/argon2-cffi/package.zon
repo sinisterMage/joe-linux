@@ -1,0 +1,12 @@
+.{
+    .name = "argon2-cffi",
+    .version = "25.1.0",
+    .release = 1,
+    .description = "Argon2 password hashing for Python",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/argon2-cffi/argon2_cffi-25.1.0.tar.gz", .sha256 = "694ae5cc8a42f4c4e2bf2ca0e64e51e23a040c6a517a85074683d3959e1346c1" },
+    },
+    .depends = .{ "python", "argon2-cffi-bindings" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs", "hatch-fancy-pypi-readme" },
+}

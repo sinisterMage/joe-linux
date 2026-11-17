@@ -1,0 +1,13 @@
+.{
+    .name = "cppy",
+    .version = "1.3.1",
+    .release = 1,
+    .description = "C++ headers for Python extension modules",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Verified against the PyPI source distribution SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/45/ed/b35645a1b285bce356f30cc0fe77a042375c385660ccd61e0cdc4c1f7c44/cppy-1.3.1.tar.gz", .sha256 = "55b5307c11874f242ea135396f398cb67a5bbde4fab3e3c3294ea5fce43a6d68" },
+    },
+    .depends = .{ "python", "setuptools" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel" },
+}

@@ -1,0 +1,11 @@
+.{
+    .name = "fira-fonts",
+    .version = "4.202",
+    .release = 1,
+    .description = "Fira Sans and Fira Mono, Mozilla's typefaces for user interfaces and code",
+    .license = "OFL-1.1",
+    .sources = .{
+        // No checksum is published for the archive.
+        .{ .url = "https://github.com/mozilla/Fira/archive/4.202/fira-4.202.tar.gz", .sha256 = "d86269657387f144d77ba12011124f30f423f70672e1576dc16f918bb16ddfe4" },
+    },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "alsa-utils",
+    .version = "1.2.16",
+    .release = 1,
+    .description = "ALSA utilities: alsamixer, amixer, aplay, arecord, alsactl, speaker-test and others",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.16.tar.bz2", .sha256 = "092399d5e8749a1d5e188e393157521cec4b75693b60ebb79bbce728cff2232c" },
+    },
+    // alsa-lib also provides libatopology (alsatplg). libsamplerate:
+    // alsaloop's resampling, taken whenever samplerate.h exists. ncurses:
+    // alsamixer (ncursesw with its panel, menu and form libraries). bash:
+    // alsa-info.sh.
+    .depends = .{ "glibc", "alsa-lib", "libsamplerate", "ncurses", "bash" },
+    // docutils' rst2man makes the alsaucm and alsatplg manual pages.
+    .build_depends = .{ "pkgconf", "gettext", "docutils" },
+}

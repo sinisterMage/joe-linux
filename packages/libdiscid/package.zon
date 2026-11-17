@@ -1,0 +1,13 @@
+.{
+    .name = "libdiscid",
+    .version = "0.7.0",
+    .release = 1,
+    .description = "Library for reading the identifiers of audio CDs (MusicBrainz and freedb disc ids)",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the release's SHA256SUMS.
+        .{ .url = "https://github.com/metabrainz/libdiscid/releases/download/v0.7.0/libdiscid-0.7.0.tar.gz", .sha256 = "c230ed462c5ed7d7403ceb6984c57c8d05de42386d796bcd893636c0b0ba222f" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{},
+}

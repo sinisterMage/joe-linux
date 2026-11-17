@@ -1,0 +1,16 @@
+.{
+    .name = "cups-browsed",
+    .version = "2.1.1",
+    .release = 1,
+    .description = "Daemon that finds network printers (DNS-SD) and sets up local CUPS queues for them",
+    .license = "Apache-2.0 WITH LLVM-exception",
+    .sources = .{
+        .{ .url = "https://github.com/OpenPrinting/cups-browsed/releases/download/2.1.1/cups-browsed-2.1.1.tar.xz", .sha256 = "d185169a74e6a5731b6bd74cba8d269f34e5c71cb71ef1841f2fa91637ba1d58" },
+    },
+    // It browses with Avahi (through its GLib integration) and talks to
+    // cupsd over D-Bus (GIO); the implicitclass back end it installs for
+    // CUPS uses libcupsfilters and libppd.
+    .depends = .{ "glibc", "cups", "libcupsfilters", "libppd", "avahi", "glib" },
+    // glib provides gdbus-codegen, which generates the cupsd notifier.
+    .build_depends = .{ "pkgconf", "glib" },
+}

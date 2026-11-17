@@ -1,0 +1,18 @@
+.{
+    .name = "fcitx5-gtk",
+    .version = "5.1.7",
+    .release = 1,
+    .description = "Fcitx 5 input method modules for GTK 3 and GTK 4, and the GObject client library",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against upstream's OpenPGP signature (Weng Xuetian,
+        // 2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9).
+        .{ .url = "https://download.fcitx-im.org/fcitx5/fcitx5-gtk/fcitx5-gtk-5.1.7.tar.zst", .sha256 = "bda5aae72886d0f046e896c48461ffa257ecaa6045e17827ffe27f1530172c42" },
+    },
+    // The modules talk to the Fcitx 5 daemon over D-Bus (fcitx5 at run
+    // time). They link GTK, xkbcommon and, for X11 windows, libX11; the
+    // immodule probing tools are C++. gtk3's trigger rebuilds GTK 3's
+    // input method module cache.
+    .depends = .{ "glibc", "gcc", "glib", "gtk3", "gtk4", "libxkbcommon", "libx11", "fcitx5" },
+    .build_depends = .{ "cmake", "ninja", "extra-cmake-modules", "pkgconf" },
+}

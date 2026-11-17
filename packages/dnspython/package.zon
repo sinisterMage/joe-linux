@@ -1,0 +1,12 @@
+.{
+    .name = "dnspython",
+    .version = "2.9.2",
+    .release = 1,
+    .description = "DNS toolkit",
+    .license = "ISC",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/76/49/900383b471c645a3c397f47b3211d1fcecb3a540c98f683494cdf86b33de/dnspython-2.9.2.tar.gz", .sha256 = "8d4d39a513e649d634004ce4d39ade2352efcea472a0247535a5c2d18a9d7ba9" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel", "uv-build" },
+}

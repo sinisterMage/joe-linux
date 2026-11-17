@@ -1,0 +1,31 @@
+.{
+    .name = "flatpak",
+    .version = "1.18.4",
+    .release = 1,
+    .description = "Sandboxed desktop application deployment framework",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against flatpak-1.18.4.tar.xz.sha256sum on the release.
+        .{ .url = "https://github.com/flatpak/flatpak/releases/download/1.18.4/flatpak-1.18.4.tar.xz", .sha256 = "b899a7a00c48d2c626cb8ec33fe556720b376c25805d7222430c0fdca4c6ac8d" },
+    },
+    // bubblewrap and xdg-dbus-proxy are the system's (configure runs both
+    // with --version); fuse3 provides libfuse3 for revokefs-fuse and the
+    // fusermount3 it calls; polkit's agent library is used by the system
+    // helper. Run time only: gnupg (through gpgme), p11-kit (its server
+    // shares the host's trust store with sandboxes), desktop-file-utils and
+    // shared-mime-info (the triggers that index exported applications),
+    // xdg-desktop-portal (what sandboxed applications reach the host
+    // through).
+    .depends = .{
+        "glibc",          "glib",              "libcap",    "libarchive", "curl",
+        "libxml2",        "zstd",              "dconf",     "systemd",    "polkit",
+        "fuse3",          "libxau",            "ostree",    "json-glib",  "appstream",
+        "gdk-pixbuf",     "libseccomp",        "gpgme",     "wayland",    "bubblewrap",
+        "xdg-dbus-proxy", "gnupg",             "p11-kit",   "desktop-file-utils",
+        "shared-mime-info", "xdg-desktop-portal",
+    },
+    // pyparsing: the bundled variant-schema-compiler; glib provides
+    // g-ir-scanner; xsltproc (libxslt) and the DocBook stylesheets build the
+    // manual pages; wayland-protocols the security-context protocol.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "pyparsing", "bison", "gettext", "libxslt", "docbook-xml", "docbook-xsl-nons", "wayland-protocols" },
+}

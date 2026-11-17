@@ -1,0 +1,17 @@
+.{
+    .name = "suitesparse",
+    .version = "7.14.1",
+    .release = 2,
+    .description = "Sparse matrix libraries: AMD, CAMD, COLAMD, CCOLAMD, CHOLMOD, CXSparse, KLU, LDL, UMFPACK, SPQR, ParU, SPEX and others",
+    .license = "BSD-3-Clause AND LGPL-2.1-or-later AND GPL-2.0-or-later AND GPL-3.0-or-later AND GPL-3.0-only AND Apache-2.0 AND (GPL-2.0-or-later OR LGPL-3.0-or-later)",
+    .sources = .{
+        // A GitHub archive of the release tag; upstream publishes no checksum.
+        .{ .url = "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v7.14.1/SuiteSparse-7.14.1.tar.gz", .sha256 = "81e560e1f74546df139edb765b3f5bc865866da23062312ffe8fd821063c8397" },
+    },
+    // Optimized BLAS and Reference LAPACK; OpenMP (libgomp) and libstdc++
+    // from gcc; SPEX uses GMP and MPFR.
+    .depends = .{ "glibc", "gcc", "openblas", "lapack", "gmp", "mpfr" },
+    // gfortran only tells CMake how Fortran names the BLAS symbols; nothing
+    // is compiled with it.
+    .build_depends = .{ "cmake", "ninja", "gcc-fortran" },
+}

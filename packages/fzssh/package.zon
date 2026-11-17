@@ -1,0 +1,21 @@
+.{
+    .name = "fzssh",
+    .version = "1.5.2",
+    .release = 1,
+    .description = "SSH and SFTP client library built on libfilezilla",
+    // The README adds attribution terms under the AGPL's section 7: the
+    // copyright notice of Tim Kosse and Business Follows Srl must be kept
+    // and shown, which FileZilla's About dialog does.
+    .license = "AGPL-3.0-or-later",
+    .sources = .{
+        // FileZilla's download server hands out per-visit links and refuses
+        // automated clients (https://trac.filezilla-project.org/ticket/13186),
+        // so the tarball is Arch Linux's copy of it. Upstream lists a SHA-512
+        // on its download page, which cannot be fetched without a browser;
+        // the file matches the SHA-512 recorded in Arch's PKGBUILD,
+        // efeb98387c28377dba6685acf01c1f6b47401414f9748c0135b8ab09d566b800b100a32971a9daa66480a3598549dd9ae1c5d2046e84b1199d0c906554826d31.
+        .{ .url = "https://sources.archlinux.org/other/packages/fzssh/fzssh-1.5.2.tar.xz", .sha256 = "cd6cb4547124b4477fee0dd4d2726c2a059dd50a4668018445c5d2729ec0a845" },
+    },
+    .depends = .{ "glibc", "gcc", "libfilezilla", "nettle", "gmp", "argon2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

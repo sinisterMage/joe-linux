@@ -1,0 +1,17 @@
+.{
+    .name = "cantarell-fonts",
+    .version = "0.311",
+    .release = 1,
+    .description = "Cantarell, the humanist sans-serif typeface of earlier GNOME releases",
+    .license = "OFL-1.1",
+    .sources = .{
+        // The release tarball with prebuilt fonts from upstream's GitLab
+        // package registry (0.303.1, the last release on
+        // download.gnome.org, is from 2021); checked against the
+        // checksum file published with it.
+        .{ .url = "https://gitlab.gnome.org/api/v4/projects/GNOME%2Fcantarell-fonts/packages/generic/cantarell-fonts/0.311/cantarell-fonts-0.311.tar.xz", .file = "cantarell-fonts-0.311.tar.xz", .sha256 = "706778e6f9468d534d7afe05e4f6e1586110395ef37d24df259746736fd6b702" },
+    },
+    // gettext merges the translations into the AppStream metadata, with
+    // the ITS rules appstream provides.
+    .build_depends = .{ "meson", "ninja", "gettext", "appstream" },
+}

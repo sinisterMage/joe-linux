@@ -1,0 +1,15 @@
+.{
+    .name = "glew",
+    .version = "2.3.1",
+    .release = 1,
+    .description = "OpenGL Extension Wrangler Library, and the glewinfo and visualinfo programs",
+    .license = "BSD-3-Clause AND MIT",
+    .sources = .{
+        // Checked against the book's MD5.
+        .{ .url = "https://downloads.sourceforge.net/glew/glew-2.3.1.tgz", .sha256 = "b64790f94b926acd7e8f84c5d6000a86cb43967bd1e688b03089079799c9e889" },
+    },
+    // libGLEW and the programs link libGL (mesa) and libX11. glu: GL/glew.h
+    // includes GL/glu.h and glew.pc requires glu.
+    .depends = .{ "glibc", "mesa", "libx11", "glu" },
+    .build_depends = .{ "xorgproto" },
+}

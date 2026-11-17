@@ -1,0 +1,15 @@
+.{
+    .name = "totem-pl-parser",
+    .version = "3.26.7",
+    .release = 1,
+    .description = "GObject library for parsing and writing playlists",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/totem-pl-parser/3.26/totem-pl-parser-3.26.7.tar.xz", .sha256 = "60d517c1acabe54ae337f64451264fc76730696eaae26b5480fb37166689b5f3" },
+    },
+    // libarchive looks into disc images, libgcrypt decrypts Amazon AMZ
+    // playlists, uchardet guesses the encoding of playlists that do not say.
+    .depends = .{ "glibc", "glib", "libxml2", "libarchive", "libgcrypt", "uchardet" },
+    // glib provides g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+}

@@ -1,0 +1,27 @@
+.{
+    .name = "gnome-music",
+    .version = "50.0",
+    .release = 1,
+    .description = "GNOME Music, a music player and library browser",
+    .license = "GPL-2.0-or-later WITH GStreamer-exception-2008",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-music/50/gnome-music-50.0.tar.xz", .sha256 = "c72890ca7e5809cefeb876b01199f8b197146b5c25e9d5745301a284c0f3cdaa" },
+    },
+    // A Python program using these libraries through PyGObject. The music
+    // library is what LocalSearch has indexed, read through TinySPARQL;
+    // Grilo's plugins fetch album art (MusicBrainz, Last.fm, TheAudioDB)
+    // and libmediaart caches it. Playback is GStreamer's playbin, with the
+    // base and good plugins for the usual formats.
+    .depends = .{
+        "python",      "pygobject",        "pycairo",
+        "glib",        "gtk4",             "libadwaita",
+        "pango",       "gdk-pixbuf",       "graphene",
+        "libmediaart", "libsoup",          "tinysparql",
+        "localsearch", "grilo",            "grilo-plugins",
+        "gstreamer",   "gst-plugins-base", "gst-plugins-good",
+    },
+    // meson checks the pkg-config files of the libraries above; itstool
+    // builds the help pages; appstream provides the gettext rules for the
+    // metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "appstream" },
+}

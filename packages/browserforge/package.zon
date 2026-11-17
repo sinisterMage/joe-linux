@@ -1,0 +1,12 @@
+.{
+    .name = "browserforge",
+    .version = "1.2.4",
+    .release = 1,
+    .description = "Intelligent browser header & fingerprint generator",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/78/6f/8975af88d203efd70cc69477ebac702babef38201d04621c9583f2508f25/browserforge-1.2.4.tar.gz", .sha256 = "05686473793769856ebd3528c69071f5be0e511260993e8b2ba839863711a0c4" },
+    },
+    .depends = .{ "python", "apify-fingerprint-datapoints", "click" },
+    .build_depends = .{ "python", "setuptools", "wheel", "poetry-core" },
+}

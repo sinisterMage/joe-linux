@@ -1,0 +1,12 @@
+.{
+    .name = "apsw",
+    .version = "3.54.1.0",
+    .release = 1,
+    .description = "Another Python SQLite Wrapper",
+    .license = "LicenseRef-APSW",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/84/75/be84a7237ea1af8374c67ff7468053bff538e1591526805c6574b2efef4d/apsw-3.54.1.0.tar.gz", .sha256 = "d9fd64ed76dc0f3d2265d4aeedb74d678c2ac7dffbd4e8ba05bf9a87aa7c34d3" },
+    },
+    .depends = .{ "python", "glibc", "sqlite" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

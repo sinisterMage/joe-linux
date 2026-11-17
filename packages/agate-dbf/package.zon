@@ -1,0 +1,13 @@
+.{
+    .name = "agate-dbf",
+    .version = "0.2.4",
+    .release = 1,
+    .description = "DBF reader for agate tables",
+    .license = "MIT",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/ad/d8/abf6f39bd8c5767cc367472ea59f7d7cc4d5728388974a1b26a9472a971f/agate_dbf-0.2.4.tar.gz", .sha256 = "6554828b10048a76dbb5bc4eff8911e059ea2b47155b7a89351e382915ca16fc" },
+    },
+    .depends = .{ "python", "agate >=1.5.0", "dbfread >=2.0.5" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

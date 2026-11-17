@@ -1,0 +1,15 @@
+.{
+    .name = "gnu-efi",
+    .version = "4.0.4",
+    .release = 2,
+    .description = "Headers, libraries and linker scripts for building UEFI applications with GCC",
+    .license = "BSD-3-Clause AND (GPL-2.0-or-later OR BSD-3-Clause)",
+    .sources = .{
+        // Upstream publishes no checksum for its tag archives.
+        .{ .url = "https://github.com/ncroxon/gnu-efi/archive/4.0.4/gnu-efi-4.0.4.tar.gz", .sha256 = "40b61e842a4efcbf80f3e53b2f220c044e8cfe46eb4dd6396c83b751240b1c0d" },
+    },
+    // Static libraries, start-up objects and headers only: what links them
+    // into an EFI application carries them, so nothing is needed at run time.
+    .depends = .{},
+    .build_depends = .{},
+}

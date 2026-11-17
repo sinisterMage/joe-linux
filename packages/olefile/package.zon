@@ -1,0 +1,13 @@
+.{
+    .name = "olefile",
+    .version = "0.47",
+    .release = 1,
+    .description = "Reader and writer for Microsoft OLE compound documents",
+    .license = "BSD-2-Clause AND HPND",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/69/1b/077b508e3e500e1629d366249c3ccb32f95e50258b231705c09e3c7a4366/olefile-0.47.zip", .sha256 = "599383381a0bf3dfbd932ca0ca6515acd174ed48870cbf7fee123d698c192c1c" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel", "libarchive" },
+}

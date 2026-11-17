@@ -1,0 +1,17 @@
+.{
+    .name = "exiftool",
+    .version = "13.64",
+    .release = 1,
+    .description = "Reads and writes image, audio, video and document metadata (exiftool and Image::ExifTool)",
+    .license = "Artistic-1.0-Perl OR GPL-1.0-or-later",
+    .sources = .{
+        // The SHA-256 is the one upstream lists in exiftool.org/checksums.txt.
+        // Upstream's download links point to SourceForge, which keeps every
+        // release.
+        .{ .url = "https://sourceforge.net/projects/exiftool/files/Image-ExifTool-13.64.tar.gz/download", .file = "Image-ExifTool-13.64.tar.gz", .sha256 = "dcb9f6be1f6705ee826a92d1522e3fec1d0b3749cdc061b03c46873d5fe204fc" },
+    },
+    // Pure Perl. Archive::Zip, which upstream recommends, lets it read the
+    // metadata inside ZIP-based documents (Office, iWork, EPUB).
+    .depends = .{ "perl", "perl-archive-zip" },
+    .build_depends = .{"perl"},
+}

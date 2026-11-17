@@ -11,6 +11,10 @@
 # way for every package.
 set -euo pipefail
 umask 022
+# GNU tar run as root restores the owners recorded in an archive, which the
+# user namespace cannot map; recipes that unpack extra tarballs would fail.
+# Packaged files are root's anyway.
+export TAR_OPTIONS=--no-same-owner
 
 unpack() {
     tar -xf "$SOURCES/$PKG_SOURCE" --strip-components=1 --no-same-owner --no-same-permissions

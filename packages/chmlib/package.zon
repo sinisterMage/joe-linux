@@ -1,0 +1,13 @@
+.{
+    .name = "chmlib",
+    .version = "0.40",
+    .release = 1,
+    .description = "Microsoft HTML Help archive reading library",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://distfiles.macports.org/chmlib/chmlib-0.40.tar.bz2", .sha256 = "3449d64b0cf71578b2c7e3ddc048d4af3661f44a83941ea074a7813f3a59ffa3" },
+        .{ .url = "https://github.com/jedwing/CHMLib/commit/11f50f16714a584c482b6f7b469fb7edd611f869.patch", .file = "chmlib-integer-types.patch", .sha256 = "37899489d8813d024e7483222202ed9acff5110b34f265bd19dd015a82a5f279" },
+    },
+    .depends = .{ "glibc" },
+    .build_depends = .{ "autoconf", "automake", "libtool", "make", "patch" },
+}

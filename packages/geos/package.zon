@@ -1,0 +1,14 @@
+.{
+    .name = "geos",
+    .version = "3.15.0",
+    .release = 1,
+    .description = "Geometry Engine Open Source: computational geometry library (C and C++ APIs)",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against GitHub's SHA-256 of the release asset; the
+        // download.osgeo.org copy has no published checksum.
+        .{ .url = "https://download.osgeo.org/geos/geos-3.15.0.tar.bz2", .sha256 = "d5e5192a686d065eaed082de14dd26244c5c8e02bff16b2c6cce3265f648e00e" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

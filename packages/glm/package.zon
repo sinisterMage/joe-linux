@@ -1,0 +1,15 @@
+.{
+    .name = "glm",
+    .version = "1.0.3",
+    .release = 1,
+    .description = "OpenGL Mathematics: header-only C++ library for graphics vector and matrix math",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the book's MD5. (LibreOffice's copy, glm-1.0.3.zip
+        // in build/src, is a different archive.)
+        .{ .url = "https://github.com/g-truc/glm/archive/1.0.3/glm-1.0.3.tar.gz", .sha256 = "6775e47231a446fd086d660ecc18bcd076531cfedd912fbd66e576b118607001" },
+    },
+    // Headers and CMake package files only.
+    .depends = .{},
+    .build_depends = .{ "cmake", "ninja" },
+}

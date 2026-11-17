@@ -1,0 +1,17 @@
+.{
+    .name = "argon2-cffi-bindings",
+    .version = "26.2.0",
+    .release = 1,
+    .description = "Low-level CFFI bindings for the Argon2 password hash",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/argon2-cffi-bindings/argon2_cffi_bindings-26.2.0.tar.gz", .sha256 = "f21ab89bb9850f32b9ca038d9961424bb0d3669d579cbbbfed068cffa6fc0643" },
+    },
+    // The extension is linked against the system libargon2 (argon2)
+    // rather than the copy in extras/; cffi provides the _cffi_backend it
+    // imports.
+    .depends = .{ "glibc", "python", "cffi", "argon2" },
+    // scikit-build-core runs cmake and ninja; the CFFI C file is shipped
+    // pre-generated in the sdist.
+    .build_depends = .{ "python", "scikit-build-core", "setuptools-scm", "cmake", "ninja" },
+}

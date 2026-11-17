@@ -1,0 +1,12 @@
+.{
+    .name = "deprecated",
+    .version = "3.0.1",
+    .release = 1,
+    .description = "Python @deprecated decorator to deprecate old python classes, functions or methods",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/61/46/f6958cdfa8a801fc845e981a8a958dba2e74a386b026a8fd5cae58423f1f/deprecated-3.0.1.tar.gz", .sha256 = "2f5a9fecc9961e26462846cf1e57f73a612b1d0b79c27dceeed8de647beadcee" },
+    },
+    .depends = .{ "python", "wrapt" },
+    .build_depends = .{ "python", "setuptools", "wheel", "hatchling" },
+}

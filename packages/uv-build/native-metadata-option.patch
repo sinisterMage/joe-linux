@@ -1,0 +1,14 @@
+--- a/python/uv_build/__init__.py
++++ b/python/uv_build/__init__.py
+@@ -86,4 +86,4 @@
+     args = ["build-wheel", wheel_directory]
+     if metadata_directory:
+-        args.extend([metadata_directory])
++        args.extend(["--metadata-directory", metadata_directory])
+     return call(args, config_settings)
+@@ -122,4 +122,4 @@
+     args = ["build-editable", wheel_directory]
+     if metadata_directory:
+-        args.extend([metadata_directory])
++        args.extend(["--metadata-directory", metadata_directory])
+     return call(args, config_settings)

@@ -1,0 +1,13 @@
+.{
+    .name = "agate-excel",
+    .version = "0.4.3",
+    .release = 1,
+    .description = "Excel workbook reader for agate tables",
+    .license = "MIT",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/a3/78/05a2004a5fc883dfd3aa64488f64b34e4045c51e19382e2209a6b5cfbed0/agate_excel-0.4.3.tar.gz", .sha256 = "c510b3cec7d679e254a257cae852b67191286b31d55165d8116d5802afbc92fc" },
+    },
+    .depends = .{ "python", "agate >=1.5.0", "olefile", "openpyxl >=2.3.0", "xlrd >=0.9.4" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

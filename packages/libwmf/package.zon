@@ -1,0 +1,18 @@
+.{
+    .name = "libwmf",
+    .version = "0.2.17",
+    .release = 2,
+    .description = "Library for Windows Metafile (WMF) images, with converters to SVG, EPS, FIG and PNG and a GdkPixbuf loader",
+    .license = "LGPL-2.1-or-later AND BSD-3-Clause",
+    .sources = .{
+        // The maintained fork (caolanm/libwmf, the one distributions ship).
+        // Checked against the SHA-256 digest GitHub gives for the release
+        // asset.
+        .{ .url = "https://github.com/caolanm/libwmf/releases/download/v0.2.17/libwmf-0.2.17.tar.gz", .sha256 = "876915024b64edda8d417daf06819d03a0d18adff1fcc2f64182c69274ed0519" },
+    },
+    // freetype (font rendering), libxml2 (the font map), zlib, libpng and
+    // libjpeg (the bundled GD's PNG and JPEG output); the GdkPixbuf loader
+    // links gdk-pixbuf and glib.
+    .depends = .{ "glibc", "freetype", "libxml2", "zlib", "libpng", "libjpeg-turbo", "gdk-pixbuf", "glib" },
+    .build_depends = .{ "pkgconf" },
+}

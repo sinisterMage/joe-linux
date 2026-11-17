@@ -1,0 +1,13 @@
+.{
+    .name = "kitemviews",
+    .version = "6.29.0",
+    .release = 1,
+    .description = "Qt item view helpers used by the standalone Fcitx configuration tool",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        // Verified against BLFS systemd frameworks6.html MD5.
+        .{ .url = "https://download.kde.org/stable/frameworks/6.29/kitemviews-6.29.0.tar.xz", .sha256 = "9e6355cf1264756d3b38254181e46e3103e531f0f1613ae1c158d4f9e541576e" },
+    },
+    .depends = .{ "glibc", "gcc", "qt6" },
+    .build_depends = .{ "cmake", "ninja", "extra-cmake-modules >=6.29.0" },
+}

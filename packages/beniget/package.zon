@@ -1,0 +1,12 @@
+.{
+    .name = "beniget",
+    .version = "0.5.1",
+    .release = 1,
+    .description = "Static analysis of Python definitions and uses (def-use chains) on top of gast",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/b/beniget/beniget-0.5.1.tar.gz", .sha256 = "976d40c6f22650d133b00291e6fe3ab8e9850a83ba121d834ea5c74db7f66c0d" },
+    },
+    .depends = .{ "python", "gast" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "qhull",
+    .version = "2020.2",
+    .release = 1,
+    .description = "Convex hulls, Delaunay triangulations, Voronoi diagrams and halfspace intersections (programs and libqhull_r)",
+    .license = "Qhull",
+    .sources = .{
+        // Checked against the MD5 on qhull.org's download page. Qhull 2020.2
+        // is library version 8.0.2; the 8.1 tags are alphas.
+        .{ .url = "http://www.qhull.org/download/qhull-2020-src-8.0.2.tgz", .sha256 = "b5c2d7eb833278881b952c8a52d20179eab87766b00b865000469a45c1838b7e" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

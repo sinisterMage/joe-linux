@@ -1,0 +1,13 @@
+.{
+    .name = "agate-sql",
+    .version = "0.7.3",
+    .release = 1,
+    .description = "SQL database reader and writer for agate tables",
+    .license = "MIT",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/fe/fe/fc7662f1ec3c0917c377f74f143a479eb13c9ae5fe14d77ce28eb165564f/agate_sql-0.7.3.tar.gz", .sha256 = "4c588a28e80bc625c7d5f915e8f8dff4900140a8a6d8a350a098a2ba9adf9d33" },
+    },
+    .depends = .{ "python", "agate >=1.5.0", "sqlalchemy >=1.4" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

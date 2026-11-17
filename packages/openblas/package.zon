@@ -1,0 +1,14 @@
+.{
+    .name = "openblas",
+    .version = "0.3.34",
+    .release = 2,
+    .description = "Optimized BLAS and CBLAS libraries with runtime CPU dispatch",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Checked against the MD5 in the release notes and GitHub's SHA-256
+        // of the release asset.
+        .{ .url = "https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.34/OpenBLAS-0.3.34.tar.gz", .sha256 = "cd7e129868320cc2d033afa920e31202dfe0b8066a5b66661900ccc0f197dfed" },
+    },
+    // OpenMP's thread runtime is libgomp, supplied by gcc.
+    .depends = .{ "glibc", "gcc", "gcc-fortran" },
+}

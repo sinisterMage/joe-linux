@@ -1,0 +1,13 @@
+.{
+    .name = "contourpy",
+    .version = "1.4.0",
+    .release = 1,
+    .description = "Contour calculation for two dimensional quadrilateral grids",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Verified against the PyPI source distribution SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/83/5a/a55177dd22553a277388e8a1b3220e92de91bacb28356cdc73caa240121d/contourpy-1.4.0.tar.gz", .sha256 = "20156f5a1ac4f8ce02656e39a61e82164a3d359796dc8026f75b062783d500e1" },
+    },
+    .depends = .{ "glibc", "gcc", "python", "python-numpy" },
+    .build_depends = .{ "python", "meson-python", "meson", "ninja", "pybind11" },
+}

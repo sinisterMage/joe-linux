@@ -1,0 +1,24 @@
+.{
+    .name = "gnome-remote-desktop",
+    .version = "51.0",
+    .release = 1,
+    .description = "Remote desktop daemon for GNOME sessions (VNC backend)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against upstream's gnome-remote-desktop-51.0.sha256sum.
+        .{ .url = "https://download.gnome.org/sources/gnome-remote-desktop/51/gnome-remote-desktop-51.0.tar.xz", .sha256 = "c7954b34da5766288ea19b56026421c9c1fe2c23ef379e57ec209dc0cf13df2b" },
+    },
+    // The daemon captures the screen through Mutter's screen-cast API as a
+    // PipeWire stream and injects input with libei; the VNC protocol is
+    // libvncserver's. Credentials are kept with libsecret or sealed by the
+    // TPM (tpm2-tss); krb5, libnotify, cairo, libepoxy, libdrm and
+    // libxkbcommon are linked by every backend.
+    .depends = .{
+        "glibc",      "glib",   "pipewire", "libei",    "libvncserver", "libsecret",
+        "tpm2-tss",   "krb5",   "libnotify", "cairo",   "libepoxy",     "libdrm",
+        "libxkbcommon",
+    },
+    // systemd.pc gives the unit directories, dbus-1.pc the system bus's;
+    // glib provides gdbus-codegen (a Python program) and glib-mkenums.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "systemd", "dbus" },
+}

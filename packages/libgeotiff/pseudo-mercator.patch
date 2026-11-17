@@ -1,0 +1,21 @@
+EPSG method1024 is normalized to CT_Mercator, but still uses spherical
+Mercator equations with the ellipsoid's semi-major axis. Preserve the actual
+operation method instead of exporting ellipsoidal +proj=merc.
+https://proj.org/en/stable/operations/projections/webmerc.html
+
+--- a/geotiff_proj4.c
++++ b/geotiff_proj4.c
+@@ -971,6 +971,12 @@
+     else if( psDefn->CTProjection == CT_Mercator )
+     {
+-        if( psDefn->ProjParm[2] != 0.0 ) /* Mercator 2SP: FIXME we need a better way of detecting it */
++        if( psDefn->Projection == 1024 ) /* Popular Visualisation Pseudo Mercator */
++            sprintf( szProjection+strlen(szProjection),
++                    "+proj=webmerc +lon_0=%.9f +x_0=%.3f +y_0=%.3f ",
++                    psDefn->ProjParm[1],
++                    dfFalseEasting,
++                    dfFalseNorthing );
++        else if( psDefn->ProjParm[2] != 0.0 ) /* Mercator 2SP: FIXME we need a better way of detecting it */
+             sprintf( szProjection+strlen(szProjection),
+                     "+proj=merc +lat_ts=%.9f +lon_0=%.9f +x_0=%.3f +y_0=%.3f ",
+                     psDefn->ProjParm[2],

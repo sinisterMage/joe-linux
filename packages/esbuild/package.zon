@@ -1,0 +1,16 @@
+.{
+    .name = "esbuild",
+    .version = "0.28.2",
+    .release = 1,
+    .description = "JavaScript and CSS bundler with its Node API",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no source-archive checksums or signatures.
+        // GitHub v0.28.2 release source; no platform binary npm packages.
+        .{ .url = "https://github.com/evanw/esbuild/archive/v0.28.2/esbuild-0.28.2.tar.gz", .sha256 = "300162f899361d9f0263065f8728ef9086dcfc1a3d36bcbc4e0abe5de9c58bf8" },
+    },
+    // Debt: Go downloads modules pinned by upstream go.mod/go.sum.
+    .network = true,
+    .depends = .{ "glibc", "nodejs" },
+    .build_depends = .{ "go" },
+}

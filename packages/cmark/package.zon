@@ -1,0 +1,13 @@
+.{
+    .name = "cmark",
+    .version = "0.31.2",
+    .release = 1,
+    .description = "CommonMark parsing and rendering library and program in C",
+    .license = "BSD-2-Clause AND MIT",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/commonmark/cmark/archive/0.31.2/cmark-0.31.2.tar.gz", .sha256 = "f9bc5ca38bcb0b727f0056100fac4d743e768872e3bacec7746de28f5700d697" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "cmake", "ninja" },
+}

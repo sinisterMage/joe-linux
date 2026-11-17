@@ -1,0 +1,26 @@
+.{
+    .name = "filezilla",
+    .version = "3.72.1",
+    .release = 1,
+    .description = "Graphical FTP, FTPS and SFTP client",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // FileZilla's download server hands out per-visit links and refuses
+        // automated clients (https://trac.filezilla-project.org/ticket/13186),
+        // so the tarball is Arch Linux's copy of it. Upstream lists a SHA-512
+        // on its download page, which cannot be fetched without a browser;
+        // the file matches the SHA-512 recorded in Arch's PKGBUILD,
+        // 4cac3c7665da76bbe44a69c9b0d9b23b21cd0e4f111de3b7ae4dbae69693c24ed6904b42e23cf9b0898c068a7b0ae75f4a82b755093c05fede9296302e88af20.
+        .{ .url = "https://sources.archlinux.org/other/filezilla/filezilla-3.72.1.tar.xz", .sha256 = "e7116a7ae8f6d3e4c9e337a0b042984b7c5b57fca922666ac3d8fcafba817764" },
+    },
+    // fzssh provides SFTP; dbus the GNOME session-manager inhibitor;
+    // xdg-open (xdg-utils) opens the browser and files.
+    .depends = .{
+        "glibc",      "gcc",        "libfilezilla", "fzssh",   "wxwidgets",
+        "gtk3",       "glib",       "pango",        "cairo",   "gdk-pixbuf",
+        "harfbuzz",   "at-spi2-core", "zlib",       "dbus",    "sqlite",
+        "pugixml",    "xdg-utils",
+    },
+    // configure insists on finding xdg-open.
+    .build_depends = .{ "pkgconf", "gettext", "xdg-utils" },
+}

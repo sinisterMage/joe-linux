@@ -1,0 +1,12 @@
+.{
+    .name = "apify-fingerprint-datapoints",
+    .version = "0.16.0",
+    .release = 1,
+    .description = "Browser fingerprint datapoints collected by Apify",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/e8/2e/393ec6fae8adddbb5e850dca689708d2050ca8863bcbf39819ea8693ca25/apify_fingerprint_datapoints-0.16.0.tar.gz", .sha256 = "0d187bf8d24566a517f915ad8e168208e4ab47fea5e900b08e9d0e7e9ba71da8" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel", "hatchling" },
+}

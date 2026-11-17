@@ -1,0 +1,13 @@
+.{
+    .name = "lttng-ust",
+    .version = "2.16.0",
+    .release = 1,
+    .description = "LTTng userspace tracing libraries and tracepoint headers",
+    .license = "LGPL-2.1-only AND MIT AND GPL-2.0-only",
+    .sources = .{
+        // Verified against upstream's .sha256 sidecar.
+        .{ .url = "https://lttng.org/files/lttng-ust/lttng-ust-2.16.0.tar.bz2", .sha256 = "1e84e02fa1fc1261eb6cf3d14d64006506a29f7c605ac85de02180318c6aa38a" },
+    },
+    .depends = .{ "glibc", "liburcu >=0.15", "python", "gcc" },
+    .build_depends = .{ "pkgconf" },
+}

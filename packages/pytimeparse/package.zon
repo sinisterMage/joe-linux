@@ -1,0 +1,13 @@
+.{
+    .name = "pytimeparse",
+    .version = "1.1.10",
+    .release = 1,
+    .description = "Parser for human-readable time expressions",
+    .license = "MIT",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/92/bf/87bd96fd60abf241cae10e6f7fc3882c8a81ebdbe76f49f9c3116b5b38ab/pytimeparse-1.1.10.tar.gz", .sha256 = "ecf0ee613a72cb0b1d3d5404bd398a64266576fc36ccf3149178af6f2ec6f736" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

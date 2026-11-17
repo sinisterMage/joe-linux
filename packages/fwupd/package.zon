@@ -1,0 +1,30 @@
+.{
+    .name = "fwupd",
+    .version = "2.1.10",
+    .release = 1,
+    .description = "Daemon and tools for updating device firmware from the LVFS",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/fwupd/fwupd/releases/download/2.1.10/fwupd-2.1.10.tar.xz", .sha256 = "cb23ab505cabaf616dacfc199f710f883329e8782ca3aa67548bdb7181d62fab" },
+    },
+    // fwupd 2 carries its own Jcat signature checking and JSON parser, so
+    // libjcat and json-glib are no longer used. GnuTLS verifies the LVFS
+    // signatures; libdrm (with libdrm_amdgpu) is for the display and AMD GPU
+    // plugins, libmnl for devlink, ModemManager with libqmi and libmbim for
+    // modems, tpm2-tss for the TPM; util-linux provides libblkid. At run
+    // time: hwdata's usb.ids and pci.ids name devices; the UEFI capsule
+    // plugin finds the EFI system partition through UDisks2 and boots
+    // fwupd-efi's fwupdx64.efi when the firmware cannot take a capsule from
+    // disk itself. BlueZ is used over D-Bus when it runs.
+    .depends = .{
+        "glibc",    "glib",   "libxmlb", "libusb",  "sqlite",       "readline",
+        "util-linux", "curl", "libdrm",  "polkit",  "zlib",         "libmnl",
+        "gnutls",   "xz",     "systemd", "dbus",    "modemmanager", "libqmi",
+        "libmbim",  "tpm2-tss", "hwdata", "fwupd-efi", "udisks",
+    },
+    // python runs the code generators; jinja2 writes the manual pages;
+    // libxml2's xmllint strips the D-Bus interface for its resource; glib
+    // provides g-ir-scanner, vala vapigen. bash-completion's pkg-config file
+    // says where the completions go.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "jinja2", "gettext", "libxml2", "vala", "bash-completion" },
+}

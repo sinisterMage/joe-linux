@@ -1,0 +1,16 @@
+.{
+    .name = "netcdf",
+    .version = "4.10.1",
+    .release = 1,
+    .description = "netCDF-C: library and tools (ncdump, ncgen, nccopy) for the self-describing netCDF array data formats",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // A GitHub archive of the release tag; upstream publishes no checksum.
+        .{ .url = "https://github.com/Unidata/netcdf-c/archive/v4.10.1/netcdf-c-4.10.1.tar.gz", .sha256 = "33c27231c478c3b35da7c7758fbdd02da1fe407abcb16ddfe195f69d164f930d" },
+    },
+    // netCDF-4 files are HDF5; DAP (remote datasets) uses libcurl and
+    // libxml2; NCZarr's zip stores libzip; the filter plugins bzip2, blosc
+    // and zstd.
+    .depends = .{ "glibc", "hdf5", "zlib", "curl", "libxml2", "libzip", "bzip2", "blosc", "zstd" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

@@ -1,7 +1,7 @@
 .{
     .name = "evolution-data-server",
     .version = "3.62.1",
-    .release = 1,
+    .release = 2,
     .description = "Backends and libraries for contacts, calendars, tasks and mail (libecal, libebook, camel)",
     .license = "LGPL-2.0-or-later",
     .sources = .{
@@ -13,6 +13,7 @@
         "glibc",   "glib",      "libical", "libsecret",             "nss",         "nspr",        "sqlite",
         "libsoup", "json-glib", "libxml2", "icu",                   "zlib",        "util-linux",  "krb5",
         "gtk3",    "gtk4",      "pango",   "gnome-online-accounts", "libgweather", "libcanberra",
+        "openldap",
     },
     // glib provides g-ir-scanner, glib-mkenums and gdbus-codegen.
     .build_depends = .{ "cmake", "ninja", "pkgconf", "python", "gperf", "vala", "gettext" },

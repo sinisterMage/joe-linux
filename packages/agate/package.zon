@@ -1,0 +1,13 @@
+.{
+    .name = "agate",
+    .version = "1.14.2",
+    .release = 1,
+    .description = "Human-oriented Python data analysis library",
+    .license = "MIT",
+    .sources = .{
+        // Verified against the sha256 published by PyPI's release JSON API.
+        .{ .url = "https://files.pythonhosted.org/packages/16/48/dc4d02dba00fbe62e966ed1a7d991e51654668ab343a2738bb816aa82256/agate-1.14.2.tar.gz", .sha256 = "7f29841c39d84b1de7fde762b8d792085371515324f3a01413b20f810398225b" },
+    },
+    .depends = .{ "python", "babel >=2.0", "isodate >=0.5.4", "leather >=0.3.2", "parsedatetime >=2.6", "python-slugify >=1.2.1", "pytimeparse >=1.1.5" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

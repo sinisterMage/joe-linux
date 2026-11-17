@@ -1,0 +1,15 @@
+.{
+    .name = "grilo",
+    .version = "0.3.19",
+    .release = 1,
+    .description = "Framework for discovering and browsing media from many sources",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/grilo/0.3/grilo-0.3.19.tar.xz", .sha256 = "0869c81d19ab139c667d79567c14ddcb6cb5cbfc0108d04cade287eb29536706" },
+    },
+    // libsoup for the grilo-net helper library, totem-pl-parser for
+    // grilo-pls (playlists), both used by the plugins in grilo-plugins.
+    .depends = .{ "glibc", "glib", "libxml2", "libsoup", "totem-pl-parser" },
+    // glib provides g-ir-scanner; vala, vapigen for the .vapi files.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "vala" },
+}

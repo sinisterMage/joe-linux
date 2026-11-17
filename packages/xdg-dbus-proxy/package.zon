@@ -1,0 +1,14 @@
+.{
+    .name = "xdg-dbus-proxy",
+    .version = "0.1.9",
+    .release = 1,
+    .description = "Filtering proxy for D-Bus connections, used by Flatpak sandboxes",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // The checksum is the one in the release notes on GitHub.
+        .{ .url = "https://github.com/flatpak/xdg-dbus-proxy/releases/download/0.1.9/xdg-dbus-proxy-0.1.9.tar.xz", .sha256 = "5450dda586ec3bb3ca709d311e845487883faa3b09cf562608d7e84f4311dced" },
+    },
+    .depends = .{ "glibc", "glib" },
+    // xsltproc (libxslt) and the DocBook stylesheets build the manual page.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "libxslt", "docbook-xml", "docbook-xsl-nons" },
+}

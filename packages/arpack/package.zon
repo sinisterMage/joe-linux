@@ -1,0 +1,14 @@
+.{
+    .name = "arpack",
+    .version = "3.9.1",
+    .release = 2,
+    .description = "ARPACK-NG, Fortran routines for large sparse eigenvalue problems, with C and C++ interfaces",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // A GitHub archive of the release tag; upstream publishes no checksum.
+        .{ .url = "https://github.com/opencollab/arpack-ng/archive/3.9.1/arpack-ng-3.9.1.tar.gz", .sha256 = "f6641deb07fa69165b7815de9008af3ea47eb39b2bb97521fbf74c97aba6e844" },
+    },
+    // Fortran (libgfortran), optimized BLAS, and Reference LAPACK.
+    .depends = .{ "glibc", "gcc", "gcc-fortran", "openblas", "lapack" },
+    .build_depends = .{ "cmake", "ninja" },
+}

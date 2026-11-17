@@ -1,0 +1,16 @@
+.{
+    .name = "fcitx5-qt",
+    .version = "5.1.16",
+    .release = 1,
+    .description = "Fcitx 5 input method plugin for Qt 6 applications, and the Qt libraries Fcitx 5 tools use",
+    .license = "LGPL-2.1-or-later AND BSD-3-Clause",
+    .sources = .{
+        // Checked against upstream's OpenPGP signature (Weng Xuetian,
+        // 2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9).
+        .{ .url = "https://download.fcitx-im.org/fcitx5/fcitx5-qt/fcitx5-qt-5.1.16.tar.zst", .sha256 = "2d49cb4dfade430e822377beabae5f23da5caf2b2ff49e1eb54213b64dd0840e" },
+    },
+    // libFcitx5Utils is fcitx5's; the platform input context plugin also
+    // links xkbcommon and XCB.
+    .depends = .{ "glibc", "gcc", "qt6", "fcitx5", "libxkbcommon", "libxcb" },
+    .build_depends = .{ "cmake", "ninja", "extra-cmake-modules", "pkgconf", "gettext" },
+}

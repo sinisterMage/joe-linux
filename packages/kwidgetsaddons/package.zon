@@ -1,0 +1,13 @@
+.{
+    .name = "kwidgetsaddons",
+    .version = "6.29.0",
+    .release = 1,
+    .description = "Qt widget helpers used by the standalone Fcitx configuration tool",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        // Verified against BLFS systemd frameworks6.html MD5.
+        .{ .url = "https://download.kde.org/stable/frameworks/6.29/kwidgetsaddons-6.29.0.tar.xz", .sha256 = "76285d03cdc06f0647afbbc89f31ab5aa766cbc3c6eb177e3f8a0441444e3068" },
+    },
+    .depends = .{ "glibc", "gcc", "qt6" },
+    .build_depends = .{ "cmake", "ninja", "extra-cmake-modules >=6.29.0" },
+}

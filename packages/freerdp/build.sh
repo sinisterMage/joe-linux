@@ -9,10 +9,8 @@ build() {
     # What the build root would otherwise decide is stated: X11 and Wayland
     # clients, PulseAudio and ALSA, CUPS printers, Kerberos, the journal,
     # FUSE, json-c, and ICU for Unicode conversion.
-    # Off: the SDL client (no SDL), OSS and sndio, uriparser, OpenH264, GSM,
-    # FAAD2 and FAAC (no recipes); LAME, Opus and soxr, because FFmpeg
-    # already encodes, decodes and resamples the audio. AV1 for the graphics
-    # channel is experimental.
+    # URIs use uriparser. The SDL client and direct audio/video codec
+    # alternatives remain off; FFmpeg handles encoding and decoding.
     cmake -D CMAKE_INSTALL_PREFIX=/usr \
         -D CMAKE_INSTALL_LIBDIR=lib \
         -D CMAKE_SKIP_INSTALL_RPATH=ON \
@@ -36,7 +34,7 @@ build() {
         -D WITH_SYSTEMD=ON \
         -D WITH_FUSE=ON \
         -D WITH_JSONC_REQUIRED=ON \
-        -D WITH_URIPARSER=OFF \
+        -D WITH_URIPARSER=ON \
         -D WITH_OPENH264=OFF \
         -D WITH_GSM=OFF \
         -D WITH_LAME=OFF \

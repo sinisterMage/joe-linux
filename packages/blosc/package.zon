@@ -1,0 +1,15 @@
+.{
+    .name = "blosc",
+    .version = "1.21.7",
+    .release = 1,
+    .description = "Blocking, shuffling and lossless compression library for binary and numerical data (c-blosc)",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/Blosc/c-blosc/archive/v1.21.7/c-blosc-1.21.7.tar.gz", .sha256 = "3c81252accfeeabd236fa219a8bf564c4feed9feb7a3291c227b03a00adb976f" },
+    },
+    // The codecs come from the system's libraries instead of the copies in
+    // internal-complibs/; snappy's C interface is a C++ library.
+    .depends = .{ "glibc", "lz4", "zlib", "zstd", "snappy" },
+    .build_depends = .{ "cmake", "ninja" },
+}

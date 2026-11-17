@@ -2,6 +2,8 @@
 # docs/building.md describes. The CMake build is not used because it clones
 # libsonic from GitHub when the library is missing.
 prepare() {
+    # Upstream's clause-terminator API keeps Calibre's TTS punctuation intact.
+    patch -Np1 -i "$SOURCES/espeak-ng-phoneme-terminator.patch"
     # What autogen.sh does, without its search for libtoolize with which.
     mkdir -p m4
     touch AUTHORS

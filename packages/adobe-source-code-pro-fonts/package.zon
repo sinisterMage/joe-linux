@@ -1,0 +1,15 @@
+.{
+    .name = "adobe-source-code-pro-fonts",
+    // Upstream's release "2.042R-u/1.062R-i/1.026R-vf": upright 2.042,
+    // italic 1.062. The version is the upright fonts'.
+    .version = "2.042",
+    .release = 1,
+    .description = "Source Code Pro, Adobe's monospaced font family for user interfaces and code",
+    .license = "OFL-1.1",
+    .sources = .{
+        // Upstream publishes no checksum for its release assets.
+        .{ .url = "https://github.com/adobe-fonts/source-code-pro/releases/download/2.042R-u%2F1.062R-i%2F1.026R-vf/OTF-source-code-pro-2.042R-u_1.062R-i.zip", .file = "source-code-pro-OTF-2.042R-u_1.062R-i.zip", .sha256 = "754a2e3ebb945ae905d720ac5896b3b34acc9546dd6551ef9536869788629dae" },
+    },
+    // bsdtar unpacks the zip file.
+    .build_depends = .{"libarchive"},
+}

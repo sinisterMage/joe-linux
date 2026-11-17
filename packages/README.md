@@ -77,6 +77,10 @@ inside the build root, with no network. Any command that fails aborts the build.
 Available variables: `DESTDIR`, `SOURCES`, `PKG_NAME`, `PKG_VERSION`,
 `PKG_RELEASE`, `JOBS`. `MAKEFLAGS` is already set to `-j$JOBS`.
 
+`PKG_VERSION` is the upstream `.version`; `PKG_RELEASE` is the full
+`VERSION-rN` string. Use `PKG_RELEASE` directly for distro build identifiers
+(for example SBAT), without adding another version or `-r` prefix.
+
 ## Writing a recipe from the book
 
 Recipes follow Linux From Scratch and Beyond LFS (systemd, development

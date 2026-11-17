@@ -1,0 +1,19 @@
+.{
+    .name = "libfilezilla",
+    .version = "0.59.0",
+    .release = 1,
+    .description = "C++ library of networking, TLS and event primitives used by FileZilla",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // FileZilla's download server hands out per-visit links and refuses
+        // automated clients (https://trac.filezilla-project.org/ticket/13186),
+        // so the tarball is Arch Linux's copy of it. Upstream lists a SHA-512
+        // on its download page, which cannot be fetched without a browser;
+        // the file matches the SHA-512 recorded in Arch's PKGBUILD,
+        // 9c54d00bd84feb77f300ee7d0e7f3dea60c73b86bb119ab48494994374eebcc0f10f462bf5a2290c7d201c90ece5c95a51f255ed4c772c40420e2caeb0a74ff2.
+        .{ .url = "https://sources.archlinux.org/other/libfilezilla/libfilezilla-0.59.0.tar.xz", .sha256 = "90ba8583fc6df8ab7dfc06905e6c12a8e9864190f75aa94c25d1da89145bfda9" },
+    },
+    // libxcrypt: crypt() for password hashing.
+    .depends = .{ "glibc", "gcc", "gmp", "nettle", "gnutls", "libxcrypt" },
+    .build_depends = .{ "pkgconf", "gettext" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "gast",
+    .version = "0.7.0",
+    .release = 1,
+    .description = "Generic AST: a Python AST that is the same across Python versions",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/g/gast/gast-0.7.0.tar.gz", .sha256 = "0bb14cd1b806722e91ddbab6fb86bba148c22b40e7ff11e248974e04c8adfdae" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

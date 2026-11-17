@@ -1,0 +1,18 @@
+.{
+    .name = "libime",
+    .version = "1.1.17",
+    .release = 1,
+    .description = "Input method library of Fcitx 5's pinyin and table engines, with its language model and dictionaries",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Upstream's tarball with the data the build would otherwise
+        // download (the language model, the pinyin and table
+        // dictionaries). Checked against upstream's OpenPGP signature
+        // (Weng Xuetian, 2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9).
+        .{ .url = "https://download.fcitx-im.org/fcitx5/libime/libime-1.1.17_dict.tar.zst", .sha256 = "3cd2703359b3080aa005a22a93400c5ebb5bdfcf3454f506a491c8343826176a" },
+    },
+    // libFcitx5Utils is fcitx5's; Boost.Iostreams and zstd read the
+    // compressed data.
+    .depends = .{ "glibc", "gcc", "fcitx5", "boost", "zstd" },
+    .build_depends = .{ "cmake", "ninja", "extra-cmake-modules", "pkgconf" },
+}

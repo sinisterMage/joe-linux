@@ -1,0 +1,24 @@
+.{
+    .name = "gnome-software",
+    .version = "51.1",
+    .release = 1,
+    .description = "GNOME Software, an application store for Flatpak applications and device firmware",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-software/51/gnome-software-51.1.tar.xz", .sha256 = "6501b1d7e499bfb8009f08efa3339ca6369bc38ee335cc3dfb67da7b2ab71289" },
+    },
+    // flatpak and ostree for the Flatpak plug-in, fwupd for the firmware
+    // plug-in, libgudev for the one that matches hardware to drivers,
+    // polkit for the authorisation checks; gsettings-desktop-schemas is
+    // read at run time.
+    .depends = .{
+        "glibc",     "glib",      "gtk4",      "libadwaita", "pango",
+        "gdk-pixbuf", "appstream", "libxmlb",  "json-glib",  "libsoup",
+        "polkit",    "libgudev",  "flatpak",   "ostree",     "fwupd",
+        "gsettings-desktop-schemas",
+    },
+    // glib provides glib-compile-resources and glib-mkenums; libxml2 the
+    // xmllint that glib-compile-resources runs; itstool translates the help
+    // pages; libxslt and the DocBook files make the manual page.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "libxml2", "itstool", "libxslt", "docbook-xml", "docbook-xsl-nons" },
+}

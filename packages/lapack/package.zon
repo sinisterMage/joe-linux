@@ -1,0 +1,13 @@
+.{
+    .name = "lapack",
+    .version = "3.12.1",
+    .release = 1,
+    .description = "Reference LAPACK linear algebra routines and LAPACKE C interface",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for its release-tag archive; downloaded from upstream.
+        .{ .url = "https://github.com/Reference-LAPACK/lapack/archive/v3.12.1/lapack-3.12.1.tar.gz", .sha256 = "2ca6407a001a474d4d4d35f3a61550156050c48016d949f0da0529c0aa052422" },
+    },
+    .depends = .{ "glibc", "gcc", "gcc-fortran", "openblas" },
+    .build_depends = .{ "cmake", "ninja" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "pugixml",
+    .version = "1.16",
+    .release = 1,
+    .description = "Light-weight C++ XML processing library with a DOM interface and XPath 1.0",
+    .license = "MIT",
+    .sources = .{
+        // The release asset's SHA-256 as GitHub lists it.
+        .{ .url = "https://github.com/zeux/pugixml/releases/download/v1.16/pugixml-1.16.tar.gz", .sha256 = "4cee1ca4aad395170f4c7a07824f3bdd41f28316c6e1e1090a1425b278ec0b4b" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

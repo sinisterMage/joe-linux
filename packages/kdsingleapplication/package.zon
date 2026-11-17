@@ -1,0 +1,15 @@
+.{
+    .name = "kdsingleapplication",
+    .version = "1.2.1",
+    .release = 1,
+    .description = "KDAB's helper for single-instance Qt applications",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the release's detached signature
+        // (kdsingleapplication-1.2.1.tar.gz.asc, KDAB Products key
+        // E86C000370B1B9E2A9191AD53DBFB6882C9358FB).
+        .{ .url = "https://github.com/KDAB/KDSingleApplication/releases/download/v1.2.1/kdsingleapplication-1.2.1.tar.gz", .sha256 = "e3254ce9dc5ecf6d61ef83264bc61d486a307f0e3c9ed1bb2176f068cdbcbe09" },
+    },
+    .depends = .{ "glibc", "gcc", "qt6" },
+    .build_depends = .{"cmake"},
+}

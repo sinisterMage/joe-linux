@@ -1,0 +1,24 @@
+.{
+    .name = "gnome-connections",
+    .version = "51.0",
+    .release = 1,
+    .description = "GNOME remote desktop client for VNC, RDP and SPICE",
+    // gtk-frdp, the bundled RDP widget, is GPL-3.0-or-later as well.
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Checked against upstream's gnome-connections-51.0.sha256sum.
+        .{ .url = "https://download.gnome.org/sources/gnome-connections/51/gnome-connections-51.0.tar.xz", .sha256 = "e3a73728cf30f1e542aed3aa4f18a342e09349b97fe01dfaef86e1603e53af3c" },
+    },
+    // VNC through gtk-vnc (with gvncpulse for the server's audio), SPICE
+    // through spice-gtk, RDP through the bundled gtk-frdp, which links
+    // FreeRDP's client libraries and fuse3 (files copied through the
+    // clipboard). libsecret keeps the passwords.
+    .depends = .{
+        "glibc",   "glib",    "gtk3",     "gdk-pixbuf", "cairo",    "libhandy", "libxml2",
+        "libsecret", "gtk-vnc", "spice-gtk", "freerdp",  "fuse3",
+    },
+    // glib provides g-ir-scanner (for gtk-frdp's vapi) and
+    // glib-compile-resources; itstool builds the help pages; appstream
+    // provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext", "itstool", "appstream" },
+}

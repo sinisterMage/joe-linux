@@ -1,0 +1,21 @@
+.{
+    .name = "ostree",
+    .version = "2026.7",
+    .release = 1,
+    .description = "Content-addressed object store for operating system and application trees (libostree)",
+    .license = "LGPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum of its own; this is the SHA-256
+        // digest GitHub records for the release asset.
+        .{ .url = "https://github.com/ostreedev/ostree/releases/download/v2026.7/libostree-2026.7.tar.xz", .sha256 = "43e0295e869927edfd41e7cb9cdf5ca8f8515a6f1460af4b381f1f701168494c" },
+    },
+    // curl fetches; OpenSSL's libcrypto computes checksums and verifies
+    // ed25519 and SPKI signatures; gpgme verifies GPG signatures; avahi
+    // finds repositories on the local network; libmount and libsystemd for
+    // the boot integration; fuse3 for rofiles-fuse.
+    .depends = .{ "glibc", "glib", "xz", "zlib", "curl", "openssl", "gpgme", "libgpg-error", "libarchive", "avahi", "util-linux", "systemd", "fuse3" },
+    // e2fsprogs: only the e2p header (file attribute flags) is used; glib
+    // provides g-ir-scanner; xsltproc (libxslt) and the DocBook stylesheets
+    // build the manual pages.
+    .build_depends = .{ "pkgconf", "bison", "python", "e2fsprogs", "libxslt", "docbook-xml", "docbook-xsl-nons" },
+}

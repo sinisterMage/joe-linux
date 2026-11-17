@@ -1,0 +1,15 @@
+.{
+    .name = "assimp",
+    .version = "6.0.6",
+    .release = 1,
+    .description = "Open Asset Import Library: loads and converts some 40 3D model formats (glTF, FBX, OBJ, Collada, ...)",
+    .license = "BSD-3-Clause AND MIT AND BSL-1.0",
+    .sources = .{
+        // GitHub's archive of the v6.0.6 tag; upstream publishes no
+        // checksum.
+        .{ .url = "https://github.com/assimp/assimp/archive/v6.0.6/assimp-6.0.6.tar.gz", .sha256 = "5f7ed412b76575621df0525a762b31da5874afff352b3a890c6308db4ac7204c" },
+    },
+    // zlib and minizip are the system libraries; gcc: libstdc++.
+    .depends = .{ "glibc", "gcc", "zlib", "minizip" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

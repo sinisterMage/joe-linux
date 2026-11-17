@@ -1,0 +1,16 @@
+.{
+    .name = "font-manager",
+    .version = "0.9.6",
+    .release = 1,
+    .description = "Font management application for GTK desktops, with a font viewer",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/FontManager/font-manager/releases/download/0.9.6/font-manager-0.9.6.tar.xz", .sha256 = "c7a6a0302a40ab453a42797ce53544f435264c1a69d9f4a04ac4c80e4bc8e5ae" },
+    },
+    // libarchive installs fonts from archives; nautilus: the Files
+    // extension that opens fonts in the viewer.
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "fontconfig", "freetype", "harfbuzz", "pango", "json-glib", "sqlite", "libxml2", "libarchive", "nautilus", "cairo", "gdk-pixbuf", "graphene" },
+    // python lists the extension sources while configuring; appstream
+    // provides the gettext rules for the metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext", "python", "appstream" },
+}

@@ -1,0 +1,26 @@
+.{
+    .name = "grilo-plugins",
+    .version = "0.3.18",
+    .release = 1,
+    .description = "Media source plugins for Grilo: local files, the LocalSearch index, podcasts, cover art and more",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/grilo-plugins/0.3/grilo-plugins-0.3.18.tar.xz", .sha256 = "8e3ce74ee717c3c322d0cb0f8df26bb0914028a5d016e28055ffb49cc9a46c5e" },
+    },
+    // lua is the Lua factory's interpreter (the cover-art and web
+    // sources are Lua scripts), with libarchive, json-glib, libxml2, librest
+    // and gnome-online-accounts for what those scripts may use; avahi finds
+    // a Freebox; sqlite keeps the metadata store and podcasts; tinysparql
+    // reads the LocalSearch index; libmediaart finds local album art.
+    .depends = .{
+        "glibc",           "glib",       "grilo",
+        "gstreamer",       "avahi",      "libmediaart",
+        "lua",             "libarchive", "json-glib",
+        "libxml2",         "librest",    "gnome-online-accounts",
+        "totem-pl-parser", "sqlite",     "libsoup",
+        "tinysparql",
+    },
+    // gperf generates the Lua factory's HTML entity table; itstool builds
+    // the help pages.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "gperf", "itstool" },
+}

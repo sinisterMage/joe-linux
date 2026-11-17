@@ -1,0 +1,23 @@
+.{
+    .name = "fcitx5-chinese-addons",
+    .version = "5.1.15",
+    .release = 1,
+    .description = "Chinese input methods for Fcitx 5: pinyin, shuangpin and tables, with cloud pinyin and conversion between simplified and traditional",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later AND Unicode-DFS-2016",
+    .sources = .{
+        // Upstream's tarball with the data the build would otherwise
+        // download (py_stroke, py_table). Checked against upstream's
+        // OpenPGP signature (Weng Xuetian,
+        // 2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9).
+        .{ .url = "https://download.fcitx-im.org/fcitx5/fcitx5-chinese-addons/fcitx5-chinese-addons-5.1.15_dict.tar.zst", .sha256 = "82f2fef12473ba4e1ffa51b522bf56bfe6a2132ee6d3b5467c653dc1b90cfd08" },
+    },
+    // The engines are Fcitx 5 addons on libime; cloud pinyin uses curl;
+    // the dictionary manager and custom phrase editor are Qt 6 on
+    // fcitx5-qt's widgets library.
+    .depends = .{ "glibc", "gcc", "fcitx5", "libime", "curl", "qt6", "fcitx5-qt" },
+    // Boost and nlohmann-json are used as headers only.
+    .build_depends = .{
+        "cmake",   "ninja",  "extra-cmake-modules", "pkgconf", "gettext",
+        "boost",   "nlohmann-json",
+    },
+}

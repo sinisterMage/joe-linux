@@ -1,0 +1,12 @@
+.{
+    .name = "construct",
+    .version = "2.10.70",
+    .release = 1,
+    .description = "Declarative parser and builder for binary data",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/construct/construct-2.10.70.tar.gz", .sha256 = "4d2472f9684731e58cc9c56c463be63baa1447d674e0d66aeb5627b22f512c29" },
+    },
+    .depends = .{ "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

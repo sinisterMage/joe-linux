@@ -1,7 +1,7 @@
 .{
     .name = "gimp",
     .version = "3.2.8",
-    .release = 1,
+    .release = 2,
     .description = "GNU Image Manipulation Program",
     .license = "GPL-3.0-or-later AND LGPL-3.0-or-later",
     .sources = .{
@@ -22,6 +22,7 @@
         "libx11",       "libxmu",       "libxext",         "libxfixes",  "libxcursor",    "libxpm",
         "tiff",         "libjpeg-turbo", "libpng",         "zlib",       "bzip2",         "xz",
         "poppler",      "openjpeg",     "openexr",         "imath",      "libwebp",       "libjxl",
+        "libheif",      "libwmf",
         "ghostscript",  "alsa-lib",     "libgudev",        "iso-codes",  "shared-mime-info",
         "glib-networking", "python",    "pygobject",       "pycairo",    "gjs",           "xdg-utils",
     },

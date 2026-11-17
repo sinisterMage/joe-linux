@@ -1,0 +1,13 @@
+.{
+    .name = "chardet",
+    .version = "7.7.0",
+    .release = 1,
+    .description = "Universal character encoding detector for Python",
+    .license = "0BSD",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/chardet/chardet-7.7.0.tar.gz", .sha256 = "0ba38a05201b0abf7570c12d8af45c30b2af835bd5cc52bfc7105082eda82c1e" },
+    },
+    .depends = .{"python"},
+    // hatch-vcs takes the version from the sdist's metadata.
+    .build_depends = .{ "python", "hatchling", "hatch-vcs" },
+}

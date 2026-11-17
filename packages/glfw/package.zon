@@ -1,0 +1,27 @@
+.{
+    .name = "glfw",
+    .version = "3.5.1",
+    .release = 1,
+    .description = "Library for creating windows, OpenGL and Vulkan contexts and reading input, on Wayland and X11",
+    .license = "Zlib",
+    .sources = .{
+        // The release archive, checked against the SHA-256 digest GitHub
+        // gives for the release asset.
+        .{ .url = "https://github.com/glfw/glfw/releases/download/3.5.1/glfw-3.5.1.zip", .sha256 = "ea79bc5feffc254c87291980c2d0bce9acebb68c4983b79f961dcd2cb8a611a0" },
+    },
+    // libglfw links only libc and libm: everything else is loaded with
+    // dlopen when a program uses it, so these are its run-time needs:
+    // Wayland (wayland-client/cursor/egl, libxkbcommon, libdecor for window
+    // decorations on GNOME), X11 (libX11, libX11-xcb in libx11, Xrandr,
+    // Xinerama, Xcursor, XInput, Xrender, Xext, Xxf86vm), EGL/GLX (mesa)
+    // and libvulkan.
+    .depends = .{
+        "glibc",      "wayland",   "libxkbcommon", "libdecor",
+        "libx11",     "libxrandr", "libxinerama",  "libxcursor",
+        "libxi",      "libxrender", "libxext",     "libxxf86vm",
+        "mesa",       "vulkan-icd-loader",
+    },
+    // wayland: wayland-scanner, run on the protocol files GLFW carries in
+    // deps/wayland. libarchive: bsdtar, to unpack the zip archive.
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "xorgproto", "libarchive" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "feedparser",
+    .version = "6.0.14",
+    .release = 1,
+    .description = "Universal feed parser, handles RSS 0.9x, RSS 1.0, RSS 2.0, CDF, Atom 0.3, and Atom 1.0 feeds",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/37/8a/a53da4a77352045d277978a2df322d5379369f9deb1707178899ff7e1121/feedparser-6.0.14.tar.gz", .sha256 = "088679b0c4b543ee211a820dd544698c76a402122eae7473c04a43425f283d06" },
+    },
+    .depends = .{ "python", "feedparser-sgmllib" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

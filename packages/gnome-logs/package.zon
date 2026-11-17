@@ -1,0 +1,16 @@
+.{
+    .name = "gnome-logs",
+    .version = "45.0",
+    .release = 1,
+    .description = "GNOME viewer for the systemd journal",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://download.gnome.org/sources/gnome-logs/45/gnome-logs-45.0.tar.xz", .sha256 = "b28a06ea5c98bd17f2873b507f085b0ca0de9810136611f4f2eeb098614ece52" },
+    },
+    // systemd: libsystemd reads the journal.
+    .depends = .{ "glibc", "glib", "gtk4", "libadwaita", "systemd", "gsettings-desktop-schemas", "pango", "cairo" },
+    // itstool translates the help pages; libxslt and the DocBook files
+    // make the manual page; appstream provides the gettext rules for the
+    // metainfo file.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "itstool", "libxslt", "docbook-xsl-nons", "docbook-xml", "appstream" },
+}

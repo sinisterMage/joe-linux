@@ -1,0 +1,18 @@
+.{
+    .name = "fcitx5-configtool",
+    .version = "5.1.16",
+    .release = 1,
+    .description = "Standalone Qt configuration tool and keyboard layout viewer for Fcitx 5",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Verified upstream OpenPGP signature: Weng Xuetian,
+        // 2CC8A0609AD2A479C65B6D5C8E8B898CBF2412F9.
+        .{ .url = "https://download.fcitx-im.org/fcitx5/fcitx5-configtool/fcitx5-configtool-5.1.16.tar.zst", .sha256 = "0d9b9e023d3aa7056ec185ed9e6ccfb94e5a5b930d3dd742dba7f37a49abd61e" },
+    },
+    .depends = .{
+        "glibc", "gcc", "qt6", "fcitx5", "fcitx5-qt",
+        "kitemviews", "kwidgetsaddons", "libx11", "libxkbfile",
+        "iso-codes", "xkeyboard-config",
+    },
+    .build_depends = .{ "cmake", "ninja", "extra-cmake-modules", "pkgconf", "gettext" },
+}

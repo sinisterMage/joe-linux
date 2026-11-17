@@ -1,0 +1,14 @@
+.{
+    .name = "glu",
+    .version = "9.0.3",
+    .release = 1,
+    .description = "Mesa's OpenGL Utility library (libGLU)",
+    .license = "SGI-B-2.0",
+    .sources = .{
+        // Checked against the book's MD5.
+        .{ .url = "https://archive.mesa3d.org/glu/glu-9.0.3.tar.xz", .sha256 = "bd43fe12f374b1192eb15fe20e45ff456b9bc26ab57f0eee919f96ca0f8a330f" },
+    },
+    // mesa: libGL. gcc: libstdc++ (the NURBS code is C++).
+    .depends = .{ "glibc", "gcc", "mesa" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

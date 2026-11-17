@@ -1,0 +1,12 @@
+.{
+    .name = "appstream-glib",
+    .version = "0.8.4",
+    .release = 1,
+    .description = "AppStream metadata library and tools",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/hughsie/appstream-glib/releases/download/appstream_glib_0_8_4/appstream-glib-0.8.4.tar.xz", .file = "appstream-glib-0.8.4.tar.xz", .sha256 = "132575f3ef2712cd0fc8a7f0c9287ff5c4264d75921953220dd2089911272946" },
+    },
+    .depends = .{ "glibc", "glib", "libarchive", "curl", "json-glib", "gdk-pixbuf", "util-linux", "gtk3", "freetype", "fontconfig", "libyaml" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "gperf", "docbook-xsl-nons", "libxslt" },
+}

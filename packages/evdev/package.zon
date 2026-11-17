@@ -1,0 +1,15 @@
+.{
+    .name = "evdev",
+    .version = "2.0.0",
+    .release = 1,
+    .description = "Python bindings to the Linux input subsystem (evdev and uinput)",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Checked against PyPI's sha256 digest.
+        .{ .url = "https://files.pythonhosted.org/packages/source/e/evdev/evdev-2.0.0.tar.gz", .sha256 = "442fb3f4c8dfc9e61e901133c356220c02d663eca8f34722e0cecdd637eba504" },
+    },
+    .depends = .{ "glibc", "python" },
+    // The table of event codes is generated from the kernel's
+    // linux/input.h and linux/input-event-codes.h while building.
+    .build_depends = .{ "python", "setuptools", "wheel", "linux-api-headers" },
+}
