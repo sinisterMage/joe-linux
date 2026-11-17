@@ -1,0 +1,21 @@
+.{
+    .name = "strongswan",
+    .version = "6.1.0",
+    .release = 1,
+    .description = "IKEv2 IPsec implementation: the charon-systemd daemon, swanctl and pki",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against Andreas Steffen's signature (strongswan-6.1.0.tar.bz2.sig,
+        // key 948F158A4E76A27BF3D07532DF42C170B34DBA77) and the MD5 sum
+        // upstream publishes beside it.
+        .{ .url = "https://download.strongswan.org/strongswan-6.1.0.tar.bz2", .sha256 = "fe6c97481298767213cfc2e9a1da29fdd8018d481ff4cb9cf0283099654f20d4" },
+    },
+    // OpenSSL does the cryptography; libcurl and OpenLDAP fetch CRLs and
+    // OCSP responses; SQLite holds address pools and credentials (sql,
+    // attr-sql); PAM checks XAuth passwords; libip4tc (iptables) is used by
+    // the connmark and forecast plugins; libsystemd by charon-systemd;
+    // libcap to keep only the capabilities the daemon needs. The updown
+    // script runs ip and iptables.
+    .depends = .{ "glibc", "openssl", "curl", "openldap", "sqlite", "linux-pam", "iptables", "systemd", "libcap", "iproute2", "bash" },
+    .build_depends = .{ "pkgconf", "bison", "flex", "gperf" },
+}

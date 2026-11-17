@@ -1,0 +1,15 @@
+.{
+    .name = "usbredir",
+    .version = "0.15.0",
+    .release = 1,
+    .description = "Protocol and libraries for redirecting USB devices over a network, and usbredirect",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its signature (usbredir-0.15.0.tar.xz.asc) by
+        // Victor Toso's key 206D3B352F566F3B0E6572E997D9123DE37A484F.
+        .{ .url = "https://www.spice-space.org/download/usbredir/usbredir-0.15.0.tar.xz", .sha256 = "6dc2a380277688a068191245dac2ab7063a552999d8ac3ad8e841c10ff050961" },
+    },
+    // libusbredirhost links libusb; the usbredirect tool also glib.
+    .depends = .{ "glibc", "libusb", "glib" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

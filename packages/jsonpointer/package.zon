@@ -1,0 +1,12 @@
+.{
+    .name = "jsonpointer",
+    .version = "3.12",
+    .release = 1,
+    .description = "Identify specific nodes in a JSON document (RFC 6901)",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/j/jsonpointer/jsonpointer-3.12.tar.gz", .sha256 = "7a3dcc11b64053eaa9c549e85e413f8d40a075215f793a331bed9182a14251ae" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

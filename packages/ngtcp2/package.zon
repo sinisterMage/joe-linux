@@ -1,0 +1,14 @@
+.{
+    .name = "ngtcp2",
+    .version = "1.26.0",
+    .release = 1,
+    .description = "Implementation of the QUIC transport protocol (RFC 9000) in C",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the release's checksums.txt.
+        .{ .url = "https://github.com/ngtcp2/ngtcp2/releases/download/v1.26.0/ngtcp2-1.26.0.tar.xz", .sha256 = "7804aa0fa1c39942ba322a90805824c37231f7675b08d0c3cc4332858a7b085e" },
+    },
+    // libngtcp2_crypto_ossl links OpenSSL's libssl and libcrypto.
+    .depends = .{ "glibc", "openssl" },
+    .build_depends = .{"pkgconf"},
+}

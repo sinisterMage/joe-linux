@@ -8,6 +8,8 @@ build() {
     # obsolete, insecure or better provided elsewhere (logger by util-linux,
     # whois, the r-commands). Added here:
     # - hostname is already shipped by coreutils in joe Linux;
+    # - traceroute is the traceroute package's (the one most distributions
+    #   ship, which also needs no set-uid for its default UDP probes);
     # - internationalised host names (libidn2 is in the build root),
     #   Kerberos, PAM and TCP wrappers are refused by name.
     ./configure --prefix=/usr \
@@ -21,6 +23,7 @@ build() {
         --disable-rsh \
         --disable-servers \
         --disable-hostname \
+        --disable-traceroute \
         --without-idn \
         --without-krb5 \
         --without-shishi \

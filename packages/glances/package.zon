@@ -1,0 +1,17 @@
+.{
+    .name = "glances",
+    .version = "4.5.9",
+    .release = 1,
+    .description = "Curses-based system monitoring tool showing CPU, memory, disks, network and processes at a glance",
+    .license = "LGPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/g/glances/glances-4.5.9.tar.gz", .sha256 = "c197954341ee5a7f8657e87456884b1f52af4bc966f6ab3f1d4c37cf580f5fa0" },
+    },
+    // Upstream's required dependencies (shtab gives --print-completion).
+    // The optional plugins and exports (sensors through psutil work
+    // already; docker, podman, SNMP, GPUs, RAID, Wi-Fi, the InfluxDB,
+    // Prometheus, MQTT ... exports) import their modules at run time and
+    // switch themselves on when those are installed.
+    .depends = .{ "python", "psutil", "defusedxml", "packaging", "jinja2", "shtab" },
+    .build_depends = .{ "python", "setuptools" },
+}

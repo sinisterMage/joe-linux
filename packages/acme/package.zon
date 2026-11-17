@@ -1,0 +1,12 @@
+.{
+    .name = "acme",
+    .version = "5.10.0",
+    .release = 1,
+    .description = "ACME protocol implementation in Python, from the certbot project",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/acme/acme-5.10.0.tar.gz", .sha256 = "12f7de98431d39028e02daafe512a82a1496964cbebcfe6d9a115147c9ad1861" },
+    },
+    .depends = .{ "python", "cryptography", "josepy", "pyopenssl", "pyrfc3339", "requests" },
+    .build_depends = .{ "python", "setuptools" },
+}

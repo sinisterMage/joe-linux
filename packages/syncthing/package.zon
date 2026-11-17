@@ -1,0 +1,18 @@
+.{
+    .name = "syncthing",
+    .version = "2.1.7",
+    .release = 1,
+    .description = "Continuous peer-to-peer file synchronisation between devices",
+    .license = "MPL-2.0",
+    .sources = .{
+        // Upstream's source archive, which carries the vendored Go modules
+        // and the prebuilt web GUI assets; its SHA-256 is in the release's
+        // sha256sum.txt.asc, signed by the Syncthing release key.
+        .{ .url = "https://github.com/syncthing/syncthing/releases/download/v2.1.7/syncthing-source-v2.1.7.tar.gz", .sha256 = "5b84abd0e8b187f618fb2c38c37fa37ce0b377a275d3e0b981bad94176a24afa" },
+    },
+    // Built with cgo, so that the database uses the system SQLite
+    // (mattn/go-sqlite3 with the libsqlite3 tag) rather than a bundled copy
+    // or the slower pure-Go translation.
+    .depends = .{ "glibc", "sqlite" },
+    .build_depends = .{"go"},
+}

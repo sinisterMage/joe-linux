@@ -1,0 +1,12 @@
+.{
+    .name = "shtab",
+    .version = "1.13.0",
+    .release = 1,
+    .description = "Generates bash, zsh and tcsh completion scripts from Python argparse parsers",
+    .license = "MPL-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/shtab/shtab-1.13.0.tar.gz", .sha256 = "0a5be9d7ab2b4549e9a38252abcd5ecf5ec6813ecd80c6b06fa851bff55a5085" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "setuptools-scm" },
+}

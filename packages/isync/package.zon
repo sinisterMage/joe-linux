@@ -1,0 +1,14 @@
+.{
+    .name = "isync",
+    .version = "1.5.1",
+    .release = 2,
+    .description = "mbsync: synchronizes IMAP4 and Maildir mailboxes",
+    .license = "GPL-2.0-or-later WITH LicenseRef-isync-GPL-exception",
+    .sources = .{
+        // Its MD5 matches the one SourceForge publishes for the file.
+        .{ .url = "https://downloads.sourceforge.net/project/isync/isync/1.5.1/isync-1.5.1.tar.gz", .sha256 = "28cc90288036aa5b6f5307bfc7178a397799003b96f7fd6e4bd2478265bb22fa" },
+    },
+    // OpenSSL for TLS (and the openssl program for mbsync-get-cert), Cyrus
+    // SASL for authentication, zlib for IMAP COMPRESS.
+    .depends = .{ "glibc", "openssl", "cyrus-sasl", "zlib" },
+}

@@ -1,0 +1,23 @@
+.{
+    .name = "containers-common",
+    .version = "0.70.0",
+    .release = 2,
+    .description = "Shared configuration and manual pages for Podman, Buildah and Skopeo",
+    .license = "Apache-2.0 AND MIT",
+    .sources = .{
+        // containers/common, containers/image and containers/storage are now
+        // one repository (container-libs) with a tag per library. These are
+        // the tags Podman 6.2.0, Buildah 1.46.1 and Skopeo 1.25.1 require in
+        // go.mod: common v0.70.0, image v5.42.1, storage v1.65.1. Upstream
+        // publishes no checksums for the archives.
+        .{ .url = "https://github.com/podman-container-tools/container-libs/archive/refs/tags/common/v0.70.0.tar.gz", .file = "container-libs-common-0.70.0.tar.gz", .sha256 = "73100f319ccd0d16153e4f09862f6d0e405fd049fb8accb13fc2ec91aadd7893" },
+        .{ .url = "https://github.com/podman-container-tools/container-libs/archive/refs/tags/image/v5.42.1.tar.gz", .file = "container-libs-image-5.42.1.tar.gz", .sha256 = "4f22b49917f19055ab63c1a4a346159b3bece3e230ebfe2734578f4d13bfd20d" },
+        .{ .url = "https://github.com/podman-container-tools/container-libs/archive/refs/tags/storage/v1.65.1.tar.gz", .file = "container-libs-storage-1.65.1.tar.gz", .sha256 = "72e07d2a2b10d58e9d47746501c96c0b321362506baeed8e67e44c773a5b0bd5" },
+        // Short-name aliases (fedora, alpine, ubuntu ...), as other
+        // distributions ship them. No checksum published either.
+        .{ .url = "https://github.com/containers/shortnames/archive/refs/tags/v2025.03.19.tar.gz", .file = "shortnames-2025.03.19.tar.gz", .sha256 = "1a2db4dca75b04d54623087972888459363392b9c4f64b6d0ac2f4b78cba3e45" },
+    },
+    // libsubid allocates non-overlapping ranges for existing normal users.
+    .depends = .{ "glibc", "shadow" },
+    .build_depends = .{"go-md2man"},
+}

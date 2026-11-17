@@ -1,0 +1,18 @@
+.{
+    .name = "kubeadm",
+    .version = "1.37.2",
+    .release = 1,
+    .description = "Tool for creating Kubernetes clusters and joining nodes to them",
+    .license = "Apache-2.0",
+    .sources = .{
+        // The release's source tarball, with the Go modules vendored; its
+        // SHA-256 is published beside it (kubernetes-src.tar.gz.sha256).
+        .{ .url = "https://dl.k8s.io/v1.37.2/kubernetes-src.tar.gz", .file = "kubernetes-src-1.37.2.tar.gz", .sha256 = "d4c61f7fd7adeb0bdfcc58add0ec929646b19314c316a524b2e3c7d3d4c4ff3f" },
+    },
+    // Built without cgo, as upstream builds kubeadm. It configures the
+    // node's kubelet (its drop-in below extends kubelet.service), and its
+    // preflight checks require losetup and mount (util-linux) and cp
+    // (coreutils).
+    .depends = .{ "glibc", "kubelet", "util-linux", "coreutils" },
+    .build_depends = .{"go"},
+}

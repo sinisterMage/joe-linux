@@ -1,0 +1,15 @@
+.{
+    .name = "postfix",
+    .version = "3.11.7",
+    .release = 1,
+    .description = "Postfix mail transfer agent, with sendmail, newaliases and mailq",
+    .license = "IPL-1.0 OR EPL-2.0",
+    .sources = .{
+        .{ .url = "https://ghostarchive.org/postfix/postfix-release/official/postfix-3.11.7.tar.gz", .sha256 = "a2f3242345753448072177fae83c322a403c9263696996406201145dab8e8625" },
+    },
+    // Cyrus SASL, LMDB (the default table type), OpenLDAP, SQLite and
+    // OpenSSL as the book enables them; PCRE2 and ICU (SMTPUTF8) are
+    // found by makedefs.
+    .depends = .{ "glibc", "cyrus-sasl", "lmdb", "openldap", "sqlite", "openssl", "pcre2", "icu" },
+    .build_depends = .{ "pkgconf", "pcre2" },
+}

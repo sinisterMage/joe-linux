@@ -1,0 +1,25 @@
+.{
+    .name = "buildah",
+    .version = "1.46.1",
+    .release = 2,
+    .description = "Tool for building OCI container images, from Containerfiles or step by step",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream publishes no checksum for the source archive. The Go
+        // modules are vendored in it.
+        .{ .url = "https://github.com/podman-container-tools/buildah/archive/v1.46.1/buildah-1.46.1.tar.gz", .sha256 = "23c8436ddc87602ef049b94c35a584037ad80f47c679c85a9fdf53647289d2dd" },
+    },
+    // Linked: gpgme (image signatures), libseccomp, libsubid (shadow),
+    // sqlite (the blob info cache); libsystemd is opened at run time
+    // (systemd). RUN steps run in runc, with networks from netavark and
+    // rootless networking from pasta (passt); containers-common holds the
+    // configuration.
+    .depends = .{
+        "glibc",   "gpgme",    "libseccomp", "shadow",            "sqlite",
+        "systemd", "runc",     "netavark",   "passt",             "containers-common",
+    },
+    // btrfs-progs only for the headers of the btrfs storage driver;
+    // binutils assembles the entry point embedded for confidential
+    // workloads (internal/mkcw).
+    .build_depends = .{ "go", "pkgconf", "btrfs-progs", "binutils" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "pyrfc3339",
+    .version = "2.1.1",
+    .release = 1,
+    .description = "RFC 3339 timestamp generation and parsing for Python",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyrfc3339/pyrfc3339-2.1.1.tar.gz", .sha256 = "b144d63819bd4c1ebf9cb57e12f4cba567fcf23d6e8f2f829ba9c7810ea4b951" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "setuptools-scm" },
+}

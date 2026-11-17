@@ -1,0 +1,13 @@
+.{
+    .name = "snappy",
+    .version = "1.3.1",
+    .release = 1,
+    .description = "Fast compression and decompression library from Google",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/google/snappy/archive/1.3.1/snappy-1.3.1.tar.gz", .sha256 = "893f708a0bf4b5529d555ffcee390e940e932fcf90261f682604475a76cd0247" },
+    },
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "cmake", "ninja" },
+}

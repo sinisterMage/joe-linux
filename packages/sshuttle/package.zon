@@ -1,0 +1,17 @@
+.{
+    .name = "sshuttle",
+    .version = "2.0.0",
+    .release = 1,
+    .description = "Transparent proxy that routes traffic through an SSH connection, a poor man's VPN",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sshuttle/sshuttle-2.0.0.tar.gz", .sha256 = "7347ff01093d471c4e9a299b9c7abd4a18eac4fddfd4cf868bedc623cab71091" },
+    },
+    // Pure Python with no Python dependencies. It connects with ssh, and
+    // runs its firewall half as root through sudo, which redirects the
+    // traffic with iptables (the default "nat" method) or nft (--method
+    // nft).
+    .depends = .{ "python", "openssh", "sudo", "iptables", "nftables" },
+    // Sphinx builds the manual page from docs/manpage.rst.
+    .build_depends = .{ "python", "hatchling", "sphinx" },
+}

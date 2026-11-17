@@ -1,0 +1,18 @@
+.{
+    .name = "libvirt-python",
+    .version = "12.9.0",
+    .release = 1,
+    .description = "Python bindings for the libvirt virtualization API",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against its signature (libvirt_python-12.9.0.tar.gz.asc)
+        // by Jiří Denemark's key 453B65310595562855471199CA68BE8010084C9C,
+        // and against PyPI's sha256.
+        .{ .url = "https://download.libvirt.org/python/libvirt_python-12.9.0.tar.gz", .sha256 = "598b85cd1f5e94b97684b725cd45a65f6ab734c6edaa61d4aec98721f30e9401" },
+    },
+    // The C modules link libvirt, libvirt-qemu and libvirt-lxc.
+    .depends = .{ "glibc", "python", "libvirt" },
+    // The bindings are generated from libvirt's API descriptions
+    // (/usr/share/libvirt/api), found with pkg-config.
+    .build_depends = .{ "python", "setuptools", "pkgconf" },
+}

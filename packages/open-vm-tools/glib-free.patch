@@ -1,0 +1,10 @@
+GLib may define g_free as a sized-free optimization macro. Define the existing
+ABI function without expanding that function-like macro.
+--- a/lib/rpcChannel/glib_stubs.c
++++ b/lib/rpcChannel/glib_stubs.c
+@@ -36,4 +36,4 @@
+ void *g_malloc0(size_t s) { return Util_SafeCalloc(1, s); }
+ void *g_malloc0_n(size_t n, size_t s) { return Util_SafeCalloc(n, s); }
+-void g_free(void *p) { free(p); }
++void (g_free)(void *p) { free(p); }
+ 

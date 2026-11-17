@@ -1,0 +1,23 @@
+.{
+    .name = "caddy",
+    .version = "2.11.9",
+    .release = 1,
+    .description = "Web server with automatic HTTPS",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream's "buildable artifact": cmd/caddy/main.go as a module of
+        // its own with every dependency vendored, the exact tree the release
+        // binaries are built from. It has no top directory. Its SHA-512 is
+        // in the release's caddy_2.11.9_checksums.txt.
+        .{ .url = "https://github.com/caddyserver/caddy/releases/download/v2.11.9/caddy_2.11.9_buildable-artifact.tar.gz", .file = "caddy-2.11.9-buildable-artifact.tar.gz", .sha256 = "07fe00aefec10b60d33e26bddf73d522fdd6d7d48dd0bf125fbce3238ec867e7" },
+        // The units, default Caddyfile, account and welcome page that
+        // upstream's packages are made from, at the release's tag. Upstream
+        // publishes no checksum for it.
+        .{ .url = "https://github.com/caddyserver/dist/archive/v2.11.9/caddy-dist-2.11.9.tar.gz", .sha256 = "432e5d14ab2ad2459ebcfb26b45222f12cc1597f77b26ecca7cdf90e396404c0" },
+    },
+    // Built without cgo, as upstream does, so no library is linked; as a
+    // position-independent executable it is still relocated by glibc's
+    // dynamic loader. Time zones are compiled in (time/tzdata).
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

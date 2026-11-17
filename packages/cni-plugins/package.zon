@@ -1,0 +1,20 @@
+.{
+    .name = "cni-plugins",
+    .version = "1.10.0",
+    .release = 1,
+    .description = "Standard Container Network Interface plugins (bridge, macvlan, portmap, host-local and more)",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream's checksums cover only its binary tarballs, not the
+        // source archive.
+        .{ .url = "https://github.com/containernetworking/plugins/archive/v1.10.0/cni-plugins-1.10.0.tar.gz", .sha256 = "15a36f0a88e90704126d2d523a9704c4cab2439a4a19c9ac23961b31c2a311c6" },
+    },
+    // go downloads the modules the plugins depend on; they are not
+    // vendored yet.
+    .network = true,
+    // Built without cgo, as upstream's release is. The firewall and
+    // portmap plugins program netfilter through the iptables commands or
+    // nftables (nft), whichever the configuration chooses.
+    .depends = .{ "glibc", "iptables", "nftables" },
+    .build_depends = .{"go"},
+}

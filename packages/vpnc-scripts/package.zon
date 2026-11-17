@@ -1,0 +1,17 @@
+.{
+    .name = "vpnc-scripts",
+    // Upstream makes no releases: the master branch at commit
+    // ce9e961bd0f6b867e1c7c35f78f6fb973f6ff101 (2025-07-27), the one Arch
+    // Linux packages.
+    .version = "0.0.20250727",
+    .release = 1,
+    .description = "Script that sets up routes and DNS for openconnect and vpnc tunnels",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://gitlab.com/openconnect/vpnc-scripts/-/archive/ce9e961bd0f6b867e1c7c35f78f6fb973f6ff101/vpnc-scripts-ce9e961bd0f6b867e1c7c35f78f6fb973f6ff101.tar.gz", .file = "vpnc-scripts-20250727.tar.gz", .sha256 = "4c50aedfcabf5d8ef3219a06fc8797790d370cd317e6f6da0064be75a0ce77c0" },
+    },
+    // A shell script: ip for addresses and routes, resolvectl (systemd) for
+    // DNS when systemd-resolved runs, otherwise /etc/resolv.conf itself.
+    .depends = .{ "bash", "iproute2", "coreutils", "sed", "gawk", "grep" },
+}

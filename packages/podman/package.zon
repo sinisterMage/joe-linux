@@ -1,0 +1,29 @@
+.{
+    .name = "podman",
+    .version = "6.2.0",
+    .release = 2,
+    .description = "Daemonless tool for managing OCI containers, pods and images, rootless or as root",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream publishes checksums for its binaries only. The Go modules
+        // are vendored in the archive.
+        .{ .url = "https://github.com/podman-container-tools/podman/archive/v6.2.0/podman-6.2.0.tar.gz", .sha256 = "cb182273c5c5e3ea079f8f88a9a30a574d247f80e0b9dd9c02df1d2e6f6f3705" },
+    },
+    // Linked: gpgme (image signatures), libseccomp, libsubid (shadow, the
+    // rootless id ranges), sqlite (the container database); libsystemd is
+    // opened at run time for journald logging and events (systemd).
+    // Run: conmon monitors each container, runc runs it (crun is preferred
+    // when installed, but is not packaged), netavark and aardvark-dns set up
+    // networks, pasta (passt) is the rootless network, newuidmap and
+    // newgidmap (shadow) map the rootless ids, and containers-common holds
+    // the configuration. fuse-overlayfs and slirp4netns are optional
+    // alternatives to the kernel's overlayfs and to pasta.
+    .depends = .{
+        "glibc",        "gpgme",          "libseccomp", "shadow",
+        "sqlite",       "systemd",        "conmon",     "runc",
+        "netavark",     "aardvark-dns",   "passt",      "containers-common",
+    },
+    // btrfs-progs only for the headers of the btrfs storage driver; python
+    // runs the manual pages' preprocessor.
+    .build_depends = .{ "go", "pkgconf", "btrfs-progs", "python" },
+}

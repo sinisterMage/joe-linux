@@ -1,0 +1,13 @@
+.{
+    .name = "utf8cpp",
+    .version = "5.0.0",
+    .release = 1,
+    .description = "Header-only C++ library for handling UTF-8 encoded text",
+    .license = "BSL-1.0",
+    .sources = .{
+        .{ .url = "https://github.com/nemtrif/utfcpp/archive/v5.0.0/utfcpp-5.0.0.tar.gz", .sha256 = "42c36e1ef1307b1186996e4644f9999970e26325670b99019f3408bf0d3c952a" },
+    },
+    // Headers and CMake package files only: nothing is compiled.
+    .depends = .{},
+    .build_depends = .{"cmake"},
+}

@@ -39,6 +39,11 @@ servers (PostgreSQL, BIND, unbound, nginx, Samba, NFS, WireGuard, nftables)
 and applications such as LibreOffice, GIMP, Inkscape, VLC, Audacity,
 Remmina and KeePassXC.
 
+Optional servers are off by default on new systems. After configuring one,
+use `systemctl enable --now UNIT` to opt in; installing its package alone
+does not start it. Core services, SSH and the GNOME desktop have explicit
+defaults.
+
 The desktop can be lived in as a virtual machine that keeps its disk: the
 first boot asks who you are, and upgrades come from the build machine. See
 [Living in it](#living-in-it). It can also be installed, from a live medium
@@ -318,9 +323,11 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   running a script.
 - **Real hardware.** Firmware, processor microcode, Wi-Fi (through
   NetworkManager and wpa_supplicant) and the Intel, AMD and NVIDIA graphics
-  drivers are there, but have been tried on few machines. There are no Vulkan
-  drivers yet. Video is decoded on the GPU through VA-API with Mesa's drivers
-  (AMD, nouveau, virtual machines), but Intel's VA-API driver is not packaged.
+  drivers are there, but have been tried on few machines. Mesa also supplies
+  Vulkan drivers for Intel, AMD, virtio and software rendering. The lavapipe
+  software path has been smoke-tested; hardware Vulkan remains unverified.
+  Video is decoded on the GPU through VA-API with Mesa's drivers (AMD, nouveau,
+  virtual machines), but Intel's VA-API driver is not packaged.
   The kernel boots without an initramfs, which is enough for internal disks
   but not for encrypted or multi-device roots. The installer erases a whole
   disk: no encryption, no installing beside another system. There is no

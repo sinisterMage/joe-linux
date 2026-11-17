@@ -1,0 +1,17 @@
+.{
+    .name = "virt-viewer",
+    .version = "11.0",
+    .release = 1,
+    .description = "Graphical console client for virtual machines over SPICE and VNC (virt-viewer, remote-viewer)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its signature (virt-viewer-11.0.tar.xz.asc) by
+        // Daniel P. Berrangé's key DAF3A6FDB26B62912D0E8E3FBE86EBB415104FDF.
+        .{ .url = "https://gitlab.com/api/v4/projects/virt-viewer%2Fvirt-viewer/packages/generic/release-assets/v11%2E0/virt-viewer-11%2E0%2Etar%2Exz", .file = "virt-viewer-11.0.tar.xz", .sha256 = "a43fa2325c4c1c77a5c8c98065ac30ef0511a21ac98e590f22340869bad9abd0" },
+    },
+    // libvirt and libvirt-glib find a guest's display (virt-viewer);
+    // gtk-vnc and spice-gtk show it; VTE shows serial consoles.
+    .depends = .{ "glibc", "glib", "gtk3", "libxml2", "libvirt", "libvirt-glib", "gtk-vnc", "spice-gtk", "vte" },
+    // python and perl's pod2man run while building; gettext msgfmt.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "perl", "gettext", "spice-protocol", "bash-completion" },
+}

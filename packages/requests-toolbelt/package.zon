@@ -1,0 +1,12 @@
+.{
+    .name = "requests-toolbelt",
+    .version = "1.0.0",
+    .release = 1,
+    .description = "Utilities for requests: multipart encoding, streaming uploads, adapters",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/r/requests-toolbelt/requests-toolbelt-1.0.0.tar.gz", .sha256 = "7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6" },
+    },
+    .depends = .{ "python", "requests" },
+    .build_depends = .{ "python", "setuptools" },
+}

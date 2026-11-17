@@ -1,0 +1,18 @@
+.{
+    .name = "duckdb",
+    .version = "2.0.0",
+    .release = 1,
+    .description = "DuckDB, an in-process analytical SQL database: the duckdb shell and libduckdb",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no checksum for its source archive.
+        .{ .url = "https://github.com/duckdb/duckdb/archive/v2.0.0/duckdb-2.0.0.tar.gz", .sha256 = "7e89053255046bfb26afbd7f524a2fb84df7dbef496aa911ea35e4a1182fdc00" },
+    },
+    // Everything it uses (ICU, re2, zstd, Mbed TLS, jemalloc, ...) is
+    // bundled in third_party/ and linked statically; only the C and C++
+    // runtimes are shared.
+    .depends = .{ "glibc", "gcc" },
+    // python runs the step that lays the built extensions out as a local
+    // extension repository in the build directory.
+    .build_depends = .{ "cmake", "ninja", "python" },
+}

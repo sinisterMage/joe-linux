@@ -8,6 +8,7 @@ look at.
 """
 
 import os
+import shlex
 import subprocess
 import sys
 import time
@@ -177,11 +178,29 @@ def check_everyday(vm, tag):
         assert application in default, default
 
 
+def check_optional_servers(vm):
+    step("optional servers remain off until the administrator starts them")
+    state = vm.run("systemctl is-enabled rsyncd.socket", check=False).strip()
+    assert state == "disabled", f"rsync daemon socket is {state}"
+    assert vm.run("systemctl is-active rsyncd.socket", check=False).strip() == "inactive"
+    probe = ('import errno,socket; s=socket.socket(); s.settimeout(5); '
+             'assert s.connect_ex(("127.0.0.1",873)) == errno.ECONNREFUSED; s.close()')
+    vm.run("su joe -c " + shlex.quote("python3 -c " + shlex.quote(probe)))
+    try:
+        vm.run("systemctl start rsyncd.socket")
+        probe = ('import socket; s=socket.create_connection(("127.0.0.1",873),timeout=5); '
+                 'assert s.makefile("rb").readline(128).startswith(b"@RSYNCD:"); s.close()')
+        vm.run("su joe -c " + shlex.quote("python3 -c " + shlex.quote(probe)))
+    finally:
+        vm.run("systemctl stop rsyncd.socket")
+
+
 def check_desktop(vm, tag):
     """The checks that make up "a working desktop". `tag` names the screenshots."""
     step("the system finishes booting and the display manager is running")
     wait_for(vm, "the system to finish booting", "systemctl is-active graphical.target", 300)
     wait_for(vm, "gdm", "systemctl is-active gdm.service")
+    check_optional_servers(vm)
     failed = vm.run("systemctl --failed --no-legend --plain", check=False).strip()
     print(f"    failed units: {failed or 'none'}")
 

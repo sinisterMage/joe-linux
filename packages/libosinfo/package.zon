@@ -1,0 +1,18 @@
+.{
+    .name = "libosinfo",
+    .version = "1.12.0",
+    .release = 2,
+    .description = "Library describing operating systems and hypervisors for virtualization tools, with osinfo-query",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its signature (libosinfo-1.12.0.tar.xz.asc) by
+        // Victor Toso's key 206D3B352F566F3B0E6572E997D9123DE37A484F.
+        .{ .url = "https://gitlab.com/api/v4/projects/libosinfo%2Flibosinfo/packages/generic/release-assets/v1%2E12%2E0/libosinfo-1%2E12%2E0%2Etar%2Exz", .file = "libosinfo-1.12.0.tar.xz", .sha256 = "ad8557ece26793da43d26de565e3d68ce2ee6bfb8d0113b7cc7dfe07f6bfc6b6" },
+    },
+    // The database itself is osinfo-db; device names come from hwdata's
+    // pci.ids and usb.ids. libsoup downloads install trees and media.
+    .depends = .{ "glibc", "glib", "libxml2", "libxslt", "libsoup", "osinfo-db", "hwdata" },
+    // glib provides g-ir-scanner; vala the vapi file; perl's pod2man the
+    // manual pages; gettext msgfmt.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "perl", "gettext" },
+}

@@ -1,0 +1,12 @@
+.{
+    .name = "parsedatetime",
+    .version = "2.6",
+    .release = 1,
+    .description = "Parses human-readable date and time strings for Python",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/parsedatetime/parsedatetime-2.6.tar.gz", .sha256 = "4cb368fbb18a0b7231f4d76119165451c8d2e35951455dfee97c62a87b04d455" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

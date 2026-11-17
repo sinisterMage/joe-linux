@@ -1,0 +1,17 @@
+.{
+    .name = "v4l-utils",
+    .version = "1.32.0",
+    .release = 1,
+    .description = "Video4Linux libraries (libv4l2, libv4lconvert, libdvbv5) and tools for cameras, TV tuners and remote controls",
+    .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
+    .sources = .{
+        // Debian's copy of the release tarball (byte for byte, checked
+        // against the book's MD5): linuxtv.org answers scripted downloads
+        // with a bot challenge page.
+        .{ .url = "https://deb.debian.org/debian/pool/main/v/v4l-utils/v4l-utils_1.32.0.orig.tar.xz", .file = "v4l-utils-1.32.0.tar.xz", .sha256 = "6828828a17775526eb93fb258a9294d1d1073d633c344dd71ecd4e7a1ffb7dfc" },
+    },
+    // libjpeg-turbo for MJPEG cameras in libv4lconvert, libudev for
+    // libdvbv5 and the media controller tools, json-c for v4l2-tracer.
+    .depends = .{ "glibc", "gcc", "libjpeg-turbo", "systemd", "json-c" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "perl", "gettext" },
+}

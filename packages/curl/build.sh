@@ -11,6 +11,8 @@ build() {
         --with-zstd \
         --with-libpsl \
         --with-nghttp2 \
+        --with-ngtcp2 \
+        --with-nghttp3 \
         --with-libidn2 \
         --without-brotli \
         --without-libssh2 \

@@ -3,10 +3,10 @@ build() {
     cd build
     # Everything optional is stated so that the build root cannot change the
     # result:
-    # - vulkan: no Vulkan loader and no glslc here; GTK renders with OpenGL.
+    # - vulkan: the loader and glslc provide the Vulkan renderer.
     # - media-gstreamer: GtkVideo and GtkMediaFile through GstPlay.
-    # - print-cups, print-cpdb, colord: no CUPS (colord only serves the CUPS
-    #   backend); "print to file" is built in.
+    # - print-cups and colord: printer discovery, output and colour profiles.
+    #   CPDB is not packaged; the CUPS and print-to-file backends are built.
     # - cloudproviders, tracker: libcloudproviders and tinysparql exist; the
     #   file chooser gains cloud locations and search.
     # - sysprof, accesskit: do not exist here.
@@ -22,12 +22,12 @@ build() {
         -D wayland-backend=true \
         -D broadway-backend=true \
         -D media-gstreamer=enabled \
-        -D print-cups=disabled \
+        -D print-cups=enabled \
         -D print-cpdb=disabled \
-        -D vulkan=disabled \
+        -D vulkan=enabled \
         -D cloudproviders=enabled \
         -D tracker=enabled \
-        -D colord=disabled \
+        -D colord=enabled \
         -D sysprof=disabled \
         -D accesskit=disabled \
         -D introspection=enabled \

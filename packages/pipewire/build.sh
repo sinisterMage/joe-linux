@@ -12,18 +12,21 @@ build() {
     # headset calls with the native HSP/HFP back end, which asks
     # ModemManager about calls on a modem. libusb is for USB Bluetooth
     # adapters that do HFP offload.
+    # WebRTC audio-processing 1 provides echo cancellation; libebur128
+    # provides loudness measurement. Its filter-graph target also requires
+    # lilv in this release, so enable the supported LV2 host as well.
     #
     # Not built: the AAC, aptX, LDAC and LC3 Bluetooth codecs and the
     # ofono and hsphfpd back ends (no recipes), JACK and the JACK
     # replacement libraries, libcamera, the v4l2 LD_PRELOAD shim, libpulse
-    # tunnels, Avahi, FFmpeg, Vulkan, SDL2, ROC, LV2, libmysofa, WebRTC
-    # echo cancelling, the X11 bell (libcanberra), FFADO, snap, ebur128,
-    # FFTW, ONNX, AVB and ALSA compress offload. The PulseAudio GSettings
-    # schema belongs to pulseaudio.
+    # tunnels, Avahi, FFmpeg, Vulkan, SDL2, ROC, libmysofa, the X11 bell
+    # (libcanberra), FFADO, snap, FFTW, ONNX, AVB and ALSA compress offload.
+    # The PulseAudio GSettings schema belongs to pulseaudio.
     #
     # libdrm and ncurses (pw-top) have no switch; both are dependencies.
     meson setup .. \
         --prefix=/usr \
+        --libdir=lib \
         --buildtype=release \
         -D session-managers="[]" \
         -D udevrulesdir=/usr/lib/udev/rules.d \
@@ -74,16 +77,16 @@ build() {
         -D vulkan=disabled \
         -D sdl2=disabled \
         -D roc=disabled \
-        -D lv2=disabled \
+        -D lv2=enabled \
         -D libmysofa=disabled \
-        -D echo-cancel-webrtc=disabled \
+        -D echo-cancel-webrtc=enabled \
         -D x11=disabled \
         -D x11-xfixes=disabled \
         -D libcanberra=disabled \
         -D libffado=disabled \
         -D snap=disabled \
         -D selinux=disabled \
-        -D ebur128=disabled \
+        -D ebur128=enabled \
         -D fftw=disabled \
         -D onnxruntime=disabled \
         -D avb=disabled \

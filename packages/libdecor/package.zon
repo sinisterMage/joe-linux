@@ -1,0 +1,16 @@
+.{
+    .name = "libdecor",
+    .version = "0.2.5",
+    .release = 1,
+    .description = "Client-side window decorations for Wayland programs, used by SDL and GLFW on GNOME",
+    .license = "MIT",
+    .sources = .{
+        // Checked against the .sha256sum file published with the release.
+        .{ .url = "https://gitlab.freedesktop.org/-/project/18349/uploads/eaf9a38b227a6e4997b5cb8fc3b8c830/libdecor-0.2.5.tar.xz", .sha256 = "7fd50f780a4fee90a03f7b2c09055033e488654cbaff4a0c4bbae616bac9cd1c" },
+    },
+    // libdecor-0: wayland-client and libdbus (cursor theme settings from
+    // the desktop portal). The plugins it loads: cairo (cairo, pangocairo,
+    // wayland-cursor) and gtk (GTK 3, drawing GNOME's own title bars).
+    .depends = .{ "glibc", "wayland", "dbus", "cairo", "pango", "glib", "gtk3" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "wayland-protocols" },
+}

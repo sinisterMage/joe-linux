@@ -1,0 +1,24 @@
+.{
+    .name = "cryptography",
+    .version = "50.0.2",
+    .release = 1,
+    .description = "Cryptographic recipes and primitives for Python, on OpenSSL",
+    .license = "Apache-2.0 OR BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/cryptography/cryptography-50.0.2.tar.gz", .sha256 = "7b46165bb56eb4704e2eaaf86f3c940d19154535d9b0ca7d6d590b04060e00d5" },
+    },
+    // cargo downloads the crates cryptography's Rust half depends on from
+    // crates.io; they are not vendored yet.
+    .network = true,
+    // A pyo3 extension module (cryptography.hazmat.bindings._rust, abi3)
+    // that also carries the cffi binding to OpenSSL, linking the system
+    // libssl and libcrypto; libgcc_s (gcc) for unwinding. _cffi_backend
+    // (cffi) is imported at run time. OpenSSL 4.1 is supported: this
+    // release's wheels are built with OpenSSL 4.0, and its openssl-sys
+    // crate accepts any 4.x.
+    .depends = .{ "glibc", "gcc", "openssl", "python", "cffi" },
+    // The build script runs Python with cffi (and setuptools, which cffi
+    // compiles through) to generate the OpenSSL binding; openssl-sys finds
+    // OpenSSL with pkg-config.
+    .build_depends = .{ "python", "maturin", "rust", "setuptools", "cffi", "pkgconf" },
+}

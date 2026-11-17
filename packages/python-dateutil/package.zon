@@ -1,0 +1,18 @@
+.{
+    .name = "python-dateutil",
+    .version = "4.0.0",
+    .release = 1,
+    .description = "Extensions to the Python datetime module: parsing, relative deltas, recurrence rules, time zones",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/python-dateutil/python_dateutil-4.0.0.tar.gz", .sha256 = "d7295ff14fdc0f92f662100bfb6c551d160ca090f2939f1ec5b9794265c03f06" },
+    },
+    // Upstream's metadata requires the "tzdata" module from PyPI, which is
+    // not packaged (and would clash with the name of joe's tzdata). It is
+    // only a fallback: dateutil.tz reads the system time zone database
+    // first (zoneinfo.TZPATH, /usr/share/zoneinfo), which the tzdata
+    // package provides. Only the deprecated dateutil.zoneinfo needs the
+    // module.
+    .depends = .{ "python", "tzdata" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs", "hatch-fancy-pypi-readme" },
+}

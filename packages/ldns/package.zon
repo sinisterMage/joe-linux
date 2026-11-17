@@ -1,0 +1,12 @@
+.{
+    .name = "ldns",
+    .version = "1.9.2",
+    .release = 1,
+    .description = "DNS library, with the drill lookup tool and the ldns-* zone and DNSSEC utilities",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://www.nlnetlabs.nl/downloads/ldns/ldns-1.9.2.tar.gz", .sha256 = "b524fa21994b6e834200ceb8c27f1b84bda5982fe35706f058196c079db94d5d" },
+    },
+    // libpcap is linked by ldns-dpa, one of the example programs.
+    .depends = .{ "glibc", "openssl", "libpcap" },
+}

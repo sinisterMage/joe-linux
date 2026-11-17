@@ -1,0 +1,15 @@
+.{
+    .name = "libmicrohttpd",
+    .version = "1.0.10",
+    .release = 1,
+    .description = "GNU libmicrohttpd, a small C library for embedding an HTTP server in a program",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against upstream's GPG signature (.sig, key
+        // D8423BCB326C7907033929C7939E6BE1E29FC3CC, Christian Grothoff).
+        .{ .url = "https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-1.0.10.tar.gz", .sha256 = "04bfe8ef75db7d629a33de767599765cecadc56274a39822d5d081030d577685" },
+    },
+    // GnuTLS for HTTPS.
+    .depends = .{ "glibc", "gnutls" },
+    .build_depends = .{"pkgconf"},
+}

@@ -1,0 +1,16 @@
+.{
+    .name = "usb-modeswitch-data",
+    .version = "20261111",
+    .release = 1,
+    .description = "Device database and udev rules for usb-modeswitch",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum; this is the SHA-256 Arch Linux
+        // records for the same file.
+        .{ .url = "https://www.draisberghof.de/usb_modeswitch/usb-modeswitch-data-20261111.tar.bz2", .sha256 = "221507574da7d11debdba94e40cf164b59fb8b19be1a3ecbec76e348b7a4fa73" },
+    },
+    // Data only. The rules run usb_modeswitch, from usb-modeswitch, which
+    // depends on this package (as in Debian), so they are installed
+    // together.
+    .depends = .{},
+}

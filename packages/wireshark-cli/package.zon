@@ -1,0 +1,24 @@
+.{
+    .name = "wireshark-cli",
+    .version = "4.6.9",
+    .release = 2,
+    .description = "Network protocol analyzer: tshark, dumpcap and the other command-line tools, without the GUI",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // The book's MD5 checks it.
+        .{ .url = "https://www.wireshark.org/download/src/all-versions/wireshark-4.6.9.tar.xz", .sha256 = "d062d416a1ab3a49975aafe3a671c882dde0562ccd71b078808ceb59d465fc0f" },
+    },
+    // libgpg-error is linked directly as well as through libgcrypt.
+    // libssh: the sshdump, ciscodump and wifidump capture helpers; systemd:
+    // sdjournal; libnl: dumpcap's monitor mode and dpauxmon; GnuTLS and
+    // Kerberos: decryption (krb5's pkg-config file adds libcom_err, which is
+    // e2fsprogs'); sbc and opus: the audio codec plugins.
+    .depends = .{
+        "glibc",   "glib",   "libgcrypt", "libgpg-error", "c-ares",  "pcre2",  "libxml2",
+        "libpcap", "libcap", "libnl",     "libssh",       "systemd", "gnutls", "krb5",
+        "xxhash",  "zlib",   "minizip",   "brotli",       "lz4",     "zstd",   "nghttp2",
+        "lua",     "sbc",    "opus",      "e2fsprogs", "snappy", "nghttp3", "speexdsp",
+    },
+    // asciidoctor: the manual pages.
+    .build_depends = .{ "cmake", "ninja", "python", "flex", "pkgconf", "asciidoctor" },
+}

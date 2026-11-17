@@ -1,7 +1,7 @@
 .{
     .name = "harfbuzz",
     .version = "15.1.0",
-    .release = 1,
+    .release = 2,
     .description = "OpenType text shaping engine",
     .license = "MIT",
     .sources = .{
@@ -9,8 +9,8 @@
     },
     // freetype is built without harfbuzz, so this dependency has no way
     // back. libharfbuzz-icu links ICU, libharfbuzz-raster libpng,
-    // libharfbuzz-vector zlib.
-    .depends = .{ "glibc", "gcc", "freetype", "glib", "icu", "libpng", "zlib" },
+    // libharfbuzz-vector zlib. The Graphite2 shaper links graphite.
+    .depends = .{ "glibc", "gcc", "freetype", "glib", "icu", "libpng", "zlib", "graphite" },
     // glib provides g-ir-scanner for HarfBuzz-0.0.gir.
     .build_depends = .{ "meson", "ninja", "pkgconf", "python" },
 }

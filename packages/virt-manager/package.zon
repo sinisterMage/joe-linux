@@ -1,0 +1,29 @@
+.{
+    .name = "virt-manager",
+    .version = "5.1.0",
+    .release = 1,
+    .description = "Desktop application for managing virtual machines through libvirt, with virt-install, virt-clone and virt-xml",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its signature (virt-manager-5.1.0.tar.xz.asc) by
+        // Pavel Hrdina's key 4252D86A52041137C291CADFC85C5E957062A701
+        // (signing subkey 71BCECF75868FDCA16598EDA522D64733007E18C).
+        .{ .url = "https://github.com/virt-manager/virt-manager/releases/download/v5.1.0/virt-manager-5.1.0.tar.xz", .sha256 = "ccfc44b6c1c0be8398beb687c675d9ea4ca1c721dfb67bd639209a7b0dec11b1" },
+    },
+    // Pure Python, through GObject introspection: GTK 3, libvirt-glib,
+    // libosinfo (with osinfo-db), gtk-vnc and spice-gtk for the graphical
+    // console, VTE for the serial console. virtinst parses XML with
+    // libxml2's Python bindings and downloads install trees with requests;
+    // argcomplete completes the command-line tools; xorrisofs (libisoburn)
+    // builds the ISO images for unattended and cloud-init installs. Its
+    // settings are GSettings, stored by dconf. libvirt runs the guests
+    // (virt-manager can also manage remote hosts over SSH).
+    .depends = .{
+        "python",      "pygobject", "gtk3",        "libvirt-python", "libvirt-glib", "libosinfo",
+        "gtk-vnc",     "spice-gtk", "vte",         "libxml2-python", "requests",     "argcomplete",
+        "libisoburn",  "dconf",     "hicolor-icon-theme", "adwaita-icon-theme",    "libvirt",
+    },
+    // docutils writes the manual pages (rst2man); gettext the
+    // translations and the desktop file.
+    .build_depends = .{ "meson", "ninja", "python", "docutils", "gettext" },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "lftp",
+    .version = "4.9.3",
+    .release = 1,
+    .description = "Scriptable file transfer client for FTP, FTPS, SFTP, HTTP, HTTPS and BitTorrent",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Checked against Alexander Lukyanov's signature (lftp-4.9.3.tar.xz.asc,
+        // key C027FA3148652A5513036413A824BB69F2A99A18) and upstream's
+        // lftp-4.9.3.md5sum.
+        .{ .url = "https://lftp.yar.ru/ftp/lftp-4.9.3.tar.xz", .sha256 = "96e7199d7935be33cf6b1161e955b2aab40ab77ecdf2a19cea4fc1193f457edc" },
+    },
+    // SFTP runs the ssh client (openssh), which is not a dependency: it is
+    // needed only for sftp:// and fish:// sites.
+    .depends = .{ "glibc", "gcc", "readline", "ncurses", "gnutls", "expat", "zlib", "libidn2" },
+    .build_depends = .{"pkgconf"},
+}

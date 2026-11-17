@@ -1,0 +1,21 @@
+.{
+    .name = "certbot",
+    .version = "5.10.0",
+    .release = 1,
+    .description = "ACME client that obtains and renews TLS certificates from Let's Encrypt and other CAs",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/certbot/certbot-5.10.0.tar.gz", .sha256 = "522517720f39b5ddb5a2841bda87f27693a1f58e9fa90d6823c288822cc9a204" },
+    },
+    // Upstream's install_requires, plus requests, which certbot imports
+    // itself (OCSP checks, the EFF subscription). The apache and nginx
+    // installer plugins are separate projects, not packaged: certbot here
+    // obtains certificates with its standalone, webroot and manual plugins
+    // ("certbot certonly").
+    .depends = .{
+        "python",       "acme",     "configargparse", "configobj",
+        "cryptography", "distro",   "josepy",         "parsedatetime",
+        "pyrfc3339",    "requests",
+    },
+    .build_depends = .{ "python", "setuptools" },
+}

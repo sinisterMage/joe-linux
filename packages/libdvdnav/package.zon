@@ -1,0 +1,12 @@
+.{
+    .name = "libdvdnav",
+    .version = "7.0.0",
+    .release = 1,
+    .description = "Library for navigating DVD-Video menus",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://get.videolan.org/libdvdnav/7.0.0/libdvdnav-7.0.0.tar.xz", .sha256 = "a2a18f5ad36d133c74bf9106b6445806fa253b09141a46392550394b647b221e" },
+    },
+    .depends = .{ "glibc", "libdvdread" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

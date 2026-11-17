@@ -21,6 +21,7 @@ d /var/log 0755 root root -
 d /var/log/journal 2755 root systemd-journal -
 d /var/spool 0755 root root -
 d /var/spool/mail 1777 root root -
+L /var/mail - - - - spool/mail
 d /var/tmp 1777 root root 30d
 L /var/run - - - - ../run
 L /var/lock - - - - ../run/lock
@@ -52,4 +53,18 @@ After=systemd-udevd.service systemd-udev-trigger.service
 ExecStartPre=-/usr/bin/udevadm settle --timeout=30
 EOT
     done
+
+    # systemd otherwise presets every unmentioned unit on first boot, including
+    # optional servers. Keep upstream's earlier core presets and our packaged
+    # .wants/aliases; everything else requires an administrator's explicit enable.
+    install -d "$DESTDIR/usr/lib/systemd/system-preset" \
+        "$DESTDIR/usr/lib/systemd/user-preset"
+    cat > "$DESTDIR/usr/lib/systemd/system-preset/99-joe-default.preset" <<'EOT'
+# The base system provides SSH access; optional servers remain opt-in.
+enable sshd.service
+disable *
+EOT
+    cat > "$DESTDIR/usr/lib/systemd/user-preset/99-joe-default.preset" <<'EOT'
+disable *
+EOT
 }

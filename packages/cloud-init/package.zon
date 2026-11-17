@@ -1,0 +1,28 @@
+.{
+    .name = "cloud-init",
+    .version = "26.2",
+    .release = 1,
+    .description = "Initializes cloud and virtual machine instances from their metadata (users, SSH keys, network, disks)",
+    .license = "GPL-3.0-only OR Apache-2.0",
+    .sources = .{
+        // Checked against its signature (cloud-init-26.2.tar.gz.asc) by Chad
+        // Smith's key E25451E0221B5773DEBFF178ECDACB160995AD89.
+        .{ .url = "https://launchpad.net/cloud-init/trunk/26.2/+download/cloud-init-26.2.tar.gz", .sha256 = "e7914cf3c9f670fac5d9690c6ee4de504ec5c78c1c586256dc35ce8332e67ffe" },
+    },
+    // The Python modules of upstream's requirements.txt (configobj,
+    // jinja2, jsonpatch, jsonschema, oauthlib, pyyaml, requests), and the
+    // programs it runs: its units pass the stage sockets through nc -U
+    // (openbsd-netcat), ds-identify and the generator are sh scripts, it
+    // grows partitions with growpart (cloud-utils) and file systems with
+    // their own tools, asks dhcpcd for a lease before the network is up,
+    // creates users with shadow's tools, gives them sudo rules and
+    // configures openssh's sshd.
+    .depends = .{
+        "python",    "configobj", "jinja2",    "jsonpatch", "jsonschema", "oauthlib",   "pyyaml",
+        "requests",  "systemd",   "util-linux", "iproute2", "dhcpcd",     "shadow",     "sudo",
+        "openssh",   "openbsd-netcat", "cloud-utils", "e2fsprogs", "btrfs-progs", "bash",
+    },
+    // tools/render-template imports cloud-init itself to write the units,
+    // the generator and cloud.cfg, and with it jinja2, pyyaml and requests.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "jinja2", "pyyaml", "requests", "bash-completion" },
+}

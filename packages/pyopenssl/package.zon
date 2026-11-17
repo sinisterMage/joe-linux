@@ -1,0 +1,14 @@
+.{
+    .name = "pyopenssl",
+    .version = "26.4.0",
+    .release = 1,
+    .description = "Python wrapper around a subset of the OpenSSL library",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyopenssl/pyopenssl-26.4.0.tar.gz", .sha256 = "28dfcce0162b9211413e26dfbfdf1d24317fbeba18fc93c12400a1856b2a0bc7" },
+    },
+    // Pure Python: it calls OpenSSL through cryptography's bindings, and
+    // asks for cryptography >=49, <51.
+    .depends = .{ "python", "cryptography" },
+    .build_depends = .{ "python", "setuptools" },
+}

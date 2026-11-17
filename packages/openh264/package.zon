@@ -1,0 +1,16 @@
+.{
+    .name = "openh264",
+    .version = "2.7.0",
+    .release = 2,
+    .description = "Cisco's H.264 (AVC) encoder and decoder library",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // GitHub publishes no checksum for archives; Cisco's own downloads
+        // are prebuilt binaries only.
+        .{ .url = "https://github.com/cisco/openh264/archive/v2.7.0/openh264-2.7.0.tar.gz", .sha256 = "5178775c8b440073e70920e97d195efff721c0e56d0a78cc82c919e95d54924d" },
+    },
+    // gcc: libstdc++.
+    .depends = .{ "glibc", "gcc" },
+    // nasm assembles the x86 SIMD code.
+    .build_depends = .{ "meson", "ninja", "nasm" },
+}

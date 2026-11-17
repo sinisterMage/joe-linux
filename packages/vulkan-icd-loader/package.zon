@@ -1,0 +1,16 @@
+.{
+    .name = "vulkan-icd-loader",
+    .version = "1.4.363.0",
+    .release = 1,
+    .description = "Vulkan loader (libvulkan), which dispatches Vulkan calls to the installed GPU drivers",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Checked against the book's MD5.
+        .{ .url = "https://github.com/KhronosGroup/Vulkan-Loader/archive/vulkan-sdk-1.4.363.0/Vulkan-Loader-vulkan-sdk-1.4.363.0.tar.gz", .sha256 = "941eff558fc74f248745fb7df367640cf89a8457f216dae498a74ae14b6ba6f7" },
+    },
+    // The loader links only libc; drivers (Mesa's ICDs) and layers are
+    // found through their JSON manifests and loaded with dlopen. The X11
+    // and Wayland window-system support needs only their headers.
+    .depends = .{"glibc"},
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "vulkan-headers", "libx11", "libxcb", "libxrandr", "xorgproto", "wayland" },
+}

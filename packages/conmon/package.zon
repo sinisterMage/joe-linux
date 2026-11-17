@@ -1,0 +1,15 @@
+.{
+    .name = "conmon",
+    .version = "2.2.1",
+    .release = 1,
+    .description = "OCI container runtime monitor used by Podman and CRI-O",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream publishes no checksum for the source archive.
+        .{ .url = "https://github.com/containers/conmon/archive/v2.2.1/conmon-2.2.1.tar.gz", .sha256 = "814fb5979a3a4b8576b1f901e606b482bebb41cb7e57926e6d5765ee786b96d3" },
+    },
+    // journald logging (libsystemd) and seccomp notification (libseccomp)
+    // are compiled in when found, and both are.
+    .depends = .{ "glibc", "glib", "systemd", "libseccomp" },
+    .build_depends = .{ "pkgconf", "go-md2man" },
+}

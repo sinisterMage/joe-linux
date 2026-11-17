@@ -1,0 +1,25 @@
+.{
+    .name = "ansible-core",
+    .version = "2.22.0",
+    .release = 1,
+    .description = "Ansible's automation engine and command-line tools (ansible, ansible-playbook, ...)",
+    // ansible-core is GPL-3.0-or-later; parts of module_utils, which are
+    // copied to managed hosts, are BSD-2-Clause, and licenses/ lists the
+    // rest that is bundled (PSF-2.0, MIT, Apache-2.0, BSD-3-Clause).
+    .license = "GPL-3.0-or-later AND BSD-2-Clause AND PSF-2.0 AND MIT AND Apache-2.0 AND BSD-3-Clause",
+    .sources = .{
+        // 2.22 rather than the 2.21.6 the ansible bundle asks for: 2.21 patches
+        // a private part of dataclasses that Python 3.15 no longer has, so it
+        // cannot run on joe's Python at all. 2.22 checks whether the patch is
+        // needed (Python 3.15 fixed the bug it works around). Checked against
+        // PyPI's sha256 digest.
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/ansible-core/ansible_core-2.22.0.tar.gz", .sha256 = "bf50b4a0cfa985e30585c7ba301897ea7050d224ca49d2816cab10e33a160e1c" },
+    },
+    // requirements.txt, plus openssh: ssh is the default connection to
+    // managed hosts.
+    .depends = .{ "python", "jinja2", "pyyaml", "cryptography", "packaging", "resolvelib", "openssh" },
+    // The manual pages are generated from the programs' own argument
+    // parsers (which import ansible with its dependencies above) and
+    // written with docutils.
+    .build_depends = .{ "python", "setuptools", "docutils" },
+}

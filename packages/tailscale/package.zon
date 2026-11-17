@@ -1,0 +1,21 @@
+.{
+    .name = "tailscale",
+    .version = "1.104.7",
+    .release = 1,
+    .description = "WireGuard-based mesh VPN client: tailscaled and the tailscale command",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for the source archive.
+        .{ .url = "https://github.com/tailscale/tailscale/archive/v1.104.7/tailscale-1.104.7.tar.gz", .sha256 = "fa1c922b33d0f6db6b073800d7a62fa84081323d247b21547c63a98ed7ecac14" },
+    },
+    // go downloads the modules tailscale depends on; they are not vendored
+    // yet.
+    .network = true,
+    // Built without cgo, as upstream's Linux releases are, so no library
+    // is linked; as position-independent executables they are still
+    // relocated by glibc's dynamic loader. tailscaled drives nftables (or
+    // iptables, when that is what it finds) over netlink, and DNS through
+    // systemd-resolved over D-Bus.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

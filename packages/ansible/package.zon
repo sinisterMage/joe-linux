@@ -1,0 +1,21 @@
+.{
+    .name = "ansible",
+    .version = "14.6.0",
+    .release = 1,
+    .description = "Ansible community package: ansible-core with a curated set of collections",
+    // The collections' own licences (their MANIFEST.json files): most are
+    // GPL-3.0-or-later, some GPL-2.0-or-later, GPL-3.0-only, Apache-2.0,
+    // MIT, BSD-3-Clause, or GPL-3.0-or-later with BSD-2-Clause, MPL-2.0 or
+    // PSF-2.0 parts. All are free.
+    .license = "GPL-3.0-or-later AND GPL-2.0-or-later AND GPL-3.0-only AND Apache-2.0 AND MIT AND BSD-2-Clause AND BSD-3-Clause AND MPL-2.0 AND PSF-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/ansible/ansible-14.6.0.tar.gz", .sha256 = "47cd013f4b6462f15b65485d09b713ae64697036733078f0623f636a94f5df45" },
+    },
+    // Upstream asks only for ansible-core ~= 2.21.6; joe's is 2.22, because
+    // 2.21 cannot run on Python 3.15 (see ansible-core). Many collections need
+    // further Python modules (boto3 for amazon.aws, the kubernetes client
+    // for kubernetes.core, ...), mostly on the managed hosts; like upstream,
+    // the package leaves those to whoever uses the collection.
+    .depends = .{ "python", "ansible-core" },
+    .build_depends = .{ "python", "setuptools" },
+}

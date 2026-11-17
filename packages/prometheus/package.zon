@@ -1,0 +1,26 @@
+.{
+    .name = "prometheus",
+    .version = "3.16.0",
+    .release = 1,
+    .description = "Monitoring system and time series database, with its web UI and promtool",
+    // Prometheus is Apache-2.0. The web UI compiled into it bundles npm
+    // modules under MIT, ISC, BSD, Apache-2.0, MPL-2.0 and 0BSD, and the
+    // classic UI Font Awesome's icons (CC-BY-4.0); every module in both
+    // lockfiles was checked against the registry and all are free.
+    .license = "Apache-2.0",
+    .sources = .{
+        // GitHub's archive of the v3.16.0 tag. The release attaches only
+        // binaries and the prebuilt web UI (with a sha256sums.txt for
+        // those); there is no checksum for the source archive.
+        .{ .url = "https://github.com/prometheus/prometheus/archive/v3.16.0/prometheus-3.16.0.tar.gz", .sha256 = "2709a3bd43f9d15e0cecfc33ab473d011e2a69ab29265b91398cc1b8561403c0" },
+    },
+    // go downloads the modules Prometheus depends on, and pnpm the npm
+    // packages of its web UI from upstream's lockfiles; they are not
+    // vendored yet.
+    .network = true,
+    // Built without cgo, as upstream does, so no library is linked; as a
+    // position-independent executable it is still relocated by glibc's
+    // dynamic loader.
+    .depends = .{"glibc"},
+    .build_depends = .{ "go", "nodejs", "pnpm" },
+}

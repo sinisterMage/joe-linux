@@ -1,0 +1,17 @@
+.{
+    .name = "cffi",
+    .version = "2.1.1",
+    .release = 1,
+    .description = "C foreign function interface for Python",
+    .license = "MIT-0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/cffi/cffi-2.1.1.tar.gz", .sha256 = "dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be" },
+    },
+    // A C extension module (_cffi_backend) linking libffi; pycparser parses
+    // the C declarations given to cffi. Compiling a module in cffi's API
+    // mode (ffi.compile) also needs setuptools and a C compiler, which, as
+    // upstream's metadata has it, are left to whoever compiles.
+    .depends = .{ "glibc", "libffi", "python", "pycparser" },
+    // setup.py finds libffi with pkg-config.
+    .build_depends = .{ "python", "setuptools", "wheel", "pkgconf" },
+}

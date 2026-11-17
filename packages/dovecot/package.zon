@@ -1,0 +1,17 @@
+.{
+    .name = "dovecot",
+    .version = "2.4.5",
+    .release = 1,
+    .description = "Dovecot IMAP, POP3, LMTP and ManageSieve-ready mail server",
+    .license = "MIT AND LGPL-2.1-only",
+    .sources = .{
+        .{ .url = "https://www.dovecot.org/releases/2.4/dovecot-2.4.5.tar.gz", .sha256 = "868c2686a61b5f8e00a3e4721789b1ab46e6528fd773a5fbed07a6ecba7731e6" },
+    },
+    // The book's libtirpc (NFS quota) and PAM; OpenSSL; libcrypt
+    // (libxcrypt); zlib, bzip2, LZ4 and zstd compression; libcap; libunwind
+    // for backtraces; libsodium (argon2 passwords); ICU and PCRE2; systemd
+    // notification; and the plugins: GSSAPI (krb5), LDAP (OpenLDAP), SQL
+    // with SQLite, Lua, and Solr full-text search (expat).
+    .depends = .{ "glibc", "libtirpc", "linux-pam", "openssl", "libxcrypt", "zlib", "bzip2", "lz4", "zstd", "libcap", "libunwind", "libsodium", "icu", "pcre2", "systemd", "krb5", "openldap", "sqlite", "lua", "expat" },
+    .build_depends = .{ "pkgconf", "rpcsvc-proto" },
+}

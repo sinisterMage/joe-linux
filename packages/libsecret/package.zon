@@ -1,7 +1,7 @@
 .{
     .name = "libsecret",
     .version = "0.21.8.2",
-    .release = 1,
+    .release = 2,
     .description = "GObject library for the freedesktop.org Secret Service API",
     .license = "LGPL-2.1-or-later",
     .sources = .{
@@ -10,8 +10,8 @@
     // A Secret Service provider (gnome-keyring) is expected at run time. It
     // is not listed: it needs gcr, which is built later, and nothing here
     // links it.
-    .depends = .{ "glibc", "glib", "libgcrypt" },
+    .depends = .{ "glibc", "glib", "libgcrypt", "tpm2-tss" },
     // glib provides g-ir-scanner, vala provides vapigen; xsltproc (libxslt)
     // and the DocBook stylesheets build secret-tool(1).
-    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "vala", "libxslt", "docbook-xml", "docbook-xsl-nons" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "vala", "libxslt", "docbook-xml", "docbook-xsl-nons", "bash-completion" },
 }

@@ -1,0 +1,17 @@
+.{
+    .name = "pgbackrest",
+    .version = "2.60.1",
+    .release = 1,
+    .description = "Backup and restore for PostgreSQL, with parallel compression, retention and archiving",
+    .license = "MIT",
+    .sources = .{
+        // Upstream's build distribution (generated sources included); its
+        // SHA-256 is the release's pgbackrest-2.60.1.tar.gz.sha256sum.
+        .{ .url = "https://github.com/pgbackrest/pgbackrest/releases/download/release/2.60.1/pgbackrest-2.60.1.tar.gz", .sha256 = "c6d8190fee982f0febdd2ca5ca112f83b4b0905ef9949e9cf64a46a6cc138026" },
+    },
+    // libpq is part of the postgresql package, which also creates the
+    // postgres account pgbackrest normally runs as. libssh2: SFTP
+    // repositories; systemd: sd_notify for the server.
+    .depends = .{ "glibc", "postgresql", "openssl", "libxml2", "zlib", "bzip2", "lz4", "zstd", "libssh2", "systemd" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

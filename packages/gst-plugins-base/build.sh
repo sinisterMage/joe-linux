@@ -2,12 +2,13 @@ build() {
     mkdir build
     cd build
     # Every plugin with an outside dependency is named. Not built:
-    # cdparanoia, libvisual, theora and tremor (no such libraries), Orc
+    # cdparanoia, libvisual and tremor (no such libraries), Orc
     # (not in the book), the Qt and GTK examples. The GL library takes its
     # APIs, platforms and window systems (X11, Wayland, GBM) from what mesa
     # provides.
     meson setup .. \
         --prefix=/usr \
+        --libdir=lib \
         --buildtype=release \
         --wrap-mode=nodownload \
         -D introspection=enabled \
@@ -30,7 +31,7 @@ build() {
         -D xi=enabled \
         -D cdparanoia=disabled \
         -D libvisual=disabled \
-        -D theora=disabled \
+        -D theora=enabled \
         -D tremor=disabled \
         -D orc=disabled \
         -D qt5=disabled \

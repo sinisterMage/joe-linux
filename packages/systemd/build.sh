@@ -32,6 +32,7 @@ build() {
         -D nobody-group=nogroup \
         -D sysupdate=disabled \
         -D ukify=disabled \
+        -D tpm2=disabled \
         -D vconsole=false
     ninja
 }

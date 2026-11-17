@@ -1,0 +1,19 @@
+.{
+    .name = "virtiofsd",
+    .version = "1.14.0",
+    .release = 1,
+    .description = "vhost-user virtio-fs device daemon that shares host directories with QEMU guests",
+    .license = "Apache-2.0 AND BSD-3-Clause",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives.
+        .{ .url = "https://gitlab.com/virtio-fs/virtiofsd/-/archive/v1.14.0/virtiofsd-v1.14.0.tar.gz", .file = "virtiofsd-1.14.0.tar.gz", .sha256 = "52b66e449ca583b4f050a2bff327ff812211a2c349b4130279fcfc6a64540f04" },
+    },
+    // cargo downloads the crates virtiofsd depends on from crates.io; they
+    // are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; libseccomp for its system call filter
+    // and libcap-ng for dropping capabilities (the libseccomp-sys and capng
+    // crates link the system libraries).
+    .depends = .{ "glibc", "gcc", "libseccomp", "libcap-ng" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

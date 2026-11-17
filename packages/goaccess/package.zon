@@ -1,0 +1,16 @@
+.{
+    .name = "goaccess",
+    .version = "1.12",
+    .release = 1,
+    .description = "Web server access log analyser for the terminal and HTML reports",
+    // goaccess is MIT. The HTML report embeds Bootstrap 3 and normalize.css
+    // (MIT), d3 and TopoJSON with the world atlas (ISC), Hogan.js
+    // (Apache-2.0) and an icon font subset of Font Awesome (OFL-1.1).
+    .license = "MIT AND ISC AND Apache-2.0 AND OFL-1.1",
+    .sources = .{
+        // Upstream publishes no checksum or signature for the tarball.
+        .{ .url = "https://tar.goaccess.io/goaccess-1.12.tar.gz", .sha256 = "3aef5f6d5061decc6fc4946339b3a61b170bd256f80b4e861194b095df83ec86" },
+    },
+    .depends = .{ "glibc", "ncurses", "openssl", "zlib" },
+    .build_depends = .{"gettext"},
+}

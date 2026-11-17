@@ -1,0 +1,14 @@
+.{
+    .name = "mbedtls",
+    .version = "3.6.7",
+    .release = 1,
+    .description = "Mbed TLS: a small TLS, X.509 and cryptography library (3.6 long-term support branch)",
+    .license = "Apache-2.0 OR GPL-2.0-or-later",
+    .sources = .{
+        // Checked against the release's mbedtls-3.6.7-sha256sum.txt.
+        .{ .url = "https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.7/mbedtls-3.6.7.tar.bz2", .sha256 = "a7e8bcbec0e6f761b4af24f25677626b35f762f68eef79c08677a363212d11f6" },
+    },
+    .depends = .{"glibc"},
+    // python runs upstream's scripts/config.py (see build.sh).
+    .build_depends = .{ "cmake", "ninja", "python" },
+}

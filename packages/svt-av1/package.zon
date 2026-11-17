@@ -1,0 +1,17 @@
+.{
+    .name = "svt-av1",
+    .version = "4.3.0",
+    .release = 1,
+    .description = "Scalable Video Technology AV1 encoder library (libSvtAv1Enc) and SvtAv1EncApp",
+    // Code since 1.0 is BSD-3-Clause-Clear, older code BSD-2-Clause; the
+    // Alliance for Open Media patent licence (PATENTS.md) comes with both.
+    .license = "BSD-3-Clause-Clear AND BSD-2-Clause",
+    .sources = .{
+        // GitLab publishes no checksum for archives; this is the book's
+        // archive and matches its MD5.
+        .{ .url = "https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v4.3.0/SVT-AV1-v4.3.0.tar.gz", .sha256 = "95ce8fc2381ba707e65ac8b9b2e165915bfbe9cd4d2f7b0f58d64ce31bd98f6d" },
+    },
+    .depends = .{"glibc"},
+    // nasm assembles the x86 SIMD kernels.
+    .build_depends = .{ "cmake", "ninja", "nasm" },
+}

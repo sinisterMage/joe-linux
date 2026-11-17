@@ -1,0 +1,20 @@
+.{
+    .name = "coredns",
+    .version = "1.15.0",
+    .release = 1,
+    .description = "DNS server built from a chain of plugins, the cluster DNS of Kubernetes",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream publishes checksums for its binaries only, not for the
+        // source archive.
+        .{ .url = "https://github.com/coredns/coredns/archive/v1.15.0/coredns-1.15.0.tar.gz", .sha256 = "6631fd1d6daccb6eea5a31f31cf8295080aa43c9d0683ff6680b19224c4c2d57" },
+    },
+    // go downloads the modules coredns depends on; they are not vendored
+    // yet.
+    .network = true,
+    // Built without cgo, as upstream's releases are, so no library is
+    // linked; as a position-independent executable it is still relocated
+    // by glibc's dynamic loader.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

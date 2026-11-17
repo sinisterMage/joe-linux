@@ -1,0 +1,18 @@
+.{
+    .name = "httpie",
+    .version = "3.2.4",
+    .release = 2,
+    .description = "Command-line HTTP client for APIs: http and https",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/h/httpie/httpie-3.2.4.tar.gz", .sha256 = "302ad436c3dc14fd0d1b19d4572ef8d62b146bcd94b505f3c2521f701e2e7a2a" },
+    },
+    // requests with its "socks" extra (pysocks); urllib3 is also imported
+    // directly. pip (part of python) and setuptools are in upstream's
+    // requirements for "httpie cli plugins install".
+    .depends = .{
+        "python",   "requests",          "pysocks",   "urllib3", "charset-normalizer", "defusedxml",
+        "pygments", "requests-toolbelt", "multidict", "rich",    "setuptools",
+    },
+    .build_depends = .{ "python", "setuptools" },
+}

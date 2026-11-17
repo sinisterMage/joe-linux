@@ -1,0 +1,12 @@
+.{
+    .name = "josepy",
+    .version = "2.3.0",
+    .release = 1,
+    .description = "JOSE (JSON Web Signature and related standards) implementation for Python, used by certbot",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/j/josepy/josepy-2.3.0.tar.gz", .sha256 = "64084a17845cb8c0c18abe3c66eb74d61e44c19c9bd45d21cd279749a7ac109a" },
+    },
+    .depends = .{ "python", "cryptography" },
+    .build_depends = .{ "python", "poetry-core" },
+}

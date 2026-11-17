@@ -1,0 +1,15 @@
+.{
+    .name = "librist",
+    .version = "0.2.20",
+    .release = 1,
+    .description = "Reliable Internet Stream Transport (RIST) protocol library and tools",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // Checked against the SHA-512 in the release notes.
+        .{ .url = "https://code.videolan.org/rist/librist/-/archive/v0.2.20/librist-v0.2.20.tar.gz", .sha256 = "9e40eeb87f014790531ad41326cc271b930a65962e4b15231b301fc59b29fe31" },
+    },
+    // Mbed TLS for encryption and SRP authentication, cJSON and LZ4 as the
+    // system's; libmicrohttpd serves the tools' Prometheus statistics.
+    .depends = .{ "glibc", "mbedtls", "cjson", "lz4", "libmicrohttpd" },
+    .build_depends = .{ "meson", "ninja", "pkgconf", "cmake" },
+}

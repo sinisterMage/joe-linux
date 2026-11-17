@@ -1,0 +1,20 @@
+.{
+    .name = "openconnect",
+    .version = "9.21",
+    .release = 1,
+    .description = "Client for Cisco AnyConnect, Juniper/Pulse, GlobalProtect, Fortinet, F5 and Array SSL VPNs",
+    .license = "LGPL-2.1-only",
+    .sources = .{
+        // Checked against David Woodhouse's signature (openconnect-9.21.tar.gz.asc,
+        // key BE07D9FD54809AB2C4B0FF5F63762CDA67E2F359).
+        .{ .url = "https://www.infradead.org/openconnect/download/openconnect-9.21.tar.gz", .sha256 = "5b32369467db6e5f317aa1ed12cfcbb81ed00bdbc765450b6bfcbdc300944a58" },
+    },
+    // GnuTLS (with p11-kit for PKCS#11 tokens), Nettle's hogweed and GMP
+    // for HPKE, libxml2, zlib and LZ4 for compression, MIT Kerberos for
+    // GSSAPI proxy and server authentication, pcsc-lite for Yubikey OATH.
+    // vpnc-scripts sets up routes and DNS; xdg-open is the browser for
+    // single sign-on (--external-browser).
+    .depends = .{ "glibc", "gnutls", "nettle", "gmp", "p11-kit", "libxml2", "zlib", "lz4", "krb5", "pcsc-lite", "vpnc-scripts", "xdg-utils" },
+    // configure checks that the browser it is given is executable.
+    .build_depends = .{ "pkgconf", "gettext", "xdg-utils" },
+}

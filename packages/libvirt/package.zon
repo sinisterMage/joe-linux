@@ -1,0 +1,30 @@
+.{
+    .name = "libvirt",
+    .version = "12.9.0",
+    .release = 2,
+    .description = "Virtualization API and daemons managing QEMU/KVM guests, virtual networks and storage",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its signature (libvirt-12.9.0.tar.xz.asc) by
+        // Jiří Denemark's key 453B65310595562855471199CA68BE8010084C9C.
+        .{ .url = "https://download.libvirt.org/libvirt-12.9.0.tar.xz", .sha256 = "dcf579d8a949f4cbf56820529d48f200382a48ea12855ffded7c16a189353cd7" },
+    },
+    // Linked: libtirpc (the RPC protocol's XDR), libudev (systemd),
+    // libblkid (util-linux), libdevmapper (lvm2), libacl and libattr, and
+    // the libraries of the features build.sh turns on. Run: qemu-base for
+    // the QEMU driver; dnsmasq, iproute2 and nftables for virtual
+    // networks; polkit and the D-Bus system bus for access control and
+    // QEMU's D-Bus helpers; util-linux's mount for file system pools.
+    // python runs virt-qemu-qmp-proxy and virt-qemu-sev-validate, which
+    // also import the libvirt module (libvirt-python, which depends on
+    // this package).
+    .depends = .{
+        "glibc",     "glib",     "libxml2",   "gnutls",    "libtirpc",   "json-c",  "libnl",
+        "libcap-ng", "libpcap",  "libssh",    "libssh2",   "systemd",    "util-linux", "lvm2",
+        "acl",       "attr",     "readline",  "libpciaccess", "dbus",    "polkit",  "qemu-base",
+        "dnsmasq",   "iproute2", "nftables",  "python",    "cyrus-sasl", "libbsd",
+    },
+    // perl, python, xmllint and xsltproc are required to build; docutils
+    // writes the manual pages (rst2man); gettext the translations.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "perl", "python", "libxslt", "docutils", "gettext", "bash-completion" },
+}

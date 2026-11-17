@@ -1,0 +1,14 @@
+.{
+    .name = "nss-mdns",
+    .version = "0.15.1",
+    .release = 1,
+    .description = "glibc NSS module resolving .local host names through Avahi's multicast DNS",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/avahi/nss-mdns/releases/download/v0.15.1/nss-mdns-0.15.1.tar.gz", .sha256 = "ddf71453d7a7cdc5921fe53ef387b24fd0c3c49f4dcf94a2a437498596761a21" },
+    },
+    // The modules do no multicast DNS themselves: they ask avahi-daemon,
+    // over its socket.
+    .depends = .{ "glibc", "avahi" },
+}

@@ -1,11 +1,12 @@
+prepare() {
+    patch -Np1 -i "$SOURCES/protobuf-c-1.5.2-protobuf34_fix-1.patch"
+}
+
 build() {
-    # --disable-protoc: only the runtime library, libprotobuf-c, is built.
-    # The code generator (protoc-gen-c) is a C++ program that needs Protobuf
-    # and Abseil, neither of which exists here, and nothing needs it:
-    # libshumate, the one user, ships its generated vector_tile.pb-c.[ch].
-    # The book's protobuf34_fix patch only touches the generator, so it is
-    # not applied, and its -std=c++20 has nothing to act on.
-    ./configure --prefix=/usr --disable-static --disable-protoc
+    # The generator uses the system Protobuf and Abseil; rsyslog's native
+    # statistics push support generates its wire messages at build time.
+    CXXFLAGS="${CXXFLAGS:--O2 -g} -std=c++20" \
+        ./configure --prefix=/usr --disable-static
     make
 }
 

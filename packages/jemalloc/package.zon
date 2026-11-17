@@ -1,0 +1,15 @@
+.{
+    .name = "jemalloc",
+    .version = "5.4.0",
+    .release = 1,
+    .description = "General-purpose malloc implementation emphasising fragmentation avoidance and scalable concurrency",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // The release asset's SHA-256 as GitHub lists it.
+        .{ .url = "https://github.com/jemalloc/jemalloc/releases/download/5.4.0/jemalloc-5.4.0.tar.bz2", .sha256 = "200776fac271093e7c2f21edd6d62657ecd2be578d9328633f2a86bfa6ef4f1d" },
+    },
+    // libstdc++ (gcc) for the C++ operator new/delete it provides; jeprof,
+    // the heap profile analyser, is a Perl script.
+    .depends = .{ "glibc", "gcc", "perl" },
+    .build_depends = .{},
+}

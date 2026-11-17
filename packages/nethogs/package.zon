@@ -1,0 +1,15 @@
+.{
+    .name = "nethogs",
+    .version = "0.9.0",
+    .release = 1,
+    .description = "Shows network bandwidth per process, like top",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/raboof/nethogs/archive/v0.9.0/nethogs-0.9.0.tar.gz", .sha256 = "5961bef2155c05695d2fe7e79aa11194981b5afd1cad9bf1f259c7f30d5487c3" },
+    },
+    // Capturing needs root (or CAP_NET_ADMIN and CAP_NET_RAW, which cannot
+    // be given to the file here).
+    .depends = .{ "glibc", "gcc", "libpcap", "ncurses" },
+    .build_depends = .{"pkgconf"},
+}

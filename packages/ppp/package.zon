@@ -1,0 +1,18 @@
+.{
+    .name = "ppp",
+    .version = "2.5.5",
+    .release = 1,
+    .description = "Point-to-Point Protocol daemon (pppd), with chat and the PPPoE, PPPoL2TP and RADIUS plugins",
+    .license = "BSD-3-Clause AND GPL-2.0-or-later",
+    .sources = .{
+        // Checked against Paul Mackerras's signature (ppp-2.5.5.tar.gz.asc,
+        // key BF454B7D76B69BD78AB9A4699D9AEA772C63719F).
+        .{ .url = "https://download.samba.org/pub/ppp/ppp-2.5.5.tar.gz", .sha256 = "0ebbcfef906d16cfbb9cbdd19c0d92aa3df2fd8fdd29731f614c58d16a279aa5" },
+    },
+    // OpenSSL for MPPE, MS-CHAP, EAP-TLS and PEAP; libpcap for the
+    // active-filter and pass-filter options; PAM for the login option;
+    // libcrypt for crypt-style passwords in pap-secrets; libsystemd for
+    // up_sdnotify. pon and poff are shell scripts; poff uses pidof.
+    .depends = .{ "glibc", "openssl", "libpcap", "linux-pam", "libxcrypt", "systemd", "bash", "procps-ng" },
+    .build_depends = .{"pkgconf"},
+}

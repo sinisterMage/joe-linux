@@ -1,0 +1,20 @@
+.{
+    .name = "pnpm",
+    .version = "11.28.12",
+    .release = 1,
+    .description = "Fast, disk space efficient package manager for Node.js",
+    // pnpm itself is MIT; the modules bundled in dist/node_modules are MIT,
+    // ISC, BlueOak-1.0.0 (tar, minipass, chownr, ...) and Apache-2.0
+    // (exponential-backoff).
+    .license = "MIT AND ISC AND BlueOak-1.0.0 AND Apache-2.0",
+    .sources = .{
+        // The npm package: pnpm as upstream publishes it, compiled to one
+        // JavaScript bundle (dist/pnpm.mjs) with its few runtime modules
+        // beside it, so there is nothing else to fetch. The SHA-512 the
+        // registry publishes for it (dist.integrity) was checked.
+        .{ .url = "https://registry.npmjs.org/pnpm/-/pnpm-11.28.12.tgz", .sha256 = "d0c42f9232c9685056b432f8b07631bbabd245d40ede9a982919c7a7ada40aa7" },
+    },
+    // node-gyp, bundled for packages that build native modules, runs
+    // python and make; those are the building package's build_depends.
+    .depends = .{"nodejs"},
+}

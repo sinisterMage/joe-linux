@@ -1,0 +1,16 @@
+.{
+    .name = "sratom",
+    .version = "0.6.22",
+    .release = 1,
+    .description = "Library for serialising LV2 atoms to and from RDF",
+    .license = "ISC",
+    .sources = .{
+        // Checked against upstream's detached signature (.sig, David
+        // Robillard's key 907D226E7E13FA337F014A083672782A9BF368F3).
+        .{ .url = "https://download.drobilla.net/sratom-0.6.22.tar.xz", .sha256 = "0209b7d0f22c96abb416722ed735b0933be47931ecff4aa4b26ded7760b4f252" },
+    },
+    // lv2 is needed for its headers, which sratom's own headers include,
+    // and its specification bundles describe the atoms sratom reads.
+    .depends = .{ "glibc", "serd", "sord", "lv2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

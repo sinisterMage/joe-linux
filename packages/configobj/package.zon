@@ -1,0 +1,12 @@
+.{
+    .name = "configobj",
+    .version = "5.0.9",
+    .release = 1,
+    .description = "Config file reader and writer for Python, with the validate module",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/configobj/configobj-5.0.9.tar.gz", .sha256 = "03c881bbf23aa07bccf1b837005975993c4ab4427ba57f959afdd9d1a2386848" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

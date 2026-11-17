@@ -1,0 +1,20 @@
+.{
+    .name = "spice",
+    .version = "0.16.0",
+    .release = 1,
+    .description = "SPICE server library, the remote display side used by QEMU",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against upstream's spice-0.16.0.tar.bz2.sha256.
+        .{ .url = "https://www.spice-space.org/download/releases/spice-server/spice-0.16.0.tar.bz2", .sha256 = "0a6ec9528f05371261bbb2d46ff35e7b5c45ff89bb975a99af95a5f20ff4717d" },
+    },
+    // spice-server.pc requires spice-protocol, whose headers the installed
+    // ones include. libudev (systemd) is found and linked by the bundled
+    // spice-common without an option to turn it off; it detects the GPU.
+    // libstdc++ (gcc): the server is partly C++. Cyrus SASL authenticates
+    // clients.
+    .depends = .{ "glibc", "gcc", "glib", "pixman", "openssl", "libjpeg-turbo", "zlib", "opus", "lz4", "cyrus-sasl", "systemd", "spice-protocol" },
+    // The marshallers spice-common generates at build time are written by a
+    // Python script that uses pyparsing.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "pyparsing" },
+}

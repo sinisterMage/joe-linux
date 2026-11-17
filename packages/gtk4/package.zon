@@ -1,7 +1,7 @@
 .{
     .name = "gtk4",
     .version = "4.24.1",
-    .release = 1,
+    .release = 2,
     .description = "GTK 4 widget toolkit",
     .license = "LGPL-2.1-or-later",
     .sources = .{
@@ -22,6 +22,7 @@
         "gstreamer",         "gst-plugins-base", "gst-plugins-bad",    "gst-plugins-good",
         "libcloudproviders", "tinysparql",       "iso-codes",          "mesa",
         "librsvg",           "shared-mime-info", "hicolor-icon-theme", "adwaita-icon-theme",
+        "vulkan-icd-loader", "cups",            "colord",
     },
     // glib provides g-ir-scanner and glib-compile-resources; wayland provides
     // wayland-scanner. Only the headers of libdrm are used (dmabuf formats).
@@ -30,5 +31,6 @@
     .build_depends = .{
         "meson",             "ninja",     "pkgconf", "python",  "pygobject", "gettext",
         "wayland-protocols", "xorgproto", "libdrm",  "libxml2",
+        "vulkan-headers",   "shaderc",
     },
 }

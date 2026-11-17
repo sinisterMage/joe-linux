@@ -1,0 +1,17 @@
+.{
+    .name = "chromaprint",
+    .version = "1.6.2",
+    .release = 1,
+    .description = "Audio fingerprinting library (AcoustID) and the fpcalc tool",
+    // Chromaprint's own code is MIT; it includes parts of FFmpeg (the
+    // resampler in src/avresample), which are LGPL-2.1, so upstream calls
+    // the whole LGPL-2.1.
+    .license = "MIT AND LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/acoustid/chromaprint/releases/download/v1.6.2/chromaprint-1.6.2.tar.gz", .sha256 = "d54ada62c16b2db396d3251ec54fc7a58909c163131a1cfcf7fa6407dbc14360" },
+    },
+    // gcc: libstdc++. ffmpeg: the library's FFT is libavutil's (avtx);
+    // fpcalc decodes with libavformat, libavcodec and libswresample.
+    .depends = .{ "glibc", "gcc", "ffmpeg" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

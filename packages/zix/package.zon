@@ -1,0 +1,14 @@
+.{
+    .name = "zix",
+    .version = "0.8.2",
+    .release = 1,
+    .description = "Lightweight C library of portability wrappers and data structures, used by the LV2 libraries",
+    .license = "ISC",
+    .sources = .{
+        // Checked against upstream's detached signature (.sig, David
+        // Robillard's key 907D226E7E13FA337F014A083672782A9BF368F3).
+        .{ .url = "https://download.drobilla.net/zix-0.8.2.tar.xz", .sha256 = "4c73aab0f8cbbfe56b00c8c6d648316021e699c5ae6cbf254391ef309047e67b" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "meson", "ninja" },
+}

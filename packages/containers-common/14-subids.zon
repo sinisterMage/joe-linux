@@ -1,0 +1,10 @@
+.{
+    .name = "rootless container subordinate IDs",
+    .paths = .{
+        "usr/libexec/joe-setup-subids",
+        "usr/lib/sysusers.d/",
+        "usr/sbin/useradd",
+        "etc/login.defs",
+    },
+    .exec = .{"/usr/libexec/joe-setup-subids"},
+}

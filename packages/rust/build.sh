@@ -97,6 +97,9 @@ build() {
 package() {
     _rust_env
     DESTDIR="$DESTDIR" ./x.py install
+    # Chromium's Crubit generator links rustc_private. Install the developer
+    # component built by this same compiler, never a prebuilt rustc-dev.
+    DESTDIR="$DESTDIR" ./x.py install rustc-dev
 
     # Records kept by the installer script for its uninstall.sh; they are
     # full of $DESTDIR paths and the package manager does that job.

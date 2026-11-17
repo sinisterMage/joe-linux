@@ -1,0 +1,26 @@
+.{
+    .name = "lnav",
+    .version = "0.14.1",
+    .release = 1,
+    .description = "Log file navigator: merges, follows and queries log files in the terminal",
+    // lnav is BSD-2-Clause. Bundled: notcurses and scnlib (Apache-2.0),
+    // fmtlib, pugixml, date, md4c, rapidyaml, robin_hood and others (MIT),
+    // yajl (ISC), CLI11 (BSD-3-Clause), tlx (BSL-1.0), xxHash and base64
+    // (BSD-2-Clause). The Rust extension's crates are MIT or Apache-2.0.
+    .license = "BSD-2-Clause AND Apache-2.0 AND MIT AND ISC AND BSD-3-Clause AND BSL-1.0",
+    .sources = .{
+        // The SHA-256 is the digest GitHub records for the release asset;
+        // upstream publishes no separate checksum file.
+        .{ .url = "https://github.com/tstack/lnav/releases/download/v0.14.1/lnav-0.14.1.tar.gz", .sha256 = "870c896a6973e1e973007be1d66bba3aef23b2aa68411fb5cc85bb7dd21a7fb0" },
+    },
+    // cargo downloads the crates of lnav's Rust extension (PRQL, log2src
+    // and the external access server) from crates.io and one from GitHub,
+    // as pinned by its Cargo.lock; they are not vendored yet.
+    .network = true,
+    // libstdc++ and libgcc_s (gcc); the rest are what configure links.
+    .depends = .{ "glibc", "gcc", "zlib", "bzip2", "libunistring", "curl", "libarchive", "pcre2", "sqlite" },
+    // re2c regenerates the two scanners from their .re sources (the tarball
+    // also carries them generated, so this only makes the build the same
+    // whatever the build root holds).
+    .build_depends = .{ "rust", "re2c" },
+}

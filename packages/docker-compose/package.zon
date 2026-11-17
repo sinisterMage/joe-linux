@@ -1,0 +1,18 @@
+.{
+    .name = "docker-compose",
+    .version = "5.7.1",
+    .release = 1,
+    .description = "Docker Compose: define and run multi-container applications (docker compose)",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream's checksums.txt covers its binaries only.
+        .{ .url = "https://github.com/docker/compose/archive/v5.7.1/docker-compose-5.7.1.tar.gz", .sha256 = "bd108789759d3e17ae5532dd6eee67b427dade4c85089daa2f85d6c8f3e3ccb6" },
+    },
+    // go downloads the modules Compose depends on; they are not vendored
+    // yet.
+    .network = true,
+    // Built without cgo, as upstream's release is. It is a plugin of the
+    // docker command and talks to dockerd.
+    .depends = .{ "glibc", "docker" },
+    .build_depends = .{"go"},
+}

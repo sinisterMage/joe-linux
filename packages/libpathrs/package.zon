@@ -1,0 +1,17 @@
+.{
+    .name = "libpathrs",
+    .version = "0.2.6",
+    .release = 1,
+    .description = "C library for safe path resolution on Linux, used by runc",
+    .license = "MPL-2.0 OR LGPL-3.0-or-later",
+    .sources = .{
+        // Upstream's release tarball and the crates it depends on, vendored
+        // by upstream (cargo vendor); both SHA-256s are in the release's
+        // signed libpathrs.sha256sum.
+        .{ .url = "https://github.com/cyphar/libpathrs/releases/download/v0.2.6/libpathrs-0.2.6.tar.xz", .sha256 = "7b1e3a2c3cc0bd9f94187edbb6d1ba9737deb2bf7f724df1ee37653ea405b2b0" },
+        .{ .url = "https://github.com/cyphar/libpathrs/releases/download/v0.2.6/libpathrs.vendor.tar.zst", .file = "libpathrs-0.2.6.vendor.tar.zst", .sha256 = "11ff71f4f55f432af378fe1a58dc41512aa19d732f5a753e75aa61f4a229a5c7" },
+    },
+    // libgcc_s (gcc) for unwinding.
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "rust", "zstd" },
+}

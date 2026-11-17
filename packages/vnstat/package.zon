@@ -1,0 +1,14 @@
+.{
+    .name = "vnstat",
+    .version = "2.14",
+    .release = 1,
+    .description = "Console network traffic monitor that keeps long-term statistics",
+    .license = "GPL-2.0-only",
+    .sources = .{
+        // Checked against Teemu Toivola's signature (vnstat-2.14.tar.gz.asc,
+        // key 23EF1DD76E65248FB055201ADAFE84E63D140114).
+        .{ .url = "https://github.com/vergoh/vnstat/releases/download/v2.14/vnstat-2.14.tar.gz", .sha256 = "8ba2119b3c6f780775135f9c9fa7236867da67e2f93649f1313319b9cf48f87c" },
+    },
+    .depends = .{ "glibc", "sqlite" },
+    .build_depends = .{"pkgconf"},
+}

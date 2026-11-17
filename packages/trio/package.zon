@@ -1,0 +1,13 @@
+.{
+    .name = "trio",
+    .version = "0.35.0",
+    .release = 1,
+    .description = "Structured concurrency for Python asynchronous I/O",
+    .license = "MIT OR Apache-2.0",
+    .sources = .{
+        // Source digest verified against the upstream PyPI release metadata.
+        .{ .url = "https://files.pythonhosted.org/packages/9c/e2/1db4e79abb730bbf048c1024a622b0e1e895f5b0e18c59f3f6b3e4b296ef/trio-0.35.0.tar.gz", .sha256 = "7efb295c78a0ecd1235c5759e620b5da564ca80d2efcb0055423588547248b96" },
+    },
+    .depends = .{ "python", "attrs", "sortedcontainers", "idna", "outcome", "sniffio" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

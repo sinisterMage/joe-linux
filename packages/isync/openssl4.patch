@@ -1,0 +1,8 @@
+ASN1 strings are opaque in OpenSSL 4; retain the embedded-NUL rejection.
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -144,2 +144,2 @@
+-			    strlen( (const char *)subj_alt_name->d.ia5->data ) == (size_t)subj_alt_name->d.ia5->length &&
+-			    host_matches( hostname, (const char *)(subj_alt_name->d.ia5->data) ))
++			    strlen( (const char *)ASN1_STRING_get0_data( subj_alt_name->d.ia5 ) ) == (size_t)ASN1_STRING_length( subj_alt_name->d.ia5 ) &&
++			    host_matches( hostname, (const char *)ASN1_STRING_get0_data( subj_alt_name->d.ia5 ) ))

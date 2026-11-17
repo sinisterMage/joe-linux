@@ -1,0 +1,18 @@
+.{
+    .name = "containerd",
+    .version = "2.4.2",
+    .release = 1,
+    .description = "Container runtime daemon managing images, storage and container lifecycles (ctr, CRI)",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream's checksums cover its binary tarballs only. The Go
+        // modules are vendored in the source archive.
+        .{ .url = "https://github.com/containerd/containerd/archive/v2.4.2/containerd-2.4.2.tar.gz", .sha256 = "02cbbecd0ef78a521d124afa791b843ba5458ef206e1f7f017999ff45c80c0b4" },
+    },
+    // Nothing is linked but libc (the btrfs snapshotter needs only
+    // btrfs-progs' headers). containerd-shim-runc-v2 runs containers with
+    // runc. The CRI plugin's pod networking needs the CNI plugins, which
+    // only Kubernetes nodes use; kubelet depends on them.
+    .depends = .{ "glibc", "runc" },
+    .build_depends = .{ "go", "btrfs-progs", "go-md2man" },
+}

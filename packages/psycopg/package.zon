@@ -1,0 +1,17 @@
+.{
+    .name = "psycopg",
+    .version = "3.3.9",
+    .release = 1,
+    .description = "PostgreSQL database adapter for Python (psycopg 3)",
+    .license = "LGPL-3.0-only",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/psycopg/psycopg-3.3.9.tar.gz", .sha256 = "87c1d85c3e0e88e811d3c0b3808f947bd967c6faf34af6cd86fd021f77793d6c" },
+    },
+    // The pure Python implementation: it loads libpq.so.5 (postgresql) and
+    // libc with ctypes at run time, found through ldconfig's cache. The
+    // optional C speed-up (psycopg-c) is not packaged: it is written in
+    // Cython, which joe Linux does not have. typing-extensions is needed
+    // only before Python 3.13.
+    .depends = .{ "python", "postgresql", "glibc" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

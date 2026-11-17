@@ -1,0 +1,12 @@
+.{
+    .name = "jsonschema-specifications",
+    .version = "2025.9.1",
+    .release = 1,
+    .description = "The JSON Schema meta-schemas and vocabularies, exposed as a referencing registry",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/j/jsonschema-specifications/jsonschema_specifications-2025.9.1.tar.gz", .sha256 = "b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d" },
+    },
+    .depends = .{ "python", "referencing" },
+    .build_depends = .{ "python", "hatchling", "hatch-vcs" },
+}

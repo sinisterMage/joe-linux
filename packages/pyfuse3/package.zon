@@ -1,0 +1,13 @@
+.{
+    .name = "pyfuse3",
+    .version = "3.5.0",
+    .release = 1,
+    .description = "Python bindings for the low-level FUSE 3 API",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Source digest verified against the upstream PyPI release metadata.
+        .{ .url = "https://files.pythonhosted.org/packages/b9/a9/ce2c0513e9611ee2ffeeb482a33d23a210326801d48866df30a989562d43/pyfuse3-3.5.0.tar.gz", .sha256 = "88399a9494b88603230bba300f4ba9ad63fece5ed514ca3633d555a0c6a42b24" },
+    },
+    .depends = .{ "glibc", "python", "fuse3", "trio" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel", "cython", "pkgconf" },
+}

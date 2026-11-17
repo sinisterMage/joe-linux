@@ -1,0 +1,14 @@
+.{
+    .name = "pyparsing",
+    .version = "3.3.3",
+    .release = 1,
+    .description = "Python library for building grammars and parsers directly in Python code",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pyparsing/pyparsing-3.3.3.tar.gz", .sha256 = "928ae7e20211f3b6f3915a72f06a0cfd29ab9d24279dd6346b6b1a7146397d36" },
+    },
+    // The optional railroad-diagram output (extra "diagrams") is not
+    // packaged.
+    .depends = .{"python"},
+    .build_depends = .{ "python", "flit-core" },
+}

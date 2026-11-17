@@ -1,0 +1,17 @@
+.{
+    .name = "usb-modeswitch",
+    .version = "2.6.3",
+    .release = 1,
+    .description = "Switches USB modems and other multi-mode devices from their storage mode into their working mode",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum; this is the SHA-256 Arch Linux
+        // records for the same file.
+        .{ .url = "https://www.draisberghof.de/usb_modeswitch/usb-modeswitch-2.6.3.tar.bz2", .sha256 = "cddb987af80eca5bc9c364dc0ccd0e2b788de4d28626d017277a48c06b0453b6" },
+    },
+    // The dispatcher udev starts (through usb_modeswitch@.service) is a Tcl
+    // script; the device database and the udev rules are
+    // usb-modeswitch-data, without which nothing is switched.
+    .depends = .{ "glibc", "libusb", "tcl", "bash", "usb-modeswitch-data" },
+    .build_depends = .{"pkgconf"},
+}

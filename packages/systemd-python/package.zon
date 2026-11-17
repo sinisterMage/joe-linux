@@ -1,0 +1,14 @@
+.{
+    .name = "systemd-python",
+    .version = "236",
+    .release = 1,
+    .description = "Python bindings for libsystemd: the journal, sd_notify, login sessions and id128",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // The release tag on GitHub; PyPI's newest is still 235, and
+        // upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/systemd/python-systemd/archive/v236/systemd-python-236.tar.gz", .sha256 = "fc2c2ff4f03bf1a110f6ba2cadb874f51a7c0ce4fa0261d2bbe3371548ddbc88" },
+    },
+    .depends = .{ "glibc", "python", "systemd" },
+    .build_depends = .{ "python", "meson-python", "meson", "ninja", "pkgconf" },
+}

@@ -1,0 +1,17 @@
+.{
+    .name = "go-md2man",
+    .version = "2.0.7",
+    .release = 1,
+    .description = "Converts Markdown into manual pages; builds the container tools' manuals",
+    .license = "MIT",
+    .sources = .{
+        // Upstream publishes no checksum for the source archive.
+        .{ .url = "https://github.com/cpuguy83/go-md2man/archive/v2.0.7/go-md2man-2.0.7.tar.gz", .sha256 = "ca3a5b57e2c01759f5a00ad2a578d034c5370fae9aa7a6c3af5648b2fc802a92" },
+    },
+    // go downloads the one module go-md2man depends on (blackfriday); it
+    // is not vendored yet.
+    .network = true,
+    // Built without cgo, as upstream does.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

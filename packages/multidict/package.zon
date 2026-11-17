@@ -1,0 +1,13 @@
+.{
+    .name = "multidict",
+    .version = "7.2.1",
+    .release = 1,
+    .description = "Python dictionary that can hold several values for one key, as HTTP headers need",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/m/multidict/multidict-7.2.1.tar.gz", .sha256 = "e8af3e6f1bdbc31fd762b094133b478b89988eaebc63cbe82b1d9e3bbd15cede" },
+    },
+    // The C extension modules (multidict._multidict).
+    .depends = .{ "glibc", "python" },
+    .build_depends = .{ "python", "setuptools" },
+}

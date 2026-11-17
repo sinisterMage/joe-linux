@@ -1,0 +1,12 @@
+.{
+    .name = "sqlparse",
+    .version = "0.6.1",
+    .release = 1,
+    .description = "Non-validating SQL parser and formatter for Python (sqlformat)",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/sqlparse/sqlparse-0.6.1.tar.gz", .sha256 = "ca722573f848ff2d30e40ea30f53a104b7dea7635ea9285891263eb2c58fb6e7" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "hatchling" },
+}

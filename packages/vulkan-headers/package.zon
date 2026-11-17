@@ -1,0 +1,16 @@
+.{
+    .name = "vulkan-headers",
+    .version = "1.4.363.0",
+    .release = 1,
+    .description = "Vulkan API header files and the machine-readable Vulkan registry",
+    .license = "Apache-2.0 OR MIT",
+    .sources = .{
+        // Checked against the book's MD5. The same SDK release as
+        // spirv-headers, spirv-tools, vulkan-icd-loader and spirv-cross.
+        .{ .url = "https://github.com/KhronosGroup/Vulkan-Headers/archive/vulkan-sdk-1.4.363.0/Vulkan-Headers-vulkan-sdk-1.4.363.0.tar.gz", .sha256 = "4a078be12bef21cfebc09d878b77a63cff9d68f899254a0b00d0e37ef73e7f7e" },
+    },
+    // Headers, the registry (usr/share/vulkan/registry) and CMake package
+    // files only: nothing is compiled.
+    .depends = .{},
+    .build_depends = .{ "cmake", "ninja" },
+}

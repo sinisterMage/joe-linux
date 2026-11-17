@@ -1,0 +1,14 @@
+.{
+    .name = "unixodbc",
+    .version = "2.3.14",
+    .release = 2,
+    .description = "ODBC driver manager, odbcinst and the isql and iusql clients",
+    .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        .{ .url = "https://github.com/lurcher/unixODBC/archive/v2.3.14/unixODBC-2.3.14.tar.gz", .sha256 = "3bd23171aca274820ef5cb4961b191adf2cf98509bea4d1b1b0a8630359ee2fb" },
+    },
+    // readline for line editing in isql and iusql; dltest links the system
+    // libltdl even though the driver manager uses its convenience copy.
+    .depends = .{ "glibc", "readline", "libtool" },
+    .build_depends = .{ "autoconf", "automake", "libtool" },
+}

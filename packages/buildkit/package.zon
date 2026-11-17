@@ -1,0 +1,17 @@
+.{
+    .name = "buildkit",
+    .version = "0.35.0",
+    .release = 1,
+    .description = "Concurrent, cache-efficient container image builder (buildkitd daemon and buildctl)",
+    .license = "Apache-2.0",
+    .sources = .{
+        // Upstream's release assets are binaries with provenance, no
+        // source checksum. The Go modules are vendored in the archive.
+        .{ .url = "https://github.com/moby/buildkit/archive/v0.35.0/buildkit-0.35.0.tar.gz", .sha256 = "214dadc2fd4730171f7d3be2c96c80d063e943d5cba84e34d803d3ebd37b4fb3" },
+    },
+    // Built without cgo, as upstream's release is. buildkitd's default OCI
+    // worker runs build steps with runc and fetches git sources with git;
+    // its containerd worker, used when containerd runs, needs nothing more.
+    .depends = .{ "glibc", "runc", "git" },
+    .build_depends = .{"go"},
+}

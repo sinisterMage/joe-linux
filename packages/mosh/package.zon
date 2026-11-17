@@ -1,0 +1,19 @@
+.{
+    .name = "mosh",
+    .version = "1.4.0",
+    .release = 1,
+    .description = "Mobile shell: a remote terminal that survives roaming, sleep and lossy links",
+    // With a special exception allowing it to be linked with OpenSSL.
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Checked against the SHA-256 in the signed release announcement
+        // (mosh.org/mosh-1.4.0-released.html).
+        .{ .url = "https://github.com/mobile-shell/mosh/releases/download/mosh-1.4.0/mosh-1.4.0.tar.gz", .sha256 = "872e4b134e5df29c8933dff12350785054d2fd2839b5ae6b5587b14db1465ddd" },
+    },
+    // libprotobuf brings Abseil's libraries, which are linked directly
+    // (protobuf.pc requires them). mosh, the program a user runs, is a
+    // Perl script that starts mosh-server over ssh.
+    .depends = .{ "glibc", "gcc", "protobuf", "abseil-cpp", "ncurses", "openssl", "zlib", "perl", "openssh" },
+    // protoc generates the message code while building.
+    .build_depends = .{ "pkgconf", "protobuf", "bash-completion" },
+}

@@ -1,0 +1,31 @@
+.{
+    .name = "grafana",
+    .version = "13.3.1",
+    .release = 1,
+    .description = "Dashboards, exploration and alerting for metrics, logs and traces",
+    // AGPL-3.0-only, with the directories LICENSING.md lists (grafana-data,
+    // grafana-ui, grafana-runtime, the kinds, packaging) under Apache-2.0.
+    // The JavaScript libraries bundled into the frontend keep their own
+    // licences, all free (mostly MIT, Apache-2.0, ISC and BSD; the fonts
+    // OFL-1.1): checked against the registry for every package in
+    // yarn.lock. Nothing of Grafana Enterprise is in this repository
+    // (pkg/extensions holds only the OSS stubs).
+    .license = "AGPL-3.0-only AND Apache-2.0",
+    .sources = .{
+        // GitHub's archive of the v13.3.1 tag; the release attaches only
+        // built packages, so upstream publishes no checksum for the source.
+        .{ .url = "https://github.com/grafana/grafana/archive/v13.3.1/grafana-13.3.1.tar.gz", .sha256 = "48a032e9c4a8dec237f3cb9cf8ed58196441625b55d18e0d9978dcf3f97d7801" },
+    },
+    // go downloads the modules the backend depends on and yarn the npm
+    // packages of yarn.lock; neither is vendored yet.
+    .network = true,
+    // The backend is built without cgo, as upstream's release builds are
+    // (SQLite is modernc.org's Go translation), so no library is linked;
+    // as a position-independent executable it is still relocated by
+    // glibc's dynamic loader. bash runs upstream's grafana, grafana-server
+    // and grafana-cli wrappers; time zones come from tzdata (the release
+    // archive's copy of Go's zoneinfo.zip is not installed) and the trusted
+    // certificates for data sources and the plugin catalog from make-ca.
+    .depends = .{ "glibc", "bash", "tzdata", "make-ca" },
+    .build_depends = .{ "go", "nodejs" },
+}

@@ -1,0 +1,20 @@
+.{
+    .name = "gtk-vnc",
+    .version = "1.6.0",
+    .release = 1,
+    .description = "VNC viewer widget for GTK 3 (gtk-vnc, gvnc, gvncpulse) and the gvnccapture tool",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against the book's MD5 (328a730056ff4898df300958ff10351c).
+        .{ .url = "https://download.gnome.org/sources/gtk-vnc/1.6/gtk-vnc-1.6.0.tar.xz", .sha256 = "0e1a1023f191a842e994e5d10053bbe0e76d5f5fb9ec2eb525e2f8fdea57347f" },
+    },
+    // The book lists libgcrypt as required, but this release no longer
+    // uses it: the VNC authentication's big numbers come from gmp. SASL
+    // authentication is Cyrus SASL's. Xlib is found and linked when
+    // present; gvncpulse plays the server's audio through PulseAudio.
+    .depends = .{ "glibc", "glib", "gtk3", "gdk-pixbuf", "cairo", "gnutls", "gmp", "zlib", "cyrus-sasl", "libx11", "pulseaudio" },
+    // The bundled keycodemapdb's keymap-gen is a Python script; perl's
+    // pod2man writes gvnccapture's manual page; glib provides
+    // g-ir-scanner; gettext msgfmt.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "perl", "vala", "gettext" },
+}

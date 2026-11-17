@@ -1,0 +1,14 @@
+.{
+    .name = "serd",
+    .version = "0.32.10",
+    .release = 1,
+    .description = "Lightweight C library and serdi tool for reading and writing RDF in Turtle, NTriples and NQuads",
+    .license = "ISC",
+    .sources = .{
+        // Checked against upstream's detached signature (.sig, David
+        // Robillard's key 907D226E7E13FA337F014A083672782A9BF368F3).
+        .{ .url = "https://download.drobilla.net/serd-0.32.10.tar.xz", .sha256 = "b0e93b49e52f01a049475b7886ef140407115a32d3b1e5dc5f95141c88275d1c" },
+    },
+    .depends = .{"glibc"},
+    .build_depends = .{ "meson", "ninja" },
+}

@@ -10,7 +10,7 @@ build() {
     # which takes clang (part of llvm), SPIRV-LLVM-Translator and
     # SPIRV-Tools; radeonsi needs LLVM's AMDGPU target, which llvm builds.
     #
-    # No Vulkan drivers yet (they need glslang and the Vulkan loader).
+    # Vulkan drivers cover Intel, AMD, software rendering and virtio-gpu.
     #
     # VA-API (gallium-va, through libva) gives hardware video decoding and
     # encoding to Firefox, GStreamer and ffmpeg on radeonsi, nouveau and virgl.
@@ -19,16 +19,15 @@ build() {
     #
     # Switched off because what they need is not part of joe Linux: glvnd
     # (libglvnd), lmsensors. valgrind and libunwind only help to debug Mesa
-    # itself. display-info
-    # (libdisplay-info) and xlib-lease (libXrandr) are only used by the Vulkan
-    # window-system code.
+    # itself. libdisplay-info and XRandR support the Vulkan display extensions.
     meson setup .. \
         --prefix=/usr \
         --libdir=lib \
         --buildtype=release \
         -D platforms=x11,wayland \
         -D gallium-drivers=iris,crocus,radeonsi,nouveau,llvmpipe,softpipe,virgl,svga \
-        -D "vulkan-drivers=[]" \
+        -D vulkan-drivers=intel,intel_hasvk,amd,swrast,virtio \
+        -D vulkan-layers=device-select,overlay \
         -D video-codecs=all \
         -D glx=dri \
         -D egl=enabled \
@@ -43,9 +42,9 @@ build() {
         -D gallium-va=enabled \
         -D glvnd=disabled \
         -D lmsensors=disabled \
-        -D display-info=disabled \
+        -D display-info=enabled \
         -D spirv-tools=enabled \
-        -D xlib-lease=disabled
+        -D xlib-lease=enabled
     ninja
 }
 

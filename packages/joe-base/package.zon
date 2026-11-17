@@ -1,7 +1,7 @@
 .{
     .name = "joe-base",
     .version = "0.1",
-    .release = 7,
+    .release = 9,
     .description = "Everything a minimal joe Linux system consists of",
     .license = "MIT",
     .depends = .{
@@ -52,6 +52,8 @@
         "openssh",
         "psmisc",
         "inetutils",
+        // inetutils' traceroute was replaced by this one.
+        "traceroute",
         "dosfstools",
         "e2fsprogs",
         "make-ca",

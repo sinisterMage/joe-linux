@@ -1,0 +1,19 @@
+ICU 79 keeps icu-uc private to icu-i18n; request the common API explicitly.
+The guest-store client also consumes the ICU-using Unicode/misc convenience libs.
+--- a/configure.ac
++++ b/configure.ac
+@@ -1255,4 +1255,4 @@
+    AC_VMW_CHECK_LIBXX([icui18n],
+                       [ICU],
+-                      [icu-i18n],
++                      [icu-i18n icu-uc],
+                       [icu-config],
+--- a/libguestStoreClient/Makefile.am
++++ b/libguestStoreClient/Makefile.am
+@@ -23,5 +23,6 @@
+ libguestStoreClient_la_LIBADD += ../lib/unicode/libUnicode.la
+ libguestStoreClient_la_LIBADD += ../lib/misc/libMisc.la
++libguestStoreClient_la_LIBADD += @ICU_LIBS@
+ libguestStoreClient_la_LIBADD += -lpthread
+ libguestStoreClient_la_LIBADD += -ldl
+ 

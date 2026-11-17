@@ -1,0 +1,14 @@
+.{
+    .name = "srt",
+    .version = "1.5.7",
+    .release = 1,
+    .description = "Secure Reliable Transport: low-latency live video over unreliable networks (libsrt and its tools)",
+    .license = "MPL-2.0",
+    .sources = .{
+        // Upstream publishes checksums only for its Windows builds.
+        .{ .url = "https://github.com/Haivision/srt/archive/v1.5.7/srt-1.5.7.tar.gz", .sha256 = "017cd1e437ef2073a4dd10ddf7b55e86bc3d6ebac0393d13bd22f6a57055d32b" },
+    },
+    // bash runs srt-ffplay, a script that pipes an SRT stream into ffplay.
+    .depends = .{ "glibc", "gcc", "openssl", "bash" },
+    .build_depends = .{ "cmake", "ninja", "pkgconf" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "argcomplete",
+    .version = "3.7.2",
+    .release = 1,
+    .description = "Bash and zsh tab completion for Python programs that use argparse",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/a/argcomplete/argcomplete-3.7.2.tar.gz", .sha256 = "aad8b69a0b9969edb62db0d1752354c0d50717b10e0cbb00e2a958381b9fc6b9" },
+    },
+    .depends = .{"python"},
+    // hatch-vcs reads the version from PKG-INFO in the release tarball.
+    .build_depends = .{ "python", "hatchling", "hatch-vcs" },
+}

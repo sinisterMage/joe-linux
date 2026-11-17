@@ -1,0 +1,32 @@
+.{
+    .name = "mariadb",
+    .version = "12.3.3",
+    .release = 2,
+    .description = "MariaDB database server, client programs and the libmariadb client library",
+    .license = "GPL-2.0-only AND LGPL-2.1-or-later",
+    .sources = .{
+        .{ .url = "https://downloads.mariadb.org/interstitial/mariadb-12.3.3/source/mariadb-12.3.3.tar.gz", .sha256 = "e99d739fd4a55f9a11dea7bd2287a262673e287550af3071c8469dd2bec0c163" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/mariadb-12.3.3-openssl4_fixes-1.patch", .sha256 = "8afb2aa14c93520cb84f666332f27a2c996c0f5dd4c14c8fd7542050f29b7b39" },
+    },
+    // libxcrypt: crypt() for ENCRYPT(); ncurses: the client's line editing
+    // (MariaDB's bundled readline); linux-pam and krb5: the auth_pam and
+    // auth_gssapi plugins; cracklib (cracklib_password_check), curl
+    // (hashicorp_key_management and the VIDEX engine), libxml2 and
+    // unixodbc (the CONNECT engine), bzip2,
+    // lz4, lzo and xz (the compression provider plugins), zstd (the
+    // client library's protocol compression). perl runs mariadb-hotcopy,
+    // mytop, mariadb-dumpslow, mariadbd-multi and the other Perl scripts.
+    .depends = .{
+        "glibc",     "gcc",     "openssl",   "zlib",
+        "pcre2",     "ncurses", "libxcrypt", "systemd",
+        "linux-pam", "krb5",    "cracklib",  "curl",
+        "libxml2",   "unixodbc", "bzip2",    "lz4",
+        "lzo",       "xz",      "zstd",      "perl", "libaio", "snappy", "jemalloc",
+    },
+    // fmt is used header-only (FMT_HEADER_ONLY).
+    .build_depends = .{ "cmake", "bison", "pkgconf", "fmt" },
+    // auth_pam_tool is set-uid root (see build.sh).
+    .operations = .{
+        .{ .programs = .{"usr/lib/mariadb/plugin/auth_pam_tool_dir/auth_pam_tool"}, .allow = .{"all"} },
+    },
+}

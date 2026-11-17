@@ -1,0 +1,21 @@
+.{
+    .name = "spice-vdagent",
+    .version = "0.23.0",
+    .release = 1,
+    .description = "SPICE guest agent: clipboard sharing, display resizing and file transfer in SPICE guests",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Checked against its signature (spice-vdagent-0.23.0.tar.bz2.sig)
+        // by Victor Toso's key 206D3B352F566F3B0E6572E997D9123DE37A484F.
+        .{ .url = "https://www.spice-space.org/download/releases/spice-vdagent-0.23.0.tar.bz2", .sha256 = "63e0f9bd5597c4638acfd6f10d7a2354f599bd9df5b31e443270cacf07e16a40" },
+    },
+    // spice-vdagent (the per-session agent) uses GTK 3 for the clipboard
+    // and Xlib, XRandR and Xinerama for the displays; spice-vdagentd (the
+    // system daemon) uses libsystemd for logind sessions and socket
+    // activation, D-Bus and libpciaccess.
+    .depends = .{
+        "glibc",   "glib",     "gtk3",       "libx11", "libxfixes", "libxrandr", "libxinerama",
+        "alsa-lib", "dbus",    "libdrm",     "systemd", "libpciaccess",
+    },
+    .build_depends = .{ "pkgconf", "spice-protocol" },
+}

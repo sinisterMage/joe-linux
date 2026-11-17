@@ -1,0 +1,19 @@
+.{
+    .name = "rclone",
+    .version = "1.76.0",
+    .release = 1,
+    .description = "Syncs files to and from cloud storage, with mount, serve and crypt",
+    .license = "MIT",
+    .sources = .{
+        // The release's source archive and the Go modules it needs, which
+        // upstream publishes vendored alongside it; both SHA-256 sums are in
+        // the release's SHA256SUMS.
+        .{ .url = "https://github.com/rclone/rclone/releases/download/v1.76.0/rclone-v1.76.0.tar.gz", .sha256 = "fa2b2e4ae56c4f1b91102285b736596e2a028be77cb2aaa5a0df53f3a7fc5902" },
+        .{ .url = "https://github.com/rclone/rclone/releases/download/v1.76.0/rclone-v1.76.0-vendor.tar.gz", .sha256 = "7706e9d6b11971a096406a1e876db3946c73f11a64327a7457545443b13f4cc0" },
+    },
+    // Built without cgo, as upstream's Linux releases are, so no library is
+    // linked; as a position-independent executable it is still relocated by
+    // glibc's dynamic loader. "rclone mount" runs fusermount3 (fuse3).
+    .depends = .{ "glibc", "fuse3" },
+    .build_depends = .{"go"},
+}

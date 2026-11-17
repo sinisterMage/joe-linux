@@ -5,8 +5,8 @@ prepare() {
 build() {
     autoreconf -fiv
     # The book's switches, with these differences:
-    # - no GTK user interface (avahi-discover, bssh, bvnc) and no Python
-    #   tools: the Python ones need dbus-python, which is not packaged;
+    # - Python D-Bus tools and bindings are available; the GTK and Python
+    #   GObject user interfaces stay off.
     # - the libevent binding is built;
     # - the manual pages need xmltoman, which is not packaged, and the
     #   avahi-core API documentation needs Doxygen.
@@ -32,9 +32,9 @@ build() {
         --disable-mono \
         --disable-monodoc \
         --disable-manpages \
-        --disable-python \
+        --enable-python \
         --disable-pygobject \
-        --disable-python-dbus \
+        --enable-python-dbus \
         --disable-qt3 \
         --disable-qt4 \
         --disable-qt5 \

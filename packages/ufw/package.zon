@@ -1,0 +1,21 @@
+.{
+    .name = "ufw",
+    .version = "0.36.2",
+    .release = 1,
+    .description = "Uncomplicated Firewall: a simple front end for host firewall rules, over iptables",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        // Checked against Jamie Strandboge's signature (ufw-0.36.2.tar.gz.asc,
+        // key 4C20C06B5D8BDE688854D28A51DBDC58CC559573).
+        .{ .url = "https://launchpad.net/ufw/0.36/0.36.2/+download/ufw-0.36.2.tar.gz", .sha256 = "2a57a99eecef6b44db3537ed2520b30bae3759f8465456e22e404cd643838bf5" },
+    },
+    // The ufw command is Python; it and its boot helper (ufw-init, a shell
+    // script) load the rules with iptables-restore and ip6tables-restore
+    // (iptables' nftables back end), set the sysctls of
+    // /etc/ufw/sysctl.conf and load the helper modules of /etc/default/ufw.
+    .depends = .{ "python", "iptables", "bash", "procps-ng", "kmod" },
+    // setup.py finds iptables (and runs iptables -V) while building, and
+    // uses distutils, which setuptools provides; msgfmt compiles the
+    // translations.
+    .build_depends = .{ "python", "setuptools", "iptables", "gettext" },
+}

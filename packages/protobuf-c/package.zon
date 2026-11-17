@@ -1,11 +1,13 @@
 .{
     .name = "protobuf-c",
     .version = "1.5.2",
-    .release = 1,
-    .description = "Protocol Buffers runtime library for C",
+    .release = 2,
+    .description = "Protocol Buffers compiler and runtime library for C",
     .license = "BSD-2-Clause",
     .sources = .{
         .{ .url = "https://github.com/protobuf-c/protobuf-c/releases/download/v1.5.2/protobuf-c-1.5.2.tar.gz", .sha256 = "e2c86271873a79c92b58fef7ebf8de1aa0df4738347a8bd5d4e65a80a16d0d24" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/protobuf-c-1.5.2-protobuf34_fix-1.patch", .sha256 = "8fcd046e15f217f7d5af61fb2772a621788387dda3d6792c5e2136435c904f7e" },
     },
-    .depends = .{ "glibc" },
+    .depends = .{ "glibc", "gcc", "protobuf", "abseil-cpp" },
+    .build_depends = .{"pkgconf"},
 }

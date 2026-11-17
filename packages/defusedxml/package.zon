@@ -1,0 +1,12 @@
+.{
+    .name = "defusedxml",
+    .version = "0.7.1",
+    .release = 1,
+    .description = "XML parsers for Python hardened against entity expansion and external entity attacks",
+    .license = "PSF-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/d/defusedxml/defusedxml-0.7.1.tar.gz", .sha256 = "1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

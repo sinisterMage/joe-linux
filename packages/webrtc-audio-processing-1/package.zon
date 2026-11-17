@@ -1,0 +1,15 @@
+.{
+    .name = "webrtc-audio-processing-1",
+    .version = "1.3",
+    .release = 1,
+    .description = "AudioProcessing module of WebRTC (echo cancellation, noise suppression, gain control), API version 1",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Checked against the .sha256sum file published beside it.
+        .{ .url = "https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-1.3.tar.gz", .sha256 = "95552fc17faa0202133707bbb3727e8c2cf64d4266fe31bfdb2298d769c1db75" },
+    },
+    // gcc: libstdc++. abseil-cpp: its libraries are linked, and the headers
+    // installed here include abseil's.
+    .depends = .{ "glibc", "gcc", "abseil-cpp" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

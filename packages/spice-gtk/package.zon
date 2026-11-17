@@ -1,0 +1,39 @@
+.{
+    .name = "spice-gtk",
+    .version = "0.43",
+    .release = 1,
+    .description = "SPICE client libraries and GTK 3 widget, used by virt-manager and virt-viewer, and the spicy client",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against upstream's spice-gtk-0.43.tar.xz.sha256sum.
+        .{ .url = "https://www.spice-space.org/download/gtk/spice-gtk-0.43.tar.xz", .sha256 = "cee26e5b2d22909f35b40a94398d1e863ca3962ee46494ca97aab206abc3203b" },
+    },
+    // spice-client-glib: the protocol (OpenSSL, libjpeg, zlib, lz4, Opus,
+    // Cyrus SASL authentication), video and audio through GStreamer, USB
+    // redirection (usbredir, libusb); libudev (systemd) is linked by the
+    // bundled spice-common.
+    // spice-client-gtk: GTK 3, EGL through libepoxy, Xlib and libva-x11
+    // (found and linked when present), Wayland pointer protocols. The USB
+    // ACL helper uses polkit, libacl and libcap-ng. spice-client-glib.pc
+    // requires spice-protocol. GStreamer's base plugins decode audio and
+    // the video codecs.
+    .depends = .{
+        "glibc",     "glib",      "pixman",   "openssl",    "libjpeg-turbo", "zlib",    "json-glib",
+        "lz4",       "opus",      "cyrus-sasl", "gstreamer", "gst-plugins-base", "usbredir", "libusb", "systemd",
+        "gtk3",      "cairo",     "libepoxy", "libx11",     "libva",         "wayland", "polkit",
+        "acl",       "libcap-ng", "hwdata",   "spice-protocol",
+    },
+    // The bundled spice-common generates the marshallers with Python and
+    // pyparsing, keycodemapdb the key maps with Python; perl's pod2man
+    // writes spice-client(1); glib provides g-ir-scanner.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "pyparsing", "perl", "vala", "gettext", "wayland-protocols" },
+    // Set-uid root: run by virt-viewer and virt-manager for an ordinary
+    // user, it asks polkit and then grants that user access to the USB
+    // device being redirected (an ACL on its /dev/bus/usb node). Run by an
+    // ordinary user, a program holds only what its seal declares
+    // (packages/linux/joe-lsm), so it declares all; a narrower list is
+    // rule 3's work.
+    .operations = .{
+        .{ .programs = .{"usr/libexec/spice-client-glib-usb-acl-helper"}, .allow = .{"all"} },
+    },
+}

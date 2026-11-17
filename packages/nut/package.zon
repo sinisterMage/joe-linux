@@ -1,0 +1,22 @@
+.{
+    .name = "nut",
+    .version = "2.8.5",
+    .release = 1,
+    .description = "Network UPS Tools: monitors UPS and power devices and shuts systems down when power runs out",
+    .license = "GPL-2.0-or-later AND GPL-3.0-or-later",
+    .sources = .{
+        // Upstream's release tarball; its SHA-256 is the release's
+        // nut-2.8.5.tar.gz.sha256 (also signed: nut-2.8.5.tar.gz.sig).
+        .{ .url = "https://github.com/networkupstools/nut/releases/download/v2.8.5/nut-2.8.5.tar.gz", .sha256 = "18bf32e59eb764b13da3c4fa70384926d7fa584cb31d2fe7f137a570633eeec1" },
+    },
+    // libstdc++ (gcc) for libnutclient; libusb for the USB drivers;
+    // OpenSSL for upsd's and the clients' TLS; libsystemd for service
+    // notifications and the sleep inhibitor; libltdl (libtool) for
+    // nut-scanner; GLib/GIO for the nut-upower driver; python for the
+    // PyNUT module.
+    .depends = .{ "glibc", "gcc", "libusb", "openssl", "systemd", "libtool", "glib", "python" },
+    // nut-scanner opens libavahi-client (and libusb) with libltdl at run
+    // time when they are installed, so avahi is needed only for its
+    // headers.
+    .build_depends = .{ "pkgconf", "avahi" },
+}

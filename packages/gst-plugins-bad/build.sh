@@ -5,16 +5,10 @@ build() {
     mkdir build
     cd build
 
-    # This package has some two hundred automatic features, most of them
-    # wrappers around libraries that do not exist here. All of them are
-    # switched off, and the ones without any outside dependency that a desktop
-    # uses are switched on again by name, so that the build root cannot change
-    # the result. The libraries under gst-libs (play, player, codecparsers,
-    # mpegts, transcoder ...) are not features and are always built.
-    #
-    # Not built in particular: everything GPL (the book's -D gpl=enabled only
-    # matters for x265, faad, dts, mpeg2enc, mplex and resindvd), the Wayland,
-    # VA-API, Vulkan and OpenGL elements, and Orc acceleration.
+    # Disable automatic features, then name the enabled plugins and their
+    # dependencies explicitly. GstPlay and the other gst-libs are always
+    # built. GPL is needed for DVD navigation and the x265 encoder.
+    # VA-API, Vulkan, OpenGL and Orc remain off in this plugin set.
     local plugin plugins=()
     for plugin in adpcmdec adpcmenc aiff asfmux audiobuffersplit audiofxbad \
         audiolatency audiomixmatrix audiovisualizers autoconvert bayer \
@@ -35,6 +29,19 @@ build() {
         --wrap-mode=nofallback \
         -D auto_features=disabled \
         "${plugins[@]}" \
+        -D gpl=enabled \
+        -D assrender=enabled \
+        -D svtav1=enabled \
+        -D webrtcdsp=enabled \
+        -D openh264=enabled \
+        -D fluidsynth=enabled \
+        -D chromaprint=enabled \
+        -D resindvd=enabled \
+        -D srt=enabled \
+        -D rist=enabled \
+        -D aom=enabled \
+        -D x265=enabled \
+        -D v4l2codecs=enabled \
         -D introspection=enabled \
         -D nls=enabled \
         -D package-name="GStreamer Bad Plugins (joe Linux)" \

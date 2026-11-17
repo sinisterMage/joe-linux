@@ -1,0 +1,14 @@
+.{
+    .name = "speex",
+    .version = "1.2.1",
+    .release = 1,
+    .description = "Speex speech codec library and its speexenc and speexdec programs",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://downloads.xiph.org/releases/speex/speex-1.2.1.tar.gz", .sha256 = "4b44d4f2b38a370a2d98a78329fefc56a0cf93d1c1be70029217baae6628feea" },
+    },
+    // libspeex itself needs only libm; speexenc and speexdec read and write
+    // Ogg files and use speexdsp's resampler and preprocessor.
+    .depends = .{ "glibc", "libogg", "speexdsp" },
+    .build_depends = .{"pkgconf"},
+}

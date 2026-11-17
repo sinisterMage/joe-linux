@@ -1,0 +1,26 @@
+.{
+    .name = "alertmanager",
+    .version = "0.35.0",
+    .release = 1,
+    .description = "Prometheus Alertmanager: groups, routes and silences alerts, with its web UI and amtool",
+    // Alertmanager is Apache-2.0. The web UIs compiled into it bundle npm
+    // and Elm modules under MIT, BSD, ISC, Apache-2.0 and MPL-2.0, and Font
+    // Awesome 4 (OFL-1.1 and MIT); every module in both lockfiles was
+    // checked and all are free.
+    .license = "Apache-2.0",
+    .sources = .{
+        // GitHub's archive of the v0.35.0 tag. The release attaches only
+        // binaries and the prebuilt web UI (with a sha256sums.txt for
+        // those); there is no checksum for the source archive.
+        .{ .url = "https://github.com/prometheus/alertmanager/archive/v0.35.0/alertmanager-0.35.0.tar.gz", .sha256 = "4c4355655ee6d303991fba6e10ca2357978ca9ca0fb47ce925482d685aa34ff7" },
+    },
+    // go downloads the modules Alertmanager depends on, npm the packages
+    // of its web UIs from upstream's lockfiles, and the Elm compiler the
+    // Elm packages that ui/app/elm.json pins; they are not vendored yet.
+    .network = true,
+    // Built without cgo, as upstream does, so no library is linked; as a
+    // position-independent executable it is still relocated by glibc's
+    // dynamic loader.
+    .depends = .{"glibc"},
+    .build_depends = .{ "go", "nodejs" },
+}

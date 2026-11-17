@@ -1,0 +1,12 @@
+.{
+    .name = "resolvelib",
+    .version = "1.2.1",
+    .release = 1,
+    .description = "Resolves abstract dependencies into concrete ones, used by ansible-galaxy",
+    .license = "ISC",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/r/resolvelib/resolvelib-1.2.1.tar.gz", .sha256 = "7d08a2022f6e16ce405d60b68c390f054efcfd0477d4b9bd019cc941c28fad1c" },
+    },
+    .depends = .{"python"},
+    .build_depends = .{ "python", "setuptools" },
+}

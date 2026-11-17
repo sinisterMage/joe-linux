@@ -1,0 +1,13 @@
+.{
+    .name = "gpgme",
+    .version = "2.2.0",
+    .release = 1,
+    .description = "GnuPG Made Easy: a C library giving applications access to GnuPG",
+    .license = "LGPL-2.1-or-later AND GPL-3.0-or-later",
+    .sources = .{
+        .{ .url = "https://www.gnupg.org/ftp/gcrypt/gpgme/gpgme-2.2.0.tar.bz2", .sha256 = "7160e80e84dafd00d956c84891c533bb7ab16a6a54fbe1574b2f3acf0496977b" },
+    },
+    // The library does its work by running gpg, gpgsm and gpgconf, so
+    // GnuPG is needed at run time (the book recommends it).
+    .depends = .{ "glibc", "libgpg-error", "libassuan", "gnupg" },
+}

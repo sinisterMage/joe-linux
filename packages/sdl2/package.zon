@@ -1,0 +1,19 @@
+.{
+    .name = "sdl2",
+    // sdl2-compat, as the book (and Arch and Fedora) provide SDL 2: the
+    // SDL 2 API and ABI (libSDL2-2.0.so.0, sdl2.pc, sdl2-config), carried
+    // out by SDL 3.
+    .version = "2.32.74",
+    .release = 1,
+    .description = "Simple DirectMedia Layer 2 (sdl2-compat: the SDL 2 library implemented on top of SDL 3)",
+    .license = "Zlib",
+    .sources = .{
+        // Checked against the book's MD5.
+        .{ .url = "https://www.libsdl.org/release/sdl2-compat-2.32.74.tar.gz", .sha256 = "ec68abde77e2e459c8abc4f9587b8976b5d2a657b2bfda2fb3a079b0f8924588" },
+    },
+    // libSDL2 loads libSDL3.so.0 with dlopen.
+    .depends = .{ "glibc", "sdl3" },
+    // libx11: SDL_syswm.h support needs the X11 headers (nothing links
+    // libX11).
+    .build_depends = .{ "cmake", "ninja", "libx11", "xorgproto" },
+}

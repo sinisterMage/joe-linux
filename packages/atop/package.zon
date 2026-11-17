@@ -1,0 +1,16 @@
+.{
+    .name = "atop",
+    .version = "2.13.0",
+    .release = 1,
+    .description = "System and process monitor that also records resource use for later replay (atop, atopsar)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream lists SHA-256 checksums on its download page only for
+        // older releases; it publishes none for 2.13.0.
+        .{ .url = "https://www.atoptool.nl/download/atop-2.13.0.tar.gz", .sha256 = "ea182f84c9f52ca922e5af4f17dff97ff424400a4f2f92393317a6af66e6a874" },
+    },
+    // ncursesw for the interface, zlib for the raw logs, GLib (linked into
+    // every program by the Makefile) for its hash tables.
+    .depends = .{ "glibc", "ncurses", "zlib", "glib" },
+    .build_depends = .{"pkgconf"},
+}

@@ -15,16 +15,12 @@ build() {
     # FriBidi, libwebp, PulseAudio and libdrm (kmsgrab), and the ALSA, zlib,
     # bzip2, xz and iconv support that configure would otherwise detect.
     #
-    # Left out:
-    # - --enable-nonfree, libfdk-aac, libass and SVT-AV1: no recipes, and
-    #   "nonfree" (needed only for fdk-aac) would make the result
-    #   undistributable. AAC is covered by ffmpeg's own encoder and decoder,
-    #   AV1 encoding by libaom.
-    # - VDPAU, Vulkan, the NVIDIA and AMD interfaces and V4L2 mem2mem: no
-    #   recipes for libvdpau and the Vulkan loader. (VA-API is on: it is how
-    #   Firefox and other ffmpeg users decode video on the GPU.)
-    # - ffplay (SDL has no recipe), X11 screen grabbing (the session is
-    #   Wayland), sndio.
+    # Tier-2 integrations: ASS subtitles, SVT-AV1, Theora, Speex, MP2,
+    # DVD-Video, SRT/RIST, libv4l2, Vulkan and SDL2 ffplay. Vulkan shaders
+    # are compiled by the explicitly selected glslang executable.
+    #
+    # Left out: nonfree codecs (the result must remain distributable),
+    # VDPAU and proprietary GPU interfaces, X11 capture and sndio.
     # - HTML and text documentation (needs Texinfo); the manual pages are
     #   built.
     ./configure --prefix=/usr \
@@ -38,6 +34,17 @@ build() {
         --disable-autodetect \
         --enable-libaom \
         --enable-libdav1d \
+        --enable-libass \
+        --enable-libsvtav1 \
+        --enable-libtheora \
+        --enable-libspeex \
+        --enable-libtwolame \
+        --enable-libdvdnav \
+        --enable-libdvdread \
+        --enable-libsrt \
+        --enable-librist \
+        --enable-libv4l2 \
+        --enable-v4l2-m2m \
         --enable-libfreetype \
         --enable-libharfbuzz \
         --enable-libfontconfig \
@@ -54,11 +61,14 @@ build() {
         --enable-libpulse \
         --enable-libdrm \
         --enable-vaapi \
+        --enable-vulkan \
+        --glslc=glslang \
         --enable-zlib \
         --enable-bzlib \
         --enable-lzma \
         --enable-iconv \
-        --disable-ffplay \
+        --enable-sdl2 \
+        --enable-ffplay \
         --disable-htmlpages \
         --disable-txtpages \
         --docdir=/usr/share/doc/ffmpeg-9.0.2

@@ -1,0 +1,18 @@
+.{
+    .name = "dnscrypt-proxy",
+    .version = "2.1.20",
+    .release = 1,
+    .description = "Local DNS proxy forwarding queries over DNSCrypt, DNS-over-HTTPS and Oblivious DoH",
+    .license = "ISC",
+    .sources = .{
+        // Upstream signs its binary archives (minisign) but publishes no
+        // checksum for the source archive. Its Go modules are vendored in
+        // it, so nothing is downloaded while building.
+        .{ .url = "https://github.com/DNSCrypt/dnscrypt-proxy/archive/2.1.20/dnscrypt-proxy-2.1.20.tar.gz", .sha256 = "2e6adb32e0f91cb755f1d2c060cddcc80ffca6a181bf03c90df22bbade121607" },
+    },
+    // Built without cgo, as upstream's Linux releases are, so no library
+    // is linked; as a position-independent executable it is still
+    // relocated by glibc's dynamic loader.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

@@ -1,0 +1,14 @@
+.{
+    .name = "libnetfilter-conntrack",
+    .version = "1.1.1",
+    .release = 1,
+    .description = "Library for the kernel's connection tracking state table",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its detached signature (.sig) by the Netfilter
+        // Core Team's key 8C5F7146A1757A65E2422A94D70D1A666ACF2B21.
+        .{ .url = "https://www.netfilter.org/projects/libnetfilter_conntrack/files/libnetfilter_conntrack-1.1.1.tar.xz", .sha256 = "769d3eaf57fa4fbdb05dd12873b6cb9a5be7844d8937e222b647381d44284820" },
+    },
+    .depends = .{ "glibc", "libnfnetlink", "libmnl" },
+    .build_depends = .{"pkgconf"},
+}

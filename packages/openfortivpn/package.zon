@@ -1,0 +1,15 @@
+.{
+    .name = "openfortivpn",
+    .version = "1.24.1",
+    .release = 1,
+    .description = "Client for Fortinet's PPP over TLS virtual private networks",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for the archive.
+        .{ .url = "https://github.com/adrienverge/openfortivpn/archive/v1.24.1/openfortivpn-1.24.1.tar.gz", .sha256 = "c40d33acd97b89c2e943bfd839c19b69e5a7a5997052e2fc9a595602745c0465" },
+    },
+    // libsystemd for readiness notification (Type=notify); the tunnel
+    // itself is run by pppd, which openfortivpn starts.
+    .depends = .{ "glibc", "openssl", "systemd", "ppp" },
+    .build_depends = .{ "autoconf", "automake", "pkgconf" },
+}

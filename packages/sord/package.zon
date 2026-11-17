@@ -1,0 +1,15 @@
+.{
+    .name = "sord",
+    .version = "0.16.22",
+    .release = 1,
+    .description = "Lightweight C library for storing RDF data in memory, with the sordi and sord_validate tools",
+    .license = "ISC",
+    .sources = .{
+        // Checked against upstream's detached signature (.sig, David
+        // Robillard's key 907D226E7E13FA337F014A083672782A9BF368F3).
+        .{ .url = "https://download.drobilla.net/sord-0.16.22.tar.xz", .sha256 = "bb23b34b216579136795d518cffa73d91cf205594ce9accebfd408afb839173f" },
+    },
+    // PCRE2 is for sord_validate's checks of literal values.
+    .depends = .{ "glibc", "serd", "zix", "pcre2" },
+    .build_depends = .{ "meson", "ninja", "pkgconf" },
+}

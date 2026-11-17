@@ -1,12 +1,12 @@
 .{
     .name = "gst-plugins-base",
     .version = "1.28.9",
-    .release = 1,
+    .release = 2,
     .description = "GStreamer base plugins and helper libraries (audio, video, tag, pbutils, GL, playback)",
     .license = "LGPL-2.1-or-later",
     .sources = .{
         .{ .url = "https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.28.9.tar.xz", .sha256 = "c1fda668b520e6aef763c0eb962c032c9fe52bce322e8b00c69b4e9e847bddc1" },
     },
-    .depends = .{ "glibc", "glib", "gstreamer", "alsa-lib", "iso-codes", "libgudev", "libjpeg-turbo", "libpng", "libogg", "libvorbis", "opus", "pango", "cairo", "graphene", "mesa", "libdrm", "wayland", "libx11", "libxext", "libxv", "libxi", "zlib" },
+    .depends = .{ "glibc", "glib", "gstreamer", "alsa-lib", "iso-codes", "libgudev", "libjpeg-turbo", "libpng", "libogg", "libvorbis", "opus", "pango", "cairo", "graphene", "mesa", "libdrm", "wayland", "libx11", "libxext", "libxv", "libxi", "zlib", "libtheora" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "python", "wayland-protocols" },
 }

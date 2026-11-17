@@ -1,0 +1,13 @@
+.{
+    .name = "wcwidth",
+    .version = "0.9.4",
+    .release = 1,
+    .description = "Measures the displayed width of Unicode strings in a terminal (wcwidth for Python)",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/w/wcwidth/wcwidth-0.9.4.tar.gz", .sha256 = "fd8d57d3cdfe570e3265c8fab1885c24e34ef40889c0759c0c304a19e9835954" },
+    },
+    // glibc: the C extension.
+    .depends = .{ "glibc", "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

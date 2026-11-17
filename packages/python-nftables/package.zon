@@ -1,0 +1,16 @@
+.{
+    .name = "python-nftables",
+    // The bindings are versioned and released with nftables itself.
+    .version = "1.1.7",
+    .release = 2,
+    .description = "Python bindings for libnftables, the nftables module firewalld drives the firewall with",
+    .license = "GPL-2.0-only",
+    .sources = .{
+        // The nftables release archive, the same file the nftables recipe
+        // builds from; only its py/ directory is used here.
+        .{ .url = "https://netfilter.org/projects/nftables/files/nftables-1.1.7.tar.xz", .sha256 = "a6fbf060d8d4fff001517a2b94f356bb4366bfbf0ba366366f9d27cc38caa58f" },
+    },
+    // Pure Python: it opens libnftables.so.1 (nftables) with ctypes.
+    .depends = .{ "python", "nftables", "jsonschema" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

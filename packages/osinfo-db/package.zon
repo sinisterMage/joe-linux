@@ -1,0 +1,16 @@
+.{
+    .name = "osinfo-db",
+    .version = "20260812",
+    .release = 1,
+    .description = "Database of operating systems, hypervisors and devices for virtualization tools (libosinfo)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its signature (osinfo-db-20260812.tar.xz.asc) by
+        // Pavel Hrdina's key 4252D86A52041137C291CADFC85C5E957062A701
+        // (signing subkey 71BCECF75868FDCA16598EDA522D64733007E18C).
+        .{ .url = "https://gitlab.com/api/v4/projects/libosinfo%2Fosinfo-db/packages/generic/release-assets/v20260812/osinfo-db-20260812%2Etar%2Exz", .file = "osinfo-db-20260812.tar.xz", .sha256 = "f13ed6e1e480b5266d39cad7f0010febdf0265dfc45579de2fb34543bc6b35de" },
+    },
+    // XML data only.
+    .depends = .{},
+    .build_depends = .{"osinfo-db-tools"},
+}

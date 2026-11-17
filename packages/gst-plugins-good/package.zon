@@ -1,12 +1,13 @@
 .{
     .name = "gst-plugins-good",
     .version = "1.28.9",
-    .release = 2,
+    .release = 3,
     .description = "GStreamer plugins of good quality under the LGPL (containers, RTP, V4L2, FLAC, MP3, VP8/VP9, JPEG, PNG, HTTP)",
     .license = "LGPL-2.1-or-later",
     .sources = .{
         .{ .url = "https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.28.9.tar.xz", .sha256 = "e518cd97483706a252e95e60312a22d23dec6f5e7673af6f5bde719c3a9ca7f4" },
     },
-    .depends = .{ "glibc", "glib", "gstreamer", "gst-plugins-base", "cairo", "flac", "lame", "mpg123", "libvpx", "gdk-pixbuf", "libsoup", "libxml2", "openssl", "libjpeg-turbo", "libpng", "libgudev", "zlib", "bzip2" },
+    .depends = .{ "glibc", "gcc", "glib", "gstreamer", "gst-plugins-base", "cairo", "flac", "lame", "mpg123", "libvpx", "gdk-pixbuf", "libsoup", "libxml2", "openssl", "libjpeg-turbo", "libpng", "libgudev", "zlib", "bzip2",
+        "v4l-utils", "pulseaudio", "speex", "taglib", "twolame", "wavpack" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "python", "nasm" },
 }

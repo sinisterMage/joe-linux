@@ -1,0 +1,15 @@
+.{
+    .name = "msgpack",
+    .version = "1.2.1",
+    .release = 1,
+    .description = "MessagePack binary serialisation for Python",
+    .license = "Apache-2.0",
+    .sources = .{
+        // The book's version (1.2.4 is newer, but borg accepts at most
+        // 1.2.1). The book's MD5 checks it.
+        .{ .url = "https://files.pythonhosted.org/packages/source/m/msgpack/msgpack-1.2.1.tar.gz", .sha256 = "04c721c2c7448767e9e3f2520a475663d8ee0f09c31890f6d2bd70fd636a9647" },
+    },
+    // The C extension module (msgpack._cmsgpack).
+    .depends = .{ "glibc", "python" },
+    .build_depends = .{ "python", "setuptools" },
+}

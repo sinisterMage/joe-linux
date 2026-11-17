@@ -6,16 +6,15 @@ build() {
     # Built: cairo, FLAC, gdk-pixbuf, JPEG, PNG, bzip2 (Matroska), LAME (MP3
     # encoding), mpg123 (MP3 decoding), libvpx (VP8 and VP9), libsoup 3
     # (HTTP source, and with libxml2 and OpenSSL the DASH/HLS/MSS client)
-    # and Video4Linux (kernel interface only, device discovery through
-    # gudev).
+    # and Video4Linux (libv4l2 conversions and gudev discovery). Tier-2
+    # adds Speex, TagLib, TwoLAME, WavPack and PulseAudio client output;
+    # PipeWire supplies the PulseAudio-compatible server.
     #
-    # Not built, because the library does not exist: aalib, AMR, libcaca,
-    # DV and IEEE 1394, JACK, shout2, Speex, TagLib, TwoLAME, WavPack,
-    # libv4l2, GTK 3, Qt 5/6, Orc. PulseAudio: sound goes out through
-    # pipewire's own sink. ximagesrc would need more of the X libraries
-    # than this distribution wants here, and OSS is obsolete.
+    # No libraries for aalib, AMR, libcaca, DV/IEEE 1394, JACK or shout2.
+    # GTK/Qt sinks, X11 capture, Orc and obsolete OSS stay off.
     meson setup .. \
         --prefix=/usr \
+        --libdir=lib \
         --buildtype=release \
         -D nls=enabled \
         -D asm=enabled \
@@ -33,7 +32,7 @@ build() {
         -D v4l2=enabled \
         -D v4l2-probe=true \
         -D v4l2-gudev=enabled \
-        -D v4l2-libv4l2=disabled \
+        -D v4l2-libv4l2=enabled \
         -D aalib=disabled \
         -D amrnb=disabled \
         -D amrwbdec=disabled \
@@ -43,13 +42,13 @@ build() {
         -D jack=disabled \
         -D lame=enabled \
         -D mpg123=enabled \
-        -D pulse=disabled \
+        -D pulse=enabled \
         -D shout2=disabled \
-        -D speex=disabled \
-        -D taglib=disabled \
-        -D twolame=disabled \
+        -D speex=enabled \
+        -D taglib=enabled \
+        -D twolame=enabled \
         -D vpx=enabled \
-        -D wavpack=disabled \
+        -D wavpack=enabled \
         -D gtk3=disabled \
         -D qt5=disabled \
         -D qt6=disabled \

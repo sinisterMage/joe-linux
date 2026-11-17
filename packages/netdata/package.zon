@@ -1,0 +1,61 @@
+.{
+    .name = "netdata",
+    .version = "2.12.3",
+    .release = 1,
+    .description = "Real-time, per-second monitoring agent for metrics, logs and alerts (without the non-free dashboard)",
+    // The agent and its Go collectors are GPL-3.0-or-later. Compiled in:
+    // Judy arrays (LGPL-2.1-or-later), the debugfs plugin's copy of
+    // libsensors (LGPL-2.1-or-later), dlib (BSL-1.0), xxHash
+    // (BSD-2-Clause) and SQLite (public domain); the Go collectors' modules
+    // are under the usual permissive licences (MIT, BSD, Apache-2.0,
+    // MPL-2.0). The NCUL1 dashboard is not part of this package (build.sh).
+    .license = "GPL-3.0-or-later AND LGPL-2.1-or-later AND BSL-1.0 AND BSD-2-Clause AND MIT AND Apache-2.0",
+    .sources = .{
+        // Upstream's release tarball, with the submodules; its SHA-256 is in
+        // the release's sha256sums.txt.
+        .{ .url = "https://github.com/netdata/netdata/releases/download/v2.12.3/netdata-v2.12.3.tar.gz", .sha256 = "6eb14deed1d7611c8f8969b2954432e91e631b2e45f762421873044561d80dd9" },
+        // netdata always compiles its own SQLite, generated from the full
+        // source tree with UPDATE/DELETE ... LIMIT, which the system library
+        // does not have. Upstream's CMake downloads this file and checks it
+        // against this SHA-256 (packaging/cmake/Modules/NetdataSQLite.cmake);
+        // here it is a source, so nothing is fetched while configuring.
+        .{ .url = "https://www.sqlite.org/2026/sqlite-src-3530400.zip", .sha256 = "d18fa15aec74d8c17e1463f861095adc01b5ad190256acb4f91d22f0368d232b" },
+        // dlib for the machine-learning (anomaly detection) code: the
+        // release upstream pins (v19.24.8, commit 636c0bcd), compiled in
+        // statically. GitHub's archive; dlib publishes no checksum.
+        .{ .url = "https://github.com/davisking/dlib/archive/v19.24.8/dlib-19.24.8.tar.gz", .sha256 = "819cfd28639fe80ca28039f591a15e01772b7ada479de4a002b95bcb8077ce80" },
+    },
+    // go downloads the modules of the Go collectors (go.d.plugin,
+    // scripts.d.plugin, nd-mcp, cgroup-name), checked against upstream's
+    // go.sum; they are not vendored yet.
+    .network = true,
+    // libstdc++ (gcc) for the ML code and protobuf; libuuid is
+    // util-linux; Protocol Buffers (and the Abseil libraries it brings) for
+    // the Netdata Cloud link; libcurl, OpenSSL, libuv, JSON-C, LibYAML, the
+    // compressors (zlib, lz4, zstd, brotli) for the agent itself; libmnl
+    // for the socket collectors; libcap for nd-run; libsystemd for the
+    // journal and units plugins; libunwind for stack traces in logs; PCRE2
+    // for log2journal; libcups for cups.plugin. bash runs the charts.d
+    // plugin and the helper scripts, python the python.d plugin, curl the
+    // alert notifications.
+    .depends = .{
+        "glibc",   "gcc",      "zlib",      "lz4",      "zstd",
+        "brotli",  "util-linux", "libuv",   "openssl",  "curl",
+        "json-c",  "libyaml",  "protobuf",  "abseil-cpp", "libmnl",
+        "libcap",  "systemd",  "libunwind", "pcre2",    "cups",
+        "bash",    "python",
+    },
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "go", "protobuf", "python" },
+    // Set-uid root, as upstream's own packages install them (4750, group
+    // netdata; see build.sh). Run by an ordinary user, a program holds only
+    // what its seal declares (packages/linux/joe-lsm), so these declare
+    // all; narrower lists are rule 3's work.
+    .operations = .{
+        .{ .programs = .{
+            "usr/libexec/netdata/plugins.d/cgroup-network",
+            "usr/libexec/netdata/plugins.d/local-listeners",
+            "usr/libexec/netdata/plugins.d/network-viewer.plugin",
+            "usr/libexec/netdata/plugins.d/ndsudo",
+        }, .allow = .{"all"} },
+    },
+}

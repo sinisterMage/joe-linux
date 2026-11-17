@@ -1,0 +1,16 @@
+.{
+    .name = "s3cmd",
+    .version = "2.4.0",
+    .release = 1,
+    .description = "Command-line client for Amazon S3 and compatible object storage",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against Florent Viard's signature (s3cmd-2.4.0.tar.gz.asc)
+        // and PyPI's SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/source/s/s3cmd/s3cmd-2.4.0.tar.gz", .sha256 = "6b567521be1c151323f2059c8feec85ded96b6f184ff80535837fea33798b40b" },
+    },
+    // python-magic (libmagic) guesses MIME types. Encryption (-e) runs gpg,
+    // which is optional and not a dependency.
+    .depends = .{ "python", "python-dateutil", "python-magic" },
+    .build_depends = .{ "python", "setuptools" },
+}

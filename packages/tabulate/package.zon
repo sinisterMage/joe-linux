@@ -1,0 +1,15 @@
+.{
+    .name = "tabulate",
+    .version = "0.10.0",
+    .release = 1,
+    .description = "Pretty-print tabular data in Python (tabulate)",
+    .license = "MIT",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/t/tabulate/tabulate-0.10.0.tar.gz", .sha256 = "e2cfde8f79420f6deeffdeda9aaec3b6bc5abce947655d17ac662b126e48a60d" },
+    },
+    // wcwidth is upstream's widechars extra, for aligning wide (East Asian)
+    // characters; cli-helpers asks for it.
+    .depends = .{ "python", "wcwidth" },
+    // setuptools-scm reads the version from the sdist's PKG-INFO.
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel" },
+}

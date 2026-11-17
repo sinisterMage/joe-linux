@@ -1,0 +1,16 @@
+.{
+    .name = "easy-rsa",
+    .version = "3.2.7",
+    .release = 1,
+    .description = "Shell-based tool for running a small X.509 certificate authority (easyrsa), as for OpenVPN",
+    .license = "GPL-2.0-only",
+    .sources = .{
+        // Upstream's release tarball. The release signs it with GPG
+        // (EasyRSA-3.2.7.tgz.sig) but publishes no checksum file; this
+        // SHA-256 matches the digest GitHub records for the asset.
+        .{ .url = "https://github.com/OpenVPN/easy-rsa/releases/download/v3.2.7/EasyRSA-3.2.7.tgz", .sha256 = "308743bc9fe871b902d47dbe98d749daff3a05b27531684f02625ce7208d4598" },
+    },
+    // A POSIX shell script (/bin/sh is bash) that runs the openssl program
+    // and the usual text tools.
+    .depends = .{ "bash", "openssl", "coreutils", "gawk", "grep", "sed" },
+}

@@ -1,0 +1,16 @@
+.{
+    .name = "monit",
+    .version = "6.0.0",
+    .release = 1,
+    .description = "Watches local processes, files and services, and restarts what fails",
+    // AGPL-3.0 with an exception for linking OpenSSL; libmonit carries
+    // MIT-licensed parts of Hanson's CII library (libmonit/THIRDPARTY).
+    .license = "AGPL-3.0-only AND MIT",
+    .sources = .{
+        // The SHA-256 is upstream's (monit-6.0.0.tar.gz.sha256 beside it).
+        .{ .url = "https://mmonit.com/monit/dist/monit-6.0.0.tar.gz", .sha256 = "ddacd2a8120aeb2351e4486ee04a17782b5004aee99f2041d829bc4dcf2a5b3b" },
+    },
+    // libcrypt (libxcrypt) checks the crypt(3) passwords of the web
+    // interface's htpasswd files; PAM authenticates "allow @group" users.
+    .depends = .{ "glibc", "openssl", "linux-pam", "zlib", "libxcrypt" },
+}

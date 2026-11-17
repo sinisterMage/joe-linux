@@ -1,0 +1,16 @@
+.{
+    .name = "autossh",
+    .version = "1.4g",
+    .release = 1,
+    .description = "Starts ssh and restarts it when the connection or its tunnels stop passing traffic",
+    // "Redistribution and use in source and binary forms, with or without
+    // modification, are freely permitted" (autossh.c).
+    .license = "LicenseRef-autossh",
+    .sources = .{
+        // Checked against the SHA-256 in upstream's autossh-1.4g.cksums.
+        .{ .url = "https://www.harding.motd.ca/autossh/autossh-1.4g.tgz", .sha256 = "5fc3cee3361ca1615af862364c480593171d0c54ec156de79fc421e31ae21277" },
+    },
+    // autossh runs ssh.
+    .depends = .{ "glibc", "openssh" },
+    .build_depends = .{ "autoconf", "automake" },
+}

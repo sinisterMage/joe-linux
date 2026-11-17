@@ -1,0 +1,21 @@
+.{
+    .name = "tpm2-tss",
+    .version = "4.2.2",
+    .release = 1,
+    .description = "TCG software stack for TPM 2.0: the ESAPI, FAPI, policy and TCTI libraries",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // Checked against its signature (tpm2-tss-4.2.2.tar.gz.asc) by
+        // Moritz Buhl's key DF46949295D2AA0F3479BF4A965B305B2BFAB54E, which
+        // MAINTAINERS.md lists.
+        .{ .url = "https://github.com/tpm2-software/tpm2-tss/releases/download/4.2.2/tpm2-tss-4.2.2.tar.gz", .sha256 = "bd4efc89ee01aca8ff771cae268d84333b7594c2d4afee50bb13b859f1113c3f" },
+    },
+    // libcrypto (OpenSSL) is the ESAPI's cryptography; json-c, libuuid
+    // (util-linux) and libcurl (fetching endorsement-key certificates) are
+    // the FAPI's and the policy library's; libusb the LetsTrust-TPM2Go
+    // TCTI. The TCTI modules are opened with dlopen by libtss2-tctildr.
+    .depends = .{ "glibc", "openssl", "json-c", "util-linux", "curl", "libusb" },
+    // systemd: configure installs the sysusers.d and tmpfiles.d files only
+    // when it finds systemd-sysusers and systemd-tmpfiles.
+    .build_depends = .{ "pkgconf", "systemd" },
+}

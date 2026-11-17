@@ -1,0 +1,16 @@
+.{
+    .name = "openldap",
+    .version = "2.7.2",
+    .release = 1,
+    .description = "OpenLDAP: the slapd directory server, client programs and libldap",
+    .license = "OLDAP-2.8",
+    .sources = .{
+        .{ .url = "https://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.7.2.tgz", .sha256 = "aad731aa22118ff327b9b4ddfc4b6f18ef9476586205da88a532e90940b523d2" },
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/openldap-2.7.2-consolidated-1.patch", .sha256 = "ee96840f2235bdd810e41e8cbc2faf4d46b83c0c15be937701c147b099d0232d" },
+    },
+    // OpenSSL for TLS (and the autoca and otp overlays); Cyrus SASL;
+    // libltdl (libtool) for the modules; libcrypt (libxcrypt) for {CRYPT}
+    // passwords; libuuid (util-linux).
+    .depends = .{ "glibc", "openssl", "cyrus-sasl", "libtool", "libxcrypt", "util-linux" },
+    .build_depends = .{ "autoconf", "groff" },
+}

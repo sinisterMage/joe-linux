@@ -1,0 +1,15 @@
+.{
+    .name = "fcgi",
+    .version = "2.4.7",
+    .release = 1,
+    .description = "FastCGI developer's kit: the libfcgi C and C++ libraries and cgi-fcgi",
+    .license = "OML",
+    .sources = .{
+        // The release tag's archive (FastCGI-Archives/fcgi2); upstream
+        // publishes no checksum for it.
+        .{ .url = "https://github.com/FastCGI-Archives/fcgi2/archive/2.4.7/fcgi2-2.4.7.tar.gz", .sha256 = "e41ddc3a473b555bdc0cbd80703dcb1f4610c1a7700d3b9d3d0c14a416e1074b" },
+    },
+    // libfcgi++ links libstdc++ (gcc).
+    .depends = .{ "glibc", "gcc" },
+    .build_depends = .{ "autoconf", "automake", "libtool" },
+}

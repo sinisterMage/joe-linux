@@ -1,0 +1,32 @@
+.{
+    .name = "sdl3",
+    .version = "3.4.20",
+    .release = 1,
+    .description = "Simple DirectMedia Layer 3: windows, graphics, audio, input and game controllers for games and media programs",
+    .license = "Zlib",
+    .sources = .{
+        // Checked against the book's MD5.
+        .{ .url = "https://www.libsdl.org/release/SDL3-3.4.20.tar.gz", .sha256 = "f3bb06f55bed9557227a700af2ea62e49497ebdf58037732a731a5fb3ef8581f" },
+        // The book's required patch, checked against its MD5.
+        .{ .url = "https://www.linuxfromscratch.org/patches/blfs/svn/SDL3-3.4.20-upstream_fixes-1.patch", .sha256 = "4269bc9e7163dcceba1ae0be9e534548e8c49166c67edfdf130a0673137dbb41" },
+    },
+    // libSDL3 links only libc and libm: every library below is loaded with
+    // dlopen when the matching driver is used, and recorded in its
+    // .note.dlopen section. Video: Wayland (with libxkbcommon and libdecor
+    // for title bars on GNOME), X11 and its extensions, KMS/DRM (libdrm,
+    // Mesa's GBM), OpenGL/EGL (mesa) and Vulkan (vulkan-icd-loader). Audio:
+    // PipeWire, ALSA. Input: libudev (systemd), libusb (HIDAPI game
+    // controllers), D-Bus (IBus, Fcitx, the screensaver and portal
+    // interfaces). Text: fribidi. The system tray: GTK 3.
+    .depends = .{
+        "glibc",       "wayland",     "libxkbcommon", "libdecor",
+        "libx11",      "libxext",     "libxcursor",   "libxi",
+        "libxfixes",   "libxrandr",   "libxscrnsaver", "libxtst",
+        "libdrm",      "mesa",        "vulkan-icd-loader",
+        "pipewire",    "alsa-lib",    "systemd",      "libusb",
+        "dbus",        "fribidi",     "gtk3",
+    },
+    // pulseaudio: libpulse, used when there is no PipeWire. ibus: the
+    // header SDL takes IBus's constants from (it talks to IBus over D-Bus).
+    .build_depends = .{ "cmake", "ninja", "pkgconf", "wayland-protocols", "xorgproto", "pulseaudio", "ibus" },
+}

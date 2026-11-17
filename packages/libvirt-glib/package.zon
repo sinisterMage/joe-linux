@@ -1,0 +1,15 @@
+.{
+    .name = "libvirt-glib",
+    .version = "5.0.0",
+    .release = 1,
+    .description = "GLib and GObject wrappers for libvirt (libvirt-glib, libvirt-gconfig, libvirt-gobject)",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // Checked against its signature (libvirt-glib-5.0.0.tar.xz.asc) by
+        // Daniel P. Berrangé's key DAF3A6FDB26B62912D0E8E3FBE86EBB415104FDF.
+        .{ .url = "https://download.libvirt.org/glib/libvirt-glib-5.0.0.tar.xz", .sha256 = "9bfec346382416a3575d87299bc641b2a464aa519fd9b1287e318aa43a2f3b8b" },
+    },
+    .depends = .{ "glibc", "glib", "libvirt", "libxml2" },
+    // glib provides g-ir-scanner; vala the vapi files; gettext msgfmt.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "vala", "gettext" },
+}

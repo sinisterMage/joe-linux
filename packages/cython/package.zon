@@ -1,0 +1,13 @@
+.{
+    .name = "cython",
+    .version = "3.3.1",
+    .release = 1,
+    .description = "Compiler from Python and the Cython language to C extension modules",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/c/cython/cython-3.3.1.tar.gz", .sha256 = "e0e45989e821bef6aa9ae15c7d583ab5e055f7406c4b3624e49e06d24e90375a" },
+    },
+    // Cython compiles parts of itself into C extension modules for speed.
+    .depends = .{ "glibc", "python" },
+    .build_depends = .{ "python", "setuptools", "wheel" },
+}

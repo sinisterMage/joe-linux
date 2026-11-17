@@ -1,0 +1,20 @@
+.{
+    .name = "firewalld",
+    .version = "2.5.2",
+    .release = 1,
+    .description = "Firewall daemon with zones, services and a D-Bus interface, over nftables; firewall-cmd",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for the release archive.
+        .{ .url = "https://github.com/firewalld/firewalld/releases/download/v2.5.2/firewalld-2.5.2.tar.bz2", .sha256 = "99d7468c22f6cafd8c72aa53173a632f2ca29cb19aec913e8ed45b6102af322d" },
+    },
+    // A Python daemon: dbus-python for its D-Bus interface, PyGObject for
+    // the GLib main loop, python-nftables to drive libnftables (the
+    // nftables back end, the default). iptables for direct rules and
+    // passthroughs and the iptables back end; polkit authorises D-Bus
+    // callers; modprobe and sysctl load and tune the netfilter modules.
+    .depends = .{ "python", "dbus-python", "pygobject", "python-nftables", "nftables", "iptables", "dbus", "polkit", "kmod", "procps-ng" },
+    // The manual pages ship ready-made; xsltproc and the DocBook
+    // stylesheets are what configure checks for to install them.
+    .build_depends = .{ "python", "pkgconf", "glib", "intltool", "gettext", "libxslt", "libxml2", "docbook-xsl-nons", "docbook-xml" },
+}

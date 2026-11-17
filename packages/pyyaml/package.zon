@@ -1,14 +1,13 @@
 .{
     .name = "pyyaml",
     .version = "6.0.3",
-    .release = 2,
+    .release = 3,
     .description = "YAML parser and emitter for Python",
     .license = "MIT",
     .sources = .{
         .{ .url = "https://files.pythonhosted.org/packages/source/P/PyYAML/pyyaml-6.0.3.tar.gz", .sha256 = "d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f" },
     },
-    // Pure Python: the optional LibYAML binding is not built (see build.sh),
-    // so libyaml is not a dependency.
-    .depends = .{"python"},
-    .build_depends = .{ "python", "setuptools", "wheel" },
+    // yaml._yaml links the system LibYAML library; Cython generates its C.
+    .depends = .{ "python", "glibc", "libyaml" },
+    .build_depends = .{ "python", "setuptools", "wheel", "cython" },
 }

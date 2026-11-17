@@ -1,0 +1,16 @@
+.{
+    .name = "aria2",
+    .version = "1.37.0",
+    .release = 1,
+    .description = "Download utility for HTTP(S), FTP, SFTP, BitTorrent and Metalink, over several connections",
+    .license = "GPL-2.0-or-later WITH openvpn-openssl-exception",
+    .sources = .{
+        // Upstream publishes no checksum or signature for the archive.
+        .{ .url = "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.xz", .sha256 = "60a420ad7085eb616cb6e2bdf0a7206d68ff3d37fb5a956dc44242eb2f79b66b" },
+    },
+    // GnuTLS for TLS, Nettle for message digests and GMP for the
+    // BitTorrent key exchange, libssh2 (SFTP), c-ares (asynchronous DNS),
+    // SQLite (Firefox and Chromium cookie stores), libxml2 (Metalink).
+    .depends = .{ "glibc", "gcc", "gnutls", "nettle", "gmp", "libssh2", "c-ares", "sqlite", "libxml2", "zlib" },
+    .build_depends = .{"pkgconf"},
+}

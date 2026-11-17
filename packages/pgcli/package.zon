@@ -1,0 +1,15 @@
+.{
+    .name = "pgcli",
+    .version = "4.7.1",
+    .release = 1,
+    .description = "PostgreSQL command-line client with auto-completion and syntax highlighting",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/p/pgcli/pgcli-4.7.1.tar.gz", .sha256 = "195d00ae994c89d43ed8e570ddfa0a9fb6105e6b783dfc1eb6cea9b326dc3346" },
+    },
+    // libpq comes through psycopg (postgresql); setproctitle hides the
+    // password from ps. The keyring and sshtunnel extras are not packaged.
+    .depends = .{ "python", "pgspecial", "click", "pygments", "prompt-toolkit", "psycopg", "sqlparse", "configobj", "cli-helpers", "setproctitle", "tzlocal" },
+    // setuptools-scm reads the version from the sdist's PKG-INFO.
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel" },
+}

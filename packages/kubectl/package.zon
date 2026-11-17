@@ -1,0 +1,16 @@
+.{
+    .name = "kubectl",
+    .version = "1.37.2",
+    .release = 1,
+    .description = "Kubernetes command line client",
+    .license = "Apache-2.0",
+    .sources = .{
+        // The release's source tarball, with the Go modules vendored; its
+        // SHA-256 is published beside it (kubernetes-src.tar.gz.sha256).
+        // kubelet and kubeadm are built from the same file.
+        .{ .url = "https://dl.k8s.io/v1.37.2/kubernetes-src.tar.gz", .file = "kubernetes-src-1.37.2.tar.gz", .sha256 = "d4c61f7fd7adeb0bdfcc58add0ec929646b19314c316a524b2e3c7d3d4c4ff3f" },
+    },
+    // Built without cgo, as upstream builds kubectl.
+    .depends = .{"glibc"},
+    .build_depends = .{"go"},
+}

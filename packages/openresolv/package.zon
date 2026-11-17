@@ -1,0 +1,14 @@
+.{
+    .name = "openresolv",
+    .version = "3.17.4",
+    .release = 1,
+    .description = "Manager of resolv.conf and resolver configuration for DHCP and VPN clients, as openresolv",
+    .license = "BSD-2-Clause",
+    .sources = .{
+        // Checked against Roy Marples's signature (openresolv-3.17.4.tar.xz.asc,
+        // key A785ED2755955D9E93EA59F6597F97EA9AD45549).
+        .{ .url = "https://github.com/NetworkConfiguration/openresolv/releases/download/v3.17.4/openresolv-3.17.4.tar.xz", .sha256 = "901d83a15520b80e117aeca8cb6f5b70ceb205ba050a638d45cebcf304df729b" },
+    },
+    // Shell scripts, run by /bin/sh (bash).
+    .depends = .{"bash"},
+}

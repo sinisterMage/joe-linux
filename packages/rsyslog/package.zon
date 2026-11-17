@@ -1,0 +1,20 @@
+.{
+    .name = "rsyslog",
+    .version = "8.2610.0",
+    .release = 2,
+    .description = "Rocket-fast system for log processing: a syslog daemon that reads the systemd journal",
+    .license = "GPL-3.0-or-later AND LGPL-3.0-or-later AND Apache-2.0",
+    .sources = .{
+        // Its SHA-256 is the .sha256 asset of the GitHub release.
+        .{ .url = "https://github.com/rsyslog/rsyslog/releases/download/v8.2610.0/rsyslog-8.2610.0.tar.gz", .sha256 = "7bdf95e81ea6c0ee5d586342d57d2a6e395b089fb3c67318a0dc555816de404b" },
+    },
+    // libestr and libfastjson are required; zlib; libuuid (util-linux);
+    // libsystemd for imjournal, omjournal and notification; libyaml for
+    // YAML configuration; libcap-ng to drop capabilities; OpenSSL and
+    // GnuTLS for TLS; libgcrypt (with libgpg-error) for encrypted log
+    // files; zstd for compressed ones; curl for fmhttp, omhttp and
+    // omelasticsearch; krb5 for GSSAPI; protobuf-c and Snappy for native
+    // statistics push encoding and compression.
+    .depends = .{ "glibc", "libestr", "libfastjson", "zlib", "util-linux", "systemd", "libyaml", "libcap-ng", "openssl", "gnutls", "libgcrypt", "libgpg-error", "zstd", "curl", "krb5", "protobuf-c", "snappy" },
+    .build_depends = .{"pkgconf"},
+}

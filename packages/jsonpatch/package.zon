@@ -1,0 +1,12 @@
+.{
+    .name = "jsonpatch",
+    .version = "1.47",
+    .release = 1,
+    .description = "Apply JSON patches (RFC 6902) in Python, with the jsonpatch and jsondiff tools",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        .{ .url = "https://files.pythonhosted.org/packages/source/j/jsonpatch/jsonpatch-1.47.tar.gz", .sha256 = "5ed650b7517789e0f43428aa7b09442c0b90de0a0fd17a53fd0ebf55205c601e" },
+    },
+    .depends = .{ "python", "jsonpointer" },
+    .build_depends = .{ "python", "setuptools" },
+}

@@ -1,0 +1,16 @@
+.{
+    .name = "libxml2-python",
+    .version = "2.15.4",
+    .release = 1,
+    .description = "Python bindings for libxml2 (the libxml2 and drv_libxml2 modules)",
+    .license = "MIT",
+    .sources = .{
+        // The same source as the libxml2 package; the two must be the same
+        // version.
+        .{ .url = "https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.4.tar.xz", .sha256 = "98087fd181d9070724f3fbc65c7377db03038eb92bd882374daff44940138821" },
+    },
+    // libxml2mod links the libxml2 built from this same source.
+    .depends = .{ "libxml2 =2.15.4", "glibc", "python" },
+    // The bindings are generated from the API description doxygen writes.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "python", "doxygen", "icu", "readline" },
+}

@@ -1,8 +1,8 @@
 .{
     .name = "rust",
     .version = "1.99.0",
-    .release = 2,
-    .description = "The Rust compiler and standard library, with cargo, clippy, rustdoc, rustfmt and the proc-macro server for rust-analyzer",
+    .release = 4,
+    .description = "The Rust compiler, compiler development libraries, standard library and Cargo tools",
     .license = "MIT OR Apache-2.0",
     .sources = .{
         .{ .url = "https://static.rust-lang.org/dist/rustc-1.99.0-src.tar.xz", .sha256 = "cc41916a8c84f5d9ec4f55561b44e39f43b647b133f8a6f51be9ea13c83f7036" },
@@ -16,9 +16,9 @@
         .{ .url = "https://static.rust-lang.org/dist/2026-08-20/cargo-1.98.0-x86_64-unknown-linux-gnu.tar.xz", .sha256 = "2f512d170d3dd23e16ababcda32ee2e6d5172d861a7af1f504e0b1e270cafab9" },
     },
     // rustc links the system libLLVM; cargo links libcurl, OpenSSL, SQLite,
-    // libssh2 (build.sh asks its crate for the system one) and zlib; rustc
-    // runs gcc to link what it compiles and everything links libgcc_s.
-    .depends = .{ "glibc", "gcc", "binutils", "llvm", "curl", "openssl", "sqlite", "zlib", "libssh2" },
+    // libgit2, libssh2 (build.sh asks its crate for the system ones) and zlib;
+    // rustc runs gcc to link what it compiles and everything links libgcc_s.
+    .depends = .{ "glibc", "gcc", "binutils", "llvm", "curl", "openssl", "sqlite", "zlib", "libssh2", "libgit2" },
     // x.py is a Python script; the vendored *-sys crates find the system
     // libraries with pkg-config. cmake is the book's requirement.
     .build_depends = .{ "python", "pkgconf", "cmake" },

@@ -1,0 +1,36 @@
+.{
+    .name = "qemu-base",
+    .version = "11.1.3",
+    .release = 2,
+    .description = "QEMU for x86 virtual machines with KVM, headless (SPICE and VNC), with its tools and guest agent",
+    .license = "GPL-2.0-only AND LGPL-2.1-or-later AND MIT AND BSD-2-Clause-Patent",
+    .sources = .{
+        // Checked against the book's MD5 (fc206ce1fca9cbd4f7493c81a2f2d2fb).
+        .{ .url = "https://download.qemu.org/qemu-11.1.3.tar.xz", .sha256 = "5a8289c7940dc77d3873c81a6c29ba3afe1446fc9d36e77fa1658cdbecb84b22" },
+    },
+    // Everything QEMU, its tools and qemu-ga link (see build.sh for what
+    // each is for): libudev is systemd's, libattr attr's, libfdt dtc's,
+    // ncursesw ncurses', libgbm Mesa's, libpam linux-pam's and
+    // libkeyutils keyutils'. libtasn1 is found and linked whenever GnuTLS
+    // is used.
+    .depends = .{
+        "glibc",        "glib",     "pixman",   "zlib",         "gnutls",     "libtasn1",   "libseccomp",
+        "libcap-ng",    "attr",     "libslirp", "spice",        "libepoxy",   "mesa",       "virglrenderer",
+        "ncurses",      "libjpeg-turbo", "libpng", "curl",      "libssh",     "fuse3",      "lzo",
+        "zstd",         "bzip2",    "linux-pam", "keyutils",    "systemd",    "libusb",     "usbredir",
+        "alsa-lib",     "pulseaudio", "pipewire", "dtc",        "cyrus-sasl", "libaio", "snappy",
+    },
+    // configure makes a Python virtual environment and installs QEMU's own
+    // Python package into it with pip, which needs setuptools and wheel.
+    // glib provides gdbus-codegen (-display dbus); bzip2 unpacks the edk2
+    // firmware images.
+    .build_depends = .{ "python", "setuptools", "wheel", "meson", "ninja", "pkgconf", "spice-protocol", "bzip2" },
+    // Set-uid root: it adds a tap device to a bridge that
+    // /etc/qemu/bridge.conf allows, on behalf of an unprivileged QEMU. Run
+    // by an ordinary user, a program holds only what its seal declares
+    // (packages/linux/joe-lsm), so it declares all; a narrower list is
+    // rule 3's work.
+    .operations = .{
+        .{ .programs = .{"usr/libexec/qemu-bridge-helper"}, .allow = .{"all"} },
+    },
+}

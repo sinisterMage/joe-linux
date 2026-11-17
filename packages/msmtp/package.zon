@@ -1,0 +1,17 @@
+.{
+    .name = "msmtp",
+    .version = "1.8.34",
+    .release = 1,
+    .description = "SMTP client that sends mail for programs that call sendmail, and the msmtpd server",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // Checked against upstream's GPG signature (.sig, key
+        // 2F61B4828BBA779AECB3F32703A2A4AB1E32FD34, Martin Lambers).
+        .{ .url = "https://marlam.de/msmtp/releases/msmtp-1.8.34.tar.xz", .sha256 = "84e8fe2a5a80a1ee7802013b3fbdb846a3f27a4163cf37a1c6d7c7f888873ead" },
+    },
+    // GnuTLS for TLS, libidn2 for internationalised domain names, libsecret
+    // (with glib) for passwords kept by the desktop's keyring. bash runs
+    // msmtpq; its connection test pings (inetutils).
+    .depends = .{ "glibc", "gnutls", "libidn2", "libsecret", "glib", "bash", "inetutils" },
+    .build_depends = .{ "pkgconf", "gettext" },
+}

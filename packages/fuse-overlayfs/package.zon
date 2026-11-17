@@ -1,0 +1,15 @@
+.{
+    .name = "fuse-overlayfs",
+    .version = "1.18",
+    .release = 1,
+    .description = "Overlay file system in user space, for rootless container storage",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream's SHA256SUMS covers only its static binary, not the
+        // source archive.
+        .{ .url = "https://github.com/containers/fuse-overlayfs/archive/v1.18/fuse-overlayfs-1.18.tar.gz", .sha256 = "fdd1896c8de35a15eb14444d7880be81d635fcbbc4ad162d8bc3ccf5627aa8c7" },
+    },
+    // fusermount3 (fuse3) mounts it for unprivileged users.
+    .depends = .{ "glibc", "fuse3" },
+    .build_depends = .{ "autoconf", "automake", "pkgconf" },
+}

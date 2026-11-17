@@ -1,0 +1,29 @@
+.{
+    .name = "cockpit",
+    .version = "372",
+    .release = 1,
+    .description = "Web console for administering Linux servers (cockpit-ws, cockpit-bridge and pages)",
+    // Upstream's own expression (tools/cockpit.spec): the C programs and
+    // pages are LGPL-2.1-or-later, the Python bridge GPL-3.0-or-later. The
+    // built pages in dist/ bundle PatternFly, React, xterm.js, lodash and
+    // the rest of runtime-npm-modules.txt (MIT; tslib 0BSD) and the Red
+    // Hat fonts (OFL-1.1), all free.
+    .license = "LGPL-2.1-or-later AND GPL-3.0-or-later AND MIT AND CC-BY-SA-3.0 AND BSD-3-Clause AND 0BSD AND OFL-1.1",
+    .sources = .{
+        // Upstream's release tarball, which carries the web pages already
+        // built (dist/), so neither node nor npm is needed. The SHA-256 is
+        // the digest GitHub records for the release asset; upstream
+        // publishes no separate checksum.
+        .{ .url = "https://github.com/cockpit-project/cockpit/releases/download/372/cockpit-372.tar.xz", .sha256 = "a74d28489341e880f73224174dd21e0b48ce7e78999801369855f74d6df4a53b" },
+    },
+    // Linked: glib (gio), json-glib, GnuTLS (cockpit-tls and the
+    // certificates), MIT Kerberos (GSSAPI single sign-on), PAM, libsystemd,
+    // libcrypt. At run time: python for cockpit-bridge, which also talks
+    // to D-Bus through libsystemd; the openssl program, with which
+    // cockpit-certificate-helper makes the self-signed certificate (sscg is
+    // not packaged); the systemd tools the pages run. Optional and not
+    // depended on: sudo or polkit's pkexec for administrative access,
+    // NetworkManager and udisks for their pages, openssh for other hosts.
+    .depends = .{ "glibc", "glib", "json-glib", "gnutls", "krb5", "linux-pam", "systemd", "libxcrypt", "python", "openssl" },
+    .build_depends = .{ "pkgconf", "gettext", "python" },
+}

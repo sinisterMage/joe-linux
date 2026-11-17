@@ -1,0 +1,16 @@
+.{
+    .name = "ddclient",
+    .version = "4.0.0",
+    .release = 1,
+    .description = "Updates dynamic DNS records at many providers when the public address changes",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Upstream publishes no checksum for the release archive.
+        .{ .url = "https://github.com/ddclient/ddclient/releases/download/v4.0.0/ddclient-4.0.0.tar.gz", .sha256 = "15c73d4b61e8e4974707379df1dbf15ab9f933835c6968947d2b56173388c6f0" },
+    },
+    // A Perl program using only core modules; it makes its HTTP requests
+    // by running curl.
+    .depends = .{ "perl", "curl" },
+    // configure checks the Perl modules it needs.
+    .build_depends = .{"perl"},
+}

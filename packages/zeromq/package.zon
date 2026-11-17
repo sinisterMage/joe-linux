@@ -1,0 +1,15 @@
+.{
+    .name = "zeromq",
+    .version = "4.3.5",
+    .release = 1,
+    .description = "ZeroMQ messaging library (libzmq)",
+    .license = "MPL-2.0",
+    .sources = .{
+        // The release's SHA1SUMS lists this tarball; its SHA-1 matches.
+        .{ .url = "https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.tar.gz", .sha256 = "6653ef5910f17954861fe72332e68b03ca6e4d9c7160eb3a8de5a5a913bfab43" },
+    },
+    // libstdc++ (gcc); libsodium for CURVE; krb5 for the GSSAPI mechanism;
+    // libunwind for the backtrace printed when an assertion fails.
+    .depends = .{ "glibc", "gcc", "libsodium", "krb5", "libunwind" },
+    .build_depends = .{"pkgconf"},
+}

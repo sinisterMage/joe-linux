@@ -1,0 +1,17 @@
+.{
+    .name = "osinfo-db-tools",
+    .version = "1.12.0",
+    .release = 1,
+    .description = "Tools for managing the osinfo database of operating systems (osinfo-db-import and others)",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // Checked against its signature (osinfo-db-tools-1.12.0.tar.xz.asc)
+        // by Victor Toso's key 206D3B352F566F3B0E6572E997D9123DE37A484F.
+        .{ .url = "https://gitlab.com/api/v4/projects/libosinfo%2Fosinfo-db-tools/packages/generic/release-assets/v1%2E12%2E0/osinfo-db-tools-1%2E12%2E0%2Etar%2Exz", .file = "osinfo-db-tools-1.12.0.tar.xz", .sha256 = "f3315f675d18770f25dea8ed04b20b8fc80efb00f60c37ee5e815f9c3776e7f3" },
+    },
+    // osinfo-db-import unpacks archives (libarchive) and downloads them
+    // (libsoup); osinfo-db-validate checks the XML (libxml2).
+    .depends = .{ "glibc", "glib", "json-glib", "libarchive", "libsoup", "libxml2" },
+    // perl's pod2man writes the manual pages; gettext msgfmt.
+    .build_depends = .{ "meson", "ninja", "pkgconf", "perl", "gettext" },
+}

@@ -1,0 +1,19 @@
+.{
+    .name = "miniserve",
+    .version = "0.35.0",
+    .release = 1,
+    .description = "Serves files and directories over HTTP from the command line",
+    .license = "MIT",
+    .sources = .{
+        // The crate as published on crates.io, with upstream's Cargo.lock;
+        // its SHA-256 is the checksum crates.io records for 0.35.0.
+        .{ .url = "https://static.crates.io/crates/miniserve/miniserve-0.35.0.crate", .file = "miniserve-0.35.0.crate.tar.gz", .sha256 = "f1b4d21e72ebf1a464a623a73e3be821bd29a52e5a99a235401b67f19b20702e" },
+    },
+    // cargo downloads the crates miniserve depends on from crates.io; they
+    // are not vendored yet.
+    .network = true,
+    // libgcc_s (gcc) for unwinding; zstd for compressed archive downloads.
+    // TLS is rustls with ring, compiled in.
+    .depends = .{ "glibc", "gcc", "zstd" },
+    .build_depends = .{ "rust", "pkgconf" },
+}

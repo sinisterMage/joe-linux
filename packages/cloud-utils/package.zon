@@ -1,0 +1,19 @@
+.{
+    .name = "cloud-utils",
+    .version = "0.34",
+    .release = 1,
+    .description = "Cloud image and guest utilities: growpart, cloud-localds, mount-image-callback, ec2metadata",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        // Upstream publishes no checksum for its release archives.
+        .{ .url = "https://github.com/canonical/cloud-utils/archive/0.34/cloud-utils-0.34.tar.gz", .sha256 = "0e2d6bb9c738d7016bb8af6780bef74dee263a02963e9c01a6b8331e7cafdf8d" },
+    },
+    // Shell and Python scripts. growpart: sfdisk, partx, blkid and flock
+    // (util-linux), udevadm (systemd). cloud-localds: xorrisofs
+    // (libisoburn, see build.sh), mkfs.vfat (dosfstools) and mcopy
+    // (mtools) for vfat seeds, file. resize-part-image: e2fsprogs.
+    // ec2metadata and write-mime-multipart: python. mount-image-callback
+    // and cloud-localds's non-raw output formats also use qemu-nbd and
+    // qemu-img when qemu-base is installed.
+    .depends = .{ "bash", "python", "util-linux", "systemd", "libisoburn", "dosfstools", "mtools", "file", "e2fsprogs", "gawk", "coreutils" },
+}

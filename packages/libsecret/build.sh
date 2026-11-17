@@ -1,8 +1,8 @@
 build() {
     mkdir bld
     cd bld
-    # No tpm2-tss and no bash-completion in joe Linux; the PAM module is off
-    # as in the book.
+    # TPM-backed secrets and shell completion are available; the PAM module
+    # remains off as in the book.
     meson setup .. \
         --prefix=/usr \
         --libdir=lib \
@@ -12,9 +12,9 @@ build() {
         -D crypto=libgcrypt \
         -D introspection=true \
         -D vapi=true \
-        -D tpm2=false \
+        -D tpm2=true \
         -D pam=false \
-        -D bash_completion=disabled \
+        -D bash_completion=enabled \
         -D test_setup=disabled
     ninja
 }

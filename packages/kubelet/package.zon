@@ -1,0 +1,21 @@
+.{
+    .name = "kubelet",
+    .version = "1.37.2",
+    .release = 1,
+    .description = "Kubernetes node agent: runs a node's pods through a container runtime",
+    .license = "Apache-2.0",
+    .sources = .{
+        // The release's source tarball, with the Go modules vendored; its
+        // SHA-256 is published beside it (kubernetes-src.tar.gz.sha256).
+        .{ .url = "https://dl.k8s.io/v1.37.2/kubernetes-src.tar.gz", .file = "kubernetes-src-1.37.2.tar.gz", .sha256 = "d4c61f7fd7adeb0bdfcc58add0ec929646b19314c316a524b2e3c7d3d4c4ff3f" },
+    },
+    // Built with cgo, as upstream builds kubelet, which links only libc.
+    // The pods run in containerd (through its CRI plugin) with networks
+    // from the CNI plugins, which upstream's packages require
+    // (kubernetes-cni). kubelet itself runs mount, umount, losetup, blkid
+    // and fsck (util-linux) for volumes, du (coreutils) for their sizes,
+    // and iptables for its KUBE-FIREWALL chain. Since 1.32 neither it nor
+    // kube-proxy runs conntrack, and it never runs ethtool, ip or socat.
+    .depends = .{ "glibc", "containerd", "cni-plugins", "util-linux", "coreutils", "iptables" },
+    .build_depends = .{"go"},
+}

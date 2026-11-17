@@ -1,0 +1,21 @@
+A detached update checker must not retain the caller's pipe descriptors.
+CPython standard streams use closefd=False, so closing their wrappers leaves
+file descriptors 0, 1 and 2 open. A blocked update fetch then prevents a piping
+consumer from receiving EOF even after the actual HTTP command has exited.
+--- a/httpie/internal/daemons.py
++++ b/httpie/internal/daemons.py
+@@ -84,6 +84,14 @@
+     sys.stdout.close()
+     sys.stderr.close()
+ 
++    # Closing Python's standard wrappers does not close their descriptors.
++    # Rebind them so the daemon cannot keep the caller's pipes alive.
++    null_fd = os.open(os.devnull, os.O_RDWR)
++    for fd in (0, 1, 2):
++        os.dup2(null_fd, fd)
++    if null_fd > 2:
++        os.close(null_fd)
++
+     if platform.system() == 'Darwin':
+         # Double-fork is not reliable on MacOS, so we'll use a subprocess
+         # to ensure the task is isolated properly.

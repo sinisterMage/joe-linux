@@ -1,0 +1,14 @@
+.{
+    .name = "apr-util",
+    .version = "1.6.6",
+    .release = 1,
+    .description = "Apache Portable Runtime utility library, with its crypto, DBM, DBD and LDAP modules",
+    .license = "Apache-2.0",
+    .sources = .{
+        .{ .url = "https://archive.apache.org/dist/apr/apr-util-1.6.6.tar.bz2", .sha256 = "aa77dd25f036731b7246abbfbebe6cc813b42799b62c874bc82bd4e1f90f2918" },
+    },
+    // expat for the XML parser; the modules: OpenSSL (apr_crypto_openssl),
+    // GDBM (apr_dbm_gdbm), SQLite and unixODBC (apr_dbd_*), OpenLDAP
+    // (apr_ldap). libcrypt and libuuid come with apr's link flags.
+    .depends = .{ "glibc", "apr", "expat", "openssl", "gdbm", "sqlite", "unixodbc", "openldap", "libxcrypt", "util-linux" },
+}

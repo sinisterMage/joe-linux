@@ -1,0 +1,34 @@
+.{
+    .name = "open-vm-tools",
+    .version = "13.1.0",
+    .release = 2,
+    .description = "VMware guest tools: vmtoolsd, shared folders, copy and paste, drag and drop, display resizing",
+    .license = "LGPL-2.1-only",
+    .sources = .{
+        // Upstream publishes no checksum; this is the SHA-256 GitHub records
+        // for the release asset.
+        .{ .url = "https://github.com/vmware/open-vm-tools/releases/download/stable-13.1.0/open-vm-tools-13.1.0-25218885.tar.gz", .sha256 = "67a23d505aca77127b081445f758e269b1009e8824cf7f6f2d6efafb0b14d0fd" },
+    },
+    // vmtoolsd and its plugins: glib, libtirpc (the guest RPC's XDR),
+    // libxcrypt, ICU, PAM (authenticating guest operations), libdrm and
+    // libudev (systemd) for the resolutionKMS plugin and vmwgfxctrl, FUSE 3
+    // for vmhgfs-fuse and vmblock-fuse. The desktop plugins (vmware-user:
+    // copy and paste, drag and drop, display layout) use X, GTK 3 and
+    // gtkmm 3. libstdc++ (gcc) for gtkmm and ICU.
+    .depends = .{
+        "glibc",     "gcc",          "glib",       "libtirpc",  "libxcrypt", "icu",       "linux-pam",
+        "libdrm",    "systemd",      "fuse3",      "libx11",    "libxext",   "libxinerama", "libxi",
+        "libxrender", "libxrandr",   "libxtst",    "libsm",     "libice",    "libxcomposite", "gtk3",
+        "gdk-pixbuf", "gtkmm3",      "glibmm2.4",  "libsigcxx2",
+    },
+    // rpcgen generates the guest RPC code; glib provides glib-genmarshal.
+    .build_depends = .{ "pkgconf", "rpcsvc-proto", "autoconf", "automake", "libtool" },
+    // Set-uid root: run in each desktop session, it opens /dev/uinput and
+    // the vmblock-fuse control file for vmware-user and starts it as the
+    // user. Run by an ordinary user, a program holds only what its seal
+    // declares (packages/linux/joe-lsm), so it declares all; a narrower
+    // list is rule 3's work.
+    .operations = .{
+        .{ .programs = .{"usr/bin/vmware-user-suid-wrapper"}, .allow = .{"all"} },
+    },
+}

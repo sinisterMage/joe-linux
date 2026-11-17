@@ -1,0 +1,19 @@
+.{
+    .name = "borg",
+    .version = "1.4.5",
+    .release = 2,
+    .description = "BorgBackup: deduplicating backup program with compression and authenticated encryption",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Checked against Thomas Waldmann's signature
+        // (borgbackup-1.4.5.tar.gz.asc) and PyPI's SHA-256.
+        .{ .url = "https://files.pythonhosted.org/packages/source/b/borgbackup/borgbackup-1.4.5.tar.gz", .sha256 = "4f9a5fe584c504b15485841236750dea16aa7cd2ddbc4a594e9d2ce5c49c4508" },
+    },
+    // The C extensions link OpenSSL (AES, ChaCha20-Poly1305), LZ4, zstd,
+    // xxHash and libacl. msgpack must be at most 1.2.1, which borg checks
+    // at run time. Remote repositories are reached with the ssh client
+    // (openssh), which is not a dependency. pyfuse3 enables archive mounting
+    // for restore browsing, including Pika Backup's file browser.
+    .depends = .{ "glibc", "python", "openssl", "lz4", "zstd", "xxhash", "acl", "msgpack", "packaging", "pyfuse3" },
+    .build_depends = .{ "python", "setuptools", "setuptools-scm", "wheel" },
+}
