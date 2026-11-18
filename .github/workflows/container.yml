@@ -1,0 +1,99 @@
+name: Container image
+
+# joe Linux as a container image (image/container.zon), built by dave from the
+# published repository and pushed to the GitHub Container Registry as
+# ghcr.io/<owner>/joe, tagged latest and with the release's name
+# (J1-7.3.1-0.3.0-alpha5, from joe-release's os-release).
+#
+# Run it after publishing a release: gh workflow run container.yml
+#
+# The repository is not named in this file. Two variables of this GitHub
+# repository say where it is and how to trust it:
+#   JOE_REPO_URL   the published repository, https://DOMAIN/x86_64
+#   JOE_REPO_KEY   its public key: the hex line of build/keys/joe.pub
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  container:
+    name: build and push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      JOE_REPO_URL: ${{ vars.JOE_REPO_URL }}
+      JOE_REPO_KEY: ${{ vars.JOE_REPO_KEY }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the repository variables
+        run: |
+          [[ $JOE_REPO_URL == https://* ]] || { echo "::error::set the variable JOE_REPO_URL"; exit 1; }
+          [[ $JOE_REPO_KEY =~ ^[0-9a-f]{64}$ ]] || { echo "::error::set the variable JOE_REPO_KEY"; exit 1; }
+
+      - name: Install Zig 0.17.1
+        env:
+          ZIG_VERSION: 0.17.1
+          # SHA-256 from https://ziglang.org/download/index.json.
+          ZIG_SHA256: 3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a
+        run: |
+          archive="$RUNNER_TEMP/zig.tar.xz"
+          curl --fail --silent --show-error --location --retry 3 \
+            --proto '=https' --tlsv1.2 \
+            "https://ziglang.org/download/$ZIG_VERSION/zig-x86_64-linux-$ZIG_VERSION.tar.xz" \
+            --output "$archive"
+          printf '%s  %s\n' "$ZIG_SHA256" "$archive" | sha256sum --check
+          mkdir -p "$RUNNER_TEMP/zig"
+          tar -xf "$archive" -C "$RUNNER_TEMP/zig" --strip-components=1
+          echo "$RUNNER_TEMP/zig" >> "$GITHUB_PATH"
+
+      - name: Build dave
+        working-directory: dave
+        run: zig build -Doptimize=ReleaseSafe
+
+      - name: Build the image
+        run: |
+          # dave builds images unprivileged, in a user namespace (unshare),
+          # which Ubuntu's AppArmor policy refuses by default.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          printf '%s\n' "$JOE_REPO_KEY" > "$RUNNER_TEMP/joe.pub"
+          dave/zig-out/bin/dave image build image/container.zon \
+            --repo "joe,$JOE_REPO_URL,$JOE_REPO_URL,$RUNNER_TEMP/joe.pub" \
+            --out "$RUNNER_TEMP/joe.tar"
+          ls -l "$RUNNER_TEMP/joe.tar"
+
+      - name: Try it
+        run: |
+          docker load --input "$RUNNER_TEMP/joe.tar"
+          docker run --rm joe:latest cat /etc/os-release
+          docker run --rm joe:latest dave --version
+          # dave in the container reaches the repository and installs from it.
+          docker run --rm joe:latest bash -c 'dave install -y which && which which'
+          version=$(docker run --rm joe:latest bash -c '. /etc/os-release && echo "$VERSION"')
+          [[ $version =~ ^J[0-9] ]] || { echo "::error::no release name in os-release: $version"; exit 1; }
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Push to the GitHub Container Registry
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/joe"
+          for tag in "$VERSION" latest; do
+            skopeo copy --dest-creds "$GITHUB_ACTOR:$TOKEN" \
+              "oci-archive:$RUNNER_TEMP/joe.tar" "docker://$image:$tag"
+          done
+          echo "pushed $image:$VERSION and $image:latest" >> "$GITHUB_STEP_SUMMARY"

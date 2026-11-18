@@ -120,7 +120,7 @@ Seal installed files that are not sealed yet; run on an image's first boot.
 .SS Images and installation
 .TP
 .BI "image build" " spec"
-Build the disk image or live medium a specification describes.
+Build the disk image, live medium or container image a specification describes.
 .TP
 .B install-system
 With
@@ -194,15 +194,11 @@ system too. Nothing is resized; make the space first, in the other system.
 .B \-\-json
 Report progress as JSON events, one per line, for a program watching.
 .TP
-.BI \-\-from " dir"
-Install from the medium at
-.I dir
-instead of the running live medium.
-.TP
 .BI \-\-with " package"
 Install
 .I package
-as well (also for image).
+as well (also for image); install-system takes it from the medium's root,
+so it must be installed there.
 .SS Building images
 .TP
 .B \-\-test

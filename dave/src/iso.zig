@@ -7,10 +7,12 @@
 //!
 //!   joe/root.squashfs     the live root: the spec's tree as a compressed
 //!                         read-only SquashFS image
-//!   joe/repos/<name>/     for each repository, its signed index and the
-//!                         packages of the spec's payload: what the installer
-//!                         installs, offline, with the same transaction as
-//!                         any other installation
+//!   joe/install.zon       what the installer installs (the spec's payload),
+//!                         which it copies out of the live root, where it is
+//!                         installed already, so that the medium carries every
+//!                         package once (install_system.zig)
+//!   joe/originals/        the files of those packages the live root holds
+//!                         changed, as they were packaged, by SHA-256
 //!
 //! and the EFI system partition holds systemd-boot, the kernel, the initramfs
 //! and two entries (the second with `nomodeset`, for graphics that do not

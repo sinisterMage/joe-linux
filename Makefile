@@ -12,7 +12,7 @@ REPO := --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/key
 .PHONY: help dave test test-cli scaffold test-boot-contract test-deployments \
         bootstrap packages image run test-joe test-security audit-security \
         desktop-image run-desktop test-desktop \
-        release-image test-release vm run-vm serve-repo iso-tools iso run-iso test-live test-install clean
+        release-image test-release vm run-vm serve-repo iso-tools iso run-iso test-live test-install container clean
 
 help:
 	@echo "dave"
@@ -49,6 +49,9 @@ help:
 	@echo "  make run-iso              boot the newest ISO in a window beside an empty disk (ISO=FILE for another)"
 	@echo "  make test-live            boot it as a CD and as a USB stick"
 	@echo "  make test-install         install from it onto an empty disk, then boot that"
+	@echo ""
+	@echo "the container image (image/container.zon)"
+	@echo "  make container            build/images/joe-container.tar, an OCI archive (docker load -i, podman load -i)"
 
 $(DAVE): $(wildcard dave/src/*.zig dave/src/solver/*.zig) dave/build.zig
 	cd dave && zig build -Doptimize=ReleaseSafe
@@ -194,6 +197,15 @@ test-live: iso-tools $(DAVE)
 
 test-install: iso-tools $(DAVE)
 	python3 tests/vm/install.py
+
+# joe as a container image. Inside it, dave takes packages from
+# CONTAINER_URL; by default build/repo as make serve-repo offers it, which a
+# container on the host's network (docker run --network host) reaches. The
+# published image is made by .github/workflows/container.yml.
+container: $(DAVE)
+	mkdir -p build/images
+	$(DAVE) image build image/container.zon --out build/images/joe-container.tar \
+		--repo joe,$(CURDIR)/build/repo,$(or $(CONTAINER_URL),http://127.0.0.1:8643),$(CURDIR)/build/keys/joe.pub
 
 serve-repo:
 	@echo "serving build/repo on port 8643 (Ctrl-C to stop)"

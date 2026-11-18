@@ -40,6 +40,7 @@ make iso-tools             xorriso and squashfs-tools (and mtools) into build/ho
 make iso                   build/images/joe-live.iso, the installation medium
 make test-live             boot the medium as a CD and as a USB stick
 make test-install          install from the medium onto an empty disk, then boot and check that
+make container             build/images/joe-container.tar, joe as an OCI container image
 ```
 
 A subset of unit tests (the filter matches test names and file paths such as `solver.version`):
@@ -69,7 +70,8 @@ Every image is a specification in `image/*.zon` built by `dave image build SPEC 
 - The **scaffold** (`image/scaffold.zon`, tree prepared by `image/mkscaffold*.sh`) is the host's kernel and systemd-boot plus a stock Arch userspace with dave added. It exists so deployment mechanics can be tested in minutes without building the distribution. Nothing from it ships, and it has no security module.
 - The **joe images** (`console.zon`, `desktop.zon`) are one `dave install` transaction of `joe-base` (or `joe-desktop`) into an empty directory, laid out as a raw GPT disk without mounting anything. They need `make bootstrap` and `make packages` first, which take an hour or more (the desktop set several hours).
 - The **release image** (`release.zon`) is `joe-desktop` alone: no test console, no ready-made user, root locked. GDM starts gnome-initial-setup because no account exists. `tests/vm/release.py` boots the same package set plus `joe-test-console`, because the harness has no other way in.
-- The **live medium** (`live.zon`, `.format = .iso`, `dave/src/iso.zig`) is a hybrid UEFI ISO: the root as an xz-compressed SquashFS image with a tmpfs overlay (`joe-live` package: live user, masks), an initramfs made by a second dave transaction plus `image/initrd/`'s mount units, and the repository subset the installer installs from (`joe/install.zon`, `joe/repos/<name>/`). Nothing on it is sealed, so it runs the security module in log mode (`joe=log` on its command line).
+- The **live medium** (`live.zon`, `.format = .iso`, `dave/src/iso.zig`) is a hybrid UEFI ISO: the root as an xz-compressed SquashFS image with a tmpfs overlay (`joe-live` package: live user, masks), an initramfs made by a second dave transaction plus `image/initrd/`'s mount units, and what the installer installs (`joe/install.zon`). The installer copies those packages out of the live root image (`/run/live/lower`) by the manifests in its database (`txn.Copy`), so the medium carries no package files; the files the live root changed are kept as packaged in `joe/originals/<sha256>`, and the build fails if the live root lacks part of the payload. Nothing on it is sealed, so it runs the security module in log mode (`joe=log` on its command line).
+- The **container image** (`container.zon`, `.format = .oci`, `dave/src/oci.zig`) is an OCI image layout archived with tar, one gzip layer. `.github/workflows/container.yml` builds it from the published repository (the repository variables `JOE_REPO_URL` and `JOE_REPO_KEY`) and pushes it to `ghcr.io/<owner>/joe`; it is run by hand after a release. `make container` builds it from build/repo.
 
 `--test` images add `joe-test-console`: root is logged in on ttyS0 with the prompt `joe# `, which `tests/vm/harness.py` depends on. A `--test` medium also gets `console=ttyS0,115200` and puts `joe-test-console` in what it installs; `dave install-system` copies only `console=` arguments from the live command line into the installed system.
 
@@ -115,6 +117,7 @@ Recipes follow Linux From Scratch and Beyond LFS (systemd, development branch). 
 - `packages/joe-installer/files/` is likewise populated with a copy of `installer/`.
 - `packages/joe-release/build.sh` holds the kernel's and dave's versions, because releases are named J<revision>-<kernel>-<dave>[-<stage>] (README.md, "Releases"). Changing either version means changing it there too and bumping `joe-release`'s `.release`; `tests/vm/live.py` checks they agree.
 - `packages/gcc-fortran` builds the same GCC source as `packages/gcc` and pins `gcc =VERSION` in its `depends`; changing gcc's version means changing both. `packages/libxml2-python` does the same with `packages/libxml2`.
+- `packages/linux-firmware-extra` builds the same source as `packages/linux-firmware` and holds exactly what that leaves out (Qualcomm Arm SoCs, server network and switch chips); the list of paths is in both `build.sh` files, and the versions must match.
 - `dave/share/` holds dave's manual page and its bash, zsh and fish completions. Like the units, they are installed by both `packages/dave/build.sh` and `image/add-dave.sh`.
 - `packages/dave/files/` is populated by `build-packages.sh` with the freshly built binary, `system/*` and `dave/share/*`. dave is cross-built on the host because joe does not package Zig. A dave change reaches an image only after the `dave` package is rebuilt, which needs a `.release` bump in `packages/dave/package.zon`.
 ## Git

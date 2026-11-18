@@ -3,8 +3,9 @@
 ways a computer does: as a CD and as a USB stick, each with an empty disk
 beside it. Checks that the live system comes up from the compressed image
 with a writable layer in memory over it, that the live session (where the
-installer runs) starts by itself, that the repository on the medium is
-complete and verifies, and that the security module, which can only log on a
+installer runs) starts by itself, that the medium holds what the installer
+installs (the live root, and the originals of the files it changed), and
+that the security module, which can only log on a
 system where nothing is sealed, says so once per file rather than flooding
 the kernel log.
 
@@ -71,19 +72,19 @@ def check_live(vm, medium_device):
     time.sleep(15)
     vm.screenshot(os.path.join(vm.workdir, "session.png"))
 
-    step("the medium carries what the installer installs")
+    step("the medium carries what the installer installs, once")
     install = vm.run("cat /run/live/medium/joe/install.zon")
     assert "joe-desktop" in install, install
-    listing = vm.run("ls /run/live/medium/joe/repos/joe/ | grep -c '\\.dave$'").strip()
-    assert int(listing) > 300, f"only {listing} packages on the medium"
-    # The medium's repository verifies against the key the live system
-    # trusts, and has every package the installation needs.
-    vm.run("mkdir -p /tmp/check/etc/dave/keys && cp /etc/dave/keys/* /tmp/check/etc/dave/keys/ && "
-           "printf '.{ .repos = .{ .{ .name = \"joe\", .url = \"/run/live/medium/joe/repos/joe\" } } }' > /tmp/check/etc/dave/repos.zon")
-    plan = vm.run("dave --root /tmp/check --cache /tmp/check-cache --dry-run install joe-desktop", timeout=300)
-    # Either form of the plan: the medium runs the packaged dave, which may
-    # be older than the one in this tree.
-    assert re.search(r"^\s+(install\s+)?joe-desktop\s", plan, re.M), plan
+    # No package files: the installer copies the packages out of the live
+    # root, where they are installed (install_system.zig).
+    assert vm.run("test -e /run/live/medium/joe/repos && echo yes || echo no").strip() == "no"
+    vm.run("test -s /run/live/lower/usr/lib/dave/db/joe-desktop/manifest.zon")
+    # The originals of the files the live root changed, each named by its
+    # SHA-256: /etc/passwd and the like.
+    originals = vm.run("cd /run/live/medium/joe/originals && for f in *; do "
+                       "[ \"$(sha256sum < \"$f\" | cut -c1-64)\" = \"$f\" ] && echo ok || echo \"bad $f\"; done")
+    assert originals.split() and set(originals.split()) == {"ok"}, originals
+    print(f"    {len(originals.split())} originals")
 
     step("Wi-Fi, as far as a virtual machine can show it")
     # Simulated radios: the kernel's wireless stack and the signed regulatory

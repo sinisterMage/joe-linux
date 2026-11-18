@@ -431,15 +431,22 @@ if [[ -n $missing ]]; then
     echo "   skipped, missing:$missing (make iso-tools builds xorriso and squashfs-tools)"
 else
     make_pkg osrel 1.0-r1 usr/lib/os-release 'PRETTY_NAME="joe Linux test"'
+    make_pkg extra 1.0-r1 usr/bin/extra "extra"
     "$dave" repo index "$work/repo" --key "$work/signing.key" >/dev/null
     mkdir -p initrd-overlay/etc
     echo 'NAME="test initrd"' > initrd-overlay/etc/initrd-release
     ln -sfn usr/bin/hello initrd-overlay/init
+    # The installer copies what it installs out of the live root, so the
+    # payload must be installed there; the live session's changes to its
+    # files (here, the overlay's) are kept on the medium as packaged.
+    mkdir -p live-overlay/usr/bin
+    echo "changed by the live session" > live-overlay/usr/bin/tree
     cat > live.zon <<'EOF'
 .{
     .name = "cli-live",
     .format = .iso,
-    .packages = .{ "kernel", "loader", "osrel", "hello" },
+    .packages = .{ "kernel", "loader", "osrel", "hello", "tree" },
+    .overlay = "live-overlay",
     .cmdline = "quiet",
     .iso = .{
         .label = "JOE_TEST",
@@ -448,22 +455,34 @@ else
     },
 }
 EOF
-    "$dave" image build live.zon --repo "${repo_arg:-test,$work/repo,http://example.invalid/x86_64,$work/signing.pub}" \
-        --out live.iso | expect "built" "image ready: live.iso"
+    live_repo=${repo_arg:-test,$work/repo,http://example.invalid/x86_64,$work/signing.pub}
+    out=$("$dave" image build live.zon --repo "$live_repo" --out live.iso)
+    expect "built" "image ready: live.iso" <<<"$out"
+    expect "changed file" "the live root changes usr/bin/tree (tree)" <<<"$out"
+    expect "payload" "installs 3 packages from its root" <<<"$out"
 
     # The ISO 9660 file system: the root image, what the installer installs,
-    # and exactly the packages that takes, with the repository's signed index.
+    # and the original of the file the live root changed; no package files.
     listing=$(xorriso -indev live.iso -find / -type f 2>/dev/null)
-    for path in /joe/root.squashfs /joe/install.zon /joe/repos/test/repo.zon /joe/repos/test/repo.zon.sig \
-        /joe/repos/test/hello-2.0-r1-x86_64.dave /joe/repos/test/libgreet-1.1-r1-x86_64.dave /joe/repos/test/tree-2.2-r1-x86_64.dave; do
+    original=$(printf 'tree\n' | sha256sum | cut -d' ' -f1)
+    for path in /joe/root.squashfs /joe/install.zon "/joe/originals/$original"; do
         expect "medium" "'$path'" <<<"$listing"
     done
-    [[ $(grep -c '\.dave' <<<"$listing") -eq 3 ]] || fail "the medium carries packages the installer does not need: $listing"
-    xorriso -indev live.iso -osirrox on -extract /joe/install.zon install.zon -extract /joe/root.squashfs root.squashfs 2>/dev/null
+    refuse "medium" ".dave" <<<"$listing"
+    refuse "medium" "/joe/repos" <<<"$listing"
+    xorriso -indev live.iso -osirrox on -extract /joe/install.zon install.zon -extract /joe/root.squashfs root.squashfs \
+        -extract "/joe/originals/$original" original 2>/dev/null
     expect "install list" '"hello", "tree",' <<<"$(cat install.zon)"
+    [[ $(cat original) == tree ]] || fail "the medium's original of usr/bin/tree is: $(cat original)"
     # The root image: xz-compressed SquashFS holding the spec's tree.
     expect "root image" "Compression xz" <<<"$(unsquashfs -s root.squashfs)"
     expect "root image" "squashfs-root/usr/bin/hello" <<<"$(unsquashfs -l root.squashfs)"
+
+    # A payload the live root does not hold is refused.
+    sed 's/payload = .{ "hello", "tree" }/payload = .{ "hello", "tree", "extra" }/' live.zon > lacking.zon
+    out=$("$dave" image build lacking.zon --repo "$live_repo" --out lacking.iso 2>&1) && fail "built a medium whose root lacks its payload"
+    expect "lacking payload" "the live root does not have extra" <<<"$out"
+    [[ ! -e lacking.iso ]] || fail "a refused medium was written"
 
     # It boots from a CD (El Torito, EFI) and as a disk (GPT partition 2).
     xorriso -indev live.iso -report_el_torito plain 2>&1 | expect "el torito" "UEFI"
@@ -485,6 +504,58 @@ EOF
     done
     ! grep -q "libgreet.txt\|usr/lib/dave/db" <<<"$contents" || fail "the initramfs kept what the spec removes"
     rm -f root.squashfs initrd.img
+fi
+
+echo "== a container image from a specification"
+if ! command -v unshare >/dev/null || [[ -z ${repo_arg:-} ]]; then
+    echo "   skipped, missing: unshare, or the disk image's packages"
+else
+    cat > container.zon <<'EOF'
+.{
+    .name = "cli-container",
+    .format = .oci,
+    .packages = .{ "osrel", "hello" },
+    .oci = .{
+        .cmd = .{"/usr/bin/hello"},
+        .labels = .{.{ .name = "org.opencontainers.image.source", .value = "https://example.invalid/joe" }},
+    },
+}
+EOF
+    "$dave" image build container.zon --repo "$repo_arg" --out container.tar | expect "built" "image ready: container.tar"
+    printf '.{ .name = "x", .packages = .{"hello"}, .oci = .{} }\n' > misplaced.zon
+    out=$("$dave" image build misplaced.zon --repo "$repo_arg" --out misplaced.img 2>&1) && fail "accepted .oci on a disk image"
+    expect "misplaced .oci" ".oci is for .format = .oci" <<<"$out"
+
+    # An OCI image layout: every blob named by its digest, the configuration
+    # naming the uncompressed layer, the layer holding the tree.
+    rm -rf oci && mkdir oci && tar -xf container.tar -C oci
+    python3 -I - oci <<'EOF' || fail "the container image is not what it should be"
+import gzip, hashlib, json, os, sys, tarfile
+top = sys.argv[1]
+def blob(ref, media):
+    assert ref["mediaType"] == media, ref
+    data = open(os.path.join(top, "blobs/sha256", ref["digest"].removeprefix("sha256:")), "rb").read()
+    assert len(data) == ref["size"] and "sha256:" + hashlib.sha256(data).hexdigest() == ref["digest"], ref
+    return data
+assert json.load(open(os.path.join(top, "oci-layout")))["imageLayoutVersion"] == "1.0.0"
+index = json.load(open(os.path.join(top, "index.json")))
+manifest = json.loads(blob(index["manifests"][0], "application/vnd.oci.image.manifest.v1+json"))
+config = json.loads(blob(manifest["config"], "application/vnd.oci.image.config.v1+json"))
+layer = gzip.decompress(blob(manifest["layers"][0], "application/vnd.oci.image.layer.v1.tar+gzip"))
+assert config["rootfs"]["diff_ids"] == ["sha256:" + hashlib.sha256(layer).hexdigest()], config["rootfs"]
+assert config["config"]["Cmd"] == ["/usr/bin/hello"] and config["os"] == "linux" and config["architecture"] == "amd64"
+assert config["config"]["Labels"]["org.opencontainers.image.source"] == "https://example.invalid/joe"
+docker = json.load(open(os.path.join(top, "manifest.json")))
+assert docker[0]["RepoTags"] == ["cli-container:latest"], docker
+with tarfile.open(fileobj=__import__("io").BytesIO(layer)) as t:
+    members = {m.name.removeprefix("./"): m for m in t.getmembers()}
+    hello = members["usr/bin/hello"]
+    assert hello.uid == 0 and hello.gid == 0 and t.extractfile(hello).read() == b"hello v2\n", hello
+    repos = t.extractfile(members["etc/dave/repos.zon"]).read().decode()
+    assert "http://example.invalid/x86_64" in repos, repos
+    assert not any(n.startswith("var/cache/dave/") for n in members), "the package files were kept"
+EOF
+    rm -rf oci container.tar
 fi
 
 echo "cli tests passed"

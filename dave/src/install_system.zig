@@ -4,20 +4,27 @@
 //! An installation is the same thing as a disk image (provision.zig) made on
 //! a real disk instead of from files: the disk gets a new GPT with an EFI
 //! system partition and a btrfs root, the first deployment is one dave
-//! transaction from the repository on the medium, and the ESP is written as
-//! for an image. Or, with --beside, joe goes into the free space of a disk
-//! another system uses, sharing its ESP (provision.Beside): nothing that is
-//! there is resized, moved or written over, so the space must be made first,
-//! by the other system (Windows' Disk Management shrinks its volume). What an image cannot do and an installation can, because it
-//! runs as root on the machine it installs: the files are sealed as they are
-//! installed (so the first boot has nothing to seal), and the firmware is told
-//! where the boot loader is.
+//! transaction, and the ESP is written as for an image. Or, with --beside,
+//! joe goes into the free space of a disk another system uses, sharing its
+//! ESP (provision.Beside): nothing that is there is resized, moved or written
+//! over, so the space must be made first, by the other system (Windows' Disk
+//! Management shrinks its volume). What an image cannot do and an
+//! installation can, because it runs as root on the machine it installs: the
+//! files are sealed as they are installed (so the first boot has nothing to
+//! seal), and the firmware is told where the boot loader is.
 //!
-//! The medium (iso.zig) says what to install, in joe/install.zon, and holds
-//! the repositories in joe/repos/<name>/. The installed system is configured
-//! with the repositories the live system itself uses (its own
-//! /etc/dave/repos.zon and keys), so it takes upgrades from where the live
-//! system would have.
+//! The medium (iso.zig) says what to install, in joe/install.zon, and the
+//! packages come from the medium's own root image, where they are already
+//! installed: the transaction copies each one out of it (txn.Copy) by the
+//! manifest that root's database keeps, checking every file against it as it
+//! would a file from a package. So the medium carries each package once, as
+//! the live system, and not a second time as package files. The few files the
+//! live root holds changed (its /etc/passwd, its host name) are on the medium
+//! as they were packaged, in joe/originals/, named by their SHA-256; the image
+//! build finds them (changedFiles) and refuses a root it could not install
+//! from. The installed system is configured with the repositories the live
+//! system itself uses (its own /etc/dave/repos.zon and keys), so it takes
+//! upgrades from where the live system would have.
 //!
 //! This file holds what an installation needs that is not dave's ordinary
 //! work: finding the disks it may use, partitioning, formatting and mounting.
@@ -33,11 +40,19 @@ const command = @import("command.zig");
 const btrfs = @import("btrfs.zig");
 const deploy = @import("deploy.zig");
 const manifest = @import("manifest.zig");
+const repo = @import("repo.zig");
+const archive = @import("archive.zig");
 
 pub const medium_mount = "/run/live/medium";
 pub const medium_dir = medium_mount ++ "/joe";
 pub const install_file = "install.zon";
-pub const repos_dir = "repos";
+/// On the medium, beside install.zon: the originals of the files the live
+/// root holds changed, each named by its SHA-256.
+pub const originals_dir = "originals";
+/// The medium's root image, mounted read-only by its initramfs
+/// (image/initrd/etc/systemd/system/run-live-lower.mount): the live root as
+/// it was built, without the session's changes.
+pub const live_root = "/run/live/lower";
 pub const min_disk_size: u64 = 20 * 1000 * 1000 * 1000;
 pub const top_mount = "/run/dave/install/top";
 pub const target_mount = "/run/dave/install/target";
@@ -535,6 +550,56 @@ pub const Disks = struct {
     }
 };
 
+/// The packages installed in a root, offered as a repository would offer
+/// them: what an installation from the medium is solved against.
+pub fn candidatesOf(arena: Allocator, installed: []const manifest.Manifest) ![]repo.Candidate {
+    const out = try arena.alloc(repo.Candidate, installed.len);
+    for (installed, out) |m, *c| c.* = .{
+        .entry = .{
+            .name = m.name,
+            .version = m.version,
+            .arch = m.arch,
+            .description = m.description,
+            .depends = m.depends,
+            .conflicts = m.conflicts,
+            .filename = try m.fileName(arena),
+            .size = 0,
+            .sha256 = "",
+            .license = m.license,
+            .installed_size = m.installedSize(),
+        },
+        .repo_url = live_root,
+        .repo_name = "medium",
+    };
+    return out;
+}
+
+/// A regular file of a package that a root holds other than as packaged.
+pub const Changed = struct {
+    package: manifest.Manifest,
+    file: manifest.File,
+};
+
+/// The regular files of `packages` that `root` holds changed or not at all:
+/// what an installation copying them out of `root` needs from elsewhere.
+pub fn changedFiles(arena: Allocator, io: Io, root: Io.Dir, packages: []const manifest.Manifest) ![]Changed {
+    var out: std.ArrayList(Changed) = .empty;
+    for (packages) |m| {
+        for (m.files) |f| {
+            if (f.kind != .file) continue;
+            const want = f.sha256 orelse return error.InvalidPackage;
+            const same = if (archive.hashFile(io, root, f.path)) |have|
+                std.mem.eql(u8, &have, want)
+            else |err| switch (err) {
+                error.FileNotFound, error.NotDir, error.IsDir => false,
+                else => return err,
+            };
+            if (!same) try out.append(arena, .{ .package = m, .file = f });
+        }
+    }
+    return out.items;
+}
+
 const testing = std.testing;
 
 const sample_lsblk =
@@ -681,4 +746,33 @@ test "the disk steps compile" {
     _ = &Disks.formatBeside;
     _ = &Disks.mountBoot;
     _ = &readById;
+}
+
+test "a root's packages, offered and checked" {
+    const io = testing.io;
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var tmp = testing.tmpDir(.{ .iterate = true });
+    defer tmp.cleanup();
+    try tmp.dir.createDirPath(io, "etc");
+    try tmp.dir.writeFile(io, .{ .sub_path = "etc/hostname", .data = "joe-live\n" });
+    try tmp.dir.writeFile(io, .{ .sub_path = "etc/issue", .data = "joe\n" });
+
+    const packages = [_]manifest.Manifest{.{ .name = "joe-filesystem", .version = "1-r1", .depends = &.{"glibc"}, .files = &.{
+        .{ .path = "etc", .kind = .dir, .mode = 0o755 },
+        .{ .path = "etc/hostname", .size = 4, .sha256 = &archive.hashBytes("joe\n"), .config = true },
+        .{ .path = "etc/issue", .size = 4, .sha256 = &archive.hashBytes("joe\n") },
+        .{ .path = "etc/motd", .size = 4, .sha256 = &archive.hashBytes("joe\n") },
+        .{ .path = "etc/os-release", .kind = .symlink, .target = "../usr/lib/os-release" },
+    } }};
+    const offered = try candidatesOf(arena, &packages);
+    try testing.expectEqualStrings("joe-filesystem-1-r1-x86_64.dave", offered[0].entry.filename);
+    try testing.expectEqualStrings("glibc", offered[0].entry.depends[0]);
+    try testing.expectEqual(@as(?u64, 12), offered[0].entry.installed_size);
+
+    const changed = try changedFiles(arena, io, tmp.dir, &packages);
+    try testing.expectEqual(@as(usize, 2), changed.len);
+    try testing.expectEqualStrings("etc/hostname", changed[0].file.path);
+    try testing.expectEqualStrings("etc/motd", changed[1].file.path);
 }

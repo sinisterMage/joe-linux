@@ -346,11 +346,11 @@ pub const commands = [_]CommandInfo{
         .group = .images,
         .synopsis = "build <spec> --out FILE [--test] [--repo NAME,DIR,URL,KEY]... [--with PACKAGE]... [--tree DIR]",
         .brief = "build <spec> --out FILE",
-        .summary = "Build a disk image or live medium",
+        .summary = "Build a disk image, live medium or container image",
         .about =
-        \\Builds the disk image or live medium a specification (image/*.zon)
-        \\describes. Each --repo is read from DIR while building, and the image
-        \\will use URL.
+        \\Builds the disk image, live medium or container image a
+        \\specification (image/*.zon) describes. Each --repo is read from DIR
+        \\(a directory, or a URL) while building, and the image will use URL.
         ,
         .operands = &.{ .{ .words = &.{"build"} }, .files },
     },
@@ -362,8 +362,9 @@ pub const commands = [_]CommandInfo{
         .summary = "Install joe Linux onto a disk",
         .about =
         \\With --list, shows the disks joe Linux could be installed on, and why
-        \\any cannot be used. With --disk, erases that disk and installs what
-        \\the live medium holds (joe/install.zon) onto it.
+        \\any cannot be used. With --disk, erases that disk and installs onto
+        \\it what the live medium says (joe/install.zon), copying the packages
+        \\out of the medium's own root.
         \\
         \\With --beside, nothing on the disk is erased: joe takes the disk's
         \\largest free space (22 GB or more) and shares its EFI system partition,
@@ -441,7 +442,6 @@ pub const options = [_]OptionSpec{
     .{ .long = "disk", .value = "DISK", .help = "Erase DISK and install onto it", .commands = &.{.@"install-system"}, .field = "disk", .complete = .files },
     .{ .long = "beside", .help = "Install into the disk's free space, beside the system already there", .commands = &.{.@"install-system"}, .field = "beside" },
     .{ .long = "json", .help = "Report as JSON events, for a program watching", .commands = &.{.@"install-system"}, .field = "json" },
-    .{ .long = "from", .value = "DIR", .help = "Install from the medium at DIR", .commands = &.{.@"install-system"}, .field = "from", .complete = .dirs },
     .{ .long = "with", .value = "PACKAGE", .help = "Install PACKAGE as well", .commands = &.{ .image, .@"install-system" }, .field = "with" },
     .{ .long = "test", .help = "Add joe-test-console: root logged in on the serial console (automated tests only)", .commands = &.{.image}, .field = "test_image" },
     .{ .long = "repo", .value = "NAME,DIR,URL,KEY", .help = "A repository: read from DIR, used as URL, signed by KEY", .commands = &.{.image}, .field = "repos" },
@@ -483,7 +483,6 @@ pub const Options = struct {
     list: bool = false,
     beside: bool = false,
     disk: ?[]const u8 = null,
-    from: ?[]const u8 = null,
     repos: std.ArrayList([]const u8) = .empty,
     with: std.ArrayList([]const u8) = .empty,
     buildroot: ?[]const u8 = null,

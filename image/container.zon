@@ -1,0 +1,28 @@
+// joe Linux as a container image: a joe system's command line, with dave to
+// install the rest. .github/workflows/container.yml builds it from the
+// published repository and pushes it to the GitHub Container Registry.
+//
+//   dave image build image/container.zon --repo joe,DIR,URL,KEY --out joe.tar
+//
+// There is no kernel, firmware or boot loader: a container runs on its host's
+// kernel. Nor is it a deployment, so dave installs into it directly, without
+// a snapshot to roll back to, as it does into any root that is not one.
+.{
+    .name = "joe",
+    .format = .oci,
+    .packages = .{
+        "joe-filesystem", "joe-release", "glibc",    "tzdata",    "iana-etc",
+        "dave",           "make-ca",     "bash",     "coreutils", "util-linux",
+        "shadow",         "procps-ng",   "findutils", "grep",     "sed",
+        "gawk",           "less",        "diffutils", "file",     "gzip",
+        "xz",             "zstd",        "bzip2",    "tar",       "nano",
+    },
+    .oci = .{
+        .labels = .{
+            .{ .name = "org.opencontainers.image.title", .value = "joe Linux" },
+            .{ .name = "org.opencontainers.image.description", .value = "joe Linux, an independent distribution built from source, with its package manager dave" },
+            // Links the registry's package to the repository it comes from.
+            .{ .name = "org.opencontainers.image.source", .value = "https://github.com/theJoeLinuxFoundation/joe-linux" },
+        },
+    },
+}

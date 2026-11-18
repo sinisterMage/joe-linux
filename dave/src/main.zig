@@ -25,6 +25,7 @@ pub const provision = @import("provision.zig");
 pub const image = @import("image.zig");
 pub const cpio = @import("cpio.zig");
 pub const iso = @import("iso.zig");
+pub const oci = @import("oci.zig");
 pub const command = @import("command.zig");
 pub const install_system = @import("install_system.zig");
 pub const cli = @import("cli.zig");
@@ -35,7 +36,7 @@ pub const errors = @import("errors.zig");
 pub const query = @import("query.zig");
 pub const plan = @import("plan.zig");
 
-const dave_version = "0.2.2";
+const dave_version = "0.3.0";
 const top_mount = "/run/dave/top";
 const lock_path = "/run/dave/lock";
 /// What `dave status` shows, written by root for everyone (deploy.Published).
@@ -66,10 +67,14 @@ const App = struct {
     /// With --json, where events go (standard output); `out` then carries
     /// what is said for people, on standard error.
     events: ?*Io.Writer = null,
+    /// Whether transactions seal what they install. An image build does not:
+    /// built without privileges, it cannot write the seals (the image's first
+    /// boot does, dave-seal.service), and enabling fs-verity alone on the
+    /// build's own files only made them read back with I/O errors on some
+    /// kernels, which mksquashfs turned into empty files.
+    seal: bool = true,
     /// The last failure, for the error event.
     last_error: []const u8 = "",
-    /// Passed to transactions, for progress events.
-    progress: ?txn.Progress = null,
     /// Set once the running system's deployments have been opened, so that
     /// what `dave status` shows is published again before dave exits.
     opened_system: bool = false,
@@ -223,7 +228,12 @@ const App = struct {
     /// asked to act on the running system and that system uses deployments.
     fn runningDeployment(app: *App) ?u32 {
         if (!std.mem.eql(u8, app.opts.root, "/")) return null;
-        return boot.deploymentOf(app.readAbsolute("/proc/cmdline") orelse return null);
+        const id = boot.deploymentOf(app.readAbsolute("/proc/cmdline") orelse return null) orelse return null;
+        // A container shares its host's command line: on a joe host it names
+        // the host's deployment, but this root is the container's own.
+        const root = app.findMount("/") orelse return null;
+        if (!std.mem.eql(u8, root.fstype, "btrfs")) return null;
+        return id;
     }
 
     const Mount = struct { source: []const u8, fstype: []const u8 };
@@ -556,14 +566,21 @@ const App = struct {
 
     /// Applies a solution directly to the root in `ctx` and runs triggers.
     fn applyNow(app: *App, ctx: Context, solution: resolve.Solution, files: []const []const u8) !void {
-        var diag: txn.Diagnostic = .{};
         var terminal: TerminalProgress = .{ .app = app };
-        const result = txn.apply(app.gpa, app.arena, app.io, ctx.root, .{
+        try app.applyPlan(ctx.root, .{
             .install = try app.packageFiles(ctx, files),
             .remove = try app.removeNames(solution),
             .overwrite_unowned = app.opts.overwrite,
-            .progress = app.progress orelse if (app.caps.live) terminal.interface() else null,
-        }, &diag) catch |e| {
+            .seal = app.seal,
+            .progress = if (app.caps.live) terminal.interface() else null,
+        });
+    }
+
+    /// Applies a transaction to `root` (which is `app.opts.root`) and runs
+    /// the triggers it calls for.
+    fn applyPlan(app: *App, root: Io.Dir, p: txn.Plan) !void {
+        var diag: txn.Diagnostic = .{};
+        const result = txn.apply(app.gpa, app.arena, app.io, root, p, &diag) catch |e| {
             if (diag.message.len > 0) return app.fail("{s}", .{diag.message});
             return app.failErr(e, "the transaction failed", .{});
         };
@@ -572,14 +589,33 @@ const App = struct {
         if (result.unsealed > 0 and app.runningDeployment() != null)
             try app.say("note: {d} file(s) could not be sealed here; run 'dave seal'", .{result.unsealed});
         if (app.opts.no_triggers) return;
-        const wanted = try triggers.matching(app.arena, try triggers.load(app.arena, app.io, ctx.root), result.changed_paths);
+        const wanted = try triggers.matching(app.arena, try triggers.load(app.arena, app.io, root), result.changed_paths);
         const live = std.mem.eql(u8, app.opts.root, "/");
         triggers.run(app.arena, app.io, wanted, .{
-            .root = ctx.root,
+            .root = root,
             .chroot_path = if (live) null else try Io.Dir.cwd().realPathFileAlloc(app.io, app.opts.root, app.arena),
             .self_exe = "/proc/self/exe",
             .environ_map = app.environ,
         }) catch |e| return app.failErr(e, "a package trigger failed", .{});
+    }
+
+    /// What installing `names` into `root` (whose packages are `installed`)
+    /// takes from the packages another root holds: the same solve as from a
+    /// repository, with that root's packages as the only ones offered. The
+    /// installer installs from the medium's root this way; the image build
+    /// makes the same solve to put on the medium what that needs.
+    fn solveFromRoot(app: *App, from: []const manifest.Manifest, installed: []const manifest.Manifest, names: []const []const u8, where: []const u8) !resolve.Solution {
+        var world: std.ArrayList(db.WorldEntry) = .empty;
+        for (names) |n| {
+            if (findInstalled(from, n) == null) return app.fail("{s} does not have {s}", .{ where, n });
+            try world.append(app.arena, .{ .name = n });
+        }
+        return app.solve(.{
+            .world = world.items,
+            .installed = installed,
+            .candidates = try install_system.candidatesOf(app.arena, from),
+            .mode = .keep_installed,
+        });
     }
 
     // -- install / remove -----------------------------------------------------
@@ -1473,6 +1509,7 @@ const App = struct {
         // Every file in the image must be owned by root. Without privileges,
         // the build runs where this user is root: a user namespace.
         if (linux.getuid() != 0) return app.reenterAsRoot();
+        app.seal = false;
 
         const spec_path = try app.absolute(args[1]);
         const text = app.readAbsolute(spec_path) orelse return app.fail("cannot read {s}", .{args[1]});
@@ -1517,6 +1554,7 @@ const App = struct {
         switch (spec.format) {
             .disk => {
                 try app.say("==> {s}: disk image", .{spec.name});
+                b.dropCache() catch |e| return app.imageFailed(&b, e);
                 b.buildDisk() catch |e| return app.imageFailed(&b, e);
             },
             .iso => {
@@ -1527,32 +1565,55 @@ const App = struct {
                 try app.cmdChange(.install, spec.iso.?.initrd.packages, .internal);
                 b.finishInitrd() catch |e| return app.imageFailed(&b, e);
                 try app.say("==> {s}: what the installer installs", .{spec.name});
-                b.preparePayloadRoot() catch |e| return app.imageFailed(&b, e);
-                const files = try app.payloadFiles(try b.payloadRootPath(), try b.payload());
-                try app.say("==> {s}: the medium, with {d} packages for the installer", .{ spec.name, files.len });
-                b.buildIso(files) catch |e| return app.imageFailed(&b, e);
+                const count = try app.mediumOriginals(&b);
+                try app.say("==> {s}: the medium, whose installer installs {d} packages from its root", .{ spec.name, count });
+                b.dropCache() catch |e| return app.imageFailed(&b, e);
+                b.buildIso() catch |e| return app.imageFailed(&b, e);
+            },
+            .oci => {
+                try app.say("==> {s}: container image", .{spec.name});
+                b.dropCache() catch |e| return app.imageFailed(&b, e);
+                b.buildOci() catch |e| return app.imageFailed(&b, e);
             },
         }
         try app.say("image ready: {s}", .{out});
     }
 
-    /// The package files installing `names` into an empty root takes: the
-    /// same solve the installer will make from the medium.
-    fn payloadFiles(app: *App, root_path: []const u8, names: []const []const u8) ![]image.MediumFile {
-        app.opts.root = root_path;
-        app.opts.cache = null;
-        const ctx = try app.context();
-        var world: std.ArrayList(db.WorldEntry) = .empty;
-        for (names) |n| try world.append(app.arena, .{ .name = n });
-        const solution = try app.solve(.{
-            .world = world.items,
-            .installed = ctx.installed,
-            .candidates = try app.candidates(ctx, true),
-            .mode = .keep_installed,
-        });
-        const files = try app.arena.alloc(image.MediumFile, solution.install.len);
-        for (solution.install, files) |u, *f| f.* = .{ .repo_dir = u.candidate.repo_url, .filename = u.candidate.entry.filename };
-        return files;
+    /// Checks that the installer can install from the live root (it copies
+    /// the payload's packages out of it), and gathers in the builder's
+    /// originals directory, from the package files, every file of theirs the
+    /// live root holds changed. Returns how many packages the installer
+    /// installs.
+    fn mediumOriginals(app: *App, b: *image.Builder) !usize {
+        var tree = try app.openDir(try b.treePath());
+        defer tree.close(app.io);
+        const installed = db.load(app.arena, app.io, tree) catch |e|
+            return app.failErr(e, "the live root's package database is unreadable", .{});
+        const solution = try app.solveFromRoot(installed, &.{}, try b.payload(), "the live root");
+        const payload = try app.arena.alloc(manifest.Manifest, solution.install.len);
+        for (solution.install, payload) |u, *m| m.* = findInstalled(installed, u.candidate.entry.name).?;
+        const changed = install_system.changedFiles(app.arena, app.io, tree, payload) catch |e|
+            return app.failErr(e, "cannot check the live root's files", .{});
+
+        const originals_path = try b.originalsPath();
+        Io.Dir.cwd().createDirPath(app.io, originals_path) catch |e| return app.failErr(e, "cannot create {s}", .{originals_path});
+        var originals = try app.openDir(originals_path);
+        defer originals.close(app.io);
+        const cache_path = "var/cache/dave/" ++ repo.packages_dir;
+        var cache = tree.openDir(app.io, cache_path, .{}) catch |e|
+            return app.failErr(e, "the live root has no package files in {s}", .{cache_path});
+        defer cache.close(app.io);
+        for (changed) |c| {
+            try app.say("    the live root changes {s} ({s}); the medium keeps the original", .{ c.file.path, c.package.name });
+            var file = try originals.createFile(app.io, c.file.sha256.?, .{});
+            defer file.close(app.io);
+            var buf: [64 * 1024]u8 = undefined;
+            var w = file.writer(app.io, &buf);
+            archive.extractFile(app.gpa, app.arena, app.io, cache, try c.package.fileName(app.arena), c.file.path, &w.interface) catch |e|
+                return app.failErr(e, "cannot take the original of {s} from {s}'s package file", .{ c.file.path, c.package.name });
+            try w.interface.flush();
+        }
+        return payload.len;
     }
 
     fn imageFailed(app: *App, b: *image.Builder, e: anyerror) Failure {
@@ -1629,14 +1690,26 @@ const App = struct {
 
     fn installSystem(app: *App, disk_arg: []const u8) !void {
         if (linux.getuid() != 0) return app.fail("installing joe Linux needs root", .{});
-        const medium_dir = app.opts.from orelse install_system.medium_dir;
-        const spec_path = try std.fs.path.join(app.arena, &.{ medium_dir, install_system.install_file });
+        const medium_dir = install_system.medium_dir;
+        const spec_path = medium_dir ++ "/" ++ install_system.install_file;
         const spec_text = app.readAbsolute(spec_path) orelse
             return app.fail("{s} is missing: is this joe Linux's installation medium?", .{spec_path});
         const medium = install_system.parseMedium(app.arena, spec_text) catch return app.fail("{s} is unreadable", .{spec_path});
         var packages: std.ArrayList([]const u8) = .empty;
         try packages.appendSlice(app.arena, medium.packages);
         try packages.appendSlice(app.arena, app.opts.with.items);
+
+        // The packages come out of the medium's root image, where they are
+        // installed. What it cannot provide is refused before the disk is
+        // touched.
+        var source = Io.Dir.cwd().openDir(app.io, install_system.live_root, .{}) catch
+            return app.fail("the medium's root image is not mounted at {s}: is this joe Linux's installation medium?", .{install_system.live_root});
+        defer source.close(app.io);
+        const offered = db.load(app.arena, app.io, source) catch |e|
+            return app.failErr(e, "the package database of {s} is unreadable", .{install_system.live_root});
+        const solution = try app.solveFromRoot(offered, &.{}, packages.items, "the medium");
+        var originals: ?Io.Dir = Io.Dir.cwd().openDir(app.io, medium_dir ++ "/" ++ install_system.originals_dir, .{}) catch null;
+        defer if (originals) |*d| d.close(app.io);
 
         // The disk, as a listing would show it: whatever a listing refuses,
         // installing refuses too.
@@ -1689,8 +1762,8 @@ const App = struct {
             fstab = try provision.fstab(app.arena, layout);
         }
 
-        // The new system installs from the medium, trusting what this one
-        // trusts.
+        // The new system trusts what this one trusts, and takes its packages
+        // from where this one would.
         const target_path = install_system.target_mount;
         var target = try app.openDir(target_path);
         defer target.close(app.io);
@@ -1703,21 +1776,22 @@ const App = struct {
                 if (e.kind != .file) continue;
                 try keys.copyFile(e.name, target, try std.fs.path.join(app.arena, &.{ repo.keys_path, e.name }), app.io, .{});
             }
-            var config: std.ArrayList(image.RepoArg) = .empty;
-            for (live_config.repos) |r| {
-                const dir = try std.fs.path.join(app.arena, &.{ medium_dir, install_system.repos_dir, r.name });
-                try config.append(app.arena, .{ .name = r.name, .dir = dir, .url = r.url, .key = "" });
-            }
-            try target.writeFile(app.io, .{ .sub_path = repo.config_path, .data = try image.reposZon(app.arena, config.items, .build) });
         }
+        try target.writeFile(app.io, .{ .sub_path = repo.config_path, .data = app.readAbsolute("/" ++ repo.config_path) orelse "" });
 
         app.step(0.05, "Installing packages", .{});
+        const copies = try app.arena.alloc(txn.Copy, solution.install.len);
+        for (solution.install, copies) |u, *c| c.* = .{
+            .manifest = findInstalled(offered, u.candidate.entry.name).?,
+            .from = source,
+            .originals = originals,
+        };
         var reporter: InstallProgress = .{ .app = app };
-        app.progress = reporter.interface();
         app.opts.root = target_path;
-        app.opts.cache = null;
-        try app.cmdChange(.install, packages.items, .internal);
-        app.progress = null;
+        try app.applyPlan(target, .{ .copy = copies, .progress = reporter.interface() });
+        var world: std.ArrayList(db.WorldEntry) = .empty;
+        for (packages.items) |n| try world.append(app.arena, .{ .name = n });
+        try db.saveWorld(app.arena, app.io, target, world.items);
 
         app.step(0.88, "Sealing the installed files", .{});
         try app.cmdSeal();
@@ -1746,10 +1820,6 @@ const App = struct {
                 provision.writeEsp(app.arena, app.io, esp, .{ .root = target, .kernel_path = kernel }, options) catch |e|
                     return app.fail("cannot write the EFI system partition: {t}", .{e});
             }
-            // From now on the installed system takes its packages from where this
-            // one would.
-            try target.writeFile(app.io, .{ .sub_path = repo.config_path, .data = app.readAbsolute("/" ++ repo.config_path) orelse "" });
-            target.deleteTree(app.io, "var/cache/dave") catch {};
             // Tell the firmware where the boot loader is. A firmware that will not
             // be told still finds it at the removable-media path. bootctl also
             // copies the loader there, over whatever is there: beside another

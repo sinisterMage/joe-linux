@@ -22,9 +22,26 @@ pub const PackageFile = struct {
     sub_path: []const u8,
 };
 
+/// A package installed by copying it out of another root where it is
+/// installed, instead of from its package file: how the installer installs
+/// what the live medium's own root holds.
+pub const Copy = struct {
+    /// The package, as that root's database records it.
+    manifest: Manifest,
+    /// The root it is installed in. Each regular file is read from there and
+    /// checked against the manifest, as a file from a package file is.
+    from: Io.Dir,
+    /// Originals of the files `from` holds changed (the live medium's
+    /// /etc/passwd, say), each named by its SHA-256: a file found here is
+    /// read from here instead.
+    originals: ?Io.Dir = null,
+};
+
 pub const Plan = struct {
     /// Packages to install, or to replace the installed version of.
     install: []const PackageFile = &.{},
+    /// Packages to install by copying them from another root; after `install`.
+    copy: []const Copy = &.{},
     /// Names of installed packages to remove.
     remove: []const []const u8 = &.{},
     /// Take over files that exist but belong to no package instead of
@@ -205,7 +222,56 @@ const Txn = struct {
 
         var by_path: std.StringHashMapUnmanaged(manifest_mod.File) = .empty;
         for (m.files) |f| try by_path.put(t.arena, f.path, f);
+        try t.makeDirs(m);
 
+        var written: std.StringHashMapUnmanaged(void) = .empty;
+        while (try reader.next()) |entry| {
+            const f = by_path.get(entry.path) orelse
+                return t.fail(error.InvalidPackage, "{s}: payload contains {s}, which the manifest does not list", .{ m.name, entry.path });
+            if (f.kind != .file or f.sha256 == null or written.contains(f.path))
+                return t.fail(error.InvalidPackage, "{s}: unexpected payload entry {s}", .{ m.name, entry.path });
+            try written.put(t.arena, f.path, {});
+            try t.placeFile(.{ .archive = reader }, m, f);
+        }
+        for (m.files) |f| {
+            if (f.kind == .file and !written.contains(f.path))
+                return t.fail(error.InvalidPackage, "{s}: payload is missing {s}", .{ m.name, f.path });
+        }
+
+        try t.makeLinks(m, by_path);
+        return m;
+    }
+
+    /// Installs a package from the root it is installed in: the same as from
+    /// its package file, with each regular file read from that root (or its
+    /// original) and verified the same way.
+    fn installCopy(t: *Txn, c: Copy) !Manifest {
+        const m = c.manifest;
+        var by_path: std.StringHashMapUnmanaged(manifest_mod.File) = .empty;
+        for (m.files) |f| try by_path.put(t.arena, f.path, f);
+        try t.makeDirs(m);
+
+        for (m.files) |f| {
+            if (f.kind != .file) continue;
+            const digest = f.sha256 orelse
+                return t.fail(error.InvalidPackage, "{s}: {s} has no checksum", .{ m.name, f.path });
+            const original: ?Io.File = if (c.originals) |dir| dir.openFile(t.io, digest, .{}) catch |err| switch (err) {
+                error.FileNotFound => null,
+                else => return t.fail(err, "{s}: cannot read the original of {s}", .{ m.name, f.path }),
+            } else null;
+            var file = original orelse c.from.openFile(t.io, f.path, .{}) catch |err|
+                return t.fail(err, "{s}: cannot read {s} to copy it", .{ m.name, f.path });
+            defer file.close(t.io);
+            var buf: [64 * 1024]u8 = undefined;
+            var reader = file.readerStreaming(t.io, &buf);
+            try t.placeFile(.{ .reader = &reader.interface }, m, f);
+        }
+
+        try t.makeLinks(m, by_path);
+        return m;
+    }
+
+    fn makeDirs(t: *Txn, m: Manifest) !void {
         for (m.files) |f| {
             if (f.kind != .dir) continue;
             if (try t.onDisk(f.path, true) == .dir) continue;
@@ -215,33 +281,26 @@ const Txn = struct {
             try t.applyOwner(f.path, f);
             try t.changed.append(t.arena, f.path);
         }
+    }
 
-        var written: std.StringHashMapUnmanaged(void) = .empty;
-        while (try reader.next()) |entry| {
-            const f = by_path.get(entry.path) orelse
-                return t.fail(error.InvalidPackage, "{s}: payload contains {s}, which the manifest does not list", .{ m.name, entry.path });
-            if (f.kind != .file or f.sha256 == null or written.contains(f.path))
-                return t.fail(error.InvalidPackage, "{s}: unexpected payload entry {s}", .{ m.name, entry.path });
-            try written.put(t.arena, f.path, {});
-
-            const action: ConfigAction = if (f.config and !t.overwrite) try t.configAction(f) else .install;
-            const dest = switch (action) {
-                .install => f.path,
-                .alongside => try std.fmt.allocPrint(t.arena, "{s}.davenew", .{f.path}),
-                .keep => null,
-            };
-            try t.writeFile(reader, m, f, dest);
-            switch (action) {
-                .install => try t.changed.append(t.arena, f.path),
-                .alongside => try t.note("{s}: local changes kept; the packaged version is at {s}.davenew", .{ f.path, f.path }),
-                .keep => {},
-            }
+    /// Writes one regular file of `m` from `source`, minding local changes to
+    /// configuration files.
+    fn placeFile(t: *Txn, source: Source, m: Manifest, f: manifest_mod.File) !void {
+        const action: ConfigAction = if (f.config and !t.overwrite) try t.configAction(f) else .install;
+        const dest = switch (action) {
+            .install => f.path,
+            .alongside => try std.fmt.allocPrint(t.arena, "{s}.davenew", .{f.path}),
+            .keep => null,
+        };
+        try t.writeFile(source, m, f, dest);
+        switch (action) {
+            .install => try t.changed.append(t.arena, f.path),
+            .alongside => try t.note("{s}: local changes kept; the packaged version is at {s}.davenew", .{ f.path, f.path }),
+            .keep => {},
         }
-        for (m.files) |f| {
-            if (f.kind == .file and !written.contains(f.path))
-                return t.fail(error.InvalidPackage, "{s}: payload is missing {s}", .{ m.name, f.path });
-        }
+    }
 
+    fn makeLinks(t: *Txn, m: Manifest, by_path: std.StringHashMapUnmanaged(manifest_mod.File)) !void {
         for (m.files) |f| {
             if (f.kind != .symlink and f.kind != .hardlink) continue;
             const target = f.target orelse
@@ -262,15 +321,29 @@ const Txn = struct {
             };
             try t.changed.append(t.arena, f.path);
         }
-        return m;
     }
 
-    /// Streams the current payload entry to `dest` (or nowhere), verifying it.
-    fn writeFile(t: *Txn, reader: *archive.PackageReader, m: Manifest, f: manifest_mod.File, dest: ?[]const u8) !void {
+    /// Where a file's contents come from: the current entry of a package
+    /// file, or a file of another root.
+    const Source = union(enum) {
+        archive: *archive.PackageReader,
+        reader: *Io.Reader,
+
+        fn pump(source: Source, w: *Io.Writer) !void {
+            switch (source) {
+                .archive => |r| try r.stream(w),
+                .reader => |r| _ = try r.streamRemaining(w),
+            }
+        }
+    };
+
+    /// Streams a file's contents from `source` to `dest` (or nowhere),
+    /// verifying them.
+    fn writeFile(t: *Txn, source: Source, m: Manifest, f: manifest_mod.File, dest: ?[]const u8) !void {
         var sink_buf: [64 * 1024]u8 = undefined;
         const path = dest orelse {
             var sink: archive.HashingSink = .init(null, &sink_buf);
-            try reader.stream(&sink.writer);
+            try source.pump(&sink.writer);
             const digest = try sink.finish();
             if (!std.mem.eql(u8, &digest, f.sha256.?))
                 return t.fail(error.InvalidPackage, "{s}: {s} does not match its recorded checksum", .{ m.name, f.path });
@@ -285,7 +358,7 @@ const Txn = struct {
             var file_buf: [64 * 1024]u8 = undefined;
             var fw = file.writer(t.io, &file_buf);
             var sink: archive.HashingSink = .init(&fw.interface, &sink_buf);
-            try reader.stream(&sink.writer);
+            try source.pump(&sink.writer);
             const digest = try sink.finish();
             try fw.interface.flush();
             if (!std.mem.eql(u8, &digest, f.sha256.?) or sink.count != f.size)
@@ -382,11 +455,14 @@ pub fn apply(gpa: Allocator, arena: Allocator, io: Io, root: Io.Dir, plan: Plan,
     }
 
     // Phase 1: read every manifest and check everything, changing nothing.
-    const incoming = try arena.alloc(Manifest, plan.install.len);
+    const incoming = try arena.alloc(Manifest, plan.install.len + plan.copy.len);
     var leaving: std.StringHashMapUnmanaged(void) = .empty;
-    for (plan.install, incoming) |pf, *m| {
+    for (plan.install, incoming[0..plan.install.len]) |pf, *m| {
         m.* = archive.readManifestOf(gpa, arena, io, pf.dir, pf.sub_path) catch |err|
             return t.fail(err, "{s} is not a valid package", .{pf.sub_path});
+    }
+    for (plan.copy, incoming[plan.install.len..]) |c, *m| m.* = c.manifest;
+    for (incoming) |m| {
         if (leaving.contains(m.name)) return t.fail(error.InvalidPackage, "{s} appears twice in the transaction", .{m.name});
         try leaving.put(arena, m.name, {});
     }
@@ -407,11 +483,11 @@ pub fn apply(gpa: Allocator, arena: Allocator, io: Io, root: Io.Dir, plan: Plan,
 
     // Phase 2: write.
     var changes: std.ArrayList(Change) = .empty;
-    for (plan.install, 1..) |pf, done| {
-        const m = try t.installPackage(pf);
+    for (0..incoming.len) |i| {
+        const m = if (i < plan.install.len) try t.installPackage(plan.install[i]) else try t.installCopy(plan.copy[i - plan.install.len]);
         const old = installed_by_name.get(m.name);
         try changes.append(arena, .{ .name = m.name, .old_version = if (old) |o| o.version else null, .new_version = m.version });
-        if (plan.progress) |p| p.report(p.context, done, plan.install.len, m.name);
+        if (plan.progress) |p| p.report(p.context, i + 1, incoming.len, m.name);
     }
     for (incoming) |m| {
         if (installed_by_name.get(m.name)) |old| try t.removeObsolete(old);
@@ -736,4 +812,47 @@ test "a corrupted payload is rejected" {
     try testing.expect(!fx.exists("usr/evil"));
     try testing.expect(!fx.exists("usr/evil.dave-tmp"));
     try testing.expectEqual(@as(usize, 0), (try db.load(a, io, fx.root)).len);
+}
+
+test "a package copied from the root it is installed in" {
+    var fx: Fixture = undefined;
+    try fx.init();
+    defer fx.deinit();
+    const io = testing.io;
+    const a = fx.arena();
+
+    const hello = try fx.pkg(.{ .name = "hello", .version = "1.0-r1" }, &.{
+        .{ .path = "usr/bin/hello", .data = "hello\n", .mode = 0o755 },
+        .{ .path = "etc/hello.conf", .data = "packaged\n" },
+    });
+    _ = try fx.run(.{ .install = &.{hello} });
+    const m = (try db.load(a, io, fx.root))[0];
+    // The source root has since changed its configuration file; the original
+    // is kept elsewhere, under its checksum.
+    try fx.root.writeFile(io, .{ .sub_path = "etc/hello.conf", .data = "changed here\n" });
+    try fx.tmp.dir.createDirPath(io, "originals");
+    var originals = try fx.tmp.dir.openDir(io, "originals", .{});
+    defer originals.close(io);
+    try originals.writeFile(io, .{ .sub_path = &archive.hashBytes("packaged\n"), .data = "packaged\n" });
+
+    try fx.tmp.dir.createDirPath(io, "target");
+    var target = try fx.tmp.dir.openDir(io, "target", .{ .iterate = true });
+    defer target.close(io);
+    const copy: Copy = .{ .manifest = m, .from = fx.root, .originals = originals };
+    const result = try apply(testing.allocator, a, io, target, .{ .copy = &.{copy}, .seal = false }, &fx.diag);
+    try testing.expectEqual(@as(usize, 1), result.changes.len);
+    try testing.expectEqualStrings("hello\n", try target.readFileAlloc(io, "usr/bin/hello", a, .limited(64)));
+    try testing.expectEqualStrings("packaged\n", try target.readFileAlloc(io, "etc/hello.conf", a, .limited(64)));
+    const st = try target.statFile(io, "usr/bin/hello", .{});
+    try testing.expectEqual(@as(u32, 0o755), st.permissions.toMode() & 0o7777);
+    try testing.expectEqualStrings("1.0-r1", (try db.load(a, io, target))[0].version);
+
+    // A file that differs from its manifest, with no original, is refused.
+    try fx.root.writeFile(io, .{ .sub_path = "usr/bin/hello", .data = "tampered\n" });
+    try fx.tmp.dir.createDirPath(io, "second");
+    var second = try fx.tmp.dir.openDir(io, "second", .{ .iterate = true });
+    defer second.close(io);
+    try testing.expectError(error.InvalidPackage, apply(testing.allocator, a, io, second, .{ .copy = &.{copy}, .seal = false }, &fx.diag));
+    try testing.expect(std.mem.indexOf(u8, fx.diag.message, "usr/bin/hello") != null);
+    try testing.expectEqual(@as(usize, 0), (try db.load(a, io, second)).len);
 }

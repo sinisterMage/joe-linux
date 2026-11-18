@@ -1,5 +1,5 @@
-//! Disk images and live media built from declarative specifications:
-//! `dave image build`.
+//! Disk images, live media and container images built from declarative
+//! specifications: `dave image build`.
 //!
 //! A specification (image/*.zon) states what an image is: the packages of its
 //! root (or a prepared tree to start from), an overlay of files copied over
@@ -20,8 +20,9 @@
 //!          image. Nothing is mounted: mkfs.btrfs --rootdir and mtools fill
 //!          the file systems from directories.
 //!   iso    a live medium, as iso.zig describes: the tree as a compressed
-//!          image, an initramfs made by a second transaction, and the
-//!          packages the installer installs.
+//!          image, an initramfs made by a second transaction, and what the
+//!          installer installs from it.
+//!   oci    a container image, as oci.zig describes: the tree as one layer.
 //!
 //! An image is assembled without privileges. main.zig runs the whole build in
 //! a user namespace in which the invoking user is root, so that every file
@@ -39,8 +40,9 @@ const archive = @import("archive.zig");
 const command = @import("command.zig");
 const iso = @import("iso.zig");
 const install_system = @import("install_system.zig");
+const oci = @import("oci.zig");
 
-pub const Format = enum { disk, iso };
+pub const Format = enum { disk, iso, oci };
 
 pub const Spec = struct {
     name: []const u8,
@@ -58,6 +60,8 @@ pub const Spec = struct {
     cmdline: []const u8 = "",
     /// For `.format = .iso`.
     iso: ?iso.Options = null,
+    /// For `.format = .oci`, a container image (oci.zig).
+    oci: ?oci.Options = null,
 };
 
 pub const Diagnostic = struct {
@@ -102,8 +106,10 @@ pub fn parseSpec(arena: Allocator, source: []const u8, file_name: []const u8, di
         return invalid(arena, diag, "{s}: '{s}' is not a package name", .{ file_name, name });
     if (spec.packages.len == 0 and spec.tree == null)
         return invalid(arena, diag, "{s}: an image needs packages or a tree", .{file_name});
+    if (spec.iso != null and spec.format != .iso) return invalid(arena, diag, "{s}: .iso is for .format = .iso", .{file_name});
+    if (spec.oci != null and spec.format != .oci) return invalid(arena, diag, "{s}: .oci is for .format = .oci", .{file_name});
     switch (spec.format) {
-        .disk => if (spec.iso != null) return invalid(arena, diag, "{s}: .iso is for .format = .iso", .{file_name}),
+        .disk, .oci => {},
         .iso => {
             const o = spec.iso orelse return invalid(arena, diag, "{s}: a live medium needs .iso", .{file_name});
             if (o.initrd.packages.len == 0) return invalid(arena, diag, "{s}: a live medium needs .iso.initrd.packages", .{file_name});
@@ -185,12 +191,6 @@ pub fn installZon(arena: Allocator, packages: []const []const u8) ![]const u8 {
     return out.written();
 }
 
-/// A package file the medium carries, and the repository it comes from.
-pub const MediumFile = struct {
-    repo_dir: []const u8,
-    filename: []const u8,
-};
-
 pub const Builder = struct {
     arena: Allocator,
     io: Io,
@@ -242,9 +242,10 @@ pub const Builder = struct {
         return b.join(&.{ b.work, "initrd" });
     }
 
-    /// A scratch root the installer's packages are solved in.
-    pub fn payloadRootPath(b: *Builder) ![]const u8 {
-        return b.join(&.{ b.work, "payload" });
+    /// Where the originals of the files the live root holds changed are
+    /// gathered, for the medium's joe/originals.
+    pub fn originalsPath(b: *Builder) ![]const u8 {
+        return b.join(&.{ b.work, "originals" });
     }
 
     /// The packages the root's transaction installs.
@@ -333,7 +334,14 @@ pub const Builder = struct {
         if (b.repos.len > 0) {
             try root.writeFile(b.io, .{ .sub_path = repo.config_path, .data = try reposZon(b.arena, b.repos, .installed) });
         }
-        // Packages fetched while building have no use in the image.
+    }
+
+    /// The package files fetched while building the root (a live medium's
+    /// build still reads originals from them), which have no use in the
+    /// image.
+    pub fn dropCache(b: *Builder) !void {
+        var root = try Io.Dir.cwd().openDir(b.io, try b.treePath(), .{ .iterate = true });
+        defer root.close(b.io);
         root.deleteTree(b.io, "var/cache/dave") catch {};
     }
 
@@ -468,14 +476,9 @@ pub const Builder = struct {
         _ = root.statFile(b.io, "etc/initrd-release", .{}) catch return b.fail("the initramfs has no /etc/initrd-release, which tells systemd where it runs", .{});
     }
 
-    /// A root to solve the installer's packages in.
-    pub fn preparePayloadRoot(b: *Builder) !void {
-        var root = try b.emptyRoot(try b.payloadRootPath());
-        root.close(b.io);
-    }
-
-    /// Writes the live medium: everything else is ready by now.
-    pub fn buildIso(b: *Builder, medium_files: []const MediumFile) !void {
+    /// Writes the live medium: everything else is ready by now, the
+    /// originals (originalsPath) included.
+    pub fn buildIso(b: *Builder) !void {
         const io = b.io;
         const arena = b.arena;
         const cwd = Io.Dir.cwd();
@@ -484,42 +487,30 @@ pub const Builder = struct {
         defer tree.close(io);
         const kernel = try b.kernelOf(tree);
 
-        // The ISO 9660 file system's contents.
+        // The ISO 9660 file system's contents. The installer installs from
+        // the live root itself (install_system.zig), so the medium carries
+        // no package files: only what to install, and the originals of the
+        // files the live root changed.
         const staging = try b.join(&.{ b.work, "medium" });
-        try cwd.createDirPath(io, try b.join(&.{ staging, "joe", install_system.repos_dir }));
+        try cwd.createDirPath(io, try b.join(&.{ staging, "joe" }));
         var medium = try cwd.openDir(io, try b.join(&.{ staging, "joe" }), .{ .iterate = true });
         defer medium.close(io);
         try medium.writeFile(io, .{ .sub_path = install_system.install_file, .data = try installZon(arena, try b.payload()) });
-        for (b.repos) |r| {
-            const dest = try std.fmt.allocPrint(arena, install_system.repos_dir ++ "/{s}", .{r.name});
-            try medium.createDirPath(io, dest);
-            var src = cwd.openDir(io, r.dir, .{}) catch |err| return b.fail("cannot open the repository {s}: {t}", .{ r.dir, err });
-            defer src.close(io);
-            // The repository's own signed index: it lists more than the
-            // medium carries, but the installer asks only for what the medium
-            // has, and the signature still verifies.
-            for ([_][]const u8{ repo.index_name, repo.signature_name }) |name| {
-                src.copyFile(name, medium, try b.join(&.{ dest, name }), io, .{}) catch |err|
-                    return b.fail("cannot copy {s}/{s}: {t}", .{ r.dir, name, err });
-            }
-            for (medium_files) |f| {
-                if (!std.mem.eql(u8, f.repo_dir, r.dir)) continue;
-                src.copyFile(f.filename, medium, try b.join(&.{ dest, f.filename }), io, .{}) catch |err|
-                    return b.fail("cannot copy {s}/{s}: {t}", .{ r.dir, f.filename, err });
-            }
-        }
+        try b.exec(&.{ "cp", "-a", try b.originalsPath(), try b.join(&.{ staging, "joe", install_system.originals_dir }) }, null);
 
         // The live root, a SquashFS image in 1 MiB blocks. -all-root: files the
         // user namespace shows as root are root's, never the building user's.
         // -noappend: mksquashfs adds to an image that already exists.
+        // -exit-on-error: a file it cannot read fails the build, where it
+        // would otherwise be put in the image empty.
         {
             var argv: std.ArrayList([]const u8) = .empty;
             try argv.appendSlice(arena, &.{
-                "mksquashfs",  try b.treePath(), try b.join(&.{ staging, "joe", "root.squashfs" }),
-                "-noappend",   "-quiet",         "-no-progress",
-                "-all-root",   "-b",             "1M",
-                "-comp",       options.compression,
-                "-processors", try std.fmt.allocPrint(arena, "{d}", .{std.Thread.getCpuCount() catch 1}),
+                "mksquashfs",     try b.treePath(),                                                          try b.join(&.{ staging, "joe", "root.squashfs" }),
+                "-noappend",      "-quiet",                                                                  "-no-progress",
+                "-exit-on-error", "-all-root",                                                               "-b",
+                "1M",             "-comp",                                                                   options.compression,
+                "-processors",    try std.fmt.allocPrint(arena, "{d}", .{std.Thread.getCpuCount() catch 1}),
             });
             if (std.mem.eql(u8, options.compression, "xz")) try argv.appendSlice(arena, &.{ "-Xbcj", "x86", "-Xdict-size", "1M" });
             try b.exec(argv.items, null);
@@ -571,6 +562,65 @@ pub const Builder = struct {
 
         cwd.deleteFile(io, b.out) catch {};
         try b.exec(try iso.xorrisoArgv(arena, staging, esp_img, options.label, b.out), null);
+    }
+
+    // -- container image ----------------------------------------------------
+
+    /// Writes the container image: the tree as one gzip-compressed tar
+    /// layer, in an OCI image layout archived with tar (oci.zig).
+    pub fn buildOci(b: *Builder) !void {
+        const io = b.io;
+        const arena = b.arena;
+        const cwd = Io.Dir.cwd();
+        const options = b.spec.oci orelse oci.Options{};
+        const tree_path = try b.treePath();
+        var tree = try cwd.openDir(io, tree_path, .{ .iterate = true });
+        defer tree.close(io);
+
+        const layout_path = try b.join(&.{ b.work, "oci" });
+        try cwd.createDirPath(io, try b.join(&.{ layout_path, "blobs", "sha256" }));
+        var layout = try cwd.openDir(io, layout_path, .{});
+        defer layout.close(io);
+
+        // The layer: its uncompressed digest names it in the configuration,
+        // its compressed one in the manifest.
+        const layer_tar = try b.join(&.{ b.work, "layer.tar" });
+        try b.exec(try oci.layerTarArgv(arena, tree_path, layer_tar), null);
+        const diff_id = try archive.hashFile(io, cwd, layer_tar);
+        try b.exec(&.{ "gzip", "-n", "-f", layer_tar }, null);
+        const layer_gz = try std.fmt.allocPrint(arena, "{s}.gz", .{layer_tar});
+        const layer: oci.Blob = .{
+            .digest = try arena.dupe(u8, &try archive.hashFile(io, cwd, layer_gz)),
+            .size = (try cwd.statFile(io, layer_gz, .{})).size,
+        };
+        try cwd.rename(layer_gz, layout, try oci.blobPath(arena, layer.digest), io);
+
+        const os_release = tree.readFileAlloc(io, "usr/lib/os-release", arena, .limited(64 * 1024)) catch "";
+        const created = try oci.rfc3339(arena, @intCast(Io.Timestamp.now(io, .real).toSeconds()));
+        var labels: std.ArrayList(oci.Label) = .empty;
+        try labels.appendSlice(arena, options.labels);
+        if (oci.osVersion(os_release)) |v| try labels.append(arena, .{ .name = "org.opencontainers.image.version", .value = v });
+        try labels.append(arena, .{ .name = "org.opencontainers.image.created", .value = created });
+
+        const config = try b.writeBlob(layout, try oci.configJson(arena, options, labels.items, created, &diff_id));
+        const manifest_blob = try b.writeBlob(layout, try oci.manifestJson(arena, config, layer, labels.items));
+        try layout.writeFile(io, .{ .sub_path = oci.layout_file, .data = oci.layout_text });
+        try layout.writeFile(io, .{ .sub_path = "index.json", .data = try oci.indexJson(arena, manifest_blob, b.spec.name, "latest") });
+        const tag = try std.fmt.allocPrint(arena, "{s}:latest", .{b.spec.name});
+        try layout.writeFile(io, .{ .sub_path = "manifest.json", .data = try oci.dockerManifestJson(arena, config, layer, tag) });
+
+        cwd.deleteFile(io, b.out) catch {};
+        try b.exec(&.{
+            "tar",            "--create",        "--file",    b.out,       "--directory", layout_path,
+            "--format=posix", "--numeric-owner", "--owner=0", "--group=0", "--sort=name", oci.layout_file,
+            "index.json",     "manifest.json",   "blobs",
+        }, null);
+    }
+
+    fn writeBlob(b: *Builder, layout: Io.Dir, data: []const u8) !oci.Blob {
+        const digest = try b.arena.dupe(u8, &archive.hashBytes(data));
+        try layout.writeFile(b.io, .{ .sub_path = try oci.blobPath(b.arena, digest), .data = data });
+        return .{ .digest = digest, .size = data.len };
     }
 
     pub fn cleanup(b: *Builder) void {

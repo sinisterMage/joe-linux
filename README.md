@@ -284,9 +284,14 @@ and how:
   btrfs root laid out exactly as an image's.
 
 The packages are installed from the medium itself, by one dave
-transaction, and sealed as they are installed. The installed system boots
-without an initramfs, like every joe system, and its first boot runs GNOME's
-initial setup.
+transaction, and sealed as they are installed. The medium carries each
+package once: the transaction copies it out of the live session's own root
+image, where it is installed already, and checks every file against the
+package's manifest, as it would a file from a package. The few files the live
+session changes (its host name, its automatic login, the accounts it adds)
+are on the medium as packaged as well. The installed system boots without an
+initramfs, like every joe system, and its first boot runs GNOME's initial
+setup.
 
 The installer (`installer/`) is a Qt Quick front end; all of its work is done by
 `dave install-system`, which can be run by hand on the medium:
@@ -300,6 +305,22 @@ dave install-system --disk /dev/nvme0n1             erase it and install
 Images and media are described by specifications in `image/*.zon` and built by
 `dave image build`; each Makefile target above names one. The build machine
 publishes the medium with the repository (see infra/build-machine).
+
+## In a container
+
+joe's command line, with dave to install the rest, is also a container image
+(`image/container.zon`, an OCI image of one layer):
+
+```
+docker run -it ghcr.io/thejoelinuxfoundation/joe
+dave install git
+```
+
+`make container` builds it from build/repo as `build/images/joe-container.tar`
+(`docker load -i` or `podman load -i` it). The published image is built from
+the published repository by a GitHub workflow, `.github/workflows/container.yml`,
+run by hand after a release. A container is not a deployment, so dave
+installs into it directly, without a snapshot to return to.
 
 ## Releases
 

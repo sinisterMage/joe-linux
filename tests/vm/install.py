@@ -108,6 +108,13 @@ def check_installed(vm):
     seal = vm.run("getfattr --absolute-names --only-values -n security.joe /usr/bin/bash 2>/dev/null | head -c 4")
     assert seal.strip() == "JOE1", seal
 
+    step("its files are as packaged, not as the live session changed them")
+    # The installer copies the packages out of the live root; the medium
+    # keeps the originals of what that root changed.
+    assert vm.run("cat /etc/hostname").strip() == "joe"
+    assert "liveuser" not in vm.run("cat /etc/gdm/custom.conf"), "the live session's automatic login was copied"
+    assert not vm.run("ls /home", check=False).strip(), "an account's home came along"
+
     step("it takes packages from the repository the medium was made for")
     assert f"http://{GUEST_HOST}:{BASE_PORT}" in vm.run("cat /etc/dave/repos.zon")
     assert vm.run("ls /var/cache/dave 2>/dev/null | wc -l").strip() in ("0", "")

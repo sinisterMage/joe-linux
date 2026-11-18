@@ -322,6 +322,27 @@ pub const PackageReader = struct {
     }
 };
 
+/// Writes the contents of one regular file of a package file to `out`,
+/// checked against the checksum its manifest records.
+pub fn extractFile(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, sub_path: []const u8, path: []const u8, out: *Io.Writer) !void {
+    const reader = try PackageReader.open(gpa, io, dir, sub_path);
+    defer reader.close(gpa);
+    const m = try reader.readManifest(arena);
+    const want = for (m.files) |f| {
+        if (f.kind == .file and std.mem.eql(u8, f.path, path)) break f.sha256 orelse return error.InvalidPackage;
+    } else return error.FileNotFound;
+    while (try reader.next()) |entry| {
+        if (!std.mem.eql(u8, entry.path, path)) continue;
+        var buf: [64 * 1024]u8 = undefined;
+        var sink: HashingSink = .init(out, &buf);
+        try reader.stream(&sink.writer);
+        const digest = try sink.finish();
+        if (!std.mem.eql(u8, &digest, want)) return error.InvalidPackage;
+        return;
+    }
+    return error.InvalidPackage;
+}
+
 /// Reads only the manifest of a package file.
 /// The reader is closed before returning; the manifest belongs to `arena`.
 pub fn readManifestOf(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, sub_path: []const u8) !Manifest {
