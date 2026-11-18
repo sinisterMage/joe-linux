@@ -1,0 +1,9 @@
+.{
+    .name = "joe-backgrounds",
+    .version = "1",
+    .release = 1,
+    .description = "joe Linux's wallpaper, in light and dark",
+    .license = "MIT",
+    // Pictures only, chosen by joe-desktop; nothing builds against them.
+    .build_only = true,
+}

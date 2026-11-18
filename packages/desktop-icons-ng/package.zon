@@ -1,0 +1,18 @@
+.{
+    .name = "desktop-icons-ng",
+    .version = "51.4.0",
+    .release = 1,
+    .description = "GNOME Shell extension showing the files of ~/Desktop as icons on the desktop (DING)",
+    .license = "GPL-3.0-or-later",
+    .sources = .{
+        // No checksum is published for the archive.
+        .{ .url = "https://gitlab.com/rastersoft/desktop-icons-ng/-/archive/51.4.0/desktop-icons-ng-51.4.0.tar.gz", .sha256 = "7d09f97e72793b6dcae54ec8f0879f86c0e638467923b503ded4b1212efa796b" },
+    },
+    // The extension is run by GNOME Shell (it declares shells 50 and 51);
+    // the desktop itself is a gjs program using GTK 4 and libadwaita, with
+    // thumbnails from gnome-desktop. Opening files is left to the desktop's
+    // applications.
+    .depends = .{ "gnome-shell >=50 <52", "gjs", "gtk4", "libadwaita", "gnome-desktop" },
+    // meson's i18n module runs msgfmt; its install script runs python.
+    .build_depends = .{ "meson", "ninja", "gettext", "glib", "python" },
+}

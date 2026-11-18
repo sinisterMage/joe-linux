@@ -26,6 +26,23 @@ SESSION_ENV = (
 )
 
 
+# The extensions joe-desktop enables for every account.
+EXTENSIONS = (
+    "dash-to-panel@jderose9.github.com",
+    "arcmenu@arcmenu.com",
+    "appindicatorsupport@rgcjonas.gmail.com",
+    "ding@rastersoft.com",
+)
+# And the settings that make up its look.
+LOOK = {
+    "org.gnome.desktop.interface icon-theme": "'Papirus'",
+    "org.gnome.desktop.interface gtk-theme": "'adw-gtk3'",
+    "org.gnome.desktop.interface accent-color": "'teal'",
+    "org.gnome.desktop.wm.preferences button-layout": "'appmenu:minimize,maximize,close'",
+    "org.gnome.desktop.background picture-uri": "'file:///usr/share/backgrounds/joe/joe-l.svg'",
+}
+
+
 def step(text):
     print(f"--- {text}", flush=True)
 
@@ -203,6 +220,9 @@ def check_desktop(vm, tag):
     check_optional_servers(vm)
     failed = vm.run("systemctl --failed --no-legend --plain", check=False).strip()
     print(f"    failed units: {failed or 'none'}")
+    # Sealing fails when a package ships a file something else rewrites
+    # (a trigger's cache): then the security module has unsealed files.
+    assert "dave-seal.service" not in failed, vm.run("journalctl -b -u dave-seal.service --no-pager | tail -n 5", check=False)
 
     step("a user session with GNOME Shell on Wayland comes up")
     wait_for(vm, "the user's session", "loginctl show-user joe -p State | grep -q active", 240)
@@ -213,6 +233,23 @@ def check_desktop(vm, tag):
     assert "Type=wayland" in session, session
     time.sleep(15)
     vm.screenshot(os.path.join(vm.workdir, f"{tag}-1-session.png"))
+
+    step("joe's look: a taskbar, a start menu, tray and desktop icons, all running")
+    for uuid in EXTENSIONS:
+        info = vm.run(in_session(f"gnome-extensions info {uuid}"), check=False)
+        print(f"    {uuid}: {'active' if 'ACTIVE' in info else info.strip()}")
+        assert "ACTIVE" in info, f"{uuid} is not running: {info}"
+    # The folders every account gets, among them the desktop's own; the
+    # icons on it are drawn by a program of their own, which must stay up.
+    wait_for(vm, "the user's folders", "test -d /home/joe/Desktop -a -d /home/joe/Documents", 60)
+    wait_for(vm, "the desktop icons", "pgrep -u joe -f ding@rastersoft.com/app/ding.js", 60)
+    first = vm.run("pgrep -u joe -f ding@rastersoft.com/app/ding.js").split()[0]
+    time.sleep(10)
+    assert vm.run("pgrep -u joe -f ding@rastersoft.com/app/ding.js").split()[0] == first, \
+        "the desktop icons keep restarting"
+    for key, expected in LOOK.items():
+        value = vm.run(in_session(f"gsettings get {key}")).strip()
+        assert value == expected, f"{key} is {value}, not {expected}"
 
     step("the core applications start")
     for name, command, process in APPLICATIONS:

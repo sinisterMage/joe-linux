@@ -1,0 +1,18 @@
+.{
+    .name = "arcmenu",
+    .version = "70.0",
+    .release = 1,
+    .description = "GNOME Shell extension providing an application menu, with many layouts",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // No checksum is published for the archive.
+        .{ .url = "https://gitlab.com/arcmenu/ArcMenu/-/archive/v70.0/ArcMenu-v70.0.tar.gz", .sha256 = "2448a5e816b2a4112cb5f672690611f1c5dd781bfe5bdf5fd61eab539a733d3a" },
+    },
+    // JavaScript run by GNOME Shell; 70.0 declares shells 45 to 51. It
+    // reads the menu of applications through gnome-menus (GMenu) and the
+    // user's picture through AccountsService.
+    .depends = .{ "gnome-shell >=45 <52", "gnome-menus", "accountsservice" },
+    // glib-compile-schemas and glib-compile-resources; gettext's msgmerge
+    // and msgfmt for the translations.
+    .build_depends = .{ "glib", "gettext" },
+}

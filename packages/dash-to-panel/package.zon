@@ -1,0 +1,15 @@
+.{
+    .name = "dash-to-panel",
+    .version = "74",
+    .release = 2,
+    .description = "GNOME Shell extension combining the top bar and the dash into one taskbar",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // No checksum is published for the archive.
+        .{ .url = "https://github.com/home-sweet-gnome/dash-to-panel/archive/v74/dash-to-panel-74.tar.gz", .sha256 = "8df5e03b547aa380902fabf4c12134b4d5f2b1ed662be797347276d664ef21e2" },
+    },
+    // JavaScript run by GNOME Shell; version 74 declares shells 46 to 51.
+    .depends = .{"gnome-shell >=46 <52"},
+    // glib-compile-schemas checks the schema; msgfmt makes the translations.
+    .build_depends = .{ "glib", "gettext" },
+}

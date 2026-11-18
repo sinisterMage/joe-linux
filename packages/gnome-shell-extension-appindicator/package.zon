@@ -1,0 +1,15 @@
+.{
+    .name = "gnome-shell-extension-appindicator",
+    .version = "66",
+    .release = 2,
+    .description = "GNOME Shell extension showing AppIndicator and KStatusNotifierItem tray icons",
+    .license = "GPL-2.0-or-later",
+    .sources = .{
+        // No checksum is published for the archive.
+        .{ .url = "https://github.com/ubuntu/gnome-shell-extension-appindicator/archive/v66/gnome-shell-extension-appindicator-66.tar.gz", .sha256 = "3f692824e54c2192d984a24e1685722d1c88787e24dba662aecabe0b7f9e2bbc" },
+    },
+    // JavaScript run by GNOME Shell; version 66 declares shells 45 to 51.
+    .depends = .{"gnome-shell >=45 <52"},
+    // meson reads the extension's uuid out of metadata.json with jq.
+    .build_depends = .{ "meson", "ninja", "jq", "glib", "gettext" },
+}

@@ -1,0 +1,13 @@
+.{
+    .name = "papirus-icon-theme",
+    .version = "20260801",
+    .release = 1,
+    .description = "Papirus, a colourful icon theme, with joe's teal folders",
+    .license = "GPL-3.0-only",
+    .sources = .{
+        // No checksum is published for the archive.
+        .{ .url = "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/20260801/papirus-icon-theme-20260801.tar.gz", .sha256 = "646f622e9e7e9e65eef9d0ab58999d4920ddb33d98e6a75232627cfe3bd508f9" },
+    },
+    // Icons Papirus lacks come from the themes it inherits from.
+    .depends = .{ "hicolor-icon-theme", "adwaita-icon-theme" },
+}

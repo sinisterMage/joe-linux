@@ -1,0 +1,18 @@
+.{
+    .name = "dart-sass",
+    .version = "1.108.2",
+    .release = 1,
+    .description = "Dart Sass, the reference Sass compiler (sass), as JavaScript for node",
+    .license = "MIT AND BSD-3-Clause",
+    .sources = .{
+        // The npm package `sass`: Dart Sass compiled to JavaScript, and the
+        // three packages it needs, with chokidar's own dependency. Each was
+        // verified against the npm registry's published integrity metadata.
+        .{ .url = "https://registry.npmjs.org/sass/-/sass-1.108.2.tgz", .sha256 = "a3398fa194c3379174bac6650bdaad077d1fbe71c4e58e817b2e213d1479bbfe" },
+        .{ .url = "https://registry.npmjs.org/chokidar/-/chokidar-5.0.0.tgz", .sha256 = "45d07ea7d57ee482c733ab3c547cc49edc1423bc231507e41ff99d2711f7f5e3" },
+        .{ .url = "https://registry.npmjs.org/readdirp/-/readdirp-5.1.1.tgz", .sha256 = "935a688197715ea14c184e4a56542d6abe99a75b2c6d805d24a4cdf36514d5a5" },
+        .{ .url = "https://registry.npmjs.org/immutable/-/immutable-5.2.1.tgz", .sha256 = "44be721297099bed852e685941658a3f270830f1fbd3c5f51c33fee1dcd935c9" },
+        .{ .url = "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.2.tgz", .sha256 = "05c8cf8e7c3a6b56cada7668fe9342b10f4b625efc92aba9ba05b9e8fe4d71a3" },
+    },
+    .depends = .{"nodejs"},
+}

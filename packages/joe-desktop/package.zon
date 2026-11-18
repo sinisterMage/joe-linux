@@ -1,7 +1,7 @@
 .{
     .name = "joe-desktop",
     .version = "0.2",
-    .release = 5,
+    .release = 8,
     .description = "The joe Linux desktop: GNOME on Wayland",
     .license = "MIT",
     // Depends on joe-base, whose directory layout cannot be installed over
@@ -27,6 +27,16 @@
         "xdg-user-dirs",
         "adwaita-icon-theme",
         "hicolor-icon-theme",
+        // The look: a taskbar and start menu made of upstream GNOME Shell
+        // extensions, tray icons and desktop icons, the libadwaita style
+        // for GTK 3 applications, Papirus icons and joe's wallpaper.
+        "dash-to-panel",
+        "arcmenu",
+        "gnome-shell-extension-appindicator",
+        "desktop-icons-ng",
+        "adw-gtk3",
+        "papirus-icon-theme",
+        "joe-backgrounds",
         "adwaita-fonts",
         "dejavu-fonts",
         "sound-theme-freedesktop",

@@ -1,0 +1,14 @@
+.{
+    .name = "adw-gtk3",
+    .version = "6.5",
+    .release = 1,
+    .description = "The libadwaita look for GTK 3 applications, light and dark",
+    .license = "LGPL-2.1-or-later",
+    .sources = .{
+        // No checksum is published for the archive.
+        .{ .url = "https://github.com/lassekongo83/adw-gtk3/archive/v6.5/adw-gtk3-6.5.tar.gz", .sha256 = "fc9fc3b3e89d90d9a0e38bae05445ce9e65faf47acea3ac658e5f42566def473" },
+    },
+    // Only style sheets: nothing at run time but GTK 3 reading them.
+    // meson runs Dart Sass (sass) to make them.
+    .build_depends = .{ "meson", "ninja", "dart-sass" },
+}
