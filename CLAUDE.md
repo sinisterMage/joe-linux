@@ -117,3 +117,9 @@ Recipes follow Linux From Scratch and Beyond LFS (systemd, development branch). 
 - `packages/gcc-fortran` builds the same GCC source as `packages/gcc` and pins `gcc =VERSION` in its `depends`; changing gcc's version means changing both. `packages/libxml2-python` does the same with `packages/libxml2`.
 - `dave/share/` holds dave's manual page and its bash, zsh and fish completions. Like the units, they are installed by both `packages/dave/build.sh` and `image/add-dave.sh`.
 - `packages/dave/files/` is populated by `build-packages.sh` with the freshly built binary, `system/*` and `dave/share/*`. dave is cross-built on the host because joe does not package Zig. A dave change reaches an image only after the `dave` package is rebuilt, which needs a `.release` bump in `packages/dave/package.zon`.
+## Git
+
+- Commit messages: `area: imperative summary`, lowercase, no trailing period.
+- Never add `Co-Authored-By`, `Generated-with`, `Assisted-by` or any similar
+  trailer. Not once, not for a small change. Treat it as a rule violation.
+- The author line is the human who committed it.
