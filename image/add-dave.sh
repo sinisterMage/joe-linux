@@ -8,6 +8,7 @@ set -euo pipefail
 rootfs=$1
 binary=$2
 system=$(cd "$(dirname "$0")/../system" && pwd)
+share=$(cd "$(dirname "$0")/../dave/share" && pwd)
 units=$rootfs/usr/lib/systemd/system
 
 install -Dm755 "$binary" "$rootfs/usr/bin/dave"
@@ -23,5 +24,10 @@ ln -sf ../dave-seal.service "$units/sysinit.target.wants/dave-seal.service"
 ln -sf ../dave-boot-check.service "$units/boot-complete.target.requires/dave-boot-check.service"
 ln -sf ../dave-finalize.service "$units/multi-user.target.wants/dave-finalize.service"
 ln -sf ../dave-status.service "$units/multi-user.target.wants/dave-status.service"
+
+install -Dm644 "$share/dave.8" "$rootfs/usr/share/man/man8/dave.8"
+install -Dm644 "$share/completion.bash" "$rootfs/usr/share/bash-completion/completions/dave"
+install -Dm644 "$share/completion.zsh" "$rootfs/usr/share/zsh/site-functions/_dave"
+install -Dm644 "$share/completion.fish" "$rootfs/usr/share/fish/vendor_completions.d/dave.fish"
 
 mkdir -p "$rootfs/etc/dave/keys" "$rootfs/usr/lib/dave/db" "$rootfs/usr/lib/dave/triggers"

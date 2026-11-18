@@ -36,9 +36,10 @@ if [[ $(id -u) -ne 0 ]]; then
         printf '\t{ %s },\n' "$(sed 's/../0x&, /g; s/, $//' "$keys/joe-code.pub")"
         echo "};"
     } > "$top/packages/linux/joe-lsm/joe_keys.h"
-    # The dave recipe packages the binary just built and the units in system/.
+    # The dave recipe packages the binary just built, the units in system/,
+    # and its manual page and shell completions from dave/share/.
     mkdir -p "$top/packages/dave/files"
-    cp "$dave" "$top"/system/* "$top/packages/dave/files/"
+    cp "$dave" "$top"/system/* "$top"/dave/share/* "$top/packages/dave/files/"
     # The joe-installer recipe builds the installer's source, installer/.
     rm -rf "$top/packages/joe-installer/files"
     mkdir -p "$top/packages/joe-installer/files"

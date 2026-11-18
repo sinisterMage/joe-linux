@@ -45,6 +45,43 @@ pub fn load(arena: Allocator, io: Io, root: Io.Dir) ![]Manifest {
     return list.items;
 }
 
+/// The manifest of one installed package, or null when it is not installed.
+pub fn loadOne(arena: Allocator, io: Io, root: Io.Dir, name: []const u8) !?Manifest {
+    if (!manifest_mod.validName(name)) return null;
+    const sub = try std.fmt.allocPrint(arena, db_path ++ "/{s}/" ++ manifest_name, .{name});
+    const text = root.readFileAlloc(io, sub, arena, .limited(max_bytes)) catch |err| switch (err) {
+        error.FileNotFound => return null,
+        else => return err,
+    };
+    const m = try Manifest.parse(arena, text);
+    if (!std.mem.eql(u8, m.name, name)) return error.CorruptDatabase;
+    return m;
+}
+
+/// The names of the installed packages, sorted, without reading their
+/// manifests (which, for a desktop, are many megabytes together).
+pub fn names(arena: Allocator, io: Io, root: Io.Dir) ![]const []const u8 {
+    var list: std.ArrayList([]const u8) = .empty;
+    var dir = root.openDir(io, db_path, .{ .iterate = true }) catch |err| switch (err) {
+        error.FileNotFound => return list.items,
+        else => return err,
+    };
+    defer dir.close(io);
+    var it = dir.iterate();
+    while (try it.next(io)) |entry| {
+        if (entry.kind != .directory or !manifest_mod.validName(entry.name)) continue;
+        const sub = try std.fmt.allocPrint(arena, "{s}/" ++ manifest_name, .{entry.name});
+        _ = dir.statFile(io, sub, .{}) catch continue;
+        try list.append(arena, try arena.dupe(u8, entry.name));
+    }
+    std.mem.sort([]const u8, list.items, {}, struct {
+        fn lessThan(_: void, a: []const u8, b: []const u8) bool {
+            return std.mem.order(u8, a, b) == .lt;
+        }
+    }.lessThan);
+    return list.items;
+}
+
 fn byName(_: void, a: Manifest, b: Manifest) bool {
     return std.mem.order(u8, a.name, b.name) == .lt;
 }
@@ -158,8 +195,16 @@ test "database round trip" {
     try testing.expectEqualStrings("1.3-r2", second[1].version);
     try testing.expect(!std.mem.eql(u8, &before, &try stateHash(arena, second)));
 
+    const listed = try names(arena, io, tmp.dir);
+    try testing.expectEqual(@as(usize, 2), listed.len);
+    try testing.expectEqualStrings("bash", listed[0]);
+    try testing.expectEqualStrings("5.3-r1", (try loadOne(arena, io, tmp.dir, "bash")).?.version);
+    try testing.expect(try loadOne(arena, io, tmp.dir, "nope") == null);
+    try testing.expect(try loadOne(arena, io, tmp.dir, "../etc") == null);
+
     try remove(arena, io, tmp.dir, "bash");
     try testing.expectEqual(@as(usize, 1), (try load(arena, io, tmp.dir)).len);
+    try testing.expectEqual(@as(usize, 1), (try names(arena, io, tmp.dir)).len);
 }
 
 test "world round trip" {

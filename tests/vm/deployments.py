@@ -166,7 +166,7 @@ def scenarios(vm, repo):
     })
     repo.index()
     out = vm.run("dave upgrade", timeout=300)
-    assert "upgrade  hello  1.0-r1 -> 2.0-r1" in out, out
+    assert re.search(r"^\s+hello\s+1\.0-r1 -> 2\.0-r1", out, re.M), out
     assert "The running system has not been changed." in out, out
     assert vm.run("hello").strip() == "hello v1"
     assert deployments(vm) == [1], deployments(vm)
@@ -239,9 +239,15 @@ def scenarios(vm, repo):
     assert "will be applied when the system shuts down" in out, out
     assert nested_in(vm, 3) == "", nested_in(vm, 3)
 
-    step("users without root: status, deployments and search, but not the top level")
+    step("users without root: status, deployments, search and upgrade --check, but not the top level")
     assert as_user(vm, "dave deployments") == vm.run("dave deployments")
-    assert "hello 2.0-r1" in as_user(vm, "dave search hello")
+    assert re.search(r"^hello\s+2\.0-r1\b", as_user(vm, "dave search hello"), re.M)
+    out = as_user(vm, "dave upgrade --check")
+    assert re.search(r"^\s+hello\s+1\.0-r1 -> 2\.0-r1", out, re.M), out
+    assert "An upgrade is already prepared" in out, out
+    # Refused before anything is touched, saying how to do it.
+    out = as_user(vm, "dave install moo 2>&1", check=False)
+    assert "installing packages needs root; run it with sudo: sudo dave install moo" in out, out
     assert as_user(vm, "ls /run/dave/top >/dev/null 2>&1; echo $?").strip() != "0"
     assert vm.run("stat -c %a /run/dave/top").strip() == "700"
     assert "nosuid" in vm.run("findmnt -no OPTIONS /run/dave/top")

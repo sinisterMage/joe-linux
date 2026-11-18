@@ -34,8 +34,13 @@ pub const IndexEntry = struct {
     depends: []const []const u8 = &.{},
     conflicts: []const []const u8 = &.{},
     filename: []const u8,
+    /// Of the package file, which is what is downloaded.
     size: u64,
     sha256: []const u8,
+    license: []const u8 = "",
+    /// What its files take once installed. Indexes written by dave 0.2 and
+    /// earlier do not say.
+    installed_size: ?u64 = null,
 };
 
 pub const Index = struct {
@@ -57,6 +62,8 @@ pub const Config = struct {
 pub const Candidate = struct {
     entry: IndexEntry,
     repo_url: []const u8,
+    /// The repository's name in the configuration.
+    repo_name: []const u8 = "",
 };
 
 // ---------------------------------------------------------------------------
@@ -169,6 +176,8 @@ pub fn writeIndex(gpa: Allocator, arena: Allocator, io: Io, dir: Io.Dir, secret_
             .filename = filename,
             .size = st.size,
             .sha256 = try arena.dupe(u8, &digest),
+            .license = m.license,
+            .installed_size = m.installedSize(),
         });
     }
     std.mem.sort(IndexEntry, entries.items, {}, struct {
@@ -284,31 +293,76 @@ fn isRemote(url: []const u8) bool {
     return std.mem.startsWith(u8, url, "https://") or std.mem.startsWith(u8, url, "http://");
 }
 
+/// Told how many bytes of a file have arrived so far.
+pub const ByteProgress = struct {
+    context: *anyopaque,
+    report: *const fn (context: *anyopaque, bytes: u64) void,
+};
+
+/// What a failed download was, for saying so.
+pub const FetchDiagnostic = struct {
+    url: []const u8 = "",
+    /// Set when the server answered, but not with the file.
+    status: ?std.http.Status = null,
+};
+
+pub const FetchOptions = struct {
+    progress: ?ByteProgress = null,
+    diag: ?*FetchDiagnostic = null,
+};
+
+/// Counts what passes through a writer (std.Io.Writer.Hashed's hasher).
+const Counter = struct {
+    bytes: u64 = 0,
+    progress: ?ByteProgress = null,
+
+    pub fn update(c: *Counter, data: []const u8) void {
+        c.bytes += data.len;
+        if (c.progress) |p| p.report(p.context, c.bytes);
+    }
+};
+
 /// Copies or downloads `<base>/<name>` to `dest_dir/dest_name`, atomically.
 ///
 /// An HTTPS server must present a certificate for its host name that chains to
 /// a certificate in the store of the system dave is running on (on joe,
 /// `/etc/pki/tls/certs/ca-bundle.crt`, from make-ca). That is the running
 /// system's store even when dave works on another root with `--root`.
-pub fn fetch(gpa: Allocator, arena: Allocator, io: Io, base: []const u8, name: []const u8, dest_dir: Io.Dir, dest_name: []const u8) !void {
+pub fn fetch(gpa: Allocator, arena: Allocator, io: Io, base: []const u8, name: []const u8, dest_dir: Io.Dir, dest_name: []const u8, options: FetchOptions) !void {
     const tmp = try std.fmt.allocPrint(arena, "{s}.partial", .{dest_name});
     errdefer dest_dir.deleteFile(io, tmp) catch {};
     if (isRemote(base)) {
         const url = try std.fmt.allocPrint(arena, "{s}/{s}", .{ std.mem.trimEnd(u8, base, "/"), name });
+        if (options.diag) |d| d.* = .{ .url = url };
         var file = try dest_dir.createFile(io, tmp, .{});
         defer file.close(io);
         var buf: [64 * 1024]u8 = undefined;
         var fw = file.writer(io, &buf);
+        var count_buf: [16 * 1024]u8 = undefined;
+        var counted = Io.Writer.Hashed(Counter).initHasher(&fw.interface, .{ .progress = options.progress }, &count_buf);
         var client: std.http.Client = .{ .allocator = gpa, .io = io };
         defer client.deinit();
-        const result = try client.fetch(.{ .location = .{ .url = url }, .response_writer = &fw.interface, .keep_alive = false });
-        if (result.status != .ok) return error.DownloadFailed;
-        try fw.interface.flush();
+        const result = client.fetch(.{ .location = .{ .url = url }, .response_writer = &counted.writer, .keep_alive = false }) catch |e| {
+            // Writing failed: the file writer knows why (a full disk).
+            if (e == error.WriteFailed) return fw.err orelse e;
+            return e;
+        };
+        if (result.status != .ok) {
+            if (options.diag) |d| d.status = result.status;
+            return error.DownloadFailed;
+        }
+        counted.writer.flush() catch return fw.err orelse error.WriteFailed;
+        fw.interface.flush() catch return fw.err orelse error.WriteFailed;
         try file.sync(io);
     } else {
+        if (options.diag) |d| d.* = .{ .url = base };
         var src = Io.Dir.cwd().openDir(io, base, .{}) catch return error.RepositoryNotFound;
         defer src.close(io);
         try src.copyFile(name, dest_dir, tmp, io, .{});
+        if (options.progress) |p| {
+            const st = try dest_dir.statFile(io, tmp, .{});
+            p.report(p.context, st.size);
+        }
     }
     try dest_dir.rename(tmp, dest_dir, dest_name, io);
 }
@@ -317,18 +371,18 @@ pub fn fetch(gpa: Allocator, arena: Allocator, io: Io, base: []const u8, name: [
 /// and returns all candidates. An index that fails verification is discarded
 /// and the previously cached one, if any, is left in place.
 pub fn refresh(gpa: Allocator, arena: Allocator, io: Io, config: Config, trusted: []const PublicKey, cache: Io.Dir) ![]Candidate {
-    for (config.repos) |r| try refreshRepo(gpa, arena, io, r, trusted, cache);
+    for (config.repos) |r| try refreshRepo(gpa, arena, io, r, trusted, cache, .{});
     return loadCached(arena, io, config, trusted, cache);
 }
 
 /// Downloads and verifies one repository's index into `cache/<name>`.
-pub fn refreshRepo(gpa: Allocator, arena: Allocator, io: Io, r: RepoConfig, trusted: []const PublicKey, cache: Io.Dir) !void {
+pub fn refreshRepo(gpa: Allocator, arena: Allocator, io: Io, r: RepoConfig, trusted: []const PublicKey, cache: Io.Dir, options: FetchOptions) !void {
     if (!manifest_mod.validName(r.name)) return error.InvalidConfig;
     try cache.createDirPath(io, r.name);
     var dir = try cache.openDir(io, r.name, .{});
     defer dir.close(io);
-    try fetch(gpa, arena, io, r.url, index_name, dir, index_name ++ ".new");
-    try fetch(gpa, arena, io, r.url, signature_name, dir, signature_name ++ ".new");
+    try fetch(gpa, arena, io, r.url, index_name, dir, index_name ++ ".new", options);
+    try fetch(gpa, arena, io, r.url, signature_name, dir, signature_name ++ ".new", .{ .diag = options.diag });
     const text = try dir.readFileAlloc(io, index_name ++ ".new", arena, .limited(max_index_bytes));
     const signature = try dir.readFileAlloc(io, signature_name ++ ".new", arena, .limited(4096));
     verify(signature, text, trusted) catch |err| {
@@ -356,7 +410,7 @@ pub fn loadCached(arena: Allocator, io: Io, config: Config, trusted: []const Pub
         for (index.packages) |p| {
             if (!manifest_mod.validName(p.name)) return error.InvalidIndex;
             if (std.mem.indexOfScalar(u8, p.filename, '/') != null or std.mem.startsWith(u8, p.filename, ".")) return error.InvalidIndex;
-            try out.append(arena, .{ .entry = p, .repo_url = r.url });
+            try out.append(arena, .{ .entry = p, .repo_url = r.url, .repo_name = r.name });
         }
     }
     return out.items;
@@ -366,18 +420,28 @@ pub const packages_dir = "pkgs";
 
 /// Makes sure the package file for `c` is in `cache/pkgs`, verified against
 /// the signed index, and returns its path relative to `cache`.
-pub fn ensurePackage(gpa: Allocator, arena: Allocator, io: Io, c: Candidate, cache: Io.Dir) ![]const u8 {
+pub fn ensurePackage(gpa: Allocator, arena: Allocator, io: Io, c: Candidate, cache: Io.Dir, options: FetchOptions) ![]const u8 {
     try cache.createDirPath(io, packages_dir);
     const rel = try std.fmt.allocPrint(arena, packages_dir ++ "/{s}", .{c.entry.filename});
     if (try matches(io, cache, rel, c.entry)) return rel;
     var dir = try cache.openDir(io, packages_dir, .{});
     defer dir.close(io);
-    try fetch(gpa, arena, io, c.repo_url, c.entry.filename, dir, c.entry.filename);
+    try fetch(gpa, arena, io, c.repo_url, c.entry.filename, dir, c.entry.filename, options);
     if (!try matches(io, cache, rel, c.entry)) {
         cache.deleteFile(io, rel) catch {};
         return error.ChecksumMismatch;
     }
     return rel;
+}
+
+/// Whether a file of the right size for `entry` is in the cache already: a
+/// cheap guess at what is left to download, for saying so. ensurePackage
+/// checks properly.
+pub fn isCached(io: Io, cache: Io.Dir, entry: IndexEntry) bool {
+    var buf: [512]u8 = undefined;
+    const rel = std.fmt.bufPrint(&buf, packages_dir ++ "/{s}", .{entry.filename}) catch return false;
+    const st = cache.statFile(io, rel, .{}) catch return false;
+    return st.size == entry.size;
 }
 
 fn matches(io: Io, cache: Io.Dir, rel: []const u8, entry: IndexEntry) !bool {
@@ -540,7 +604,7 @@ test "index, refresh from a local repository, and fetch a package" {
     var cache = try tmp.dir.openDir(io, "cache", .{});
     defer cache.close(io);
     try stage.writeFile(io, .{ .sub_path = "usr/bin/hello", .data = "hello\n" });
-    _ = try archive.pack(arena, io, .{ .meta = .{ .name = "hello", .version = "1.0-r1", .depends = &.{"glibc"} }, .src = stage, .out_dir = repo_dir });
+    _ = try archive.pack(arena, io, .{ .meta = .{ .name = "hello", .version = "1.0-r1", .license = "MIT", .depends = &.{"glibc"} }, .src = stage, .out_dir = repo_dir });
 
     const key = generateKey(io);
     try testing.expectEqual(@as(usize, 1), try writeIndex(testing.allocator, arena, io, repo_dir, &key.secret_hex));
@@ -554,8 +618,22 @@ test "index, refresh from a local repository, and fetch a package" {
     try testing.expectEqual(@as(usize, 1), candidates.len);
     try testing.expectEqualStrings("hello", candidates[0].entry.name);
     try testing.expectEqualStrings("glibc", candidates[0].entry.depends[0]);
+    try testing.expectEqualStrings("MIT", candidates[0].entry.license);
+    try testing.expectEqual(@as(?u64, 6), candidates[0].entry.installed_size);
+    try testing.expectEqualStrings("test", candidates[0].repo_name);
+    try testing.expect(!isCached(io, cache, candidates[0].entry));
 
-    const rel = try ensurePackage(testing.allocator, arena, io, candidates[0], cache);
+    const Seen = struct {
+        bytes: u64 = 0,
+        fn report(ctx: *anyopaque, bytes: u64) void {
+            const self: *@This() = @ptrCast(@alignCast(ctx));
+            self.bytes = bytes;
+        }
+    };
+    var seen: Seen = .{};
+    const rel = try ensurePackage(testing.allocator, arena, io, candidates[0], cache, .{ .progress = .{ .context = &seen, .report = Seen.report } });
+    try testing.expectEqual(candidates[0].entry.size, seen.bytes);
+    try testing.expect(isCached(io, cache, candidates[0].entry));
     const m = try archive.readManifestOf(testing.allocator, arena, io, cache, rel);
     try testing.expectEqualStrings("1.0-r1", m.version);
 
@@ -569,5 +647,15 @@ test "index, refresh from a local repository, and fetch a package" {
     _ = try writeIndex(testing.allocator, arena, io, repo_dir, &key.secret_hex);
     try cache.deleteFile(io, rel);
     try repo_dir.writeFile(io, .{ .sub_path = candidates[0].entry.filename, .data = "tampered" });
-    try testing.expectError(error.ChecksumMismatch, ensurePackage(testing.allocator, arena, io, candidates[0], cache));
+    try testing.expectError(error.ChecksumMismatch, ensurePackage(testing.allocator, arena, io, candidates[0], cache, .{}));
+}
+
+test "an index from an older dave is read" {
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const index = try manifest_mod.parseZon(Index, arena_state.allocator(),
+        \\.{ .packages = .{ .{ .name = "hello", .version = "1.0-r1", .filename = "hello-1.0-r1-x86_64.dave", .size = 10, .sha256 = "ab" } } }
+    );
+    try testing.expectEqual(@as(?u64, null), index.packages[0].installed_size);
+    try testing.expectEqualStrings("", index.packages[0].license);
 }

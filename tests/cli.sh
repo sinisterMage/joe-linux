@@ -15,6 +15,16 @@ expect() { # expect <description> <needle> <<< haystack
     local text; text=$(cat)
     grep -qF -- "$2" <<<"$text" || fail "$1: expected '$2' in: $text"
 }
+expect_re() { # expect_re <description> <extended regex> <<< haystack
+    local text; text=$(cat)
+    grep -qE -- "$2" <<<"$text" || fail "$1: expected /$2/ in: $text"
+}
+refuse() { # refuse <description> <needle> <<< haystack
+    local text; text=$(cat)
+    ! grep -qF -- "$2" <<<"$text" || fail "$1: did not expect '$2' in: $text"
+}
+
+declare -A about=([hello]="says hello" [libgreet]="greetings for hello" [tree]="lists directories")
 
 # make_pkg <name> <version> <file> <content> [depends...]
 make_pkg() {
@@ -24,7 +34,8 @@ make_pkg() {
     printf '%s\n' "$content" > "$stage/$file"
     local deps=()
     for d in "$@"; do deps+=(--depends "$d"); done
-    "$dave" pack --name "$name" --version "$version" --out "$work/repo" "${deps[@]}" "$stage" >/dev/null
+    "$dave" pack --name "$name" --version "$version" --license MIT --description "${about[$name]:-}" \
+        --out "$work/repo" "${deps[@]}" "$stage" >/dev/null
 }
 
 "$dave" key generate "$work/signing" >/dev/null
@@ -34,6 +45,47 @@ cat > root/etc/dave/repos.zon <<EOF
 EOF
 D=("$dave" --root "$work/root")
 
+echo "== help and version"
+"$dave" | expect "overview" "Run 'dave help <command>'"
+"$dave" --help | expect "--help" "Finding out"
+"$dave" -h | expect "-h" "Every command takes"
+"$dave" | refuse "hidden commands" "  finalize"
+"$dave" help install | expect "help install" "Usage: dave install [options] <package>..."
+"$dave" install --help | expect "install --help" "--dry-run"
+"$dave" remove -h | expect "remove -h" "Usage: dave remove"
+"$dave" help finalize | expect "hidden commands" "dave-finalize.service"
+version=$("$dave" version)
+[[ $version =~ ^dave\ [0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "dave version says: $version"
+[[ $("$dave" --version) == "$version" && $("$dave" -V) == "$version" && $("$dave" install --version) == "$version" ]] ||
+    fail "--version, -V and dave version disagree"
+if [[ -z ${DAVE:-} ]]; then
+    # What `dave version` says, what the package is and what the release is
+    # named after must agree; tests/vm/live.py checks the same in a VM.
+    packaged=$(sed -n 's/^ *\.version = "\(.*\)",/\1/p' "$top/packages/dave/package.zon")
+    released=$(sed -n 's/.*local kernel=[^ ]* dave=\([^ ]*\).*/\1/p' "$top/packages/joe-release/build.sh")
+    [[ $version == "dave $packaged" && $packaged == "$released" ]] ||
+        fail "dave's version: the binary says '$version', packages/dave '$packaged', joe-release '$released'"
+fi
+out=$("$dave" isntall hello 2>&1) && fail "accepted a mistyped command"
+expect "command suggestion" "did you mean 'install'?" <<<"$out"
+out=$("$dave" help isntall 2>&1) && fail "explained a mistyped command"
+expect "help suggestion" "did you mean 'install'?" <<<"$out"
+out=$("$dave" install --dryrun hello 2>&1) && fail "accepted a mistyped option"
+expect "option suggestion" "did you mean --dry-run?" <<<"$out"
+out=$("$dave" list --disk x 2>&1) && fail "accepted another command's option"
+expect "scoped option" "list does not take --disk (it is for install-system)" <<<"$out"
+out=$("$dave" list --root 2>&1) && fail "accepted an option without its value"
+expect "missing value" "--root needs a value (DIR)" <<<"$out"
+
+echo "== the manual page names every command and option"
+man=$top/dave/share/dave.8
+for cmd in $("$dave" complete 1 dave "" | cut -f1); do
+    grep -qE "^\.B[IR]? \"?$cmd( |\"|$)" "$man" || fail "dave.8 does not describe $cmd"
+    for option in $("$dave" help "$cmd" | grep -oE -- '--[a-z][a-z-]*' | sort -u); do
+        grep -qF -- "${option//-/\\-}" "$man" || fail "dave.8 does not describe $option (of $cmd)"
+    done
+done
+
 make_pkg libgreet 1.0-r1 usr/lib/libgreet.txt "greet v1"
 make_pkg hello 1.0-r1 usr/bin/hello "hello v1" "libgreet >=1.0"
 make_pkg tree 2.2-r1 usr/bin/tree "tree"
@@ -41,13 +93,67 @@ make_pkg broken 1.0-r1 usr/bin/broken "x" "libgreet >=9"
 "$dave" repo index "$work/repo" --key "$work/signing.key" | expect "index" "Indexed 4 package(s)."
 
 echo "== install pulls in dependencies"
-"${D[@]}" install hello | expect "plan" "install  libgreet  1.0-r1"
+out=$("${D[@]}" install hello)
+expect_re "plan" '^  hello +1\.0-r1$' <<<"$out"
+expect_re "plan" '^  libgreet +1\.0-r1 +\(dependency\)$' <<<"$out"
+expect "plan summary" "2 to install." <<<"$out"
 [[ $(cat root/usr/bin/hello) == "hello v1" ]] || fail "hello not installed"
 [[ $(cat root/usr/lib/libgreet.txt) == "greet v1" ]] || fail "dependency not installed"
 "${D[@]}" list | expect "list" "libgreet 1.0-r1  (dependency)"
 "${D[@]}" list | expect "list" "hello 1.0-r1"
 [[ $(cat root/etc/dave/world) == "hello" ]] || fail "world not recorded"
 "${D[@]}" install hello | expect "idempotent" "Already installed."
+
+echo "== questions about what is installed"
+"${D[@]}" list --requested | expect "list --requested" "hello 1.0-r1"
+"${D[@]}" list --requested | refuse "list --requested" "libgreet"
+out=$("${D[@]}" info libgreet)
+expect_re "info" '^Installed +1\.0-r1, because hello needs it$' <<<"$out"
+expect_re "info" '^Available +1\.0-r1, from test$' <<<"$out"
+expect_re "info" '^Required by +hello$' <<<"$out"
+expect_re "info" '^Licence +MIT$' <<<"$out"
+out=$("${D[@]}" info tree)
+expect_re "info, not installed" '^Installed +no$' <<<"$out"
+expect_re "info, not installed" '^Installed size +5 B$' <<<"$out"
+out=$("${D[@]}" info helo 2>&1) && fail "described a package that does not exist"
+expect "info suggestion" "did you mean hello?" <<<"$out"
+out=$("${D[@]}" search hello)
+[[ $(head -n1 <<<"$out") =~ ^hello\ +1\.0-r1\ +\[installed\]\ +says\ hello$ ]] || fail "search: the name match is not first: $out"
+expect "search by description" "libgreet" <<<"$out"
+out=$("${D[@]}" search hello greet)
+[[ $out =~ ^libgreet\  && $(wc -l <<<"$out") -eq 1 ]] || fail "search hello greet: $out"
+out=$("${D[@]}" search nothing-like-this 2>&1) && fail "a search without a match succeeded"
+expect "search, no match" "no package matches nothing-like-this" <<<"$out"
+"${D[@]}" files hello | expect "files" "/usr/bin/hello"
+"${D[@]}" files hello | expect "files, directories" "/usr/bin/"
+"${D[@]}" owns /usr/bin/hello | expect "owns" "/usr/bin/hello is owned by hello 1.0-r1."
+ln -s usr/bin root/bin
+"${D[@]}" owns /bin/hello | expect "owns, through a link" "/bin/hello (/usr/bin/hello) is owned by hello 1.0-r1."
+rm root/bin
+"${D[@]}" owns /usr | expect "owns, shared" "/usr is a directory shared by 2 packages: hello and libgreet."
+out=$("${D[@]}" owns /etc/nothing 2>&1) && fail "owns found an owner for nothing"
+expect "owns, nothing" "no installed package owns /etc/nothing" <<<"$out"
+"${D[@]}" why libgreet | expect "why" "libgreet is here because you asked for hello, which needs it."
+"${D[@]}" why hello | expect "why, requested" "hello is here because you asked for it."
+
+echo "== mistakes are caught before anything changes"
+out=$("${D[@]}" install helo 2>&1) && fail "installed a mistyped package"
+expect "package suggestion" "no package named helo exists; did you mean hello?" <<<"$out"
+out=$("${D[@]}" remove helo 2>&1) && fail "removed a package that is not installed"
+expect "remove suggestion" "helo is not installed; did you mean hello?" <<<"$out"
+"${D[@]}" install --dry-run tree | expect_re "dry run" '^  tree +2\.2-r1$'
+[[ ! -e root/usr/bin/tree ]] || fail "a dry run installed tree"
+[[ $(cat root/etc/dave/world) == "hello" ]] || fail "a dry run changed the world"
+mkdir -p fresh/etc/dave
+cp -r root/etc/dave/keys root/etc/dave/repos.zon fresh/etc/dave/
+"$dave" --root fresh --dry-run install tree | expect_re "dry run, nothing fetched yet" '^  tree +2\.2-r1$'
+[[ ! -e fresh/usr/bin/tree && ! -e fresh/etc/dave/world ]] || fail "a dry run changed a fresh root"
+if [[ $(id -u) -ne 0 ]]; then
+    out=$("$dave" install hello 2>&1) && fail "installed into / without root"
+    expect "root" "installing packages needs root; run it with sudo: sudo dave install hello" <<<"$out"
+    out=$("$dave" rollback 2>&1) && fail "rolled back without root"
+    expect "root" "sudo dave rollback" <<<"$out"
+fi
 
 echo "== an impossible request is explained and changes nothing"
 out=$("${D[@]}" install broken 2>&1) && fail "impossible install succeeded"
@@ -62,19 +168,88 @@ echo "== upgrade moves to the newest versions"
 make_pkg libgreet 1.1-r1 usr/lib/libgreet.txt "greet v1.1"
 make_pkg hello 2.0-r1 usr/bin/hello "hello v2" "libgreet >=1.1"
 "$dave" repo index "$work/repo" --key "$work/signing.key" >/dev/null
-"${D[@]}" install tree | expect "no unrelated upgrades" "install  tree  2.2-r1"
+"${D[@]}" install tree | expect_re "no unrelated upgrades" '^  tree +2\.2-r1$'
 [[ $(cat root/usr/bin/hello) == "hello v1" ]] || fail "install upgraded an unrelated package"
-"${D[@]}" upgrade | expect "upgrade" "upgrade  hello  1.0-r1 -> 2.0-r1"
+"${D[@]}" upgrade --check | expect_re "upgrade --check" '^  hello +1\.0-r1 -> 2\.0-r1$'
+[[ $(cat root/usr/bin/hello) == "hello v1" ]] || fail "upgrade --check upgraded"
+"${D[@]}" upgrade | expect_re "upgrade" '^  hello +1\.0-r1 -> 2\.0-r1$'
 [[ $(cat root/usr/bin/hello) == "hello v2" ]] || fail "hello not upgraded"
 [[ $(cat root/usr/lib/libgreet.txt) == "greet v1.1" ]] || fail "libgreet not upgraded"
 "${D[@]}" upgrade | expect "up to date" "Everything is up to date."
 
 echo "== remove takes orphaned dependencies along"
 out=$("${D[@]}" remove libgreet 2>&1) && fail "removed a dependency directly"
-expect "dependency" "another package needs it" <<<"$out"
-"${D[@]}" remove hello | expect "orphan" "remove   libgreet  1.1-r1"
+expect "dependency" "libgreet was not installed by request; it is here because hello needs it" <<<"$out"
+"${D[@]}" remove hello | expect_re "orphan" '^  libgreet +1\.1-r1 +\(no longer needed\)$'
 [[ ! -e root/usr/bin/hello && ! -e root/usr/lib/libgreet.txt ]] || fail "files left behind"
 [[ -e root/usr/bin/tree ]] || fail "unrelated package removed"
+
+echo "== shell completion"
+completing() { "$dave" complete "$@" | cut -f1; }
+[[ $(completing 1 dave inf) == info ]] || fail "completing a command: $(completing 1 dave inf)"
+completing 4 dave --root "$work/root" install "" | expect "available packages" "hello"
+[[ $(completing 4 dave --root "$work/root" remove "") == tree ]] || fail "completing what can be removed"
+completing 2 dave install --dr | expect "options" "--dry-run"
+[[ $(completing 2 dave owns /u) == :files ]] || fail "completing a path"
+[[ -z $(completing 3 dave deployments pin "") ]] || fail "completed a deployment id"
+share=$top/dave/share
+bash -n "$share/completion.bash"
+if command -v zsh >/dev/null; then zsh -n "$share/completion.zsh"; fi
+if command -v fish >/dev/null; then fish --no-execute "$share/completion.fish"; fi
+out=$(PATH=$(dirname "$dave"):$PATH bash -c 'source "$1"; COMP_WORDS=(dave --root "$2" install he); COMP_CWORD=4; _dave
+    printf "%s\n" "${COMPREPLY[@]}"' _ "$share/completion.bash" "$work/root")
+[[ $out == hello ]] || fail "bash completion of 'install he': $out"
+
+echo "== questions and colour on a terminal"
+mkdir -p "$work/bin"
+cat > "$work/bin/tty.py" <<'EOF'
+# tty.py ANSWER COMMAND...: runs COMMAND on a pseudo-terminal, typing ANSWER
+# (y or n) if it asks "[Y/n]". With ANSWER "none", a question is answered n
+# and reported. Prints what COMMAND wrote and exits with its status.
+import os, pty, sys
+answer, *argv = sys.argv[1:]
+pid, fd = pty.fork()
+if pid == 0:
+    os.execvp(argv[0], argv)
+out, asked = b"", False
+while True:
+    try:
+        data = os.read(fd, 4096)
+    except OSError:
+        break
+    if not data:
+        break
+    out += data
+    if not asked and b"[Y/n]" in out:
+        asked = True
+        os.write(fd, (b"n" if answer == "none" else answer.encode()) + b"\n")
+_, status = os.waitpid(pid, 0)
+sys.stdout.write(out.decode(errors="replace").replace("\r\n", "\n"))
+if answer == "none" and asked:
+    print("UNEXPECTED QUESTION")
+sys.exit(os.waitstatus_to_exitcode(status))
+EOF
+on_tty() { python3 -I "$work/bin/tty.py" "$@"; }
+mkdir -p tty/etc/dave
+cp -r root/etc/dave/keys root/etc/dave/repos.zon tty/etc/dave/
+out=$(TERM=dumb on_tty n "${D[0]}" --root tty install hello) && fail "went ahead after being told no"
+expect "declined" "Continue? [Y/n]" <<<"$out"
+expect "declined" "Nothing was changed." <<<"$out"
+[[ ! -e tty/usr/bin/hello && ! -e tty/etc/dave/world ]] || fail "a declined install changed the root"
+out=$(TERM=dumb on_tty none "${D[0]}" --root tty install tree)
+refuse "exactly what was named" "UNEXPECTED QUESTION" <<<"$out"
+[[ -e tty/usr/bin/tree ]] || fail "tree was not installed"
+out=$(TERM=xterm on_tty none "${D[0]}" --root tty install -y hello)
+refuse "--yes" "UNEXPECTED QUESTION" <<<"$out"
+[[ $out == *$'\e[32m'* ]] || fail "no colour on a terminal: $out"
+[[ -e tty/usr/bin/hello ]] || fail "hello was not installed"
+out=$(NO_COLOR=1 TERM=xterm on_tty none "${D[0]}" --root tty info hello)
+[[ $out != *$'\e['* ]] || fail "colour despite NO_COLOR: $out"
+out=$(TERM=dumb on_tty y "${D[0]}" --root tty remove hello)
+expect "asked, as libgreet goes too" "Continue? [Y/n]" <<<"$out"
+[[ $out != *$'\e['* ]] || fail "escape sequences for TERM=dumb: $out"
+[[ ! -e tty/usr/bin/hello && ! -e tty/usr/lib/libgreet.txt ]] || fail "the removal answered yes did not happen"
+CLICOLOR_FORCE=1 "$dave" --root tty info tree | expect "CLICOLOR_FORCE" $'\e[1m'
 
 echo "== repositories over http and https"
 for tool in openssl python3 bwrap; do
@@ -130,11 +305,11 @@ trusting_test_ca() { # the command, with the test authority as the only trusted 
 }
 
 net_root net-http "http://127.0.0.1:$http_port"
-"$dave" --root net-http install hello | expect "http" "install  hello  2.0-r1"
+"$dave" --root net-http install hello | expect_re "http" '^  hello +2\.0-r1$'
 [[ $(cat net-http/usr/bin/hello) == "hello v2" ]] || fail "nothing installed over http"
 
 net_root net-https "https://127.0.0.1:$here_port/"
-trusting_test_ca "$dave" --root net-https install hello | expect "https" "install  hello  2.0-r1"
+trusting_test_ca "$dave" --root net-https install hello | expect_re "https" '^  hello +2\.0-r1$'
 [[ $(cat net-https/usr/bin/hello) == "hello v2" ]] || fail "nothing installed over https"
 
 net_root net-untrusted "https://127.0.0.1:$here_port"
@@ -146,6 +321,13 @@ net_root net-wrong-name "https://127.0.0.1:$elsewhere_port"
 out=$(trusting_test_ca "$dave" --root net-wrong-name install hello 2>&1) && fail "accepted a certificate for another name"
 expect "wrong name" "cannot connect securely" <<<"$out"
 [[ ! -e net-wrong-name/usr/bin/hello ]] || fail "installed from a server with another name's certificate"
+
+net_root net-refused "http://127.0.0.1:1"
+out=$("$dave" --root net-refused install hello 2>&1) && fail "installed from a server that is not there"
+expect "refused" "the connection was refused" <<<"$out"
+net_root net-missing "http://127.0.0.1:$http_port/nowhere"
+out=$("$dave" --root net-missing install hello 2>&1) && fail "installed from a repository that is not there"
+expect "not found" "nowhere/repo.zon answered 404 Not Found" <<<"$out"
 kill $server
 
 echo "== a tampered index is refused"

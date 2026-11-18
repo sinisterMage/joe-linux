@@ -54,11 +54,16 @@ computers are a work in progress; see [Not done yet](#not-done-yet).
 
 ```
 dave install tree     Installs now. The system as it was is kept as a
-                      bootable deployment first, so there is a way back.
+                      bootable deployment first, so there is a way back. When
+                      more would change than you named (dependencies come in,
+                      other packages are upgraded or removed), dave shows the
+                      plan and asks first; -y answers for you.
 
 dave upgrade          Works out and downloads the upgrade and proves it applies
                       cleanly to a copy of the system. Changes nothing you can
                       see. The upgrade is applied when the machine shuts down.
+
+dave upgrade --check  What an upgrade would change, without preparing it.
 
 dave rollback         The previous system starts on the next boot, and on every
                       boot after it. Says so if someone has been given an
@@ -66,8 +71,38 @@ dave rollback         The previous system starts on the next boot, and on every
                       /etc, which belongs to each system.
 
 dave status           What is running, what will start next, what is pending.
-                      Needs no sudo, nor do list, info, search and deployments.
+
+dave info tree        Installed and available versions, licence, sizes, what it
+                      needs, what needs it, and why it is installed.
+
+dave search a b       The packages matching every word; name matches first.
+
+dave why zlib         The shortest chain from something you asked for.
+
+dave owns /bin/sh     The package a file belongs to, resolving /bin and /lib
+                      as the system does. dave files lists a package's files.
+
+dave help install     Every command explains itself; dave(8) has the rest, and
+                      bash, zsh and fish complete commands and package names.
 ```
+
+Only changing the system needs root: status, list, info, search, files, owns,
+why, deployments and `upgrade --check` work for everyone. Before anything
+changes, dave shows the plan:
+
+```
+Install
+  babl  0.1.128-r1  (dependency)
+  gegl  0.4.72-r2   (dependency)
+  gimp  3.2.8-r2
+
+3 to install. 27.0 MiB to download; 112.4 MiB more disk space will be used.
+Continue? [Y/n]
+```
+
+On a terminal there is colour, and a line that shows downloads and progress
+as they happen; `NO_COLOR` turns the colour off. Output to a pipe or a file
+stays plain lines.
 
 When a request cannot be satisfied, dave says why:
 

@@ -77,6 +77,15 @@ pub const Manifest = struct {
         try w.writeByte('\n');
     }
 
+    /// The bytes its regular files take; a hard link adds nothing.
+    pub fn installedSize(m: Manifest) u64 {
+        var total: u64 = 0;
+        for (m.files) |f| {
+            if (f.kind == .file) total += f.size;
+        }
+        return total;
+    }
+
     /// `name-version-arch.dave`
     pub fn fileName(m: Manifest, arena: Allocator) Allocator.Error![]const u8 {
         return std.fmt.allocPrint(arena, "{s}-{s}-{s}.dave", .{ m.name, m.version, m.arch });
@@ -152,6 +161,7 @@ test "round trip" {
     try testing.expectEqual(FileKind.symlink, parsed.files[2].kind);
     try testing.expectEqualStrings("hello", parsed.files[2].target.?);
     try testing.expectEqual(@as(u32, 0o755), parsed.files[1].mode);
+    try testing.expectEqual(@as(u64, 5), parsed.installedSize());
 }
 
 test "rejects hostile input" {

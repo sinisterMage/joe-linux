@@ -81,7 +81,9 @@ def check_live(vm, medium_device):
     vm.run("mkdir -p /tmp/check/etc/dave/keys && cp /etc/dave/keys/* /tmp/check/etc/dave/keys/ && "
            "printf '.{ .repos = .{ .{ .name = \"joe\", .url = \"/run/live/medium/joe/repos/joe\" } } }' > /tmp/check/etc/dave/repos.zon")
     plan = vm.run("dave --root /tmp/check --cache /tmp/check-cache --dry-run install joe-desktop", timeout=300)
-    assert "install  joe-desktop" in plan, plan
+    # Either form of the plan: the medium runs the packaged dave, which may
+    # be older than the one in this tree.
+    assert re.search(r"^\s+(install\s+)?joe-desktop\s", plan, re.M), plan
 
     step("Wi-Fi, as far as a virtual machine can show it")
     # Simulated radios: the kernel's wireless stack and the signed regulatory
