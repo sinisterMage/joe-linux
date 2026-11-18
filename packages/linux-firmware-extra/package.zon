@@ -1,0 +1,14 @@
+.{
+    .name = "linux-firmware-extra",
+    // The same source as linux-firmware; the two must be the same version.
+    .version = "20261019",
+    .release = 1,
+    .description = "Firmware PCs do not need: Qualcomm Arm systems on chips, and server network and switch chips",
+    .license = "LicenseRef-linux-firmware",
+    .sources = .{
+        .{ .url = "https://cdn.kernel.org/pub/linux/kernel/firmware/linux-firmware-20261019.tar.xz", .sha256 = "a10d1ab5baf2c74ba92e8c7cf313e691696c26bddfa6df00db795e48d70cd4ca" },
+    },
+    // Its licences (WHENCE, LICENCE.*) are installed with linux-firmware.
+    .depends = .{"linux-firmware =20261019"},
+    .build_depends = .{"zstd"},
+}

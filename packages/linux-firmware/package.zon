@@ -1,8 +1,9 @@
 .{
     .name = "linux-firmware",
     .version = "20261019",
-    .release = 1,
+    .release = 2,
     .description = "Firmware for the devices whose drivers load it: graphics, Wi-Fi, Bluetooth and more",
+    // What PCs do not have is in linux-firmware-extra; see build.sh.
     .license = "LicenseRef-linux-firmware",
     .sources = .{
         .{ .url = "https://cdn.kernel.org/pub/linux/kernel/firmware/linux-firmware-20261019.tar.xz", .sha256 = "a10d1ab5baf2c74ba92e8c7cf313e691696c26bddfa6df00db795e48d70cd4ca" },
