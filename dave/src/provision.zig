@@ -19,6 +19,18 @@
 //! The partition type matters beyond tidiness: joe-base's repart.d grows the
 //! partition of type "root" over free space at every boot. A root that fills
 //! its disk is left alone; one of another type would get a sibling.
+//!
+//! Beside another operating system (`Beside`), joe takes one stretch of free
+//! space and touches nothing else. It shares the disk's existing ESP, where
+//! systemd-boot finds the other system (Windows' boot manager, by itself) and
+//! offers both in its menu; the ESP gets only the boot loader, which is small,
+//! and never anything the other system put there. Kernels and boot entries go
+//! on an extended boot loader partition (XBOOTLDR) of joe's own, the first
+//! part of the free space, which systemd-boot reads as it reads the ESP:
+//!
+//!   existing     EFI system partition, shared: systemd-boot
+//!   free space   XBOOTLDR (FAT32): kernels, entries
+//!                btrfs root, laid out as above
 
 const std = @import("std");
 const Io = std.Io;
@@ -36,6 +48,12 @@ pub const first_deployment_path = "joe/deploy/1";
 pub const shared_subvolumes = deploy.shared_subvolumes;
 /// Where the ESP is mounted in every deployment (main.zig expects it there).
 pub const esp_mount = "efi";
+pub const xbootldr_type = "BC13C2FF-59E6-4262-A352-B275FD6F7172";
+pub const xbootldr_label = "JOE-BOOT";
+/// Where the XBOOTLDR partition is mounted, when there is one; dave finds it
+/// there (main.zig) and systemd looks for it there.
+pub const xbootldr_mount = "boot";
+pub const default_xbootldr_size: u64 = 1024 * mib;
 
 pub const mib: u64 = 1024 * 1024;
 /// Partitions start on a 1 MiB boundary, as every partitioning tool does;
@@ -99,6 +117,50 @@ pub const Plan = struct {
     }
 };
 
+/// A joe system in the free space of a disk another system already uses.
+pub const Beside = struct {
+    /// The disk's existing EFI system partition, which joe shares.
+    esp_uuid: Uuid,
+    xbootldr_uuid: Uuid,
+    root_uuid: Uuid,
+    /// The free space joe takes, in bytes from the start of the disk; whole
+    /// MiB.
+    start: u64,
+    size: u64,
+    xbootldr_size: u64 = default_xbootldr_size,
+
+    pub fn new(io: Io, esp_uuid: Uuid, start: u64, size: u64) Beside {
+        return .{ .esp_uuid = esp_uuid, .xbootldr_uuid = newUuid(io), .root_uuid = newUuid(io), .start = start, .size = size };
+    }
+
+    pub fn rootOffset(b: Beside) u64 {
+        return b.start + b.xbootldr_size;
+    }
+
+    pub fn rootSize(b: Beside) u64 {
+        return b.size - b.xbootldr_size;
+    }
+};
+
+/// The smallest free space joe can be installed into: a boot partition and
+/// a root a little larger than a whole disk must be.
+pub const min_beside_size: u64 = 22 * 1000 * 1000 * 1000;
+
+/// Input for `sfdisk --append` adding joe's two partitions to a disk's
+/// existing table, inside the free space and nowhere else.
+pub fn sfdiskAppendScript(arena: Allocator, b: Beside) ![]const u8 {
+    std.debug.assert(b.start % mib == 0 and b.size % mib == 0 and b.size >= min_beside_size);
+    return std.fmt.allocPrint(arena,
+        \\start={d}KiB, size={d}KiB, type={s}, uuid={s}, name="joe-boot"
+        \\start={d}KiB, size={d}KiB, type={s}, uuid={s}, name="{s}"
+        \\
+    , .{
+        b.start / 1024,        b.xbootldr_size / 1024, xbootldr_type, b.xbootldr_uuid,
+        b.rootOffset() / 1024, b.rootSize() / 1024,    root_type,     b.root_uuid,
+        root_label,
+    });
+}
+
 /// Input for sfdisk(8) creating the partition table. Sizes are in KiB rather
 /// than sectors so that the same text is right for 512-byte and 4096-byte
 /// sector disks.
@@ -122,12 +184,23 @@ pub fn sfdiskScript(arena: Allocator, plan: Plan) ![]const u8 {
 /// The deployment's fstab. The root itself is deliberately absent: it comes
 /// from the kernel command line.
 pub fn fstab(arena: Allocator, plan: Plan) ![]const u8 {
-    return std.fmt.allocPrint(arena,
+    return fstabFor(arena, plan.root_uuid, plan.esp_uuid, null);
+}
+
+/// fstab beside another system: the shared ESP, and joe's boot partition.
+pub fn fstabBeside(arena: Allocator, b: Beside) ![]const u8 {
+    return fstabFor(arena, b.root_uuid, b.esp_uuid, b.xbootldr_uuid);
+}
+
+fn fstabFor(arena: Allocator, root: Uuid, esp: Uuid, xbootldr: ?Uuid) ![]const u8 {
+    const base = try std.fmt.allocPrint(arena,
         \\PARTUUID={s}  /var   btrfs  subvol=var,noatime   0 0
         \\PARTUUID={s}  /home  btrfs  subvol=home,noatime  0 0
         \\PARTUUID={s}  /efi   vfat   umask=0077           0 2
         \\
-    , .{ plan.root_uuid, plan.root_uuid, plan.esp_uuid });
+    , .{ root, root, esp });
+    const x = xbootldr orelse return base;
+    return std.fmt.allocPrint(arena, "{s}PARTUUID={s}  /boot  vfat   umask=0077           0 2\n", .{ base, x });
 }
 
 /// The first deployment's kernel command line. Later deployments copy it with
@@ -135,8 +208,12 @@ pub fn fstab(arena: Allocator, plan: Plan) ![]const u8 {
 /// stays for the life of the installation. `extra` is appended as given.
 /// loglevel=4: errors and worse reach the console; the rest is in the journal.
 pub fn cmdline(arena: Allocator, plan: Plan, extra: []const u8) ![]const u8 {
+    return cmdlineFor(arena, plan.root_uuid, extra);
+}
+
+pub fn cmdlineFor(arena: Allocator, root_uuid: Uuid, extra: []const u8) ![]const u8 {
     const base = try std.fmt.allocPrint(arena, "root=PARTUUID={s} rootfstype=btrfs rootflags=subvol=" ++
-        first_deployment_path ++ " rw rootwait panic=10 loglevel=4", .{plan.root_uuid});
+        first_deployment_path ++ " rw rootwait panic=10 loglevel=4", .{root_uuid});
     const trimmed = std.mem.trim(u8, extra, " \t\n");
     if (trimmed.len == 0) return base;
     return std.fmt.allocPrint(arena, "{s} {s}", .{ base, trimmed });
@@ -158,6 +235,8 @@ pub fn consoleArgs(arena: Allocator, line: []const u8) ![]const u8 {
 }
 
 pub const loader_conf = "timeout 0\neditor no\n";
+/// Beside another system the menu shows, so that it can be chosen.
+pub const beside_loader_conf = "timeout 5\neditor no\n";
 pub const entries_srel = "type1\n";
 
 pub const EspSource = struct {
@@ -178,17 +257,48 @@ pub fn writeEsp(arena: Allocator, io: Io, esp: Io.Dir, source: EspSource, option
         try source.root.copyFile(source.loader_path, esp, target, io, .{});
     }
     try esp.createDirPath(io, "loader");
-    try esp.writeFile(io, .{ .sub_path = "loader/entries.srel", .data = entries_srel });
     try esp.writeFile(io, .{ .sub_path = "loader/loader.conf", .data = loader_conf });
-    const kernel = try boot.installKernel(arena, io, esp, source.root, source.kernel_path);
+    try writeEntries(arena, io, esp, source, options);
+}
+
+/// Writes a new installation's boot files beside another system: on the
+/// shared `esp`, systemd-boot where the ESP has none (or an older one, which
+/// boot.updateLoader replaces) and loader.conf where there is none; on
+/// joe's own `xbootldr`, the kernel and the first entry. Nothing another
+/// system put on the ESP is replaced: the firmware's fallback path, another
+/// boot loader, another systemd-boot's settings.
+pub fn writeBeside(arena: Allocator, io: Io, esp: Io.Dir, xbootldr: Io.Dir, source: EspSource, options: []const u8) !void {
+    for (boot.loader_targets) |target| {
+        if (esp.statFile(io, target, .{})) |_| continue else |err| switch (err) {
+            error.FileNotFound => {},
+            else => return err,
+        }
+        try esp.createDirPath(io, std.fs.path.dirname(target).?);
+        try source.root.copyFile(source.loader_path, esp, target, io, .{});
+    }
+    _ = try boot.updateLoader(arena, io, esp, source.root);
+    try esp.createDirPath(io, "loader");
+    if (esp.statFile(io, "loader/loader.conf", .{})) |_| {} else |err| switch (err) {
+        error.FileNotFound => try esp.writeFile(io, .{ .sub_path = "loader/loader.conf", .data = beside_loader_conf }),
+        else => return err,
+    }
+    try writeEntries(arena, io, xbootldr, source, options);
+}
+
+/// The kernel, microcode and first boot entry, on the partition systemd-boot
+/// reads entries from.
+fn writeEntries(arena: Allocator, io: Io, dir: Io.Dir, source: EspSource, options: []const u8) !void {
+    try dir.createDirPath(io, "loader");
+    try dir.writeFile(io, .{ .sub_path = "loader/entries.srel", .data = entries_srel });
+    const kernel = try boot.installKernel(arena, io, dir, source.root, source.kernel_path);
     // The processor's microcode, if the root has it, is the only initrd.
     var initrds: []const []const u8 = &.{};
     if (source.root.statFile(io, deploy.microcode_path, .{})) |_| {
-        initrds = try arena.dupe([]const u8, &.{try boot.installInitrd(arena, io, esp, source.root, deploy.microcode_path)});
+        initrds = try arena.dupe([]const u8, &.{try boot.installInitrd(arena, io, dir, source.root, deploy.microcode_path)});
     } else |_| {}
     // Uncounted: the first deployment is good by definition, and a rollback
     // point needs a good entry to fall back to.
-    try boot.write(arena, io, esp, .{
+    try boot.write(arena, io, dir, .{
         .id = first_deployment,
         .priority = 1,
         .kernel = kernel,
@@ -294,4 +404,70 @@ test "the ESP of a new installation" {
     try testing.expectEqualStrings("joe-1.conf", entries[0].file_name);
     try testing.expectEqualStrings(options, entries[0].options);
     try testing.expectEqualStrings("kernel", try read(arena, esp, entries[0].kernel[1..]));
+}
+
+test "beside another system: two partitions in the free space, the boot partition mounted" {
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const b: Beside = .{
+        .esp_uuid = "11111111-2222-4333-8444-555555555555".*,
+        .xbootldr_uuid = "77777777-8888-4999-aaaa-bbbbbbbbbbbb".*,
+        .root_uuid = "66666666-7777-4888-9999-aaaaaaaaaaaa".*,
+        .start = 101 * 1024 * mib,
+        .size = 30 * 1024 * mib,
+    };
+    try testing.expectEqualStrings(
+        \\start=105906176KiB, size=1048576KiB, type=BC13C2FF-59E6-4262-A352-B275FD6F7172, uuid=77777777-8888-4999-aaaa-bbbbbbbbbbbb, name="joe-boot"
+        \\start=106954752KiB, size=30408704KiB, type=4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709, uuid=66666666-7777-4888-9999-aaaaaaaaaaaa, name="joe"
+        \\
+    , try sfdiskAppendScript(arena, b));
+    const table = try fstabBeside(arena, b);
+    try testing.expect(std.mem.indexOf(u8, table, "PARTUUID=11111111-2222-4333-8444-555555555555  /efi   vfat") != null);
+    try testing.expect(std.mem.indexOf(u8, table, "PARTUUID=77777777-8888-4999-aaaa-bbbbbbbbbbbb  /boot  vfat   umask=0077") != null);
+    try testing.expect(std.mem.indexOf(u8, try fstab(arena, fixedPlan()), "/boot") == null);
+}
+
+test "beside another system, nothing of the other's is replaced" {
+    const io = testing.io;
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    var tmp = testing.tmpDir(.{ .iterate = true });
+    defer tmp.cleanup();
+    for ([_][]const u8{ "root/usr/lib/modules/7.3.1-joe", "root/usr/lib/systemd/boot/efi", "esp/EFI/BOOT", "esp/EFI/Microsoft/Boot", "xbootldr" }) |d|
+        try tmp.dir.createDirPath(io, d);
+    var root = try tmp.dir.openDir(io, "root", .{ .iterate = true });
+    defer root.close(io);
+    var esp = try tmp.dir.openDir(io, "esp", .{ .iterate = true });
+    defer esp.close(io);
+    var xbootldr = try tmp.dir.openDir(io, "xbootldr", .{ .iterate = true });
+    defer xbootldr.close(io);
+    try root.writeFile(io, .{ .sub_path = "usr/lib/modules/7.3.1-joe/vmlinuz", .data = "kernel" });
+    try root.writeFile(io, .{ .sub_path = boot.loader_source, .data = "MZ #### LoaderInfo: systemd-boot 262.1 ####" });
+    // Windows' boot manager, and its copy at the firmware's fallback path.
+    try esp.writeFile(io, .{ .sub_path = "EFI/Microsoft/Boot/bootmgfw.efi", .data = "MZ windows" });
+    try esp.writeFile(io, .{ .sub_path = "EFI/BOOT/BOOTX64.EFI", .data = "MZ windows" });
+
+    const options = try cmdline(arena, fixedPlan(), "");
+    try writeBeside(arena, io, esp, xbootldr, .{ .root = root, .kernel_path = "usr/lib/modules/7.3.1-joe/vmlinuz" }, options);
+    const read = struct {
+        fn file(a: Allocator, dir: Io.Dir, path: []const u8) ![]const u8 {
+            return dir.readFileAlloc(testing.io, path, a, .limited(1 << 20));
+        }
+    }.file;
+    try testing.expectEqualStrings("MZ windows", try read(arena, esp, "EFI/BOOT/BOOTX64.EFI"));
+    try testing.expectEqualStrings("MZ windows", try read(arena, esp, "EFI/Microsoft/Boot/bootmgfw.efi"));
+    try testing.expect(std.mem.indexOf(u8, try read(arena, esp, boot.loader_targets[0]), "systemd-boot 262.1") != null);
+    try testing.expectEqualStrings(beside_loader_conf, try read(arena, esp, "loader/loader.conf"));
+    // Entries and kernels are on joe's own partition, not the shared one.
+    try testing.expectEqual(@as(usize, 0), (try boot.list(arena, io, esp)).len);
+    const entries = try boot.list(arena, io, xbootldr);
+    try testing.expectEqual(@as(usize, 1), entries.len);
+    try testing.expectEqualStrings("kernel", try read(arena, xbootldr, entries[0].kernel[1..]));
+
+    // Another system's systemd-boot settings stay as they are.
+    try esp.writeFile(io, .{ .sub_path = "loader/loader.conf", .data = "timeout 3\n" });
+    try writeBeside(arena, io, esp, xbootldr, .{ .root = root, .kernel_path = "usr/lib/modules/7.3.1-joe/vmlinuz" }, options);
+    try testing.expectEqualStrings("timeout 3\n", try read(arena, esp, "loader/loader.conf"));
 }

@@ -127,7 +127,9 @@ With
 .BR \-\-list ,
 the disks joe Linux could be installed on; with
 .BR \-\-disk ,
-erase one and install onto it.
+erase one and install onto it, or with
+.B \-\-beside
+install into its free space beside the system already there.
 .SS Help
 .TP
 .BR help " [" \fIcommand\fR ]
@@ -183,6 +185,11 @@ List the disks joe Linux could be installed on.
 Erase
 .I disk
 and install onto it.
+.TP
+.B \-\-beside
+Keep what is on the disk: take its largest free space (22 GB or more) and
+share its EFI system partition, so that the boot menu offers the other
+system too. Nothing is resized; make the space first, in the other system.
 .TP
 .B \-\-json
 Report progress as JSON events, one per line, for a program watching.

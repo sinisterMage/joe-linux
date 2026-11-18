@@ -58,6 +58,14 @@ QVariant DiskModel::data(const QModelIndex &index, int role) const
     case ReasonRole: return d.reason;
     case ContentsRole: return d.contents;
     case SegmentsRole: return d.segments;
+    case LayoutRole: return d.layout;
+    case SelectableRole: return d.usable || d.canBeside;
+    case CanBesideRole: return d.canBeside;
+    case BesideReasonRole: return d.besideReason;
+    case BesideSizeTextRole: return sizeText(d.besideSize);
+    case BesideStartRole: return d.besideStart;
+    case BesideFractionRole: return d.besideFraction;
+    case BesideWhatRole: return d.besideWhat;
     }
     return {};
 }
@@ -75,6 +83,14 @@ QHash<int, QByteArray> DiskModel::roleNames() const
         {ReasonRole, "reason"},
         {ContentsRole, "contents"},
         {SegmentsRole, "segments"},
+        {LayoutRole, "layout"},
+        {SelectableRole, "selectable"},
+        {CanBesideRole, "canBeside"},
+        {BesideReasonRole, "besideReason"},
+        {BesideSizeTextRole, "besideSizeText"},
+        {BesideStartRole, "besideStart"},
+        {BesideFractionRole, "besideFraction"},
+        {BesideWhatRole, "besideWhat"},
     };
 }
 
@@ -93,6 +109,37 @@ void DiskModel::setDisks(const QJsonArray &disks)
         d.removable = o.value(QLatin1String("removable")).toBool();
         d.usable = o.value(QLatin1String("usable")).toBool();
         d.reason = o.value(QLatin1String("reason")).toString();
+        const double size = double(d.size);
+        for (const QJsonValue &p : o.value(QLatin1String("partitions")).toArray()) {
+            const QJsonObject po = p.toObject();
+            const QString kind = po.value(QLatin1String("kind")).toString();
+            QString label = po.value(QLatin1String("label")).toString();
+            if (label.isEmpty())
+                label = kind == QLatin1String("windows") ? QStringLiteral("Windows")
+                      : kind == QLatin1String("esp")     ? QStringLiteral("EFI")
+                                                         : po.value(QLatin1String("fstype")).toString();
+            if (size > 0) {
+                d.layout << QVariantMap{
+                    {QStringLiteral("label"), label},
+                    {QStringLiteral("start"), po.value(QLatin1String("start")).toDouble() / size},
+                    {QStringLiteral("size"), po.value(QLatin1String("size")).toDouble() / size},
+                };
+            }
+        }
+        const QJsonObject beside = o.value(QLatin1String("beside")).toObject();
+        d.canBeside = beside.value(QLatin1String("possible")).toBool();
+        d.besideReason = beside.value(QLatin1String("reason")).toString();
+        d.besideSize = qint64(beside.value(QLatin1String("size")).toDouble());
+        if (size > 0) {
+            d.besideStart = beside.value(QLatin1String("start")).toDouble() / size;
+            d.besideFraction = beside.value(QLatin1String("size")).toDouble() / size;
+        }
+        QStringList systems;
+        for (const QJsonValue &s : beside.value(QLatin1String("systems")).toArray())
+            systems << s.toString();
+        d.besideWhat = systems.isEmpty() ? tr("another system")
+                     : systems.size() == 1 ? systems.first()
+                                           : tr("%1 and %2").arg(systems.mid(0, systems.size() - 1).join(QStringLiteral(", ")), systems.last());
         for (const QJsonValue &c : o.value(QLatin1String("contents")).toArray()) {
             const QJsonObject co = c.toObject();
             const QString label = co.value(QLatin1String("label")).toString();
@@ -109,11 +156,14 @@ void DiskModel::setDisks(const QJsonArray &disks)
         }
         m_disks << d;
     }
-    // Disks that can be used first, the largest first: the likely choice is
-    // at the top.
+    // Disks that can be used first, those joe can share with another
+    // system before them, then the largest: the likely choice is at the top.
     std::stable_sort(m_disks.begin(), m_disks.end(), [](const Disk &a, const Disk &b) {
-        if (a.usable != b.usable)
-            return a.usable;
+        const bool ua = a.usable || a.canBeside, ub = b.usable || b.canBeside;
+        if (ua != ub)
+            return ua;
+        if (a.canBeside != b.canBeside)
+            return a.canBeside;
         return a.size > b.size;
     });
     endResetModel();
@@ -122,7 +172,7 @@ void DiskModel::setDisks(const QJsonArray &disks)
 
 int DiskModel::usableCount() const
 {
-    return int(std::count_if(m_disks.begin(), m_disks.end(), [](const Disk &d) { return d.usable; }));
+    return int(std::count_if(m_disks.begin(), m_disks.end(), [](const Disk &d) { return d.usable || d.canBeside; }));
 }
 
 int DiskModel::indexOfPath(const QString &path) const

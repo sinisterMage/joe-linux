@@ -30,7 +30,14 @@ joe Linux builds from source into two systems that boot in a virtual machine:
   weather, clocks, calculator), with fonts for most scripts, spell checking
   and the common media codecs, and printing, Bluetooth (headsets included)
   and mobile broadband. `make test-desktop` starts every one of them, with
-  the security module both logging and enforcing.
+  the security module both logging and enforcing. It is laid out like
+  Windows, entirely with upstream GNOME Shell extensions and ordinary
+  settings: a taskbar along the bottom (Dash to Panel) with a start menu
+  (ArcMenu) and tray icons (AppIndicator), icons on the desktop (DING),
+  minimize and maximize buttons, Papirus icons, GTK 3 applications styled
+  to match the rest (adw-gtk3), and joe's teal accent and wallpaper. Each
+  piece is an ordinary extension or setting, which `gnome-extensions
+  disable` or Settings turns back to plain GNOME.
 
 The repository also provides packages beyond those images, a `dave install`
 away. That covers development tools and
@@ -47,7 +54,8 @@ defaults.
 The desktop can be lived in as a virtual machine that keeps its disk: the
 first boot asks who you are, and upgrades come from the build machine. See
 [Living in it](#living-in-it). It can also be installed, from a live medium
-whose installer erases a whole disk; see [Installing](#installing). Real
+whose installer puts it beside Windows (or another system) in free space, or
+on a whole disk; see [Installing](#installing). Real
 computers are a work in progress; see [Not done yet](#not-done-yet).
 
 ## How it behaves
@@ -260,10 +268,22 @@ make test-install          install from it onto an empty disk, then boot that
 The medium is a hybrid ISO for UEFI computers (Secure Boot off): write it to a
 USB stick or attach it to a virtual machine as a CD. It starts a GNOME session
 from a compressed image of the desktop (SquashFS, xz), with a layer in memory
-for changes, and opens the installer. The installer asks which disk to use
-and erases all of
-it: a new GPT with an EFI system partition and a btrfs root laid out exactly
-as an image's. The packages are installed from the medium itself, by one dave
+for changes, and opens the installer. The installer asks which disk to use,
+and how:
+
+- **Beside another system**, in the disk's largest free space (22 GB or
+  more). Nothing that is there is moved, shrunk or erased, so the room is made
+  first, in the other system: Windows' Disk Management shrinks its volume. joe
+  shares the disk's EFI system partition, adding only systemd-boot to it
+  (never replacing Windows' files, the firmware's fallback loader included),
+  and keeps its kernels and boot entries on a boot partition of its own
+  (XBOOTLDR) at the start of the free space. The boot menu then lists joe and
+  Windows, which systemd-boot finds by itself, for five seconds; joe starts
+  unless another is chosen.
+- **On the whole disk**, erased: a new GPT with an EFI system partition and a
+  btrfs root laid out exactly as an image's.
+
+The packages are installed from the medium itself, by one dave
 transaction, and sealed as they are installed. The installed system boots
 without an initramfs, like every joe system, and its first boot runs GNOME's
 initial setup.
@@ -272,8 +292,9 @@ The installer (`installer/`) is a Qt Quick front end; all of its work is done by
 `dave install-system`, which can be run by hand on the medium:
 
 ```
-dave install-system --list                 the disks, and why any cannot be used
-dave install-system --disk /dev/nvme0n1    erase it and install
+dave install-system --list                          the disks, and what each allows
+dave install-system --disk /dev/nvme0n1 --beside    install in its free space
+dave install-system --disk /dev/nvme0n1             erase it and install
 ```
 
 Images and media are described by specifications in `image/*.zon` and built by
@@ -367,9 +388,9 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   Video is decoded on the GPU through VA-API with Mesa's drivers (AMD, nouveau,
   virtual machines), but Intel's VA-API driver is not packaged.
   The kernel boots without an initramfs, which is enough for internal disks
-  but not for encrypted or multi-device roots. The installer erases a whole
-  disk: no encryption, no installing beside another system. There is no
-  Secure Boot.
+  but not for encrypted or multi-device roots. The installer neither
+  encrypts nor resizes: beside another system it needs free space made
+  beforehand. There is no Secure Boot.
 - **Desktop gaps.** No graphical front end to dave. Only the English (US)
   locale is built, so that is the one language the first-run setup offers.
   No HEIF or AVIF images and no mail client. LibreOffice is in the repository

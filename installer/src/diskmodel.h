@@ -15,9 +15,17 @@ struct Disk {
     QString transport;
     bool removable = false;
     bool usable = false;
-    QString reason;     // why it cannot be used
+    QString reason;     // why it cannot be erased
     QStringList contents; // "Windows (ntfs, 512 GB)", ...
     QVariantList segments; // {label, fraction} per file system, for the disk strip
+    QVariantList layout;   // {label, start, size} per partition, as fractions of the disk
+    // Installing beside what is on the disk, in its largest free space.
+    bool canBeside = false;
+    QString besideReason;  // why not
+    qint64 besideSize = 0;
+    double besideStart = 0;    // fractions of the disk
+    double besideFraction = 0;
+    QString besideWhat;    // "Windows", "Windows and Linux", "another system"
 };
 
 class DiskModel : public QAbstractListModel {
@@ -39,6 +47,14 @@ public:
         ReasonRole,
         ContentsRole,
         SegmentsRole,
+        LayoutRole,
+        SelectableRole,
+        CanBesideRole,
+        BesideReasonRole,
+        BesideSizeTextRole,
+        BesideStartRole,
+        BesideFractionRole,
+        BesideWhatRole,
     };
 
     using QAbstractListModel::QAbstractListModel;

@@ -1,12 +1,14 @@
-//! Installing joe Linux onto a whole disk: `dave install-system`, the back
-//! end of the graphical installer (installer/), run as root on the live
-//! medium.
+//! Installing joe Linux onto a disk: `dave install-system`, the back end of
+//! the graphical installer (installer/), run as root on the live medium.
 //!
 //! An installation is the same thing as a disk image (provision.zig) made on
 //! a real disk instead of from files: the disk gets a new GPT with an EFI
 //! system partition and a btrfs root, the first deployment is one dave
 //! transaction from the repository on the medium, and the ESP is written as
-//! for an image. What an image cannot do and an installation can, because it
+//! for an image. Or, with --beside, joe goes into the free space of a disk
+//! another system uses, sharing its ESP (provision.Beside): nothing that is
+//! there is resized, moved or written over, so the space must be made first,
+//! by the other system (Windows' Disk Management shrinks its volume). What an image cannot do and an installation can, because it
 //! runs as root on the machine it installs: the files are sealed as they are
 //! installed (so the first boot has nothing to seal), and the firmware is told
 //! where the boot loader is.
@@ -59,6 +61,42 @@ pub const Content = struct {
     size: u64,
 };
 
+/// A partition of a disk, where it lies and what it seems to be.
+pub const Partition = struct {
+    name: []const u8,
+    /// Bytes from the start of the disk.
+    start: u64,
+    size: u64,
+    fstype: []const u8,
+    label: []const u8,
+    /// "esp", "windows", "linux" or "other", from its GPT type and file
+    /// system, for drawing it and naming the systems a disk holds.
+    kind: []const u8,
+    partuuid: []const u8,
+};
+
+/// A stretch of the disk no partition uses.
+pub const Region = struct {
+    start: u64,
+    size: u64,
+};
+
+/// Whether joe could be installed in a disk's free space, beside what is
+/// there.
+pub const Beside = struct {
+    possible: bool = false,
+    /// Why not, for the person choosing.
+    reason: []const u8 = "",
+    /// The free space joe would take: the largest on the disk.
+    start: u64 = 0,
+    size: u64 = 0,
+    /// The disk's EFI system partition, which joe would share.
+    esp: []const u8 = "",
+    /// The systems already on the disk, as a person would name them
+    /// ("Windows", "Linux").
+    systems: []const []const u8 = &.{},
+};
+
 pub const Disk = struct {
     /// What to pass as --disk: a /dev/disk/by-id path where the disk has
     /// one, which names this disk and no other however devices are numbered.
@@ -68,10 +106,16 @@ pub const Disk = struct {
     model: []const u8,
     transport: []const u8,
     removable: bool,
+    /// Whether the whole disk may be erased and installed on.
     usable: bool,
     /// Why it is not usable, for the person choosing.
     reason: []const u8 = "",
     contents: []const Content = &.{},
+    /// "gpt", "dos" (MBR) or "" when the disk has no partition table.
+    table: []const u8 = "",
+    partitions: []const Partition = &.{},
+    free: []const Region = &.{},
+    beside: Beside = .{},
 };
 
 /// A /dev/disk/by-id link and the device name it points at ("vda").
@@ -153,7 +197,9 @@ fn mountPoints(obj: std.json.ObjectMap) []const std.json.Value {
 }
 
 /// The output lsblk(8) is asked for.
-pub const lsblk_argv = [_][]const u8{ "lsblk", "--json", "--bytes", "--output", "NAME,PATH,SIZE,TYPE,MODEL,TRAN,RM,RO,FSTYPE,LABEL,MOUNTPOINTS" };
+/// START is in 512-byte units whatever the disk's sector size, as the
+/// kernel reports it.
+pub const lsblk_argv = [_][]const u8{ "lsblk", "--json", "--bytes", "--output", "NAME,PATH,SIZE,TYPE,MODEL,TRAN,RM,RO,FSTYPE,LABEL,MOUNTPOINTS,PTTYPE,PARTTYPE,PARTUUID,START" };
 
 /// The disks of `lsblk_json`, each with whether it may be installed on.
 /// `medium` is the device the live medium is mounted from (a disk or one of
@@ -179,6 +225,7 @@ pub fn parseDisks(arena: Allocator, lsblk_json: []const u8, links: []const Link,
         const device = field(obj, "path");
 
         var contents: std.ArrayList(Content) = .empty;
+        var partitions: std.ArrayList(Partition) = .empty;
         var holds_medium = medium != null and std.mem.eql(u8, medium.?, device);
         var in_use: ?[]const u8 = null;
         if (fsOf(obj)) |c| try contents.append(arena, c);
@@ -191,7 +238,21 @@ pub fn parseDisks(arena: Allocator, lsblk_json: []const u8, links: []const Link,
             if (medium != null and std.mem.eql(u8, medium.?, field(child, "path"))) holds_medium = true;
             if (fsOf(child)) |c| try contents.append(arena, c);
             if (in_use == null) in_use = mountedAt(child);
+            if (std.mem.eql(u8, field(child, "type"), "part")) try partitions.append(arena, .{
+                .name = field(child, "name"),
+                .start = number(child, "start") * 512,
+                .size = number(child, "size"),
+                .fstype = field(child, "fstype"),
+                .label = field(child, "label"),
+                .kind = kindOf(field(child, "parttype"), field(child, "fstype")),
+                .partuuid = field(child, "partuuid"),
+            });
         };
+        std.mem.sort(Partition, partitions.items, {}, struct {
+            fn lessThan(_: void, a: Partition, b: Partition) bool {
+                return a.start < b.start;
+            }
+        }.lessThan);
 
         const size = number(obj, "size");
         var disk: Disk = .{
@@ -203,6 +264,9 @@ pub fn parseDisks(arena: Allocator, lsblk_json: []const u8, links: []const Link,
             .removable = flag(obj, "rm"),
             .usable = true,
             .contents = contents.items,
+            .table = field(obj, "pttype"),
+            .partitions = partitions.items,
+            .free = try freeRegions(arena, size, partitions.items),
         };
         if (holds_medium) {
             disk.usable = false;
@@ -217,9 +281,97 @@ pub fn parseDisks(arena: Allocator, lsblk_json: []const u8, links: []const Link,
             disk.usable = false;
             disk.reason = try std.fmt.allocPrint(arena, "part of it is in use ({s})", .{point});
         }
+        disk.beside = try besideOf(arena, disk);
         try out.append(arena, disk);
     }
     return out.items;
+}
+
+/// What a partition seems to be, from its GPT type (lsblk prints it in lower
+/// case) and its file system.
+fn kindOf(parttype: []const u8, fstype: []const u8) []const u8 {
+    const is = struct {
+        fn any(t: []const u8, list: []const []const u8) bool {
+            for (list) |x| if (std.ascii.eqlIgnoreCase(t, x)) return true;
+            return false;
+        }
+    }.any;
+    if (is(parttype, &.{"c12a7328-f81f-11d2-ba4b-00a0c93ec93b"})) return "esp";
+    // Microsoft reserved and recovery; basic data holding NTFS or BitLocker.
+    if (is(parttype, &.{ "e3c9e316-0b5c-4db8-817d-f92df00215ae", "de94bba4-06d1-4d40-a16a-bfd50179d6ac" }) or
+        is(fstype, &.{ "ntfs", "BitLocker" })) return "windows";
+    // Linux file system data, root, home, swap and XBOOTLDR; the usual file
+    // systems of a Linux whatever its partition types.
+    if (is(parttype, &.{
+        "0fc63daf-8483-4772-8e79-3d69d8477de4", "4f68bce3-e8cd-4db1-96e7-fbcaf984b709",
+        "933ac7e1-2eb4-4f13-b844-0e14e2aef915", "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f",
+        "bc13c2ff-59e6-4262-a352-b275fd6f7172",
+    }) or is(fstype, &.{ "ext2", "ext3", "ext4", "btrfs", "xfs", "f2fs", "swap" })) return "linux";
+    return "other";
+}
+
+/// The stretches of a disk no partition uses, of at least 1 MiB, aligned to
+/// 1 MiB as partitions are: from after the primary GPT to before the backup.
+pub fn freeRegions(arena: Allocator, disk_size: u64, partitions: []const Partition) ![]const Region {
+    var out: std.ArrayList(Region) = .empty;
+    const mib = provision.mib;
+    var cursor: u64 = provision.first_offset;
+    const end = (disk_size -| provision.tail) / mib * mib;
+    for (partitions) |p| {
+        if (p.start > cursor) try add(arena, &out, cursor, @min(p.start, end));
+        cursor = @max(cursor, p.start + p.size);
+    }
+    if (end > cursor) try add(arena, &out, cursor, end);
+    return out.items;
+}
+
+fn add(arena: Allocator, out: *std.ArrayList(Region), from: u64, to: u64) !void {
+    const mib = provision.mib;
+    const start = (from + mib - 1) / mib * mib;
+    const stop = to / mib * mib;
+    if (stop > start) try out.append(arena, .{ .start = start, .size = stop - start });
+}
+
+/// Whether joe could go in the free space of `disk`, beside what is there.
+fn besideOf(arena: Allocator, disk: Disk) !Beside {
+    var b: Beside = .{};
+    var systems: std.ArrayList([]const u8) = .empty;
+    for (disk.partitions) |p| {
+        const name: ?[]const u8 = if (std.mem.eql(u8, p.kind, "windows")) "Windows" else if (std.mem.eql(u8, p.kind, "linux")) "Linux" else null;
+        const n = name orelse continue;
+        for (systems.items) |have| {
+            if (std.mem.eql(u8, have, n)) break;
+        } else try systems.append(arena, n);
+    }
+    b.systems = systems.items;
+    for (disk.free) |r| {
+        if (r.size > b.size) {
+            b.start = r.start;
+            b.size = r.size;
+        }
+    }
+    for (disk.partitions) |p| {
+        if (std.mem.eql(u8, p.kind, "esp") and p.partuuid.len == 36) {
+            b.esp = p.partuuid;
+            break;
+        }
+    }
+    // A disk that cannot be erased because of what it holds or how it is
+    // used cannot be shared either; being too small is another matter.
+    if (!disk.usable and !std.mem.startsWith(u8, disk.reason, "it is smaller")) {
+        b.reason = disk.reason;
+    } else if (disk.table.len == 0) {
+        b.reason = "it has no partitions to keep";
+    } else if (!std.mem.eql(u8, disk.table, "gpt")) {
+        b.reason = "its partition table is the old MBR kind, which joe cannot share";
+    } else if (b.esp.len == 0) {
+        b.reason = "it has no EFI system partition to share";
+    } else if (b.size < provision.min_beside_size) {
+        b.reason = "it has no free space of 22 GB or more";
+    } else {
+        b.possible = true;
+    }
+    return b;
 }
 
 fn fsOf(obj: std.json.ObjectMap) ?Content {
@@ -285,15 +437,43 @@ pub const Disks = struct {
         try d.run(&.{ "sfdisk", "--quiet", "--wipe", "always", device }, try provision.sfdiskScript(d.arena, plan));
         const esp = try std.fmt.allocPrint(d.arena, "/dev/disk/by-partuuid/{s}", .{plan.esp_uuid});
         const root = try std.fmt.allocPrint(d.arena, "/dev/disk/by-partuuid/{s}", .{plan.root_uuid});
+        try d.waitFor(device, &.{ esp, root });
+        return .{ .esp = esp, .root = root };
+    }
+
+    /// Adds joe's partitions to the free space `b` describes, leaving every
+    /// other partition and the table's own signature as they are, and
+    /// returns their paths. Signatures left in the free space by a partition
+    /// deleted earlier are wiped from the new ones.
+    pub fn addBeside(d: *Disks, device: []const u8, b: provision.Beside) !struct { xbootldr: []const u8, root: []const u8 } {
+        try d.run(&.{ "sfdisk", "--quiet", "--append", "--wipe", "never", "--wipe-partitions", "always", device }, try provision.sfdiskAppendScript(d.arena, b));
+        const xbootldr = try std.fmt.allocPrint(d.arena, "/dev/disk/by-partuuid/{s}", .{b.xbootldr_uuid});
+        const root = try std.fmt.allocPrint(d.arena, "/dev/disk/by-partuuid/{s}", .{b.root_uuid});
+        try d.waitFor(device, &.{ xbootldr, root });
+        return .{ .xbootldr = xbootldr, .root = root };
+    }
+
+    /// Waits for udev to have made the links to new partitions.
+    fn waitFor(d: *Disks, device: []const u8, paths: []const []const u8) !void {
         var tries: usize = 0;
         while (tries < 30) : (tries += 1) {
             d.run(&.{ "udevadm", "settle", "--timeout=10" }, null) catch {};
-            const have_esp = if (Io.Dir.cwd().statFile(d.io, esp, .{})) |_| true else |_| false;
-            const have_root = if (Io.Dir.cwd().statFile(d.io, root, .{})) |_| true else |_| false;
-            if (have_esp and have_root) return .{ .esp = esp, .root = root };
+            for (paths) |p| {
+                if (Io.Dir.cwd().statFile(d.io, p, .{})) |_| {} else |_| break;
+            } else return;
             try d.io.sleep(.fromMilliseconds(500), .awake);
         }
         return d.fail("the new partitions of {s} did not appear", .{device});
+    }
+
+    pub fn formatBeside(d: *Disks, xbootldr: []const u8, root: []const u8) !void {
+        try d.run(&.{ "mkfs.vfat", "-F", "32", "-n", provision.xbootldr_label, xbootldr }, null);
+        try d.run(&.{ "mkfs.btrfs", "--quiet", "--force", "--label", provision.root_label, root }, null);
+    }
+
+    /// Mounts the boot partition where the installed system will mount it.
+    pub fn mountBoot(d: *Disks, xbootldr: []const u8) !void {
+        try d.mountAt(xbootldr, target_mount ++ "/" ++ provision.xbootldr_mount, "vfat", 0, "umask=0077");
     }
 
     pub fn format(d: *Disks, esp: []const u8, root: []const u8) !void {
@@ -344,6 +524,7 @@ pub const Disks = struct {
     /// Unmounts whatever of the target is mounted, innermost first.
     pub fn unmountTarget(d: *Disks) void {
         const points = [_][]const u8{
+            target_mount ++ "/" ++ provision.xbootldr_mount,
             target_mount ++ "/" ++ provision.esp_mount,
             target_mount ++ "/home",
             target_mount ++ "/var",
@@ -402,6 +583,77 @@ test "disks are offered with what is on them, and refused with a reason" {
     try testing.expectEqualStrings("it is smaller than 20 GB", disks[3].reason);
 }
 
+// A laptop's disk: Windows with its ESP, reserved and recovery partitions,
+// shrunk to leave 60 GiB free before its recovery partition; and an MBR disk.
+const windows_lsblk =
+    \\{"blockdevices": [
+    \\  {"name":"nvme0n1","path":"/dev/nvme0n1","size":256060514304,"type":"disk","model":"Laptop SSD","tran":"nvme","rm":false,"ro":false,"fstype":null,"label":null,"mountpoints":[null],"pttype":"gpt","parttype":null,"partuuid":null,"start":null,
+    \\   "children":[
+    \\     {"name":"nvme0n1p1","path":"/dev/nvme0n1p1","size":104857600,"type":"part","fstype":"vfat","label":"SYSTEM","mountpoints":[null],"pttype":"gpt","parttype":"c12a7328-f81f-11d2-ba4b-00a0c93ec93b","partuuid":"0a1b2c3d-0000-4000-8000-000000000001","start":2048},
+    \\     {"name":"nvme0n1p2","path":"/dev/nvme0n1p2","size":16777216,"type":"part","fstype":null,"label":null,"mountpoints":[null],"pttype":"gpt","parttype":"e3c9e316-0b5c-4db8-817d-f92df00215ae","partuuid":"0a1b2c3d-0000-4000-8000-000000000002","start":206848},
+    \\     {"name":"nvme0n1p3","path":"/dev/nvme0n1p3","size":189458432000,"type":"part","fstype":"BitLocker","label":null,"mountpoints":[null],"pttype":"gpt","parttype":"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7","partuuid":"0a1b2c3d-0000-4000-8000-000000000003","start":239616},
+    \\     {"name":"nvme0n1p4","path":"/dev/nvme0n1p4","size":786432000,"type":"part","fstype":"ntfs","label":"Recovery","mountpoints":[null],"pttype":"gpt","parttype":"de94bba4-06d1-4d40-a16a-bfd50179d6ac","partuuid":"0a1b2c3d-0000-4000-8000-000000000004","start":496523264}
+    \\   ]},
+    \\  {"name":"sda","path":"/dev/sda","size":500107862016,"type":"disk","model":"Old Disk","tran":"sata","rm":false,"ro":false,"fstype":null,"label":null,"mountpoints":[null],"pttype":"dos","parttype":null,"partuuid":null,"start":null,
+    \\   "children":[{"name":"sda1","path":"/dev/sda1","size":104857600000,"type":"part","fstype":"ntfs","label":"Data","mountpoints":[null],"pttype":"dos","parttype":"0x7","partuuid":"1234abcd-01","start":2048}]}
+    \\]}
+;
+
+test "free space beside Windows is found, and its reasons when there is none" {
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const disks = try parseDisks(arena, windows_lsblk, &.{}, null);
+    try testing.expectEqual(@as(usize, 2), disks.len);
+
+    const laptop = disks[0];
+    try testing.expectEqualStrings("gpt", laptop.table);
+    try testing.expectEqual(@as(usize, 4), laptop.partitions.len);
+    try testing.expectEqualStrings("esp", laptop.partitions[0].kind);
+    try testing.expectEqualStrings("windows", laptop.partitions[1].kind);
+    try testing.expectEqualStrings("windows", laptop.partitions[2].kind);
+    try testing.expectEqualStrings("windows", laptop.partitions[3].kind);
+    // The gap between Windows and its recovery partition, and the tail.
+    const b = laptop.beside;
+    try testing.expect(b.possible);
+    // Windows' volume ends part-way through a MiB; joe starts on the next.
+    const windows_end: u64 = 239616 * 512 + 189458432000;
+    try testing.expectEqual((windows_end + provision.mib - 1) / provision.mib * provision.mib, b.start);
+    try testing.expectEqual(@as(u64, 496523264 * 512) - b.start, b.size);
+    try testing.expectEqual(@as(u64, 0), b.start % provision.mib);
+    try testing.expectEqualStrings("0a1b2c3d-0000-4000-8000-000000000001", b.esp);
+    try testing.expectEqual(@as(usize, 1), b.systems.len);
+    try testing.expectEqualStrings("Windows", b.systems[0]);
+    try testing.expectEqual(@as(usize, 2), laptop.free.len);
+    // The whole disk could still be erased.
+    try testing.expect(laptop.usable);
+
+    const old = disks[1];
+    try testing.expect(!old.beside.possible);
+    try testing.expectEqualStrings("its partition table is the old MBR kind, which joe cannot share", old.beside.reason);
+}
+
+test "free regions" {
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const mib = provision.mib;
+    // An empty table: everything between the GPTs.
+    const empty = try freeRegions(arena, 100 * mib, &.{});
+    try testing.expectEqual(@as(usize, 1), empty.len);
+    try testing.expectEqual(mib, empty[0].start);
+    try testing.expectEqual(98 * mib, empty[0].size);
+    // A partition that ends off a MiB boundary leaves the next whole MiB.
+    const parts = [_]Partition{
+        .{ .name = "a", .start = mib, .size = 10 * mib + 512, .fstype = "", .label = "", .kind = "other", .partuuid = "" },
+        .{ .name = "b", .start = 50 * mib, .size = 49 * mib, .fstype = "", .label = "", .kind = "other", .partuuid = "" },
+    };
+    const gaps = try freeRegions(arena, 100 * mib, &parts);
+    try testing.expectEqual(@as(usize, 1), gaps.len);
+    try testing.expectEqual(12 * mib, gaps[0].start);
+    try testing.expectEqual(38 * mib, gaps[0].size);
+}
+
 test "the device a mount point comes from" {
     const info =
         \\24 1 0:22 / / rw,relatime - overlay overlay rw,lowerdir=/run/live/lower
@@ -425,5 +677,8 @@ test "the disk steps compile" {
     _ = &Disks.format;
     _ = &Disks.mountTarget;
     _ = &Disks.unmountTarget;
+    _ = &Disks.addBeside;
+    _ = &Disks.formatBeside;
+    _ = &Disks.mountBoot;
     _ = &readById;
 }

@@ -86,7 +86,13 @@ pub const System = struct {
     top: Io.Dir,
     /// Absolute path at which `top` is mounted.
     top_path: []const u8,
+    /// The EFI system partition, where the boot loader is.
     esp: Io.Dir,
+    /// The extended boot loader partition (XBOOTLDR), where a system that
+    /// shares its ESP with another operating system keeps its boot entries
+    /// and kernels, so as never to crowd the other system's partition.
+    /// Null when they are on the ESP.
+    xbootldr: ?Io.Dir = null,
     /// The running root, opened with `.iterate = true`.
     root: Io.Dir,
     cache: Io.Dir,
@@ -96,6 +102,12 @@ pub const System = struct {
     run_triggers: bool = true,
     /// Filled with the reason when an operation fails.
     diag: txn.Diagnostic = .{},
+
+    /// Where boot entries and kernels are: the XBOOTLDR partition if there
+    /// is one, the ESP otherwise. systemd-boot reads entries from both.
+    pub fn bootDir(s: *const System) Io.Dir {
+        return s.xbootldr orelse s.esp;
+    }
 
     // -- state ----------------------------------------------------------------
 
@@ -157,7 +169,7 @@ pub const System = struct {
     /// has any, copied to the ESP.
     fn installInitrds(s: *System, root: Io.Dir) ![]const []const u8 {
         _ = root.statFile(s.io, microcode_path, .{}) catch return &.{};
-        const path = try boot.installInitrd(s.arena, s.io, s.esp, root, microcode_path);
+        const path = try boot.installInitrd(s.arena, s.io, s.bootDir(), root, microcode_path);
         return s.arena.dupe([]const u8, &.{path});
     }
 
@@ -310,24 +322,24 @@ pub const System = struct {
         try btrfs.snapshot(s.root, parent, name);
         // From here on, any failure must leave no trace: no subvolume, no entry.
         errdefer {
-            boot.remove(s.arena, s.io, s.esp, id) catch {};
+            boot.remove(s.arena, s.io, s.bootDir(), id) catch {};
             btrfs.removeSubvolume(s.io, parent, name) catch {};
         }
         var target = try parent.openDir(s.io, name, .{ .iterate = true });
         defer target.close(s.io);
         _ = try s.applyTo(target, name, staged);
 
-        const kernel = try boot.installKernel(s.arena, s.io, s.esp, target, try s.findKernel(target));
+        const kernel = try boot.installKernel(s.arena, s.io, s.bootDir(), target, try s.findKernel(target));
         const initrds = try s.installInitrds(target);
         // Best effort: the loader already on the ESP starts this deployment
         // too, so failing to bring a newer one must not cost the upgrade.
         _ = boot.updateLoader(s.arena, s.io, s.esp, target) catch false;
-        const entries = try boot.list(s.arena, s.io, s.esp);
+        const entries = try boot.list(s.arena, s.io, s.bootDir());
         const current = try s.currentEntry(entries);
         _ = std.os.linux.syncfs(target.handle);
         // The entry is written last: until it exists, the loader knows nothing
         // of this deployment.
-        try boot.write(s.arena, s.io, s.esp, .{
+        try boot.write(s.arena, s.io, s.bootDir(), .{
             .id = id,
             .priority = boot.highestPriority(entries) + 1,
             .kernel = kernel,
@@ -343,7 +355,7 @@ pub const System = struct {
     /// state as a bootable deployment that `dave rollback` will return to.
     pub fn rollbackPoint(s: *System, reason: []const u8) !u32 {
         try s.refuseNested();
-        const entries = try boot.list(s.arena, s.io, s.esp);
+        const entries = try boot.list(s.arena, s.io, s.bootDir());
         const current = try s.currentEntry(entries);
         if (current.health() != .good)
             return s.fail(error.BootCheckPending, "this boot has not passed its health check yet; try again in a moment", .{});
@@ -355,14 +367,14 @@ pub const System = struct {
         const name = try std.fmt.allocPrint(s.arena, "{d}", .{id});
         try btrfs.snapshot(s.root, parent, name);
         errdefer {
-            boot.remove(s.arena, s.io, s.esp, id) catch {};
+            boot.remove(s.arena, s.io, s.bootDir(), id) catch {};
             btrfs.removeSubvolume(s.io, parent, name) catch {};
         }
 
         // The preserved state ranks just below the running system: it is what
         // was chosen before, so it is what the loader falls back to.
         const top = boot.highestPriority(entries);
-        try boot.write(s.arena, s.io, s.esp, .{
+        try boot.write(s.arena, s.io, s.bootDir(), .{
             .id = id,
             .priority = top + 1,
             .kernel = current.kernel,
@@ -370,7 +382,7 @@ pub const System = struct {
             .options = try boot.optionsFor(s.arena, current.options, id),
             .counted = false,
         });
-        try boot.write(s.arena, s.io, s.esp, .{
+        try boot.write(s.arena, s.io, s.bootDir(), .{
             .id = s.current,
             .priority = top + 2,
             .kernel = current.kernel,
@@ -393,7 +405,7 @@ pub const System = struct {
     /// Makes the most recently chosen healthy deployment other than the running
     /// one the default for every following boot. Returns its id.
     pub fn rollback(s: *System) !u32 {
-        const entries = try boot.list(s.arena, s.io, s.esp);
+        const entries = try boot.list(s.arena, s.io, s.bootDir());
         const ids = try s.deploymentIds();
         const target = for (entries) |e| {
             if (e.id == s.current or e.health() != .good) continue;
@@ -401,7 +413,7 @@ pub const System = struct {
             break e;
         } else return s.fail(error.NoRollbackTarget, "there is no other healthy deployment to roll back to", .{});
 
-        try boot.write(s.arena, s.io, s.esp, .{
+        try boot.write(s.arena, s.io, s.bootDir(), .{
             .id = target.id,
             .priority = boot.highestPriority(entries) + 1,
             .kernel = target.kernel,
@@ -451,7 +463,7 @@ pub const System = struct {
     /// `keep` most recently chosen healthy ones. Returns the ids removed.
     pub fn collectGarbage(s: *System, keep: usize) ![]u32 {
         var state = try s.loadState();
-        const entries = try boot.list(s.arena, s.io, s.esp);
+        const entries = try boot.list(s.arena, s.io, s.bootDir());
         const ids = try s.deploymentIds();
 
         var keeping: std.AutoHashMapUnmanaged(u32, void) = .empty;
@@ -474,7 +486,7 @@ pub const System = struct {
         // An entry must never outlive its subvolume, so entries go first.
         for (entries) |e| {
             if (keeping.contains(e.id)) continue;
-            try boot.remove(s.arena, s.io, s.esp, e.id);
+            try boot.remove(s.arena, s.io, s.bootDir(), e.id);
         }
         for (ids) |id| {
             if (keeping.contains(id)) continue;
@@ -484,7 +496,7 @@ pub const System = struct {
         }
         // Entries pointing at subvolumes that do not exist can only fail to boot.
         for (entries) |e| {
-            if (std.mem.indexOfScalar(u32, ids, e.id) == null) try boot.remove(s.arena, s.io, s.esp, e.id);
+            if (std.mem.indexOfScalar(u32, ids, e.id) == null) try boot.remove(s.arena, s.io, s.bootDir(), e.id);
         }
         // Scratch snapshots left behind by an interrupted `stage`.
         var doomed: std.ArrayList([]const u8) = .empty;
@@ -494,7 +506,7 @@ pub const System = struct {
         }
         for (doomed.items) |name| try btrfs.removeSubvolume(s.io, parent, name);
 
-        try boot.pruneKernels(s.arena, s.io, s.esp, try boot.list(s.arena, s.io, s.esp), &.{});
+        try boot.pruneKernels(s.arena, s.io, s.bootDir(), try boot.list(s.arena, s.io, s.bootDir()), &.{});
 
         var records: std.ArrayList(Record) = .empty;
         for (state.deployments) |r| if (keeping.contains(r.id)) try records.append(s.arena, r);
@@ -522,7 +534,7 @@ pub const System = struct {
 
     pub fn overview(s: *System) !Overview {
         const state = try s.loadState();
-        const entries = try boot.list(s.arena, s.io, s.esp);
+        const entries = try boot.list(s.arena, s.io, s.bootDir());
         const default = boot.defaultEntry(entries);
         var views: std.ArrayList(DeploymentView) = .empty;
         for (try s.deploymentIds()) |id| {

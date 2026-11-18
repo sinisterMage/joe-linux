@@ -81,6 +81,8 @@ One static binary serves as package manager, build tool, repository tool and boo
 
 The flow of a change: `etc/dave/world` is the only statement of intent (the Alpine model). `resolve.zig` solves world against the signed repository indexes (`repo.zig`) with `solver/pubgrub.zig`, and the transaction is the difference from what is installed (`db.zig`). `solver/report.zig` turns a failed solve into the prose explanation users see. `txn.zig` applies a transaction to a root directory; it has no undo log and relies on being pointed at a snapshot that can be thrown away.
 
+A system installed beside another (`dave install-system --beside`) shares the disk's ESP, which then holds only systemd-boot, and keeps its entries and kernels on an XBOOTLDR partition mounted at `/boot`: `deploy.System.bootDir()` is where entries live, `esp` only where the loader is. Nothing of another system's on the shared ESP may be replaced, the firmware's fallback `EFI/BOOT/BOOTX64.EFI` included.
+
 `install` and `remove` apply live after taking a bootable snapshot. Only `upgrade` is deferred: `deploy.zig` stages a plan, and `dave finalize` at shutdown snapshots the root as it then is, applies the plan to the snapshot, and writes the boot entry last. `boot.zig` keeps no state of its own: priority and health are encoded in systemd-boot entry file names (`joe-<id>+3.conf`), and those assumptions are pinned by `tests/vm/boot_contract.py`.
 
 Invariants that span files:

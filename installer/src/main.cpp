@@ -21,6 +21,9 @@ int main(int argc, char *argv[])
                        "actions a person would use, then exit with the result. For automated tests."),
         QStringLiteral("DISK"));
     parser.addOption(autotest);
+    QCommandLineOption beside(QStringLiteral("beside"),
+        QStringLiteral("With --autotest, install beside what is on DISK, in its free space."));
+    parser.addOption(beside);
     QCommandLineOption screenshots(QStringLiteral("screenshots"),
         QStringLiteral("With --autotest, save a picture of each page in DIR."), QStringLiteral("DIR"));
     parser.addOption(screenshots);
@@ -34,6 +37,8 @@ int main(int argc, char *argv[])
     auto *backend = engine.singletonInstance<Backend *>("Joe.Installer", "Backend");
     if (backend && parser.isSet(autotest))
         backend->setAutotestDisk(parser.value(autotest));
+    if (backend && parser.isSet(beside))
+        backend->setAutotestBeside(true);
     if (backend && parser.isSet(screenshots))
         backend->setScreenshotDir(parser.value(screenshots));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app,

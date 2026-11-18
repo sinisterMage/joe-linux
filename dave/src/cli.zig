@@ -357,13 +357,18 @@ pub const commands = [_]CommandInfo{
     .{
         .command = .@"install-system",
         .group = .images,
-        .synopsis = "--list [--json] | --disk DISK [--json]",
+        .synopsis = "--list [--json] | --disk DISK [--beside] [--json]",
         .brief = "--list | --disk DISK",
         .summary = "Install joe Linux onto a disk",
         .about =
         \\With --list, shows the disks joe Linux could be installed on, and why
         \\any cannot be used. With --disk, erases that disk and installs what
         \\the live medium holds (joe/install.zon) onto it.
+        \\
+        \\With --beside, nothing on the disk is erased: joe takes the disk's
+        \\largest free space (22 GB or more) and shares its EFI system partition,
+        \\so the boot menu offers the other system too. Make the space first, in
+        \\the other system: Windows' Disk Management can shrink its volume.
         ,
     },
     .{
@@ -434,6 +439,7 @@ pub const options = [_]OptionSpec{
 
     .{ .long = "list", .help = "List the disks joe Linux could be installed on", .commands = &.{.@"install-system"}, .field = "list" },
     .{ .long = "disk", .value = "DISK", .help = "Erase DISK and install onto it", .commands = &.{.@"install-system"}, .field = "disk", .complete = .files },
+    .{ .long = "beside", .help = "Install into the disk's free space, beside the system already there", .commands = &.{.@"install-system"}, .field = "beside" },
     .{ .long = "json", .help = "Report as JSON events, for a program watching", .commands = &.{.@"install-system"}, .field = "json" },
     .{ .long = "from", .value = "DIR", .help = "Install from the medium at DIR", .commands = &.{.@"install-system"}, .field = "from", .complete = .dirs },
     .{ .long = "with", .value = "PACKAGE", .help = "Install PACKAGE as well", .commands = &.{ .image, .@"install-system" }, .field = "with" },
@@ -475,6 +481,7 @@ pub const Options = struct {
     tree: ?[]const u8 = null,
     json: bool = false,
     list: bool = false,
+    beside: bool = false,
     disk: ?[]const u8 = null,
     from: ?[]const u8 = null,
     repos: std.ArrayList([]const u8) = .empty,
@@ -771,6 +778,7 @@ test "every command line in the repository still parses" {
         // the installer, tests/vm/install.py and live.py
         &.{ "install-system", "--list", "--json" },
         &.{ "install-system", "--disk", "/dev/vda", "--json" },
+        &.{ "install-system", "--disk", "/dev/vda", "--beside", "--json" },
         &.{ "--root", "/tmp/check", "--cache", "/tmp/check-cache", "--dry-run", "install", "joe-desktop" },
         // the systemd units
         &.{"finalize"},

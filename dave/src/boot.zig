@@ -282,6 +282,11 @@ pub const loader_source = "usr/lib/systemd/boot/efi/systemd-bootx64.efi";
 /// fallback path, both written when the image was made.
 pub const loader_targets = [_][]const u8{ "EFI/systemd/systemd-bootx64.efi", "EFI/BOOT/BOOTX64.EFI" };
 
+/// Whether a file on the ESP is systemd-boot (and so joe's to replace).
+pub fn isLoader(image: []const u8) bool {
+    return loaderVersion(image) != null;
+}
+
 /// The version a systemd-boot image states about itself ("262.1").
 fn loaderVersion(image: []const u8) ?[]const u8 {
     const marker = "#### LoaderInfo: systemd-boot ";

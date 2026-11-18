@@ -69,7 +69,7 @@ void Backend::refreshDisks()
     process->start(dave(), {QStringLiteral("install-system"), QStringLiteral("--list"), QStringLiteral("--json")});
 }
 
-void Backend::install(const QString &diskPath)
+void Backend::install(const QString &diskPath, bool beside)
 {
     if (m_state == State::Installing || m_install)
         return;
@@ -95,7 +95,7 @@ void Backend::install(const QString &diskPath)
         appendLog(QString::fromUtf8(m_install->readAllStandardError()));
     });
     connect(m_install, &QProcess::finished, this, &Backend::installFinished);
-    m_install->start(QStringLiteral("systemd-inhibit"), {
+    QStringList args = {
         QStringLiteral("--what=sleep:idle:shutdown:handle-lid-switch"),
         QStringLiteral("--who=joe Linux installer"),
         QStringLiteral("--why=A disk is being written"),
@@ -104,7 +104,10 @@ void Backend::install(const QString &diskPath)
         QStringLiteral("install-system"),
         QStringLiteral("--disk"), diskPath,
         QStringLiteral("--json"),
-    });
+    };
+    if (beside)
+        args << QStringLiteral("--beside");
+    m_install->start(QStringLiteral("systemd-inhibit"), args);
 }
 
 // One event from dave:

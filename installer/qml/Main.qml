@@ -16,19 +16,22 @@ ApplicationWindow {
     color: Theme.window
     font.family: Theme.family
 
-    // The disk chosen on the disk page, as the model describes it.
+    // The disk chosen on the disk page, as the model describes it, and
+    // whether joe goes beside what is on it.
     property var disk: ({})
+    property bool beside: false
 
     function showDisks() {
         Backend.refreshDisks()
         stack.push(diskPage)
     }
-    function confirm(row) {
+    function confirm(row, beside) {
         window.disk = Backend.disks.get(row)
+        window.beside = beside
         stack.push(confirmPage)
     }
     function install() {
-        Backend.install(window.disk.path)
+        Backend.install(window.disk.path, window.beside)
         stack.replace(null, progressPage)
     }
 
@@ -39,9 +42,9 @@ ApplicationWindow {
     }
 
     Component { id: welcomePage; WelcomePage { onProceed: window.showDisks(); onLeave: Qt.quit() } }
-    Component { id: diskPage; DiskPage { onBack: stack.pop(); onProceed: window.confirm(chosen) } }
-    Component { id: confirmPage; ConfirmPage { disk: window.disk; onBack: stack.pop(); onProceed: window.install() } }
-    Component { id: progressPage; ProgressPage {} }
+    Component { id: diskPage; DiskPage { onBack: stack.pop(); onProceed: window.confirm(chosen, beside) } }
+    Component { id: confirmPage; ConfirmPage { disk: window.disk; beside: window.beside; onBack: stack.pop(); onProceed: window.install() } }
+    Component { id: progressPage; ProgressPage { disk: window.disk; beside: window.beside } }
     Component { id: donePage; DonePage { onLeave: Qt.quit() } }
     Component { id: failedPage; FailedPage { onLeave: Qt.quit(); onAgain: { stack.replace(null, welcomePage); window.showDisks() } } }
 
@@ -89,21 +92,24 @@ ApplicationWindow {
                     return
                 autotest.report("page disk")
                 const row = Backend.disks.indexOfPath(Backend.autotestDisk)
-                if (row < 0 || !Backend.disks.get(row).usable) {
+                const found = row >= 0 ? Backend.disks.get(row) : null
+                if (!found || !(Backend.autotestBeside ? found.canBeside : found.usable)) {
                     autotest.report("disk " + Backend.autotestDisk + " cannot be used")
                     Qt.exit(2)
                     return
                 }
                 page.chosen = row
+                page.beside = Backend.autotestBeside
                 autotest.stage = 2
                 break
             case 2:
-                window.confirm(page.chosen)
+                window.confirm(page.chosen, page.beside)
                 autotest.stage = 3
                 break
             case 3:
                 autotest.report("page confirm")
-                page.understood = true
+                if (!window.beside)
+                    page.understood = true
                 autotest.stage = 4
                 break
             case 4:

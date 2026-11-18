@@ -41,6 +41,7 @@ const lock_path = "/run/dave/lock";
 /// What `dave status` shows, written by root for everyone (deploy.Published).
 const status_path = "/run/dave/status.zon";
 const esp_path = "/efi";
+const boot_mount = "/boot";
 const system_cache = "/var/cache/dave";
 const boot_check_hooks = "etc/dave/boot-check.d";
 const sealed_marker = "usr/lib/dave/sealed";
@@ -294,6 +295,7 @@ const App = struct {
             .top = top,
             .top_path = top_mount,
             .esp = try app.openDir(esp_path),
+            .xbootldr = app.openXbootldr(),
             .root = try app.openDir("/"),
             .cache = try app.openDir(system_cache),
             .current = current,
@@ -301,6 +303,15 @@ const App = struct {
         };
         app.opened_system = true;
         return sys;
+    }
+
+    /// The extended boot loader partition, where a system installed beside
+    /// another keeps its boot entries and kernels: mounted at /boot, FAT
+    /// as systemd-boot needs it. Null for every other joe system.
+    fn openXbootldr(app: *App) ?Io.Dir {
+        const m = app.findMount(boot_mount) orelse return null;
+        if (!std.mem.eql(u8, m.fstype, "vfat")) return null;
+        return Io.Dir.cwd().openDir(app.io, boot_mount, .{ .iterate = true }) catch null;
     }
 
     /// Writes what `dave status` shows to `status_path`, readable by everyone.
@@ -318,9 +329,11 @@ const App = struct {
             .esp = Io.Dir.cwd().openDir(app.io, esp_path, .{ .iterate = true }) catch return,
             .root = Io.Dir.cwd().openDir(app.io, "/", .{ .iterate = true }) catch return,
             .cache = Io.Dir.cwd().openDir(app.io, system_cache, .{ .iterate = true }) catch return,
+            .xbootldr = app.openXbootldr(),
             .current = current,
         };
         defer for ([_]Io.Dir{ sys.top, sys.esp, sys.root, sys.cache }) |d| d.close(app.io);
+        defer if (sys.xbootldr) |d| d.close(app.io);
         const text = deploy.Published.of(current, sys.overview() catch return).serialize(app.arena) catch return;
         var dir = Io.Dir.cwd().openDir(app.io, std.fs.path.dirname(status_path).?, .{}) catch return;
         defer dir.close(app.io);
@@ -1227,6 +1240,11 @@ const App = struct {
         for ([_][]const u8{ "/var", esp_path }) |point| {
             if (app.findMount(point) == null) return app.fail("boot check failed: {s} is not mounted", .{point});
         }
+        // A system installed beside another keeps its boot entries on /boot.
+        if (app.readAbsolute("/etc/fstab")) |table| {
+            if (std.mem.indexOf(u8, table, " " ++ boot_mount ++ " ") != null and app.findMount(boot_mount) == null)
+                return app.fail("boot check failed: {s} is not mounted", .{boot_mount});
+        }
         const root = try app.openDir("/");
         _ = db.load(app.arena, app.io, root) catch |e| return app.fail("boot check failed: the package database is unreadable: {t}", .{e});
 
@@ -1560,8 +1578,8 @@ const App = struct {
     // -- installing onto a disk ------------------------------------------------
 
     fn cmdInstallSystem(app: *App, args: []const []const u8) !void {
-        if (args.len != 0 or (app.opts.list == (app.opts.disk != null)))
-            return app.fail("usage: dave install-system --list [--json] | --disk DISK [--json]", .{});
+        if (args.len != 0 or (app.opts.list == (app.opts.disk != null)) or (app.opts.beside and app.opts.list))
+            return app.fail("usage: dave install-system --list [--json] | --disk DISK [--beside] [--json]", .{});
         if (app.opts.json) {
             // Events alone on standard output; everything said for people
             // (and what the programs dave runs say) on standard error.
@@ -1596,9 +1614,16 @@ const App = struct {
         }
         for (disks) |d| {
             try app.say("{s}  {d} GB  {s}{s}{s}", .{
-                d.path,                                     d.size / 1_000_000_000, if (d.model.len > 0) d.model else "-",
-                if (d.usable) "" else "  cannot be used: ", d.reason,
+                d.path,                                       d.size / 1_000_000_000, if (d.model.len > 0) d.model else "-",
+                if (d.usable) "" else "  cannot be erased: ", d.reason,
             });
+            if (d.beside.possible) {
+                try app.say("    --beside: {d} GB of free space, beside {s}", .{
+                    d.beside.size / 1_000_000_000, try besideWhat(app.arena, d.beside),
+                });
+            } else if (d.partitions.len > 0) {
+                try app.say("    --beside: cannot be used: {s}", .{d.beside.reason});
+            }
         }
     }
 
@@ -1620,7 +1645,10 @@ const App = struct {
         const disk = for (try app.findDisks()) |d| {
             if (std.mem.eql(u8, d.device, device)) break d;
         } else return app.fail("{s} is not a disk this system can install onto", .{disk_arg});
-        if (!disk.usable) return app.fail("{s} cannot be used: {s}", .{ disk_arg, disk.reason });
+        if (app.opts.beside) {
+            if (!disk.beside.possible)
+                return app.fail("joe Linux cannot be installed beside what is on {s}: {s}", .{ disk_arg, disk.beside.reason });
+        } else if (!disk.usable) return app.fail("{s} cannot be used: {s}", .{ disk_arg, disk.reason });
 
         var lock_file = try app.lock();
         defer lock_file.close(app.io);
@@ -1628,15 +1656,38 @@ const App = struct {
             return app.fail("this system's {s} is unreadable", .{repo.config_path});
         if (live_config.repos.len == 0) return app.fail("this system has no repositories configured ({s})", .{repo.config_path});
 
-        const layout = provision.Plan.new(app.io, provision.default_esp_size, null);
         var disks: install_system.Disks = .{ .arena = app.arena, .io = app.io };
         defer disks.unmountTarget();
-
-        app.step(0.01, "Erasing {s}", .{if (disk.model.len > 0) disk.model else device});
-        const parts = disks.partition(device, layout) catch return app.fail("{s}", .{disks.diag.message});
-        app.step(0.03, "Creating file systems", .{});
-        disks.format(parts.esp, parts.root) catch return app.fail("{s}", .{disks.diag.message});
-        disks.mountTarget(parts.esp, parts.root) catch return app.fail("{s}", .{disks.diag.message});
+        const name = if (disk.model.len > 0) disk.model else device;
+        // Beside another system: its ESP shared, joe's partitions in the free
+        // space. Otherwise: the whole disk.
+        var beside: ?provision.Beside = null;
+        var root_uuid: provision.Uuid = undefined;
+        var fstab: []const u8 = undefined;
+        if (app.opts.beside) {
+            var esp_uuid: provision.Uuid = undefined;
+            @memcpy(&esp_uuid, disk.beside.esp[0..esp_uuid.len]);
+            const b = provision.Beside.new(app.io, esp_uuid, disk.beside.start, disk.beside.size);
+            app.step(0.01, "Adding joe Linux beside {s} on {s}", .{ try besideWhat(app.arena, disk.beside), name });
+            const parts = disks.addBeside(device, b) catch return app.fail("{s}", .{disks.diag.message});
+            app.step(0.03, "Creating file systems", .{});
+            disks.formatBeside(parts.xbootldr, parts.root) catch return app.fail("{s}", .{disks.diag.message});
+            const esp_device = try std.fmt.allocPrint(app.arena, "/dev/disk/by-partuuid/{s}", .{disk.beside.esp});
+            disks.mountTarget(esp_device, parts.root) catch return app.fail("{s}", .{disks.diag.message});
+            disks.mountBoot(parts.xbootldr) catch return app.fail("{s}", .{disks.diag.message});
+            beside = b;
+            root_uuid = b.root_uuid;
+            fstab = try provision.fstabBeside(app.arena, b);
+        } else {
+            const layout = provision.Plan.new(app.io, provision.default_esp_size, null);
+            app.step(0.01, "Erasing {s}", .{name});
+            const parts = disks.partition(device, layout) catch return app.fail("{s}", .{disks.diag.message});
+            app.step(0.03, "Creating file systems", .{});
+            disks.format(parts.esp, parts.root) catch return app.fail("{s}", .{disks.diag.message});
+            disks.mountTarget(parts.esp, parts.root) catch return app.fail("{s}", .{disks.diag.message});
+            root_uuid = layout.root_uuid;
+            fstab = try provision.fstab(app.arena, layout);
+        }
 
         // The new system installs from the medium, trusting what this one
         // trusts.
@@ -1672,32 +1723,65 @@ const App = struct {
         try app.cmdSeal();
 
         app.step(0.94, "Making the disk bootable", .{});
-        try target.writeFile(app.io, .{ .sub_path = "etc/fstab", .data = try provision.fstab(app.arena, layout) });
+        try target.writeFile(app.io, .{ .sub_path = "etc/fstab", .data = fstab });
         const kernel = deploy.findKernelIn(app.arena, app.io, target) catch return app.fail("the installed system has no kernel", .{});
         const consoles = try provision.consoleArgs(app.arena, app.readAbsolute("/proc/cmdline") orelse "");
+        const options = try provision.cmdlineFor(app.arena, root_uuid, consoles);
+        // Closed before the target is unmounted, as the ESP is mounted in it.
         {
             var esp = try app.openDir(target_path ++ "/" ++ provision.esp_mount);
             defer esp.close(app.io);
-            provision.writeEsp(app.arena, app.io, esp, .{ .root = target, .kernel_path = kernel }, try provision.cmdline(app.arena, layout, consoles)) catch |e|
-                return app.fail("cannot write the EFI system partition: {t}", .{e});
-        }
-        // From now on the installed system takes its packages from where this
-        // one would.
-        try target.writeFile(app.io, .{ .sub_path = repo.config_path, .data = app.readAbsolute("/" ++ repo.config_path) orelse "" });
-        target.deleteTree(app.io, "var/cache/dave") catch {};
-        // Tell the firmware where the boot loader is. A firmware that will not
-        // be told still finds it at the removable-media path.
-        var diag: command.Diagnostic = .{};
-        if (command.run(app.arena, app.io, &.{
-            "bootctl",                "install",         "--root=" ++ target_path,    "--esp-path=/efi",
-            "--install-source=image", "--variables=yes", "--make-entry-directory=no", "--graceful",
-        }, .{}, &diag)) |_| {} else |_| {
-            app.say("note: the firmware was not told about the new system ({s}); it starts from the disk's removable-media path", .{diag.message}) catch {};
+            if (beside != null) {
+                var xbootldr = try app.openDir(target_path ++ "/" ++ provision.xbootldr_mount);
+                defer xbootldr.close(app.io);
+                provision.writeBeside(app.arena, app.io, esp, xbootldr, .{ .root = target, .kernel_path = kernel }, options) catch |e|
+                    return app.failErr(e, "cannot write the boot partitions", .{});
+                // joe-base's repart.d grows the first partition of type "root" on
+                // the disk into free space at every boot. Beside another Linux,
+                // that could be the other system's; joe already has its space.
+                try target.createDirPath(app.io, "etc/repart.d");
+                target.symLink(app.io, "/dev/null", "etc/repart.d/50-root.conf", .{}) catch |e|
+                    return app.failErr(e, "cannot turn off growing the root partition", .{});
+            } else {
+                provision.writeEsp(app.arena, app.io, esp, .{ .root = target, .kernel_path = kernel }, options) catch |e|
+                    return app.fail("cannot write the EFI system partition: {t}", .{e});
+            }
+            // From now on the installed system takes its packages from where this
+            // one would.
+            try target.writeFile(app.io, .{ .sub_path = repo.config_path, .data = app.readAbsolute("/" ++ repo.config_path) orelse "" });
+            target.deleteTree(app.io, "var/cache/dave") catch {};
+            // Tell the firmware where the boot loader is. A firmware that will not
+            // be told still finds it at the removable-media path. bootctl also
+            // copies the loader there, over whatever is there: beside another
+            // system, that is put back unless it was systemd-boot already.
+            const fallback = boot.loader_targets[1];
+            const kept: ?[]const u8 = if (beside != null) keep: {
+                const old = esp.readFileAlloc(app.io, fallback, app.arena, .limited(64 * 1024 * 1024)) catch break :keep null;
+                break :keep if (boot.isLoader(old)) null else old;
+            } else null;
+            var argv: std.ArrayList([]const u8) = .empty;
+            try argv.appendSlice(app.arena, &.{
+                "bootctl",                "install",         "--root=" ++ target_path,    "--esp-path=/efi",
+                "--install-source=image", "--variables=yes", "--make-entry-directory=no", "--graceful",
+            });
+            if (beside != null) try argv.append(app.arena, "--boot-path=/" ++ provision.xbootldr_mount);
+            var diag: command.Diagnostic = .{};
+            if (command.run(app.arena, app.io, argv.items, .{}, &diag)) |_| {} else |_| {
+                app.say("note: the firmware was not told about the new system ({s}); it starts from the disk's removable-media path", .{diag.message}) catch {};
+            }
+            if (kept) |data| esp.writeFile(app.io, .{ .sub_path = fallback, .data = data }) catch |e|
+                return app.failErr(e, "cannot put back the other system's {s}", .{fallback});
         }
 
         app.step(0.99, "Finishing", .{});
         _ = linux.sync();
         disks.unmountTarget();
+    }
+
+    /// "Windows", "Windows and Linux", or "another system".
+    fn besideWhat(arena: Allocator, b: install_system.Beside) ![]const u8 {
+        if (b.systems.len == 0) return "another system";
+        return listNames(arena, b.systems, 3);
     }
 
     const InstallProgress = struct {

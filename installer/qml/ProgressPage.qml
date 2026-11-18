@@ -9,7 +9,17 @@ PageFrame {
     title: qsTr("Installing joe Linux")
     body: Backend.step
 
-    DiskStrip { Layout.fillWidth: true; joe: true; fill: Backend.progress }
+    // The disk being installed onto, as the confirmation page drew it.
+    property var disk: ({})
+    property bool beside: false
+
+    DiskStrip {
+        Layout.fillWidth: true
+        joe: true
+        fill: Backend.progress
+        layout: page.beside ? (page.disk.layout || []) : []
+        region: page.beside ? { start: page.disk.besideStart, size: page.disk.besideFraction } : null
+    }
     Text {
         Layout.fillWidth: true
         wrapMode: Text.Wrap
