@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """End-to-end test of dave's deployments in a real VM: upgrade, late edits,
-boot loader update, rollback, live install, power loss, and unattended
-recovery from a broken upgrade.
+boot loader update, rollback, live install, nested subvolumes, power loss,
+unattended recovery from a broken upgrade, and what users without root see.
 
     deployments.py            on the scaffold (host kernel, borrowed userspace)
     deployments.py --joe      on an image built entirely from joe's own packages
@@ -29,10 +29,42 @@ def deployments(vm):
     return sorted(int(d) for d in vm.run("ls /run/dave/top/joe/deploy/").split() if d.isdigit())
 
 
+def scratch_left(vm):
+    return vm.run("ls -A /run/dave/top/joe/deploy/ | grep -c scratch", check=False).strip()
+
+
+def nested_in(vm, deployment):
+    """The subvolumes nested in a deployment, as btrfs lists them."""
+    return vm.run(f"btrfs subvolume list -o /run/dave/top/joe/deploy/{deployment}").strip()
+
+
+def as_user(vm, command, check=True):
+    """Runs a command as a user without any privileges. joe's util-linux has
+    neither setpriv nor runuser, and su from root asks for no password, but
+    Arch's nobody has expired: the account is the test's own. It is a system
+    account, made in deployment 1 before any other exists, so every
+    deployment has it and rollback has no person to warn about."""
+    vm.run("id dave-user >/dev/null 2>&1 || useradd --system --no-create-home --home-dir / --shell /bin/sh dave-user")
+    return vm.run(f"su dave-user -c 'cd / && {command}'", check=check)
+
+
+def wait_published(vm):
+    """Waits for dave-status.service, which publishes the state at boot."""
+    for _ in range(60):
+        if vm.run("systemctl is-active dave-status.service", check=False).strip() == "active":
+            return
+        time.sleep(1)
+    raise AssertionError("dave-status.service never ran: " + vm.run("systemctl status dave-status.service --no-pager", check=False))
+
+
 def expect_running(vm, deployment):
     got = vm.current_subvol()
     assert got == f"joe/deploy/{deployment}", f"expected deployment {deployment}, running {got}"
-    assert f"Running deployment {deployment}." in vm.run("dave status")
+    status = vm.run("dave status")
+    assert f"Running deployment {deployment}." in status, status
+    # Root's dave has just published what it showed; a user sees the same.
+    seen = as_user(vm, "dave status")
+    assert seen == status, f"a user sees:\n{seen}\nroot sees:\n{status}"
 
 
 def digest(vm, path):
@@ -53,8 +85,14 @@ def reboot_into_upgrade(vm, deployment):
     with commands rather than matched on the console, where kernel messages
     can land in the middle of a line."""
     vm.reboot(300)
-    expect_running(vm, deployment)
+    assert vm.current_subvol() == f"joe/deploy/{deployment}", vm.current_subvol()
     wait_blessed(vm, deployment)
+    # Published at boot, after the boot was marked good, so a user sees what
+    # root does before root has run dave at all.
+    wait_published(vm)
+    published = as_user(vm, "dave status")
+    expect_running(vm, deployment)
+    assert published == vm.run("dave status"), published
     assert vm.run("systemctl is-active dave-boot-check.service", check=False).strip() == "active"
     assert "An upgrade is ready" not in vm.run("dave status")
 
@@ -117,13 +155,23 @@ def scenarios(vm, repo):
 
     step("upgrade: prepared without touching the running system")
     repo.package("hello", "2.0-r1", {"usr/bin/hello": script("echo hello v2")})
-    repo.package("release-marker", "2-r1", {"usr/lib/release-marker": "2\n"})
+    repo.package("release-marker", "2-r1", {
+        "usr/lib/release-marker": "2\n",
+        # A directory systemd-tmpfiles makes a subvolume of where it can, as it
+        # does systemd's own /var/lib/machines, and a trigger that runs it when
+        # the upgrade is applied (the scaffold has no joe systemd to do that).
+        "usr/lib/tmpfiles.d/dave-test.conf": "v /var/lib/dave-test 0755 - - -\n",
+        "usr/lib/dave/triggers/90-dave-test.zon":
+            '.{ .paths = .{"usr/lib/tmpfiles.d/"}, .exec = .{ "/usr/bin/systemd-tmpfiles", "--create", "/usr/lib/tmpfiles.d/dave-test.conf" } }\n',
+    })
     repo.index()
     out = vm.run("dave upgrade", timeout=300)
     assert "upgrade  hello  1.0-r1 -> 2.0-r1" in out, out
     assert "The running system has not been changed." in out, out
     assert vm.run("hello").strip() == "hello v1"
     assert deployments(vm) == [1], deployments(vm)
+    # The rehearsal ran the trigger in a scratch snapshot, which is gone.
+    assert scratch_left(vm) == "0", vm.run("ls -A /run/dave/top/joe/deploy/")
     assert entries(vm) == ["joe-1.conf"], entries(vm)
     assert "An upgrade is ready" in vm.run("dave status")
 
@@ -142,6 +190,10 @@ def scenarios(vm, repo):
     assert vm.run("cat /usr/lib/release-marker").strip() == "2"
     assert vm.run("cat /etc/late-edit").strip() == "made-after-upgrade"
     assert "Everything is up to date." in vm.run("dave upgrade", timeout=300)
+
+    step("upgrade: the trigger's subvolume is in the shared /var, not hidden in the deployment")
+    assert nested_in(vm, 2) == "", nested_in(vm, 2)
+    assert vm.run("test -d /var/lib/dave-test; echo $?").strip() == "0"
 
     step("upgrade: the newer boot loader reached the ESP, and has just booted this system")
     for copy in LOADER_COPIES:
@@ -174,7 +226,30 @@ def scenarios(vm, repo):
     assert vm.run("command -v moo", check=False).strip() == ""
     assert vm.run("hello").strip() == "hello v1"
 
+    step("nested subvolumes: hidden ones are cleared, others refused by name")
+    # Where dave 0.2.1's upgrades left subvolumes: in the deployment's own
+    # /var, under the shared one, out of reach of the running system.
+    vm.run("mkdir -p /run/dave/top/joe/deploy/3/var/lib && btrfs subvolume create /run/dave/top/joe/deploy/3/var/lib/left-behind")
+    vm.run("mkdir -p /opt && btrfs subvolume create /opt/nested")
+    out = vm.run("dave upgrade 2>&1", timeout=300, check=False)
+    assert "nested btrfs subvolumes (/opt/nested)" in out, out
+    assert vm.run("test -e /run/dave/top/joe/deploy/3/var/lib/left-behind; echo $?").strip() == "1"
+    vm.run("btrfs subvolume delete /opt/nested")
+    out = vm.run("dave upgrade", timeout=300)
+    assert "will be applied when the system shuts down" in out, out
+    assert nested_in(vm, 3) == "", nested_in(vm, 3)
+
+    step("users without root: status, deployments and search, but not the top level")
+    assert as_user(vm, "dave deployments") == vm.run("dave deployments")
+    assert "hello 2.0-r1" in as_user(vm, "dave search hello")
+    assert as_user(vm, "ls /run/dave/top >/dev/null 2>&1; echo $?").strip() != "0"
+    assert vm.run("stat -c %a /run/dave/top").strip() == "700"
+    assert "nosuid" in vm.run("findmnt -no OPTIONS /run/dave/top")
+
     step("an upgrade killed while it is being prepared leaves the system as it was")
+    # A rehearsal's leftover from dave 0.2.1, holding a subvolume of its own.
+    vm.run("btrfs subvolume create /run/dave/top/joe/deploy/.scratch-old && "
+           "btrfs subvolume create /run/dave/top/joe/deploy/.scratch-old/inner")
     before = (deployments(vm), entries(vm))
     out = vm.run("dave upgrade >/dev/null 2>&1 & pid=$!; sleep 0.05; kill -9 $pid; wait $pid; echo status=$?", check=False)
     print(f"    {out.strip().splitlines()[-1]} (137 means the kill landed mid-run)")
@@ -185,7 +260,7 @@ def scenarios(vm, repo):
     # file), the lock is free and housekeeping restores a clean slate.
     vm.run("dave deployments gc")
     assert deployments(vm) == before[0], deployments(vm)
-    assert vm.run("ls -A /run/dave/top/joe/deploy/ | grep -c scratch", check=False).strip() == "0"
+    assert scratch_left(vm) == "0", vm.run("ls -A /run/dave/top/joe/deploy/")
 
     step("power loss between preparing an upgrade and shutting down")
     out = vm.run("dave upgrade", timeout=300)

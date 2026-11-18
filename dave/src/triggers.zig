@@ -76,6 +76,13 @@ pub const RunOptions = struct {
     chroot_path: ?[]const u8,
     /// Path of the dave executable, used to enter the chroot.
     self_exe: []const u8,
+    /// Directories of the chroot, relative to it, that a booted system has
+    /// other file systems mounted on (a deployment's /var and /home). Trigger
+    /// programs find an empty tmpfs there, as they would find the shared
+    /// subvolume at boot: what they write there is not left behind in the
+    /// root, hidden under the mount, and systemd-tmpfiles cannot make a
+    /// nested subvolume of a directory there. Ignored without `chroot_path`.
+    shared: []const []const u8 = &.{},
     /// The environment trigger programs get; dave's own when null.
     environ_map: ?*const std.process.Environ.Map = null,
 };
@@ -91,6 +98,7 @@ pub fn run(arena: Allocator, io: Io, triggers: []const Trigger, options: RunOpti
         var argv: std.ArrayList([]const u8) = .empty;
         if (options.chroot_path) |path| {
             try argv.appendSlice(arena, &.{ options.self_exe, chroot_command, path });
+            for (options.shared) |dir| try argv.append(arena, try std.fmt.allocPrint(arena, tmpfs_flag ++ "{s}", .{dir}));
         }
         try argv.appendSlice(arena, t.exec);
         var child = try std.process.spawn(io, .{ .argv = argv.items, .stdin = .ignore, .environ_map = options.environ_map });
@@ -99,8 +107,10 @@ pub fn run(arena: Allocator, io: Io, triggers: []const Trigger, options: RunOpti
     }
 }
 
-/// Hidden subcommand: `dave --chroot-exec <dir> <program> [args...]`.
+/// Hidden subcommand: `dave --chroot-exec <dir> [--tmpfs=PATH]... <program> [args...]`.
+/// The program is an absolute path, so it cannot be taken for an option.
 pub const chroot_command = "--chroot-exec";
+pub const tmpfs_flag = "--tmpfs=";
 
 const testing = std.testing;
 

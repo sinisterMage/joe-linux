@@ -1,0 +1,21 @@
+# Publishes what `dave status` shows for users without root, who cannot read
+# the EFI system partition or the top of the btrfs file system. Every dave
+# command run as root publishes it again; this writes it at boot, once
+# systemd-bless-boot has recorded whether a new deployment's boot was good.
+#
+# DefaultDependencies=no keeps multi-user.target from being ordered after this
+# unit: dave-boot-check.service runs after multi-user.target, and before the
+# boot-complete.target that systemd-bless-boot.service waits for.
+[Unit]
+Description=Publish the state of joe Linux's deployments
+DefaultDependencies=no
+RequiresMountsFor=/efi /var
+After=local-fs.target systemd-bless-boot.service
+Before=shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/dave status
+StandardOutput=null

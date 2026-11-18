@@ -6,6 +6,7 @@
 
 const std = @import("std");
 const Io = std.Io;
+const Allocator = std.mem.Allocator;
 const linux = std.os.linux;
 
 const ioctl_magic = 0x94;
@@ -57,11 +58,23 @@ const RootRefArgs = extern struct {
     @"align": [7]u8 = @splat(0),
 };
 
+/// `BTRFS_VOL_NAME_MAX + 1` and `BTRFS_INO_LOOKUP_USER_PATH_MAX`.
+const InoLookupUserArgs = extern struct {
+    dirid: u64 = 0,
+    treeid: u64 = 0,
+    name: [256]u8 = @splat(0),
+    path: [3824]u8 = @splat(0),
+};
+
+/// The longest path `nestedPath` can return.
+const path_max = @sizeOf(@FieldType(InoLookupUserArgs, "path")) + @sizeOf(@FieldType(InoLookupUserArgs, "name"));
+
 comptime {
     std.debug.assert(@sizeOf(VolArgsV2) == 4096);
     std.debug.assert(@sizeOf(VolArgs) == 4096);
     std.debug.assert(@sizeOf(SubvolInfoArgs) == 504);
     std.debug.assert(@sizeOf(RootRefArgs) == 4096);
+    std.debug.assert(@sizeOf(InoLookupUserArgs) == 4096);
 }
 
 const Direction = enum(u32) { write = 1, read = 2, read_write = 3 };
@@ -75,6 +88,7 @@ const SNAP_CREATE_V2 = request(.write, 23, VolArgsV2);
 const SUBVOL_CREATE_V2 = request(.write, 24, VolArgsV2);
 const GET_SUBVOL_INFO = request(.read, 60, SubvolInfoArgs);
 const GET_SUBVOL_ROOTREF = request(.read_write, 61, RootRefArgs);
+const INO_LOOKUP_USER = request(.read_write, 62, InoLookupUserArgs);
 
 pub const Error = error{
     NotBtrfs,
@@ -133,14 +147,54 @@ pub fn destroySubvolume(parent: Io.Dir, name: []const u8) Error!void {
     try check(linux.ioctl(parent.handle, SNAP_DESTROY, @intFromPtr(&args)));
 }
 
-/// Deletes a subvolume, falling back to removing its contents file by file
-/// where the kernel refuses the direct operation to unprivileged users.
-pub fn removeSubvolume(io: Io, parent: Io.Dir, name: []const u8) !void {
+pub const RemoveError = Error || Io.Dir.OpenError || Io.Dir.DeleteTreeError;
+
+/// Deletes a subvolume and any subvolumes inside it, falling back to removing
+/// its contents file by file where the kernel refuses the direct operation to
+/// unprivileged users (rmdir(2) then removes the nested ones once emptied).
+pub fn removeSubvolume(io: Io, parent: Io.Dir, name: []const u8) RemoveError!void {
     destroySubvolume(parent, name) catch |err| switch (err) {
         error.NotFound => return,
         error.PermissionDenied => return parent.deleteTree(io, name),
+        // The kernel deletes only a subvolume with none inside it.
+        error.NotEmpty => {
+            var sub = try parent.openDir(io, name, .{ .iterate = true });
+            defer sub.close(io);
+            try removeNested(io, sub);
+            return destroySubvolume(parent, name);
+        },
         else => return err,
     };
+}
+
+/// Deletes the subvolume at `path`, relative to `dir`.
+pub fn removeSubvolumeAt(io: Io, dir: Io.Dir, path: []const u8) RemoveError!void {
+    const parent_path = std.fs.path.dirname(path) orelse return removeSubvolume(io, dir, path);
+    var parent = try dir.openDir(io, parent_path, .{ .iterate = true });
+    defer parent.close(io);
+    return removeSubvolume(io, parent, std.fs.path.basename(path));
+}
+
+/// Deletes every subvolume inside the subvolume whose root directory is
+/// `dir`, depth first. One at a time, so that nothing needs allocating: each
+/// round takes whichever is listed first, until none is.
+fn removeNested(io: Io, dir: Io.Dir) RemoveError!void {
+    var previous: u64 = 0;
+    while (true) {
+        var args: RootRefArgs = .{};
+        const rc = linux.ioctl(dir.handle, GET_SUBVOL_ROOTREF, @intFromPtr(&args));
+        switch (linux.errno(rc)) {
+            .SUCCESS, .OVERFLOW => {},
+            else => try check(rc),
+        }
+        if (args.num_items == 0) return;
+        const first = args.rootref[0];
+        // Removing it did not take it off the list: stop rather than loop.
+        if (first.treeid == previous) return error.Unexpected;
+        previous = first.treeid;
+        var buf: [path_max]u8 = undefined;
+        try removeSubvolumeAt(io, dir, try nestedPath(dir, first.treeid, first.dirid, &buf));
+    }
 }
 
 pub const SubvolumeInfo = struct {
@@ -156,19 +210,44 @@ pub fn subvolumeInfo(dir: Io.Dir) Error!SubvolumeInfo {
     return .{ .id = args.treeid, .parent_id = args.parent_id, .generation = args.generation };
 }
 
-/// Whether the subvolume containing `dir` has other subvolumes nested inside
-/// it. A snapshot does not descend into nested subvolumes, so a root that has
-/// them cannot be captured faithfully.
-pub fn hasNestedSubvolumes(dir: Io.Dir) Error!bool {
+/// The paths, relative to `dir`, of the subvolumes directly inside the
+/// subvolume whose root directory `dir` is. A snapshot does not descend into
+/// nested subvolumes, so a root that has them cannot be captured faithfully.
+/// Needs no privileges.
+pub fn nestedSubvolumes(arena: Allocator, dir: Io.Dir) (Error || Allocator.Error)![]const []const u8 {
+    var out: std.ArrayList([]const u8) = .empty;
     var args: RootRefArgs = .{};
-    const rc = linux.ioctl(dir.handle, GET_SUBVOL_ROOTREF, @intFromPtr(&args));
-    switch (linux.errno(rc)) {
-        .SUCCESS, .OVERFLOW => return args.num_items > 0,
-        else => {
-            try check(rc);
-            unreachable;
-        },
+    while (true) {
+        const rc = linux.ioctl(dir.handle, GET_SUBVOL_ROOTREF, @intFromPtr(&args));
+        // More than fit in one call: the kernel has set `min_treeid` to
+        // continue from.
+        const more = switch (linux.errno(rc)) {
+            .SUCCESS => false,
+            .OVERFLOW => true,
+            else => {
+                try check(rc);
+                unreachable;
+            },
+        };
+        for (args.rootref[0..args.num_items]) |ref| {
+            var buf: [path_max]u8 = undefined;
+            try out.append(arena, try arena.dupe(u8, try nestedPath(dir, ref.treeid, ref.dirid, &buf)));
+        }
+        if (!more or args.num_items == 0) return out.items;
     }
+}
+
+/// The path, relative to `dir` (the root directory of its subvolume), of the
+/// nested subvolume `treeid`, which sits in the directory with inode `dirid`.
+fn nestedPath(dir: Io.Dir, treeid: u64, dirid: u64, buf: *[path_max]u8) Error![]const u8 {
+    var args: InoLookupUserArgs = .{ .dirid = dirid, .treeid = treeid };
+    try check(linux.ioctl(dir.handle, INO_LOOKUP_USER, @intFromPtr(&args)));
+    // The directory's path comes with a trailing slash, or is empty.
+    const parent = std.mem.sliceTo(&args.path, 0);
+    const name = std.mem.sliceTo(&args.name, 0);
+    @memcpy(buf[0..parent.len], parent);
+    @memcpy(buf[parent.len..][0..name.len], name);
+    return buf[0 .. parent.len + name.len];
 }
 
 const testing = std.testing;
@@ -207,13 +286,62 @@ test "create, snapshot, inspect and remove subvolumes" {
     const outer = try subvolumeInfo(tmp.dir);
     try testing.expect(outer.id != a.id);
 
-    try testing.expect(!try hasNestedSubvolumes(source));
+    try testing.expectEqual(@as(usize, 0), (try nestedSubvolumes(testing.allocator, source)).len);
     try createSubvolume(source, "nested");
-    try testing.expect(try hasNestedSubvolumes(source));
+    {
+        var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+        defer arena_state.deinit();
+        const found = try nestedSubvolumes(arena_state.allocator(), source);
+        try testing.expectEqual(@as(usize, 1), found.len);
+        try testing.expectEqualStrings("nested", found[0]);
+    }
 
     try removeSubvolume(io, source, "nested");
     try removeSubvolume(io, tmp.dir, "copy");
     try testing.expectError(error.FileNotFound, tmp.dir.statFile(io, "copy", .{}));
     try removeSubvolume(io, tmp.dir, "copy"); // already gone: not an error
     try removeSubvolume(io, tmp.dir, "source");
+}
+
+test "nested subvolumes are found by path and removed with their parent" {
+    const io = testing.io;
+    var tmp = testing.tmpDir(.{ .iterate = true });
+    defer tmp.cleanup();
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+
+    createSubvolume(tmp.dir, "outer") catch |err| switch (err) {
+        error.NotBtrfs => return error.SkipZigTest,
+        else => return err,
+    };
+    var outer = try tmp.dir.openDir(io, "outer", .{ .iterate = true });
+    defer outer.close(io);
+    try outer.createDirPath(io, "a/b");
+    var b = try outer.openDir(io, "a/b", .{ .iterate = true });
+    defer b.close(io);
+    try createSubvolume(b, "inner");
+    try createSubvolume(outer, "top");
+    var inner = try b.openDir(io, "inner", .{ .iterate = true });
+    defer inner.close(io);
+    try createSubvolume(inner, "deepest");
+
+    // Only the subvolumes directly inside: "deepest" belongs to "inner".
+    const found = try nestedSubvolumes(arena, outer);
+    try testing.expectEqual(@as(usize, 2), found.len);
+    var saw_inner = false;
+    var saw_top = false;
+    for (found) |path| {
+        if (std.mem.eql(u8, path, "a/b/inner")) saw_inner = true;
+        if (std.mem.eql(u8, path, "top")) saw_top = true;
+    }
+    try testing.expect(saw_inner and saw_top);
+
+    try removeSubvolumeAt(io, outer, "top");
+    const left = try nestedSubvolumes(arena, outer);
+    try testing.expectEqual(@as(usize, 1), left.len);
+    try testing.expectEqualStrings("a/b/inner", left[0]);
+    // The parent goes with everything still inside it.
+    try removeSubvolume(io, tmp.dir, "outer");
+    try testing.expectError(error.FileNotFound, tmp.dir.statFile(io, "outer", .{}));
 }

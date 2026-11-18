@@ -14,6 +14,13 @@
 //! A failure at any point deletes the snapshot and leaves the running system
 //! and its boot entry untouched. Health, fallback and rollback are delegated
 //! to the boot loader as described in boot.zig.
+//!
+//! Triggers run in the snapshot through a chroot, where /var and /home are
+//! covered by an empty tmpfs: at boot the shared subvolumes are mounted
+//! there, so anything written to the snapshot's own directories would only
+//! lie hidden under them. Without the cover, systemd-tmpfiles makes its
+//! `Q /var/lib/machines` a subvolume nested in the snapshot, and the next
+//! snapshot of that root is refused.
 
 const std = @import("std");
 const Io = std.Io;
@@ -33,6 +40,9 @@ pub const microcode_path = "usr/lib/joe/microcode.img";
 pub const state_path = "joe/state.zon";
 pub const default_keep = 3;
 const scratch_prefix = ".scratch-";
+/// Subvolumes at the top level holding what every deployment shares, each
+/// mounted on the directory of the same name in the running root.
+pub const shared_subvolumes = [_][]const u8{ "var", "home" };
 
 /// A recorded upgrade waiting for the next shutdown.
 pub const Staged = struct {
@@ -189,16 +199,45 @@ pub const System = struct {
                 .root = target,
                 .chroot_path = try std.fmt.allocPrint(s.arena, "{s}/" ++ deploy_dir ++ "/{s}", .{ s.top_path, target_name }),
                 .self_exe = s.self_exe,
+                .shared = &shared_subvolumes,
             }) catch |err| return s.fail(err, "a trigger failed in the upgraded system", .{});
         }
         try s.sanityCheck(target);
         return result;
     }
 
+    /// A snapshot leaves out the subvolumes nested in the root, so a root with
+    /// any is refused, naming them, once the hidden ones are gone.
     fn refuseNested(s: *System) !void {
-        if (try btrfs.hasNestedSubvolumes(s.root))
-            return s.fail(error.NestedSubvolumes, "the root contains nested btrfs subvolumes, which a snapshot would not include; " ++
-                "move them under /var or /home", .{});
+        const visible = try s.removeHiddenSubvolumes();
+        if (visible.len == 0) return;
+        var names: Io.Writer.Allocating = .init(s.arena);
+        for (visible, 0..) |path, i| try names.writer.print("{s}/{s}", .{ if (i > 0) ", " else "", path });
+        return s.fail(error.NestedSubvolumes, "the root contains nested btrfs subvolumes ({s}), which a snapshot would not include; " ++
+            "move them under /var or /home", .{names.written()});
+    }
+
+    /// Deletes the subvolumes nested in the running root beneath its /var and
+    /// /home directories, and returns the paths of any others. Those beneath
+    /// lie under the shared subvolumes mounted there, so nothing on the
+    /// running system can reach them; dave 0.2.1 and earlier made them by
+    /// running triggers without the cover described at the top of this file.
+    pub fn removeHiddenSubvolumes(s: *System) ![]const []const u8 {
+        const nested = try btrfs.nestedSubvolumes(s.arena, s.root);
+        if (nested.len == 0) return nested;
+        // Through the top level: from / they are covered by the mounts.
+        const path = try std.fmt.allocPrint(s.arena, deploy_dir ++ "/{d}", .{s.current});
+        var uncovered = try s.top.openDir(s.io, path, .{ .iterate = true });
+        defer uncovered.close(s.io);
+        var visible: std.ArrayList([]const u8) = .empty;
+        for (nested) |sub| {
+            if (underShared(sub)) {
+                try btrfs.removeSubvolumeAt(s.io, uncovered, sub);
+            } else {
+                try visible.append(s.arena, sub);
+            }
+        }
+        return visible.items;
     }
 
     // -- staging --------------------------------------------------------------
@@ -476,7 +515,7 @@ pub const System = struct {
     };
 
     pub const Overview = struct {
-        deployments: []DeploymentView,
+        deployments: []const DeploymentView,
         staged: ?Staged,
         last_finalize: ?FinalizeOutcome,
     };
@@ -508,6 +547,45 @@ pub const System = struct {
         return .{ .deployments = views.items, .staged = state.staged, .last_finalize = state.last_finalize };
     }
 };
+
+/// What `dave status` shows, as root publishes it for everyone else (main.zig
+/// keeps it in /run/dave). Reading the original takes the top level of the
+/// file system and the EFI system partition, which only root may open.
+pub const Published = struct {
+    /// The deployment that was running when this was written.
+    running: u32,
+    deployments: []const System.DeploymentView = &.{},
+    staged: ?Staged = null,
+    last_finalize: ?FinalizeOutcome = null,
+
+    pub fn of(running: u32, view: System.Overview) Published {
+        return .{ .running = running, .deployments = view.deployments, .staged = view.staged, .last_finalize = view.last_finalize };
+    }
+
+    pub fn overview(p: Published) System.Overview {
+        return .{ .deployments = p.deployments, .staged = p.staged, .last_finalize = p.last_finalize };
+    }
+
+    pub fn serialize(p: Published, arena: Allocator) ![]const u8 {
+        var text: Io.Writer.Allocating = .init(arena);
+        try std.zon.stringify.serialize(p, .{}, &text.writer);
+        try text.writer.writeByte('\n');
+        return text.written();
+    }
+
+    pub fn parse(arena: Allocator, text: []const u8) !Published {
+        return manifest_mod.parseZon(Published, arena, text);
+    }
+};
+
+/// Whether a path relative to a deployment's root lies beneath one of the
+/// directories the shared subvolumes are mounted on.
+fn underShared(path: []const u8) bool {
+    for (shared_subvolumes) |dir| {
+        if (path.len > dir.len and std.mem.startsWith(u8, path, dir) and path[dir.len] == '/') return true;
+    }
+    return false;
+}
 
 /// The name on a passwd line, if it is a person's account: system accounts
 /// come and go with the packages that declare them and are not of interest.
@@ -918,4 +996,97 @@ test "garbage collection keeps what matters and removes the rest" {
     const view = try s.overview();
     try testing.expectEqual(@as(usize, 3), view.deployments.len);
     try testing.expect(view.deployments[0].running and view.deployments[0].next_boot);
+}
+
+test "subvolumes hidden under /var are removed before a snapshot, and others are refused by name" {
+    var fx: Fixture = undefined;
+    if (!try fx.init()) return error.SkipZigTest;
+    defer fx.deinit();
+    const io = testing.io;
+    const s = &fx.sys;
+
+    // What an upgrade by dave 0.2.1 left in the deployment it made.
+    try s.root.createDirPath(io, "var/lib");
+    var lib = try s.root.openDir(io, "var/lib", .{ .iterate = true });
+    defer lib.close(io);
+    try btrfs.createSubvolume(lib, "machines");
+    try btrfs.createSubvolume(lib, "portables");
+    // One the administrator made, which a snapshot would lose.
+    try s.root.createDirPath(io, "opt");
+    var opt = try s.root.openDir(io, "opt", .{ .iterate = true });
+    defer opt.close(io);
+    try btrfs.createSubvolume(opt, "data");
+
+    try testing.expectError(error.NestedSubvolumes, s.rollbackPoint("before: dave install hello"));
+    try testing.expect(std.mem.indexOf(u8, s.diag.message, "(/opt/data)") != null);
+    try testing.expectError(error.FileNotFound, lib.statFile(io, "machines", .{}));
+    try testing.expectError(error.FileNotFound, lib.statFile(io, "portables", .{}));
+    try testing.expectEqual(@as(usize, 1), (try s.deploymentIds()).len);
+
+    try btrfs.removeSubvolume(io, opt, "data");
+    try testing.expectEqual(@as(u32, 2), try s.rollbackPoint("before: dave install hello"));
+
+    try testing.expect(underShared("var/lib/machines"));
+    try testing.expect(underShared("home/ann/vm"));
+    // The mount points themselves are part of the root.
+    try testing.expect(!underShared("var"));
+    try testing.expect(!underShared("various/x"));
+}
+
+test "garbage collection removes snapshots with subvolumes inside them" {
+    var fx: Fixture = undefined;
+    if (!try fx.init()) return error.SkipZigTest;
+    defer fx.deinit();
+    const io = testing.io;
+    const s = &fx.sys;
+
+    var parent = try s.deployParent();
+    defer parent.close(io);
+    // A deployment that never completed, and a staging rehearsal's leftover,
+    // each holding a subvolume as dave 0.2.1's triggers made them.
+    const doomed = [_][]const u8{ "99", scratch_prefix ++ "old" };
+    for (doomed) |name| {
+        try btrfs.snapshot(s.root, parent, name);
+        var sub = try parent.openDir(io, name, .{ .iterate = true });
+        defer sub.close(io);
+        try sub.createDirPath(io, "var/lib");
+        var lib = try sub.openDir(io, "var/lib", .{ .iterate = true });
+        defer lib.close(io);
+        try btrfs.createSubvolume(lib, "machines");
+    }
+
+    const removed = try s.collectGarbage(default_keep);
+    try testing.expectEqualSlices(u32, &.{99}, removed);
+    for (doomed) |name| try testing.expectError(error.FileNotFound, parent.statFile(io, name, .{}));
+}
+
+test "the published status reads back as it was written" {
+    var fx: Fixture = undefined;
+    if (!try fx.init()) return error.SkipZigTest;
+    defer fx.deinit();
+    const s = &fx.sys;
+
+    _ = try s.rollbackPoint("before: dave install hello");
+    try s.setPinned(2, true);
+    try fx.installLive(try fx.package("hello", "1.0-r1", "usr/bin/hello", "v1"));
+    _ = try s.stage(try fx.plan(&.{try fx.package("hello", "2.0-r1", "usr/bin/hello", "v2")}, "1 to install or upgrade, 0 to remove"));
+
+    const view = try s.overview();
+    const back = try Published.parse(s.arena, try Published.of(1, view).serialize(s.arena));
+    try testing.expectEqual(@as(u32, 1), back.running);
+    try testing.expectEqual(view.deployments.len, back.deployments.len);
+    for (view.deployments, back.deployments) |a, b| {
+        try testing.expectEqual(a.id, b.id);
+        try testing.expectEqual(a.running, b.running);
+        try testing.expectEqual(a.next_boot, b.next_boot);
+        try testing.expectEqual(a.health, b.health);
+        try testing.expectEqual(a.priority, b.priority);
+        try testing.expectEqual(a.record != null, b.record != null);
+        if (a.record) |r| {
+            try testing.expectEqualStrings(r.reason, b.record.?.reason);
+            try testing.expectEqual(r.pinned, b.record.?.pinned);
+        }
+    }
+    try testing.expectEqualStrings(view.staged.?.summary, back.staged.?.summary);
+    try testing.expect(back.last_finalize == null);
 }

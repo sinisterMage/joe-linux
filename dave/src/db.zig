@@ -72,11 +72,18 @@ pub fn stateHash(arena: Allocator, installed: []const Manifest) Allocator.Error!
 
 /// Writes a file so that a crash leaves either the old or the new contents.
 pub fn writeAtomic(arena: Allocator, io: Io, dir: Io.Dir, sub_path: []const u8, data: []const u8) !void {
+    return writeAtomicWith(arena, io, dir, sub_path, data, null);
+}
+
+/// writeAtomic, giving the file exactly `permissions` (when not null)
+/// whatever the umask.
+pub fn writeAtomicWith(arena: Allocator, io: Io, dir: Io.Dir, sub_path: []const u8, data: []const u8, permissions: ?Io.File.Permissions) !void {
     const tmp = try std.fmt.allocPrint(arena, "{s}.dave-tmp", .{sub_path});
     {
         var file = try dir.createFile(io, tmp, .{});
         defer file.close(io);
         errdefer dir.deleteFile(io, tmp) catch {};
+        if (permissions) |p| try file.setPermissions(io, p);
         var buf: [16 * 1024]u8 = undefined;
         var w = file.writer(io, &buf);
         try w.interface.writeAll(data);

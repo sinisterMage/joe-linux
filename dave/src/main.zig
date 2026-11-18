@@ -28,9 +28,11 @@ pub const iso = @import("iso.zig");
 pub const command = @import("command.zig");
 pub const install_system = @import("install_system.zig");
 
-const dave_version = "0.2.1";
+const dave_version = "0.2.2";
 const top_mount = "/run/dave/top";
 const lock_path = "/run/dave/lock";
+/// What `dave status` shows, written by root for everyone (deploy.Published).
+const status_path = "/run/dave/status.zon";
 const esp_path = "/efi";
 const system_cache = "/var/cache/dave";
 const boot_check_hooks = "etc/dave/boot-check.d";
@@ -143,6 +145,9 @@ const App = struct {
     last_error: []const u8 = "",
     /// Passed to transactions, for progress events.
     progress: ?txn.Progress = null,
+    /// Set once the running system's deployments have been opened, so that
+    /// what `dave status` shows is published again before dave exits.
+    opened_system: bool = false,
 
     // -- reporting ------------------------------------------------------------
 
@@ -269,6 +274,9 @@ const App = struct {
         }
         const cmd = pos[0];
         const rest = pos[1..];
+        // Whatever the command did, and whether or not it succeeded, users
+        // without root then see the system as it now is.
+        defer if (app.opened_system) app.publishStatus();
         if (std.mem.eql(u8, cmd, "help")) return app.out.writeAll(usage);
         if (std.mem.eql(u8, cmd, "version")) return app.say("dave {s}", .{dave_version});
         if (std.mem.eql(u8, cmd, "install")) return app.cmdChange(.install, rest);
@@ -348,7 +356,9 @@ const App = struct {
         if (!std.mem.eql(u8, root.fstype, "btrfs")) return app.fail("/ is {s}, not btrfs", .{root.fstype});
         Io.Dir.cwd().createDirPath(app.io, top_mount) catch |e| return app.fail("cannot create {s}: {t}", .{ top_mount, e });
         const source = try app.arena.dupeSentinel(u8, root.source, 0);
-        const rc = linux.mount(source, top_mount, "btrfs", 0, @intFromPtr(@as([*:0]const u8, "subvolid=5")));
+        // Every deployment is under it, with the set-uid programs of each:
+        // they must not run from here. openSystem also closes it to users.
+        const rc = linux.mount(source, top_mount, "btrfs", linux.MS.NOSUID | linux.MS.NODEV, @intFromPtr(@as([*:0]const u8, "subvolid=5")));
         if (linux.errno(rc) != .SUCCESS)
             return app.fail("cannot mount the top of {s} at {s}: {t}", .{ root.source, top_mount, linux.errno(rc) });
     }
@@ -366,11 +376,16 @@ const App = struct {
         try app.mountTop();
         if (app.findMount(esp_path) == null) return app.fail("the EFI system partition is not mounted at {s}", .{esp_path});
         Io.Dir.cwd().createDirPath(app.io, system_cache) catch {};
-        return .{
+        const top = try app.openDir(top_mount);
+        // Only root may enter the top level, through this mount or any other:
+        // old deployments keep the set-uid programs they were made with.
+        top.setPermissions(app.io, .fromMode(0o700)) catch |e|
+            return app.fail("cannot close {s} to other users: {t}", .{ top_mount, e });
+        const sys: deploy.System = .{
             .gpa = app.gpa,
             .arena = app.arena,
             .io = app.io,
-            .top = try app.openDir(top_mount),
+            .top = top,
             .top_path = top_mount,
             .esp = try app.openDir(esp_path),
             .root = try app.openDir("/"),
@@ -378,6 +393,41 @@ const App = struct {
             .current = current,
             .run_triggers = !app.opts.no_triggers,
         };
+        app.opened_system = true;
+        return sys;
+    }
+
+    /// Writes what `dave status` shows to `status_path`, readable by everyone.
+    /// Best effort and silent: the command has already succeeded or failed,
+    /// and must not be reported otherwise because of this.
+    fn publishStatus(app: *App) void {
+        if (linux.geteuid() != 0) return;
+        const current = app.runningDeployment() orelse return;
+        var sys: deploy.System = .{
+            .gpa = app.gpa,
+            .arena = app.arena,
+            .io = app.io,
+            .top = Io.Dir.cwd().openDir(app.io, top_mount, .{ .iterate = true }) catch return,
+            .top_path = top_mount,
+            .esp = Io.Dir.cwd().openDir(app.io, esp_path, .{ .iterate = true }) catch return,
+            .root = Io.Dir.cwd().openDir(app.io, "/", .{ .iterate = true }) catch return,
+            .cache = Io.Dir.cwd().openDir(app.io, system_cache, .{ .iterate = true }) catch return,
+            .current = current,
+        };
+        defer for ([_]Io.Dir{ sys.top, sys.esp, sys.root, sys.cache }) |d| d.close(app.io);
+        const text = deploy.Published.of(current, sys.overview() catch return).serialize(app.arena) catch return;
+        var dir = Io.Dir.cwd().openDir(app.io, std.fs.path.dirname(status_path).?, .{}) catch return;
+        defer dir.close(app.io);
+        db.writeAtomicWith(app.arena, app.io, dir, std.fs.path.basename(status_path), text, .fromMode(0o644)) catch return;
+    }
+
+    /// The deployments as root last published them, if that was during this
+    /// boot of this deployment.
+    fn publishedView(app: *App, current: u32) ?deploy.System.Overview {
+        const text = app.readAbsolute(status_path) orelse return null;
+        const published = deploy.Published.parse(app.arena, text) catch return null;
+        if (published.running != current) return null;
+        return published.overview();
     }
 
     const Context = struct {
@@ -705,7 +755,12 @@ const App = struct {
     fn cmdSearch(app: *App, terms: []const []const u8) !void {
         if (terms.len != 1) return app.fail("give one search term", .{});
         const ctx = try app.context();
-        for (try app.candidates(ctx, true)) |c| {
+        // Only root can refresh the index; anyone can search the one fetched last.
+        const root = linux.geteuid() == 0;
+        const found = try app.candidates(ctx, root);
+        if (!root and found.len == 0)
+            return app.fail("no repository index has been fetched yet; 'sudo dave search {s}' fetches it", .{terms[0]});
+        for (found) |c| {
             if (std.mem.indexOf(u8, c.entry.name, terms[0]) == null and
                 std.ascii.findIgnoreCase(c.entry.description, terms[0]) == null) continue;
             try app.say("{s} {s}  {s}", .{ c.entry.name, c.entry.version, c.entry.description });
@@ -725,8 +780,19 @@ const App = struct {
             const ctx = try app.context();
             return app.say("{d} packages installed in {s} (not a deployment-managed system).", .{ ctx.installed.len, app.opts.root });
         };
+        if (linux.geteuid() != 0) {
+            const view = app.publishedView(current) orelse {
+                try app.say("Running deployment {d}.", .{current});
+                return app.say("Until dave-status.service has run at boot, only root can see the other deployments " ++
+                    "and any pending upgrade; 'sudo dave status' shows them.", .{});
+            };
+            return app.printStatus(current, view);
+        }
         var sys = try app.openSystem(current);
-        const view = try sys.overview();
+        try app.printStatus(current, try sys.overview());
+    }
+
+    fn printStatus(app: *App, current: u32, view: deploy.System.Overview) !void {
         try app.say("Running deployment {d}.", .{current});
         for (view.deployments) |d| {
             if (d.next_boot and !d.running) try app.say("Deployment {d} will start on the next boot.", .{d.id});
@@ -775,8 +841,17 @@ const App = struct {
     }
 
     fn cmdDeployments(app: *App, args: []const []const u8) !void {
+        if (args.len == 0 or std.mem.eql(u8, args[0], "list")) {
+            const current = app.runningDeployment() orelse
+                return app.fail("this command only applies to a running joe Linux system", .{});
+            if (linux.geteuid() != 0)
+                return app.printDeployments(app.publishedView(current) orelse
+                    return app.fail("until dave-status.service has run at boot, only root can list the deployments; " ++
+                        "'sudo dave deployments' lists them", .{}));
+            var sys = try app.openSystem(current);
+            return app.printDeployments(try sys.overview());
+        }
         var sys = try app.requireSystem();
-        if (args.len == 0 or std.mem.eql(u8, args[0], "list")) return app.printDeployments(try sys.overview());
         var lock_file = try app.lock();
         defer lock_file.close(app.io);
         if (std.mem.eql(u8, args[0], "gc")) {
@@ -837,6 +912,8 @@ const App = struct {
         var lock_file = app.lock() catch return;
         defer lock_file.close(app.io);
         var sys = app.openSystem(current) catch return;
+        // Left by an upgrade made with dave 0.2.1 or earlier (deploy.zig).
+        _ = sys.removeHiddenSubvolumes() catch {};
         _ = sys.collectGarbage(deploy.default_keep) catch {};
     }
 
@@ -1303,18 +1380,25 @@ const App = struct {
         }
     };
 
-    /// `dave --chroot-exec <dir> <program> [args...]`: used to run triggers
-    /// inside a root other than the running one.
+    /// `dave --chroot-exec <dir> [--tmpfs=PATH]... <program> [args...]`: used
+    /// to run triggers inside a root other than the running one.
     fn chrootExec(app: *App, args: []const []const u8) !void {
         if (args.len < 2) return app.fail("--chroot-exec needs a directory and a program", .{});
         const dir = try app.arena.dupeSentinel(u8, args[0], 0);
+        var program = args[1..];
+        var covered: std.ArrayList([]const u8) = .empty;
+        while (program.len > 0 and std.mem.startsWith(u8, program[0], triggers.tmpfs_flag)) : (program = program[1..]) {
+            try covered.append(app.arena, program[0][triggers.tmpfs_flag.len..]);
+        }
+        if (program.len == 0) return app.fail("--chroot-exec needs a program", .{});
 
         // Programs expect /proc, /dev and /sys. They are bound into the root
         // inside a mount namespace of this process's own, so nothing outlives
         // the trigger and the host's mount table is never touched. If the
         // namespace cannot be made, the program simply runs without them.
         const CLONE_NEWNS = 0x00020000;
-        if (linux.errno(linux.unshare(CLONE_NEWNS)) == .SUCCESS) {
+        const isolated = linux.errno(linux.unshare(CLONE_NEWNS)) == .SUCCESS;
+        if (isolated) {
             _ = linux.mount(null, "/", null, linux.MS.REC | linux.MS.PRIVATE, 0);
             for ([_][]const u8{ "proc", "dev", "sys" }) |name| {
                 const source = try std.fmt.allocPrintSentinel(app.arena, "/{s}", .{name}, 0);
@@ -1322,11 +1406,21 @@ const App = struct {
                 _ = linux.mount(source, target, null, linux.MS.BIND | linux.MS.REC, 0);
             }
         }
+        // The directories a booted system mounts the shared subvolumes on
+        // (triggers.RunOptions.shared). These are not optional: without them
+        // the program would leave its work hidden in the root.
+        for (covered.items) |name| {
+            if (!isolated) return app.fail("cannot cover {s} in {s}: no mount namespace of its own", .{ name, args[0] });
+            const target = try std.fmt.allocPrintSentinel(app.arena, "{s}/{s}", .{ args[0], name }, 0);
+            Io.Dir.cwd().createDirPath(app.io, target) catch {};
+            const rc = linux.mount("tmpfs", target, "tmpfs", linux.MS.NOSUID | linux.MS.NODEV, @intFromPtr(@as([*:0]const u8, "mode=0755")));
+            if (linux.errno(rc) != .SUCCESS) return app.fail("cannot cover {s} in {s}: {t}", .{ name, args[0], linux.errno(rc) });
+        }
 
         if (linux.errno(linux.chroot(dir)) != .SUCCESS) return app.fail("cannot chroot to {s}", .{args[0]});
         if (linux.errno(linux.chdir("/")) != .SUCCESS) return app.fail("cannot enter {s}", .{args[0]});
-        const e = std.process.replace(app.io, .{ .argv = args[1..] });
-        return app.fail("cannot run {s} in {s}: {t}", .{ args[1], args[0], e });
+        const e = std.process.replace(app.io, .{ .argv = program });
+        return app.fail("cannot run {s} in {s}: {t}", .{ program[0], args[0], e });
     }
 };
 

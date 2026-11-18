@@ -66,6 +66,7 @@ dave rollback         The previous system starts on the next boot, and on every
                       /etc, which belongs to each system.
 
 dave status           What is running, what will start next, what is pending.
+                      Needs no sudo, nor do list, info, search and deployments.
 ```
 
 When a request cannot be satisfied, dave says why:
@@ -94,7 +95,9 @@ entry for the new deployment is written last, so a power cut at any earlier
 point boots the old system with the upgrade still pending. A newer
 systemd-boot in the upgraded system replaces the one on the EFI system
 partition at the same moment, and only ever a newer one, because every
-deployment is started by the same loader.
+deployment is started by the same loader. Package triggers run in the new
+deployment with an empty tmpfs on `/var` and `/home`, where the shared
+subvolumes will be mounted, so nothing they write is left hidden under them.
 
 **The boot loader keeps the health record.** Each deployment has one
 systemd-boot entry. Entries are ordered by a priority that is bumped whenever a

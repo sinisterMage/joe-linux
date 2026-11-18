@@ -33,7 +33,7 @@ pub const root_label = "joe";
 pub const first_deployment: u32 = 1;
 pub const first_deployment_path = "joe/deploy/1";
 /// Subvolumes the shared state lives in, mounted under every deployment.
-pub const shared_subvolumes = [_][]const u8{ "var", "home" };
+pub const shared_subvolumes = deploy.shared_subvolumes;
 /// Where the ESP is mounted in every deployment (main.zig expects it there).
 pub const esp_mount = "efi";
 
