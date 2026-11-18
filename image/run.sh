@@ -10,6 +10,12 @@
 #                               made from IMAGE the first time (default image:
 #                               build/images/joe-release.img) and booted, as it
 #                               then is, every time after. Implies --desktop.
+#   run.sh --iso ISO            a computer with an empty disk and the
+#                               installation medium ISO in its CD drive, in a
+#                               window: the live session and its installer.
+#                               The machine is kept in build/images/run-iso,
+#                               so after installing, it starts the installed
+#                               system (delete that directory to start over).
 #
 # Without --persist the image is not modified: the VM runs on a copy that the
 # next run replaces.
@@ -28,11 +34,12 @@ set -euo pipefail
 top=$(cd "$(dirname "$0")/.." && pwd)
 ovmf=/usr/share/edk2/x64
 qemu=${QEMU:-qemu-system-x86_64}
-desktop=0 persist= create=0 disk_size=64G share= sound=hda gl=auto memory= cpus=
+desktop=0 persist= create=0 disk_size=64G share= sound=hda gl=auto memory= cpus= iso=
 while [[ $# -gt 0 ]]; do
     case $1 in
         --desktop) desktop=1; shift ;;
         --persist) persist=$2; desktop=1; shift 2 ;;
+        --iso) iso=$2; desktop=1; shift 2 ;;
         --create) create=1; shift ;;
         --disk-size) disk_size=$2; shift 2 ;;
         --share) share=$2; shift 2 ;;
@@ -51,7 +58,17 @@ default=joe.img
 [[ -n $persist ]] && default=joe-release.img
 image=${1:-$top/build/images/$default}
 
-if [[ -n $persist ]]; then
+if [[ -n $iso ]]; then
+    [[ -e $iso ]] || { echo "no ISO at $iso; build one with 'make iso'" >&2; exit 1; }
+    iso=$(realpath "$iso")
+    work=$top/build/images/run-iso
+    if [[ ! -e $work/disk.img ]]; then
+        mkdir -p "$work"
+        truncate -s "$disk_size" "$work/disk.img"
+        cp "$ovmf/OVMF_VARS.4m.fd" "$work/OVMF_VARS.fd"
+        echo "new machine in $work: an empty $disk_size disk"
+    fi
+elif [[ -n $persist ]]; then
     work=$persist
     if [[ ! -e $work/disk.img ]]; then
         [[ -e $image ]] || { echo "no image at $image; build it first (see 'make help')" >&2; exit 1; }
@@ -89,6 +106,10 @@ args=(
     -drive file="$work/disk.img",format=raw,if=virtio
     -netdev user,id=n0 -device virtio-net-pci,netdev=n0
 )
+# No boot order is imposed: the firmware tries what it has been told about
+# first (the installed system, once there is one) and then the devices, the
+# empty disk and the CD, as a computer would.
+[[ -z $iso ]] || args+=(-drive if=none,id=medium,format=raw,media=cdrom,readonly=on,file="$iso" -device ide-cd,drive=medium)
 
 if [[ -n $share ]]; then
     [[ -d $share ]] || { echo "--share: $share is not a directory" >&2; exit 1; }

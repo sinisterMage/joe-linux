@@ -12,7 +12,7 @@ REPO := --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/key
 .PHONY: help dave test test-cli scaffold test-boot-contract test-deployments \
         bootstrap packages image run test-joe test-security audit-security \
         desktop-image run-desktop test-desktop \
-        release-image test-release vm run-vm serve-repo iso-tools iso test-live test-install clean
+        release-image test-release vm run-vm serve-repo iso-tools iso run-iso test-live test-install clean
 
 help:
 	@echo "dave"
@@ -46,6 +46,7 @@ help:
 	@echo ""
 	@echo "the installation medium (image/live.zon)"
 	@echo "  make iso                  build/images/joe-live.iso: a live session with the installer"
+	@echo "  make run-iso              boot the newest ISO in a window beside an empty disk (ISO=FILE for another)"
 	@echo "  make test-live            boot it as a CD and as a USB stick"
 	@echo "  make test-install         install from it onto an empty disk, then boot that"
 
@@ -179,6 +180,14 @@ run-vm:
 iso: iso-tools $(DAVE)
 	mkdir -p build/images
 	$(DAVE) image build image/live.zon $(REPO) --out build/images/joe-live.iso
+
+# The medium in a window, with an empty disk to install onto: the newest ISO
+# in build/images (make iso, a test's, or a release's), or ISO=FILE.
+run-iso:
+	@iso='$(ISO)'; [ -n "$$iso" ] || iso=$$(ls -t build/images/*.iso 2>/dev/null | head -n 1); \
+	if [ -z "$$iso" ]; then echo "no ISO in build/images; build one with 'make iso'" >&2; exit 1; fi; \
+	echo "booting $$iso ($$(date -r "$$iso" '+%F %H:%M'))"; \
+	image/run.sh --iso "$$iso"
 
 test-live: iso-tools $(DAVE)
 	python3 tests/vm/live.py
