@@ -5,7 +5,7 @@
     // see is composed from this and the kernel's and dave's versions; see
     // build.sh.
     .version = "1alpha4",
-    .release = 1,
+    .release = 2,
     .description = "joe Linux release identification",
     .license = "MIT",
 }

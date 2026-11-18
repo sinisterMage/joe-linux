@@ -28,7 +28,7 @@ PRETTY_NAME="joe Linux $name"
 VERSION="$name"
 VERSION_ID=$PKG_VERSION
 BUILD_ID=$PKG_RELEASE
-HOME_URL="https://github.com/sinisterMage/joe-linux"
+HOME_URL="https://github.com/theJoeLinuxFoundation/joe-linux"
 EOT
     ln -s ../usr/lib/os-release "$DESTDIR/etc/os-release"
     printf 'joe Linux %s \\n \\l\n\n' "$name" > "$DESTDIR/etc/issue"

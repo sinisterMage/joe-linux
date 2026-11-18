@@ -20,7 +20,7 @@ build() {
         -D efi_sbat_distro_summary="joe Linux" \
         -D efi_sbat_distro_pkgname=fwupd-efi \
         -D efi_sbat_distro_version="$PKG_RELEASE" \
-        -D efi_sbat_distro_url=https://github.com/sinisterMage/joe-linux
+        -D efi_sbat_distro_url=https://github.com/theJoeLinuxFoundation/joe-linux
     ninja
 }
 

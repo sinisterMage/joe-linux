@@ -1,7 +1,7 @@
 .{
     .name = "fwupd-efi",
     .version = "1.9",
-    .release = 2,
+    .release = 3,
     .description = "UEFI program that fwupd uses to apply capsule firmware updates at boot",
     .license = "LGPL-2.1-or-later",
     .sources = .{
