@@ -68,6 +68,10 @@ def check_live(vm, medium_device):
     wait_for(vm, "liveuser's GNOME Shell", "pgrep -u liveuser -x gnome-shell", 300)
     wait_for(vm, "the Wayland socket", "test -S /run/user/1000/wayland-0")
     assert vm.run("id -nG liveuser").split().count("wheel") == 1
+    # liveuser has no password, and becomes root without one: joe-live adds
+    # the rule to doas.conf at boot, once, and not to the medium's image.
+    assert vm.run("su liveuser -c 'doas -n id -u'").strip() == "0"
+    assert vm.run("grep -c liveuser /etc/doas.conf").strip() == "1"
     wait_for(vm, "the installer, opened by the session", "pgrep -u liveuser -x joe-installer", 120)
     time.sleep(15)
     vm.screenshot(os.path.join(vm.workdir, "session.png"))

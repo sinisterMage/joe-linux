@@ -2,12 +2,13 @@
 """Boots the joe Linux desktop image and checks that it is a working desktop:
 the display manager starts, a user session with GNOME Shell on Wayland comes
 up, every application launches, and the things a person does all day work
-(a web page renders, sudo, the manual, spell checking, media codecs, the
-trash). Screenshots are saved under build/images/vm-desktop/ for a person to
-look at.
+(a web page renders, doas by the name sudo, the manual, spell checking,
+media codecs, the trash). Screenshots are saved under build/images/vm-desktop/
+for a person to look at.
 """
 
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -163,7 +164,20 @@ def check_everyday(vm, tag):
         assert "firefox.desktop" in default, default
 
     step("an administrator can become root, and the manual is there")
-    assert vm.run("su joe -c 'echo joe | sudo -S id -u' 2>/dev/null", check=False).strip() == "0", "sudo did not work"
+    # An interactive shell, as in a terminal window, has sudo answer as doas,
+    # which takes a password only from a terminal: it is typed at doas's
+    # prompt on the serial console, and asked for once (persist). su -c
+    # would start a new session without that terminal; root's doas -u
+    # keeps it.
+    kind = vm.run("su joe -c 'bash -ic \"type sudo\"' 2>/dev/null", check=False)
+    assert "aliased" in kind and "doas" in kind, kind
+    vm.buffer = b""
+    vm.send("doas -u joe bash -ic 'sudo id -u; sudo id -u'; echo __RC__$?__\n")
+    vm.expect(rb"doas \(joe@[^)]*\) password: ", 60)
+    vm.send("joe\n")
+    m = vm.expect(rb"(.*?)__RC__(\d+)__\r?\n", 60)
+    vm.expect(re.escape(harness.PROMPT), 30)
+    assert m.group(2) == b"0" and m.group(1).split() == [b"0", b"0"], f"doas did not work: {m.group(0)!r}"
     assert "list directory contents" in vm.run("su joe -c 'man ls' 2>/dev/null | head -n 8", check=False)
     for tool in ("git", "vim", "nano", "ssh -V", "rsync", "gpg", "wget", "htop", "strace -V"):
         program = tool.split()[0]

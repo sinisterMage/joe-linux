@@ -4,8 +4,12 @@
 #
 # - a user, liveuser, is logged in automatically (GDM's side of that is the
 #   image's overlay, image/overlays/live: gdm owns /etc/gdm/custom.conf). The
-#   account has no password and may do anything through sudo and polkit
-#   without one, as on other distributions' live media;
+#   account has no password and may do anything through doas and polkit
+#   without one, as on other distributions' live media. doas reads only
+#   /etc/doas.conf, which is opendoas's, so its rule is added to that file
+#   at boot, and only then ("!": not by the trigger that runs tmpfiles.d
+#   when the image is assembled), so the medium's root image holds the file
+#   as packaged and the installer copies it from there unchanged;
 # - the first-run setup is not offered: liveuser's session is marked as set
 #   up, and GDM only starts gnome-initial-setup when no account exists;
 # - the installer opens when the session starts, and is first in the dash;
@@ -25,11 +29,8 @@ EOT
 d /home/liveuser 0700 liveuser users -
 d /home/liveuser/.config 0700 liveuser users -
 f /home/liveuser/.config/gnome-initial-setup-done 0644 liveuser users - yes
+w+! /etc/doas.conf - - - - permit nopass liveuser\n
 EOT
-
-    install -d -m 750 "$DESTDIR/etc/sudoers.d"
-    echo 'liveuser ALL=(ALL:ALL) NOPASSWD: ALL' > "$DESTDIR/etc/sudoers.d/10-joe-live"
-    chmod 0440 "$DESTDIR/etc/sudoers.d/10-joe-live"
 
     install -d "$DESTDIR/usr/share/polkit-1/rules.d"
     cat > "$DESTDIR/usr/share/polkit-1/rules.d/49-joe-live.rules" <<'EOT'

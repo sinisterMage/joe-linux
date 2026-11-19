@@ -1,7 +1,7 @@
 .{
     .name = "joe-base",
     .version = "0.1",
-    .release = 9,
+    .release = 10,
     .description = "Everything a minimal joe Linux system consists of",
     .license = "MIT",
     .depends = .{
@@ -40,10 +40,11 @@
         "file",
         "diffutils",
         "btrfs-progs",
-        // What a person at a console expects to find: becoming root, an
-        // editor, the manual, a way in from another machine, and the tools
-        // for the other file systems a disk may carry.
-        "sudo",
+        // What a person at a console expects to find: becoming root (doas,
+        // which also answers to sudo at a prompt), an editor, the manual, a
+        // way in from another machine, and the tools for the other file
+        // systems a disk may carry.
+        "opendoas",
         "vim",
         "nano",
         "man-db",

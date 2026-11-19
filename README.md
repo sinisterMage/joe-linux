@@ -26,9 +26,9 @@ The idea of snapshot-based upgrades without immutability comes from
 
 joe Linux builds from source into two systems that boot in a virtual machine:
 
-- a **console system**, with sudo, an editor, the
-  manual and ssh, whose upgrade, rollback and recovery behaviour is exercised
-  end to end by `make test-joe`;
+- a **console system**, with doas (which answers to `sudo` at a prompt),
+  an editor, the manual and ssh, whose upgrade, rollback and recovery
+  behaviour is exercised end to end by `make test-joe`;
 - a **GNOME desktop**: GDM, GNOME Shell on Wayland,
   Firefox, Files, Terminal, Text Editor, Settings and the usual small
   applications (documents, images, video, music, archives, disks, maps,
@@ -207,7 +207,7 @@ consequence worth knowing: a root shell does not read `/etc/profile` or
 
 Today the distribution declares `all` for the programs where privilege
 starts: systemd's PID 1 and the executor that starts every service, root's
-bash, sudo, dave, the programs the kernel itself starts (modprobe,
+bash, doas, dave, the programs the kernel itself starts (modprobe,
 systemd-coredump, request-key), and every set-uid program. The first service
 with a narrower declaration is wpa_supplicant, which NetworkManager starts for
 Wi-Fi: `net`, `cap:net_admin` and `cap:net_raw` only. `true` and `false`
@@ -361,8 +361,8 @@ make serve-repo            offer build/repo to that machine
 The release image has no accounts and root has no password. On the first boot
 GDM starts GNOME's initial setup, which asks for a language, keyboard layout
 and time zone and creates your account. That account is an administrator (a
-member of `wheel`), so `sudo` works. The root file system grows to fill the
-disk it finds itself on.
+member of `wheel`), so `doas` works, and so does `sudo` at a prompt, which
+runs doas. The root file system grows to fill the disk it finds itself on.
 
 `make run-vm` uses the host's GPU for the guest's 3D when QEMU can (virgl),
 gives the guest a sound card, and takes options through `VM_ARGS`: `--share

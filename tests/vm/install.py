@@ -113,6 +113,7 @@ def check_installed(vm):
     # keeps the originals of what that root changed.
     assert vm.run("cat /etc/hostname").strip() == "joe"
     assert "liveuser" not in vm.run("cat /etc/gdm/custom.conf"), "the live session's automatic login was copied"
+    assert "liveuser" not in vm.run("cat /etc/doas.conf"), "the live session's doas rule was copied"
     assert not vm.run("ls /home", check=False).strip(), "an account's home came along"
 
     step("it takes packages from the repository the medium was made for")
