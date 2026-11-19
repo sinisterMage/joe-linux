@@ -1,5 +1,10 @@
 # joe Linux
 
+<a href="https://www.linuxlinks.com/joe-linux-from-scratch-based-distribution/"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://www.linuxlinks.com/badges/linuxlinks-badge-black.png">
+  <img alt="Featured on LinuxLinks" width="240" height="80" src="https://www.linuxlinks.com/badges/linuxlinks-badge-white.png">
+</picture></a>
+
 An independent Linux distribution whose goal is to be as boring as possible for
 the person using it. Three things about it are new; everything else is ordinary
 (glibc, systemd, a usr-merged file system, GNOME).
@@ -203,9 +208,12 @@ consequence worth knowing: a root shell does not read `/etc/profile` or
 Today the distribution declares `all` for the programs where privilege
 starts: systemd's PID 1 and the executor that starts every service, root's
 bash, sudo, dave, the programs the kernel itself starts (modprobe,
-systemd-coredump, request-key), and every set-uid program. Everything else
-is `undeclared`, so it acts with the authority of the shell or service that
-runs it. Narrower declarations for each service are the next step.
+systemd-coredump, request-key), and every set-uid program. The first service
+with a narrower declaration is wpa_supplicant, which NetworkManager starts for
+Wi-Fi: `net`, `cap:net_admin` and `cap:net_raw` only. `true` and `false`
+declare `none`. Everything else is `undeclared`, so it acts with the
+authority of the shell or service that runs it. Narrower declarations for
+each service are the next step.
 
 The details are in the source, which is commented for readers:
 [packages/linux/joe-lsm/joe.c](packages/linux/joe-lsm/joe.c), [dave/src/seal.zig](dave/src/seal.zig),
@@ -221,8 +229,8 @@ btrfs or fs-verity skip when those features are unavailable. This workflow
 does not run the command-line or VM suites below.
 
 Requirements on the build machine: Zig 0.17.1, a C toolchain, QEMU with KVM,
-OVMF firmware, btrfs-progs 6.12 or newer, bubblewrap, and a build directory on
-btrfs. Nothing needs root.
+OVMF firmware, btrfs-progs 6.12 or newer, bubblewrap, zstd, Python 3, OpenSSL,
+and a build directory on btrfs. Nothing needs root.
 
 ```
 make test                  unit tests and command-line tests, in seconds
@@ -261,6 +269,7 @@ the tests look inside. The release image below has neither.
 
 ```
 make iso                   build/images/joe-live.iso, the installation medium
+make run-iso               boot the newest medium in a window, beside an empty disk
 make test-live             boot it as a CD and as a USB stick, in a VM
 make test-install          install from it onto an empty disk, then boot that
 ```
@@ -304,7 +313,8 @@ dave install-system --disk /dev/nvme0n1             erase it and install
 
 Images and media are described by specifications in `image/*.zon` and built by
 `dave image build`; each Makefile target above names one. The build machine
-publishes the medium with the repository (see infra/build-machine).
+publishes the medium with the repository, at
+[joelinux.io/downloads](https://joelinux.io/downloads/).
 
 ## In a container
 
@@ -327,16 +337,16 @@ installs into it directly, without a snapshot to return to.
 A release is named **J*X*-*Y*-*Z***, with a stage such as `-alpha1` before it
 is final:
 
-| Part | Is | In J1-7.3.1-0.2.1-alpha3 |
+| Part | Is | In J1-7.3.1-0.3.0-alpha5 |
 |------|----|--------------------------|
 | J | joe, the distribution | J |
 | *X* | the system revision | 1 |
 | *Y* | the kernel's version | 7.3.1 |
-| *Z* | dave's version | 0.2.1 |
+| *Z* | dave's version | 0.3.0 |
 
 `packages/joe-release` writes the name into `os-release` and the build machine
 names the installation medium after it. Its package version is the revision
-and stage alone (`1alpha3`), which dave orders before the final `1`.
+and stage alone (`1alpha5`), which dave orders before the final `1`.
 
 ## Living in it
 
@@ -387,14 +397,16 @@ Scratch (systemd, development branches), with the same package versions. Recipes
 | `image/` | Image and live medium specifications, and the scaffold's scripts |
 | `installer/` | The graphical installer |
 | `tests/` | Command-line tests and VM scenarios |
+| `.github/workflows/` | The unit tests for pushes and pull requests, and the container image |
 
 ## Not done yet
 
 - **Declarations for each service.** The mechanism of rule 3 is tested, and
   the base system's entry points and set-uid programs declare `all`, but
   services still receive `all` from systemd instead of holding studied
-  declarations of their own. `dave repo audit build/repo` lists the
-  undeclared programs and any invalid or missing seals.
+  declarations of their own; wpa_supplicant is the first with a narrower
+  one. `dave repo audit build/repo` lists the undeclared programs and any
+  invalid or missing seals.
 - **The rest of the trust chain.** Kernel modules are checked by the module
   but not by the kernel's own signature enforcement; there is no kernel
   lockdown and no Secure Boot, so root can still replace the kernel or its
@@ -414,16 +426,18 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   beforehand. There is no Secure Boot.
 - **Desktop gaps.** No graphical front end to dave. Only the English (US)
   locale is built, so that is the one language the first-run setup offers.
-  No HEIF or AVIF images and no mail client. LibreOffice is in the repository
-  but not installed by default.
+  No mail client. LibreOffice is in the repository but not installed by
+  default. WebKitGTK and its applications, Chromium, QtWebEngine and
+  Thunderbird are not built yet.
 - **Split packages.** A package is everything its upstream installs, so the
   base image carries the compiler because programs need its run-time libraries.
 - **Builds are not isolated from each other.** Every recipe builds in one
   shared build root. A fresh, minimal build root per package, chosen by the
-  solver, comes later. Fifteen packages fetch their locked Rust, Go or Haskell
-  dependencies from the network while building. Rust, Go, GHC and OpenJDK
-  are each first compiled by a prebuilt compiler: their upstream's, or for
-  OpenJDK the book's.
+  solver, comes later. Recipes marked `.network = true` fetch their locked
+  Rust, Go, Haskell, JavaScript or Java dependencies from the network while
+  building, until those are kept as sources of their own. Rust, Go, GHC and
+  OpenJDK are each first compiled by a prebuilt compiler: their upstream's,
+  or for OpenJDK the book's.
   The TypeScript compiler (needed to build one application) is its upstream's
   already-compiled release, and bun is upstream's binary, repackaged.
 - **Building dave inside joe.** joe packages Zig 0.17.1 now, but the dave
@@ -434,8 +448,8 @@ Scratch (systemd, development branches), with the same package versions. Recipes
 ## Licence
 
 joe Linux's own code is under the [MIT License](LICENSE). The security module
-is GPL-2.0-only, as part of the kernel, and the patches to bash, Python and
-GNOME Settings are under those projects' licences. The recipes follow Linux
-From Scratch and Beyond LFS. [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
-has the details, including what to know before distributing an image built
-from these recipes.
+is GPL-2.0-only, as part of the kernel, and the patches to other projects
+(bash's and Python's among them) are under those projects' licences. The
+recipes follow Linux From Scratch and Beyond LFS.
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) has the details, including
+what to know before distributing an image built from these recipes.

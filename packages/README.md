@@ -29,7 +29,13 @@ others (`joe-desktop`) say this.
 
 `.network = true` lets the build reach the network. Builds are offline by
 default; the exception is for build systems that fetch their own dependencies
-(cargo), and every use of it is a debt to be paid by vendoring.
+(cargo, go, cabal, npm and yarn, Maven), and every use of it is a debt to be
+paid by vendoring.
+
+`.conflicts = .{ "inetutils <2.8-r4" }` keeps the package from being installed
+beside those versions of another. Use it when a file moves from one package
+to another: the resolver then upgrades the old owner in the same transaction,
+so the two are never installed with the same file.
 
 The build order is computed from `depends` and `build_depends`
 (`bootstrap/order.py`), so both must be complete: a library a package links
@@ -72,7 +78,8 @@ anything at top level.
 | `package` | required           | install into `$DESTDIR`                   |
 
 All four run in the unpacked source directory, as root in a user namespace,
-inside the build root, with no network. Any command that fails aborts the build.
+inside the build root, with no network unless the recipe says `.network =
+true`. Any command that fails aborts the build.
 
 Available variables: `DESTDIR`, `SOURCES`, `PKG_NAME`, `PKG_VERSION`,
 `PKG_RELEASE`, `JOBS`. `MAKEFLAGS` is already set to `-j$JOBS`.
@@ -141,7 +148,12 @@ exists, someone else is writing that recipe.
   rebuild), ship a trigger in `usr/lib/dave/triggers/NAME.zon`:
   `.{ .paths = .{"usr/lib/"}, .exec = .{"/usr/bin/ldconfig"} }`.
 - Do not run test suites.
-- Do not strip, delete `.la` files or remove `usr/share/doc` and
-  `usr/share/info` yourself; the build driver does that for every package. Set
-  `NOSTRIP=1` at the top of `build.sh` to keep symbols.
+- Do not strip, delete `.la` files or remove `usr/share/doc`,
+  `usr/share/info` and `usr/share/gtk-doc/html` yourself; the build driver
+  does that for every package. Set `NOSTRIP=1` at the top of `build.sh` to
+  keep symbols.
+- Ship Python byte code as the build compiles it. The driver rewrites every
+  `__pycache__/*.pyc` to check a hash of its source (PEP 552) instead of a
+  modification time, which dave does not keep, so it stays valid on installed
+  systems and a privileged Python never writes unsealed byte code of its own.
 - Static libraries are not shipped unless something needs them.
