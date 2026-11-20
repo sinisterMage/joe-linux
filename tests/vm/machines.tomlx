@@ -54,10 +54,10 @@ inputs = ["build/scaffold/archlinux-bootstrap.tar.zst", "image/mkscaffold.sh", "
 outputs = ["build/images/scaffold.img"]
 timeout = "30m"
 
-# The deployment tests' own repositories (was tests/vm/repo.py): version 1
-# of two packages, which the images are built with; the tests publish
-# newer ones while their machine runs. Each variant of the tests has its
-# own, served on its own port, so the two can run at once.
+# The deployment tests' own repositories: version 1 of two packages,
+# which the images are built with; the tests publish newer ones while
+# their machine runs. Each variant of the tests has its own, served on
+# its own port, so the two can run at once.
 [tasks.deployments-repo]
 description = "build/vm-repo-{{matrix.base}}: hello 1.0-r1 and release-marker 1-r1, signed"
 deps = ["dave"]

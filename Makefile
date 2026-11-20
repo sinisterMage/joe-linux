@@ -133,8 +133,8 @@ run:
 test-joe: build/host-tools/bin/mcopy
 	$(NEOMAKE) test deployments-joe
 
-test-security: build/host-tools/bin/mcopy $(DAVE)
-	python3 tests/vm/security.py
+test-security: build/host-tools/bin/mcopy
+	$(NEOMAKE) test 'security*'
 
 audit-security: $(DAVE)
 	$(DAVE) repo audit build/repo
@@ -148,8 +148,8 @@ desktop-image: build/host-tools/bin/mcopy $(DAVE)
 run-desktop:
 	image/run.sh --desktop
 
-test-desktop: build/host-tools/bin/mcopy $(DAVE)
-	python3 tests/vm/desktop.py
+test-desktop: build/host-tools/bin/mcopy
+	$(NEOMAKE) test 'desktop*'
 
 # What a person would install: no test console, no ready-made account, root
 # locked. The first boot asks who you are (gnome-initial-setup).
@@ -157,8 +157,8 @@ release-image: build/host-tools/bin/mcopy $(DAVE)
 	mkdir -p build/images
 	$(DAVE) image build image/release.zon $(REPO) --out build/images/joe-release.img
 
-test-release: build/host-tools/bin/mcopy $(DAVE)
-	python3 tests/vm/release.py
+test-release: build/host-tools/bin/mcopy
+	$(NEOMAKE) test 'release*'
 
 # A machine that keeps its disk between runs. `make vm` never replaces an
 # existing one; delete build/vm to start again from the release image.
@@ -187,11 +187,11 @@ run-iso:
 	echo "booting $$iso ($$(date -r "$$iso" '+%F %H:%M'))"; \
 	image/run.sh --iso "$$iso"
 
-test-live: iso-tools $(DAVE)
-	python3 tests/vm/live.py
+test-live: iso-tools
+	$(NEOMAKE) test live
 
-test-install: iso-tools $(DAVE)
-	python3 tests/vm/install.py
+test-install: iso-tools
+	$(NEOMAKE) test 'install*'
 
 # joe as a container image. Inside it, dave takes packages from
 # CONTAINER_URL; by default build/repo as make serve-repo offers it, which a

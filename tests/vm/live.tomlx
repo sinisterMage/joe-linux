@@ -1,0 +1,139 @@
+# The installation medium (image/live.zon, built with --test), booted the
+# two ways a computer boots one: as a CD and as a USB stick, each with an
+# empty disk beside it. The live system comes up from the compressed
+# image with a writable layer in memory over it, the live session (where
+# the installer runs) starts by itself, the medium holds what the
+# installer installs (the live root, and the originals of the files it
+# changed), and the security module, which can only log on a system where
+# nothing is sealed, says so once per file rather than flooding the
+# kernel log.
+#
+#   live[media=cd]     the medium as a CD
+#   live[media=usb]    the medium as a USB stick
+#
+# The live system runs the dave of the dave package in build/repo, so a
+# change to dave reaches these tests (and the installation tests) only
+# once that package is rebuilt.
+
+[tasks.joe-live-test-iso]
+description = "build/images/joe-live-test.iso: the installation medium, with root on the serial console"
+deps = ["dave"]
+env = { PATH = "${path}" }
+# make iso-tools builds xorriso and mksquashfs into build/host-tools.
+requires = { files = ["build/repo/repo.zon", "build/keys/joe.pub"], commands = ["mcopy", "xorriso", "mksquashfs", "unshare"] }
+command = '''
+mkdir -p build/images
+dave/zig-out/bin/dave image build image/live.zon --test \
+    --repo "joe,$PWD/build/repo,http://10.0.2.2:8643,$PWD/build/keys/joe.pub" \
+    --out build/images/joe-live-test.iso
+'''
+inputs = ["image/**", "build/repo/repo.zon", "build/keys/joe.pub", "dave/zig-out/bin/dave"]
+outputs = ["build/images/joe-live-test.iso"]
+timeout = "1h"
+
+[machines.joe-live]
+description = "a computer with an empty 40G disk and the installation medium in its CD drive"
+use = "scaffold"
+disks = [{ size = "40G" }]
+media = [{ file = "build/images/joe-live-test.iso", as = "cd", name = "medium" }]
+memory = "6G"
+cpus = 8
+display = true
+boot_timeout = "10m"
+
+[tests.live]
+description = "the installation medium boots into a live session with the installer, from a CD and from a USB stick"
+tags = ["vm", "joe", "live"]
+deps = ["joe-live-test-iso"]
+matrix.media = [
+  { name = "cd", device = "/dev/sr0" },
+  { name = "usb", device = "/dev/sd" },
+]
+machine = { use = "joe-live", media = [{ file = "build/images/joe-live-test.iso", as = "{{matrix.media}}", name = "medium" }] }
+timeout = "30m"
+on_boot = '''
+# medium_on DEVICE: DEVICE when the medium is mounted from it, otherwise
+# what it is mounted from. systemd attaches a CD that has a partition
+# table (as a hybrid ISO does) to a loop device, so that its partitions
+# appear; the medium is then the first of those, the same ISO 9660 file
+# system, and the loop device's file is named after the CD's device.
+medium_on() {
+    local source parent file
+    source=$(findmnt -no SOURCE /run/live/medium)
+    case $source in "$1"*) echo "$1"; return ;; esac
+    parent=$(lsblk -no PKNAME "$source" 2>/dev/null)
+    file=$(losetup -nO BACK-FILE "/dev/$parent" 2>/dev/null)
+    case $file in
+        *"${1##*/}") echo "$1" ;;
+        *) echo "$source (on ${file:-no loop device})" ;;
+    esac
+}
+'''
+on_failure = [
+  { run = 'systemctl --failed --no-legend --plain; journalctl -b --no-pager | tail -n 40' },
+  { screenshot = "failed.png" },
+]
+steps = [
+  { section = "the root is the image with a writable layer over it" },
+  { run = 'findmnt -no FSTYPE /', equals = "overlay" },
+  { run = 'findmnt -no FSTYPE /run/live/lower', equals = "squashfs" },
+  { run = 'medium_on {{matrix.media.device}}', equals = "{{matrix.media.device}}", name = "the medium is mounted from {{matrix.media.device}}" },
+  { run = 'echo changed > /usr/share/live-write-test && grep -q changed /usr/share/live-write-test', name = "the root is writable" },
+  { run = 'cat /proc/cmdline', lacks = "root=", contains = "joe=log" },
+  { run = 'cat /sys/kernel/security/joe/enforce', equals = "0" },
+
+  { section = "the release is named after its kernel and dave: J<revision>-<kernel>-<dave>[-<stage>]" },
+  { run = 'uname -r', capture = { kernel = '^(.*?)(?:-joe)?$' } },
+  { run = 'dave version', capture = { dave = '(\S+)\s*$' } },
+  { run = '(. /usr/lib/os-release; echo "$VERSION")', matches = '^J\d+-{{kernel}}-{{dave}}(-[a-z]+\d+)?$', name = "the release runs kernel {{kernel}} and dave {{dave}}" },
+
+  { section = "the system came up without failed units" },
+  { run = 'systemctl --failed --no-legend --plain', exit = "any", equals = "", name = "no failed units" },
+  { run = 'systemctl is-enabled dave-seal.service', exit = "any", equals = "masked" },
+  { run = 'systemctl is-enabled systemd-repart.service', exit = "any", equals = "masked" },
+  { run = 'systemctl is-enabled systemd-growfs-root.service', exit = "any", equals = "masked" },
+
+  { section = "the live session starts by itself" },
+  { run = 'pgrep -u liveuser -x gnome-shell', wait = "5m", interval = "3s", name = "liveuser's GNOME Shell is running" },
+  { run = 'test -S /run/user/1000/wayland-0', wait = "3m", interval = "3s" },
+  { run = 'id -nG liveuser | tr " " "\n" | grep -cx wheel', equals = "1", name = "liveuser is an administrator" },
+  # liveuser has no password, and becomes root without one: joe-live adds
+  # the rule to doas.conf at boot, once, and not to the medium's image.
+  { run = "su liveuser -c 'doas -n id -u'", equals = "0" },
+  { run = 'grep -c liveuser /etc/doas.conf', equals = "1" },
+  { run = 'pgrep -u liveuser -x joe-installer', wait = "2m", interval = "3s", name = "the session opened the installer" },
+  { run = 'sleep 15', name = "let it draw" },
+  { screenshot = "session.png" },
+
+  { section = "the medium carries what the installer installs, once" },
+  { run = 'cat /run/live/medium/joe/install.zon', contains = "joe-desktop" },
+  # No package files: the installer copies the packages out of the live
+  # root, where they are installed (install_system.zig).
+  { run = 'test ! -e /run/live/medium/joe/repos', name = "no package files on the medium" },
+  { run = 'test -s /run/live/lower/usr/lib/dave/db/joe-desktop/manifest.zon' },
+  # The originals of the files the live root changed, each named by its
+  # SHA-256: /etc/passwd and the like.
+  { run = '''
+(cd /run/live/medium/joe/originals &&
+    for f in *; do [ "$(sha256sum < "$f" | cut -c1-64)" = "$f" ] || echo "bad $f"; done
+    ls | wc -l)
+''', matches = '^[1-9]\d*$', lacks = "bad", name = "each original is named by its SHA-256" },
+
+  { section = "Wi-Fi, as far as a virtual machine can show it" },
+  # Simulated radios: the kernel's wireless stack and the signed regulatory
+  # database, then NetworkManager taking the device over through
+  # wpa_supplicant (which D-Bus starts for it).
+  { run = 'modprobe mac80211_hwsim radios=1' },
+  { run = 'nmcli -t -f TYPE device | grep -qx wifi', wait = "60s", interval = "3s", name = "NetworkManager has a Wi-Fi device" },
+  { run = 'pgrep -x wpa_supplicant', wait = "60s", interval = "3s" },
+  # The database itself is read when a country is set; what must be there
+  # before then is the file and the keys it is checked against.
+  { run = "dmesg | grep -i 'x.509 cert'", exit = "any", contains = "Loaded X.509 cert 'sforshee", name = "the regulatory database's keys are loaded" },
+  { run = 'test -s /usr/lib/firmware/regulatory.db && test -s /usr/lib/firmware/regulatory.db.p7s' },
+  { run = "nmcli -t -f TYPE,STATE device | grep '^wifi:'", lacks = ["unavailable", "unmanaged"], name = "the Wi-Fi device is managed and available" },
+
+  { section = "the security module reports each unsealed file once" },
+  { run = "dmesg | grep -c 'joe: would-deny'", exit = "any", name = "reports" },
+  { run = 'dmesg | head -n 1', contains = "Linux version", name = "the kernel log kept its beginning" },
+  { run = "dmesg | grep -c 'joe: denied'", exit = "any", equals = "0", name = "nothing was denied" },
+]

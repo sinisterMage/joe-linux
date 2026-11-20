@@ -1,0 +1,260 @@
+# The desktop image is a working desktop: the display manager starts, a
+# user session with GNOME Shell on Wayland comes up, every application
+# launches, and the things a person does all day work (a web page
+# renders, doas by the name sudo, the manual, spell checking, media
+# codecs, the trash). Screenshots are kept in each test's directory, for
+# a person to look at.
+#
+#   desktop              the desktop as it first boots, the security module logging
+#   desktop-enforcing    the same desktop, booted with the security module enforcing
+
+# Run in the machine after every boot.
+$desktop_helpers = '''
+# What a program started from the shell's own launcher would inherit.
+session_env='XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus XDG_CURRENT_DESKTOP=GNOME XDG_SESSION_TYPE=wayland XDG_SESSION_DESKTOP=gnome'
+# in_session COMMAND: COMMAND as the logged-in user, inside their graphical session.
+in_session() { su joe -c "export $session_env; $1"; }
+# bus METHOD NAME: what the session bus says about NAME.
+bus() {
+    in_session "gdbus call --session --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus --method org.freedesktop.DBus.$1 $2"
+}
+# The program itself, not the shell that started it: a command line
+# whose first word is the program.
+running() { pgrep -u joe -f "^[^ ]*$1( |\$)" >/dev/null; }
+stop() { pkill -u joe -f "^[^ ]*$1( |\$)"; }
+# Applications that take a name on the session bus, by that name.
+on_bus() { bus NameHasOwner "$1" | grep -q true; }
+stop_on_bus() { kill $(bus GetConnectionUnixProcessID "$1" | tr -dc '0-9 ' | awk '{print $NF}'); }
+# stays_up CHECK LOG SECONDS: `up` when CHECK passes within a minute and
+# still passes SECONDS later; otherwise what went wrong, and LOG's end.
+stays_up() {
+    local i
+    for i in $(seq 20); do eval "$1" && break; sleep 3; done
+    if ! eval "$1"; then echo "it did not start"; tail -n 15 "$2"; return; fi
+    sleep "$3"
+    if ! eval "$1"; then echo "it exited"; tail -n 15 "$2"; return; fi
+    echo up
+}
+'''
+
+$desktop_failure = [
+  { run = 'systemctl --failed --no-legend --plain; journalctl -b -u dave-seal.service --no-pager | tail -n 5' },
+  { run = 'for f in /tmp/*.log; do echo "== $f"; tail -n 15 "$f"; done' },
+  { screenshot = "failed.png" },
+]
+
+[tasks.joe-desktop-image]
+description = "build/images/joe-desktop.img: the desktop, with the test user joe logged in by itself"
+deps = ["dave"]
+env = { PATH = "${path}" }
+requires = { files = ["build/repo/repo.zon", "build/keys/joe.pub"], commands = ["mcopy", "unshare"] }
+command = '''
+mkdir -p build/images
+dave/zig-out/bin/dave image build image/desktop.zon --test \
+    --repo "joe,$PWD/build/repo,http://10.0.2.2:8643,$PWD/build/keys/joe.pub" \
+    --out build/images/joe-desktop.img
+'''
+inputs = ["image/**", "build/repo/repo.zon", "build/keys/joe.pub", "dave/zig-out/bin/dave"]
+outputs = ["build/images/joe-desktop.img"]
+timeout = "1h"
+
+[machines.joe-desktop]
+description = "joe's desktop image, with a display"
+use = "scaffold"
+disk = "build/images/joe-desktop.img"
+memory = "6G"
+cpus = 8
+display = true
+boot_timeout = "10m"
+
+# A web page for the machine's browser to fetch.
+[services.desktop-site]
+description = "tests/vm/desktop-site, on a free port"
+serve = { dir = "tests/vm/desktop-site" }
+
+# An application, started as from the session's launcher, is running
+# within a minute and still SECONDS later.
+[templates.starts]
+params = ["name", "command", "check", "log", "seconds"]
+steps = [
+  { run = 'in_session "{{command}} >{{log}} 2>&1 &"', name = "start {{name}}" },
+  { run = 'stays_up "{{check}}" {{log}} {{seconds}}', equals = "up", timeout = "3m", name = "{{name}} starts and runs for {{seconds}} seconds" },
+]
+
+# Each of the applications beyond the core four, on its own: started,
+# seen to stay up, pictured and closed again.
+[templates.application]
+params = ["name", "command", "check", "stop", "shot"]
+steps = [
+  { run = 'in_session "{{command}} >/tmp/{{shot}}.log 2>&1 &"', name = "start {{name}}" },
+  { run = 'stays_up "{{check}}" /tmp/{{shot}}.log 8', equals = "up", timeout = "3m", name = "{{name}} starts and runs for 8 seconds" },
+  { screenshot = "app-{{shot}}.png" },
+  { run = '{{stop}} 2>/dev/null; sleep 2', exit = "any", name = "close {{name}}" },
+]
+
+# What makes a working desktop.
+[templates.working-desktop]
+steps = [
+  { section = "the system finishes booting and the display manager is running" },
+  { run = 'systemctl is-active graphical.target', wait = "5m", interval = "3s" },
+  { run = 'systemctl is-active gdm.service', wait = "3m", interval = "3s" },
+
+  { section = "optional servers remain off until the administrator starts them" },
+  { run = 'systemctl is-enabled rsyncd.socket', exit = "any", equals = "disabled" },
+  { run = 'systemctl is-active rsyncd.socket', exit = "any", equals = "inactive" },
+  { run = '''su joe -c 'bash -c "exec 3<>/dev/tcp/127.0.0.1/873"' ''', exit = "nonzero", contains = "Connection refused", name = "nothing answers on rsync's port" },
+  { run = 'systemctl start rsyncd.socket' },
+  { run = '''su joe -c 'bash -c "exec 3<>/dev/tcp/127.0.0.1/873 && timeout 5 head -n 1 <&3"' ''', matches = '^@RSYNCD:', name = "once started, the rsync daemon answers" },
+  { run = 'systemctl stop rsyncd.socket' },
+  # Sealing fails when a package ships a file something else rewrites (a
+  # trigger's cache): then the security module has unsealed files.
+  { run = 'systemctl --failed --no-legend --plain', exit = "any", lacks = "dave-seal.service", name = "sealing did not fail" },
+
+  { section = "a user session with GNOME Shell on Wayland comes up" },
+  { run = 'loginctl show-user joe -p State | grep -q active', wait = "4m", interval = "3s", name = "joe's session is active" },
+  { run = 'pgrep -u joe -x gnome-shell', wait = "4m", interval = "3s" },
+  { run = 'test -S /run/user/1000/wayland-0', wait = "3m", interval = "3s" },
+  { run = '''loginctl show-session $(loginctl list-sessions --no-legend | awk '$3=="joe"{print $1; exit}') -p Type -p Class''', contains = "Type=wayland" },
+  { run = 'sleep 15', name = "let the session settle" },
+  { screenshot = "1-session.png" },
+
+  { section = "joe's look: a taskbar, a start menu, tray and desktop icons, all running" },
+  { run = 'in_session "gnome-extensions info dash-to-panel@jderose9.github.com"', matches = 'State: ACTIVE$' },
+  { run = 'in_session "gnome-extensions info arcmenu@arcmenu.com"', matches = 'State: ACTIVE$' },
+  { run = 'in_session "gnome-extensions info appindicatorsupport@rgcjonas.gmail.com"', matches = 'State: ACTIVE$' },
+  { run = 'in_session "gnome-extensions info ding@rastersoft.com"', matches = 'State: ACTIVE$' },
+  # The folders every account gets, among them the desktop's own; the
+  # icons on it are drawn by a program of their own, which must stay up.
+  { run = 'test -d /home/joe/Desktop -a -d /home/joe/Documents', wait = "60s", interval = "3s", name = "joe's folders are made" },
+  { run = 'pgrep -u joe -f ding@rastersoft.com/app/ding.js | head -n 1', matches = '^\d+$', capture = "icons", wait = "60s", interval = "3s", name = "the desktop icons are drawn" },
+  { run = 'sleep 10; pgrep -u joe -f ding@rastersoft.com/app/ding.js | head -n 1', equals = "{{icons}}", name = "the desktop icons do not keep restarting" },
+  { run = 'in_session "gsettings get org.gnome.desktop.interface icon-theme"', equals = "'Papirus'" },
+  { run = 'in_session "gsettings get org.gnome.desktop.interface gtk-theme"', equals = "'adw-gtk3'" },
+  { run = 'in_session "gsettings get org.gnome.desktop.interface accent-color"', equals = "'teal'" },
+  { run = 'in_session "gsettings get org.gnome.desktop.wm.preferences button-layout"', equals = "'appmenu:minimize,maximize,close'" },
+  { run = 'in_session "gsettings get org.gnome.desktop.background picture-uri"', equals = "'file:///usr/share/backgrounds/joe/joe-l.svg'" },
+
+  { section = "the core applications start" },
+  { use = "starts", with = { name = "Terminal", command = "gnome-terminal", check = "running gnome-terminal-server", log = "/tmp/gnome-terminal.log", seconds = 15 } },
+  { use = "starts", with = { name = "Files", command = "nautilus", check = "running nautilus", log = "/tmp/nautilus.log", seconds = 15 } },
+  { use = "starts", with = { name = "Text Editor", command = "gnome-text-editor", check = "running gnome-text-editor", log = "/tmp/gnome-text-editor.log", seconds = 15 } },
+  { use = "starts", with = { name = "Settings", command = "gnome-control-center", check = "running gnome-control-center", log = "/tmp/gnome-control-center.log", seconds = 15 } },
+  { screenshot = "2-applications.png" },
+
+  { section = "the session's services" },
+  { run = 'in_session "systemctl --user is-active pipewire.service"', exit = "any", equals = "active" },
+  { run = 'in_session "systemctl --user is-active wireplumber.service"', exit = "any", equals = "active" },
+  { run = 'in_session "systemctl --user is-active xdg-desktop-portal.service"', exit = "any", equals = "active" },
+  { run = "nmcli -t -f DEVICE,STATE device | paste -sd' '", exit = "any", contains = ":connected", name = "the network is connected" },
+]
+
+# The rest of what is installed. Two take no name on the session bus,
+# and are looked for as processes.
+[templates.every-application]
+steps = [
+  { section = "every other application starts" },
+  { use = "application", with = { name = "Image Viewer", command = "loupe", check = "on_bus org.gnome.Loupe", stop = "stop_on_bus org.gnome.Loupe", shot = "org.gnome.Loupe" } },
+  { use = "application", with = { name = "Document Viewer", command = "evince", check = "running evince", stop = "stop evince", shot = "evince" } },
+  { use = "application", with = { name = "Video Player", command = "showtime", check = "on_bus org.gnome.Showtime", stop = "stop_on_bus org.gnome.Showtime", shot = "org.gnome.Showtime" } },
+  { use = "application", with = { name = "Audio Player", command = "org.gnome.Decibels", check = "on_bus org.gnome.Decibels", stop = "stop_on_bus org.gnome.Decibels", shot = "org.gnome.Decibels" } },
+  { use = "application", with = { name = "Calculator", command = "gnome-calculator", check = "running gnome-calculator", stop = "stop gnome-calculator", shot = "gnome-calculator" } },
+  { use = "application", with = { name = "Clocks", command = "gnome-clocks", check = "on_bus org.gnome.clocks", stop = "stop_on_bus org.gnome.clocks", shot = "org.gnome.clocks" } },
+  { use = "application", with = { name = "Weather", command = "gapplication launch org.gnome.Weather", check = "on_bus org.gnome.Weather", stop = "stop_on_bus org.gnome.Weather", shot = "org.gnome.Weather" } },
+  { use = "application", with = { name = "Maps", command = "gapplication launch org.gnome.Maps", check = "on_bus org.gnome.Maps", stop = "stop_on_bus org.gnome.Maps", shot = "org.gnome.Maps" } },
+  { use = "application", with = { name = "Characters", command = "gnome-characters", check = "on_bus org.gnome.Characters", stop = "stop_on_bus org.gnome.Characters", shot = "org.gnome.Characters" } },
+  { use = "application", with = { name = "Fonts", command = "gnome-font-viewer", check = "on_bus org.gnome.font-viewer", stop = "stop_on_bus org.gnome.font-viewer", shot = "org.gnome.font-viewer" } },
+  { use = "application", with = { name = "Disks", command = "gnome-disks", check = "on_bus org.gnome.DiskUtility", stop = "stop_on_bus org.gnome.DiskUtility", shot = "org.gnome.DiskUtility" } },
+  { use = "application", with = { name = "Disk Usage Analyzer", command = "baobab", check = "on_bus org.gnome.baobab", stop = "stop_on_bus org.gnome.baobab", shot = "org.gnome.baobab" } },
+  { use = "application", with = { name = "Archive Manager", command = "file-roller", check = "on_bus org.gnome.FileRoller", stop = "stop_on_bus org.gnome.FileRoller", shot = "org.gnome.FileRoller" } },
+  { use = "application", with = { name = "System Monitor", command = "gnome-system-monitor", check = "on_bus org.gnome.SystemMonitor", stop = "stop_on_bus org.gnome.SystemMonitor", shot = "org.gnome.SystemMonitor" } },
+]
+
+[tests.desktop]
+description = "the desktop: session, look, every application, and everyday work"
+tags = ["vm", "joe", "desktop"]
+deps = ["joe-desktop-image"]
+services = ["desktop-site"]
+machine = "joe-desktop"
+timeout = "45m"
+on_boot = ${desktop_helpers}
+on_failure = ${desktop_failure}
+steps = [
+  { run = 'cat /sys/kernel/security/joe/enforce', equals = "0", name = "the security module logs" },
+  { use = "working-desktop" },
+  # Every application is tried, and the test fails afterwards if any did
+  # not start.
+  { use = "every-application", soft = true },
+
+  { section = "Firefox renders a page served by the host" },
+  { run = 'in_session "firefox --headless --screenshot /tmp/page.png http://10.0.2.2:{{services.desktop-site.port}}/ >/tmp/firefox-headless.log 2>&1"', exit = "any", timeout = "3m", name = "Firefox pictures the page, headless" },
+  { run = 'file -b /tmp/page.png; stat -c %s /tmp/page.png', matches = ['^PNG image data', '^\d{5,}$'], name = "a picture of more than 10 kB" },
+  { use = "starts", with = { name = "Firefox", command = "firefox http://10.0.2.2:{{services.desktop-site.port}}/", check = "pgrep -u joe -x firefox >/dev/null", log = "/tmp/firefox.log", seconds = 25 } },
+  { screenshot = "3-firefox.png" },
+  { run = 'pkill -u joe -x firefox', exit = "any" },
+  { run = 'in_session "gio mime x-scheme-handler/https" | head -n 1', contains = "firefox.desktop" },
+  { run = 'in_session "gio mime text/html" | head -n 1', contains = "firefox.desktop" },
+
+  { section = "an administrator can become root, and the manual is there" },
+  # An interactive shell, as in a terminal window, has sudo answer as
+  # doas, which takes a password only from a terminal: it is typed at
+  # doas's prompt on the serial console, and asked for once (persist). su
+  # -c would start a new session without that terminal; root's doas -u
+  # keeps it.
+  { run = '''su joe -c 'bash -ic "type sudo"' 2>/dev/null''', exit = "any", contains = ["aliased", "doas"] },
+  { send = "doas -u joe bash -ic 'sudo id -u; sudo id -u'; echo __DOAS_$?__\n" },
+  { expect = 'doas \(joe@[^)]*\) password: ', timeout = "60s" },
+  { send = "joe\n" },
+  { expect = '^(\d+)\r?\n(\d+)\r?\n__DOAS_(\d+)__', groups = ["0", "0", "0"], timeout = "60s", name = "sudo became root twice, with the password asked once" },
+  { wait_prompt = true },
+  { run = "su joe -c 'man ls' 2>/dev/null | head -n 8", contains = "list directory contents" },
+  { run = '''
+for t in "git --version" "vim --version" "nano --version" "ssh -V" "rsync --version" \
+         "gpg --version" "wget --version" "htop --version" "strace -V"; do
+    su joe -c "$t" >/dev/null 2>&1 || echo "${t%% *} does not run"
+done
+''', equals = "", name = "everyday tools run" },
+  { run = "su joe -c 'cd /tmp && echo hi > z.txt && zip -q z.zip z.txt && unzip -l z.zip'", contains = "z.txt" },
+
+  { section = "text: fonts and spell checking" },
+  { run = "fc-match -f '%{family}' 'sans-serif'", contains = "Noto Sans" },
+  { run = "fc-match -f '%{family}' 'emoji'", contains = "Noto Color Emoji" },
+  { run = "fc-match -f '%{family}' 'sans-serif:lang=ja'", contains = "Noto Sans CJK JP" },
+  { run = "fc-match -f '%{family}' 'Arial'", contains = "Liberation Sans" },
+  { run = 'echo helo world | enchant-2 -d en_US -l', equals = "helo" },
+
+  { section = "media: the common formats have decoders" },
+  { run = '''
+for e in avdec_h264 avdec_aac vp9dec mpg123audiodec opusdec gtk4paintablesink; do
+    in_session "gst-inspect-1.0 --exists $e" || echo "GStreamer has no $e"
+done
+''', equals = "", name = "GStreamer has every decoder" },
+
+  { section = "files: the trash and other GVfs locations" },
+  { run = 'in_session "touch /home/joe/discard && gio trash /home/joe/discard"' },
+  { run = 'in_session "gio list trash:///"', contains = "discard" },
+  { run = 'in_session "gio mime application/pdf" | head -n 1', contains = "org.gnome.Evince.desktop" },
+  { run = 'in_session "gio mime image/png" | head -n 1', contains = "org.gnome.Loupe.desktop" },
+  { run = 'in_session "gio mime video/mp4" | head -n 1', contains = "org.gnome.Showtime.desktop" },
+  { run = 'in_session "gio mime audio/mpeg" | head -n 1', contains = "org.gnome.Decibels.desktop" },
+]
+
+[tests.desktop-enforcing]
+description = "the same desktop, booted with the security module enforcing"
+tags = ["vm", "joe", "desktop"]
+deps = ["joe-desktop-image"]
+machine = "joe-desktop"
+timeout = "45m"
+on_boot = ${desktop_helpers}
+on_failure = ${desktop_failure}
+steps = [
+  # The first boot seals the system's files; enforcing before it has
+  # would deny what it had not got to yet.
+  { run = 'systemctl is-active graphical.target', wait = "5m", interval = "3s" },
+  { run = 'test -e /usr/lib/dave/sealed', wait = "5m", interval = "3s", name = "the first boot sealed every packaged file" },
+  { run = "sed -i '/^options /s/$/ joe=enforce/' /efi/loader/entries/joe-1.conf; sync" },
+  { reboot = {}, timeout = "10m" },
+  { run = 'cat /sys/kernel/security/joe/enforce', equals = "1", name = "the security module enforces" },
+  { use = "working-desktop" },
+  { use = "every-application", soft = true },
+  { run = '''n=$(dmesg | grep -c 'joe: denied'); echo "$n denials since boot"; dmesg | grep 'joe: denied' | head -n 25 | sed 's/.*joe: /  /' ''', exit = "any", name = "what the security module denied" },
+]

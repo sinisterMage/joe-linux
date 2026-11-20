@@ -766,15 +766,15 @@ test "every command line in the repository still parses" {
         &.{ "repo", "index", "build/repo", "--key", "k" },
         &.{ "key", "generate", "build/keys/joe" },
         &.{ "key", "generate-code", "build/keys/joe-code" },
-        // tests/cli.tomlx, tests/lib/repo.sh and tests/vm/repo.py
+        // tests/cli.tomlx and tests/lib/repo.sh
         &.{ "pack", "--name", "hello", "--version", "1.0-r1", "--out", "repo", "--depends", "libgreet >=1.0", "stage" },
         &.{ "pack", "--name", "x", "--version", "1.0-r1", "--allow", "undeclared", "--out", "repo", "--code-key", "k", "stage" },
         &.{ "--root", "root", "seal" },
         &.{ "repo", "audit", "repo" },
-        // the Makefile, tests/vm/machines.tomlx, tests/vm/harness.py, image/mkscaffold-dave.sh, joe-build
+        // the Makefile, tests/vm/*.tomlx, image/mkscaffold-dave.sh, joe-build
         &.{ "image", "build", "image/console.zon", "--test", "--repo", "joe,a,b,c", "--out", "joe.img" },
         &.{ "image", "build", "scaffold.zon", "--tree", "t", "--repo", "joe,a,b,c", "--with", "x", "--out", "o" },
-        // the installer, tests/vm/install.py and live.py
+        // the installer and tests/vm/install.tomlx
         &.{ "install-system", "--list", "--json" },
         &.{ "install-system", "--disk", "/dev/vda", "--json" },
         &.{ "install-system", "--disk", "/dev/vda", "--beside", "--json" },

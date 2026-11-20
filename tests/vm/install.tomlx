@@ -1,0 +1,254 @@
+# Installing joe Linux from the installation medium, and the system that
+# makes:
+#
+# - the installer is offered the empty disk and never the medium;
+# - it goes through its pages (joe-installer --autotest, in the live
+#   session, pictured page by page) and finishes;
+# - the firmware is told where the new system's boot loader is;
+# - the installed system starts from the disk alone, as a deployment,
+#   with its files already sealed, the repository the medium was built
+#   for, no accounts, and GNOME's initial setup waiting for the person;
+# - dave works on it as on any other joe system: a change makes a
+#   rollback point, and rolling back returns to it;
+# - on a disk Windows already uses, with room made for joe, joe goes
+#   beside it: in the free space alone, sharing Windows' EFI system
+#   partition, whose boot menu then offers both, and with nothing of
+#   Windows' changed.
+#
+#   install           onto an empty disk
+#   install-beside    beside Windows
+#
+# The medium is tests/vm/live.tomlx's, which checks that it has the
+# installer.
+
+$install_helpers = '''
+live_env='XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus XDG_CURRENT_DESKTOP=GNOME XDG_SESSION_TYPE=wayland QT_FORCE_STDERR_LOGGING=1'
+# installer_page PAGE SECONDS: PAGE, once the installer (--autotest)
+# shows it, within SECONDS; otherwise what it said instead, if it failed,
+# could not use the disk or exited.
+installer_page() {
+    local end=$((SECONDS + $2))
+    while [ $SECONDS -lt $end ]; do
+        if grep -q "autotest: page $1\$" /tmp/installer.log; then echo "$1"; return; fi
+        if grep -qE 'autotest: (page failed|disk .* cannot be used)' /tmp/installer.log; then
+            grep -o 'autotest: .*' /tmp/installer.log; tail -n 40 /tmp/installer.log; return
+        fi
+        if ! pgrep -x joe-installer >/dev/null; then
+            echo "the installer exited"; tail -n 40 /tmp/installer.log; return
+        fi
+        sleep 1
+    done
+    echo "no page $1 in $2 seconds:"; grep -o 'autotest: .*' /tmp/installer.log
+}
+'''
+
+$install_failure = [
+  { run = 'tail -n 40 /tmp/installer.log 2>/dev/null; systemctl --failed --no-legend --plain' },
+  { screenshot = "failed.png" },
+]
+
+# A disk as a Windows computer's is once room has been made for joe: an
+# EFI system partition holding Windows' boot manager (also at the
+# firmware's fallback path), Microsoft's reserved partition, a Windows
+# volume (FAT here, since this host cannot make NTFS) and free space
+# after it. Made without privileges: the file systems are images written
+# into place.
+[tasks.windows-disk]
+description = "build/images/install-beside.img: a 40G disk with Windows on its first 4.1G"
+env = { PATH = "${path}" }
+requires = { commands = ["sfdisk", "mkfs.vfat", "mmd", "mcopy"] }
+cache = false
+command = '''
+disk=build/images/install-beside.img
+work=$disk.parts
+mkdir -p build/images
+rm -rf "$disk" "$work"
+mkdir -p "$work"
+truncate -s 40G "$disk"
+sfdisk --quiet "$disk" <<'EOF'
+label: gpt
+start=1MiB, size=100MiB, type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, name="EFI system partition"
+start=101MiB, size=16MiB, type=E3C9E316-0B5C-4DB8-817D-F92DF00215AE, name="Microsoft reserved partition"
+start=117MiB, size=4096MiB, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, name="Basic data partition"
+EOF
+mkfs.vfat -F 32 -n SYSTEM -C "$work/esp.img" $((100 * 1024)) >/dev/null
+mkfs.vfat -F 32 -n WINDOWS -C "$work/windows.img" $((4096 * 1024)) >/dev/null
+# Windows' boot manager, the copy of it at the firmware's fallback path,
+# and a file on Windows' own partition.
+printf 'MZ stand-in for the Windows Boot Manager\n' > "$work/bootmgfw.efi"
+printf 'Windows was here before joe.\n' > "$work/marker.txt"
+mmd -i "$work/esp.img" ::/EFI ::/EFI/Microsoft ::/EFI/Microsoft/Boot ::/EFI/BOOT
+mcopy -i "$work/esp.img" "$work/bootmgfw.efi" ::/EFI/Microsoft/Boot/bootmgfw.efi
+mcopy -i "$work/esp.img" "$work/bootmgfw.efi" ::/EFI/BOOT/BOOTX64.EFI
+mcopy -i "$work/windows.img" "$work/marker.txt" ::/marker.txt
+dd if="$work/esp.img" of="$disk" bs=1M seek=1 conv=notrunc,sparse status=none
+dd if="$work/windows.img" of="$disk" bs=1M seek=117 conv=notrunc,sparse status=none
+'''
+
+# Through the installer, as a person would install, with a picture of
+# each page. `how` is "" for the whole disk or " --beside".
+[templates.installs]
+params = ["how"]
+steps = [
+  { run = 'pgrep -u liveuser -x gnome-shell', wait = "5m", interval = "3s", name = "the live session is up" },
+  # The session opened the installer by itself; the test drives its own.
+  { run = 'pgrep -u liveuser -x joe-installer', wait = "2m", interval = "3s", name = "the session opened the installer" },
+  { run = 'sleep 10', name = "let it draw" },
+  { screenshot = "installer-0-opened.png" },
+  { run = 'pkill -x joe-installer; sleep 2', exit = "any" },
+  { run = '''su liveuser -c "export $live_env; joe-installer --autotest /dev/vda{{how}} >/tmp/installer.log 2>&1 &"''', name = "start the installer, to install onto /dev/vda{{how}}" },
+  { run = 'installer_page welcome 120', equals = "welcome", timeout = "3m" },
+  { screenshot = "installer-1-welcome.png" },
+  { run = 'installer_page disk 120', equals = "disk", timeout = "3m" },
+  { screenshot = "installer-2-disk.png" },
+  { run = 'installer_page confirm 120', equals = "confirm", timeout = "3m" },
+  { screenshot = "installer-3-confirm.png" },
+  { run = 'installer_page progress 120', equals = "progress", timeout = "3m" },
+  { screenshot = "installer-4-progress.png" },
+  { run = 'installer_page done 2400', equals = "done", timeout = "41m", name = "the installation finishes" },
+  { screenshot = "installer-5-done.png" },
+
+  { section = "the firmware was told about the new system" },
+  { run = "bootctl status --no-pager 2>/dev/null | sed -n '/Listed in EFI Variables/,/^$/p'", exit = "any", contains = "Linux Boot Manager" },
+
+  # The medium is taken out; the disk alone must start.
+  { kill = true },
+  { detach = "medium" },
+  { boot = true, timeout = "10m" },
+]
+
+# What dave does on any joe system.
+[templates.dave-works]
+steps = [
+  { section = "a change makes a rollback point, and rolling back returns to it" },
+  { run = 'dave install ninja', timeout = "10m" },
+  { run = 'command -v ninja' },
+  { run = 'dave rollback' },
+  { reboot = {}, timeout = "10m" },
+  { run = 'dave status', contains = "Running deployment 2." },
+  { run = 'command -v ninja', exit = "any", equals = "", name = "ninja did not survive the rollback" },
+]
+
+[tests.install]
+description = "an installation from the medium onto an empty disk, and the system it makes"
+tags = ["vm", "joe", "install"]
+deps = ["joe-live-test-iso"]
+services = ["joe-repo"]
+machine = "joe-live"
+# The listings are JSON, read on this host.
+requires = { commands = ["jq"] }
+timeout = "1h"
+on_boot = ${install_helpers}
+on_failure = ${install_failure}
+steps = [
+  { section = "the installer is offered the empty disk, and not the medium" },
+  { run = 'dave install-system --list --json', capture = "listing" },
+  { host = '''
+jq -r '.disks[] | select(.device == "/dev/vda") | .usable' <<'JSON'
+{{listing}}
+JSON
+''', equals = "true", name = "the empty disk is offered" },
+  { host = '''
+jq -r '[.disks[].device] | index("/dev/sr0")' <<'JSON'
+{{listing}}
+JSON
+''', equals = "null", name = "the medium is not offered" },
+
+  { use = "installs", with = { how = "" } },
+
+  { section = "the installed system starts from the disk as deployment 1" },
+  { run = 'cat /proc/cmdline', contains = ["rootflags=subvol=joe/deploy/1", "console=ttyS0,115200"], lacks = "joe=log", name = "the command line is the installed system's, not the medium's" },
+  { run = 'findmnt -no FSTYPE /', equals = "btrfs" },
+  { run = 'findmnt -no FSTYPE /efi', equals = "vfat" },
+  { run = 'dave status', contains = "Running deployment 1." },
+  { run = "sfdisk --dump /dev/vda | grep -c '^/dev/vda'", equals = "2", name = "two partitions" },
+  { run = 'sfdisk --verify /dev/vda' },
+  { run = 's=$(df -B1 --output=size / | tail -n 1); echo "$s"; [ "$s" -gt $((37 << 30)) ]', name = "the root fills the 40G disk" },
+
+  { section = "its files were sealed as they were installed" },
+  { run = 'test -e /usr/lib/dave/sealed' },
+  { run = 'systemctl show -p ConditionResult dave-seal.service', contains = "no", name = "the first boot had nothing to seal" },
+  { run = 'getfattr --absolute-names --only-values -n security.joe /usr/bin/bash 2>/dev/null | head -c 4', equals = "JOE1", name = "bash is sealed" },
+
+  { section = "its files are as packaged, not as the live session changed them" },
+  # The installer copies the packages out of the live root; the medium
+  # keeps the originals of what that root changed.
+  { run = 'cat /etc/hostname', equals = "joe" },
+  { run = 'cat /etc/gdm/custom.conf', lacks = "liveuser", name = "the live session's automatic login was not copied" },
+  { run = 'cat /etc/doas.conf', lacks = "liveuser", name = "the live session's doas rule was not copied" },
+  { run = 'ls /home', exit = "any", equals = "", name = "no account's home came along" },
+
+  { section = "it takes packages from the repository the medium was made for" },
+  { run = 'cat /etc/dave/repos.zon', contains = "http://10.0.2.2:8643" },
+  { run = 'ls /var/cache/dave 2>/dev/null | wc -l', equals = "0", name = "nothing was downloaded" },
+
+  { section = "nobody has an account yet, and the first-run setup is waiting" },
+  { run = "awk -F: '$3 >= 1000 && $3 < 60000' /etc/passwd", equals = "", name = "no accounts" },
+  { run = 'pgrep -f gnome-initial-setup', wait = "5m", interval = "3s", name = "gnome-initial-setup is running" },
+  { run = 'sleep 20', name = "let it draw" },
+  { screenshot = "first-boot.png" },
+  { run = 'systemctl --failed --no-legend --plain', exit = "any", equals = "", name = "no failed units" },
+
+  { use = "dave-works" },
+]
+
+[tests.install-beside]
+description = "an installation from the medium beside Windows, and the system it makes"
+tags = ["vm", "joe", "install"]
+deps = ["joe-live-test-iso", "windows-disk"]
+services = ["joe-repo"]
+machine = { use = "joe-live", disks = [{ file = "build/images/install-beside.img" }] }
+requires = { commands = ["jq"] }
+timeout = "1h"
+on_boot = ${install_helpers}
+on_failure = ${install_failure}
+steps = [
+  { section = "the installer finds room beside Windows" },
+  { run = 'dave install-system --list --json', capture = "listing" },
+  { host = '''
+jq -c '.disks[] | select(.device == "/dev/vda") | .beside | [.possible, .systems, .start]' <<'JSON'
+{{listing}}
+JSON
+''', equals = '[true,["Windows"],4417650688]', name = "there is room beside Windows, from 4213 MiB on" },
+
+  { use = "installs", with = { how = " --beside" } },
+
+  { section = "joe starts as deployment 1, from its own partitions in the free space" },
+  { run = 'cat /proc/cmdline', contains = "rootflags=subvol=joe/deploy/1" },
+  { run = 'dave status', contains = "Running deployment 1." },
+  { run = 'sfdisk --json /dev/vda', capture = "table" },
+  { host = '''
+jq -c '[.partitiontable.partitions[] | .name // ""]' <<'JSON'
+{{table}}
+JSON
+''', equals = '["EFI system partition","Microsoft reserved partition","Basic data partition","joe-boot","joe"]', name = "Windows' three partitions, then joe's two" },
+  { host = '''
+jq -c '.partitiontable as $t | [$t.partitions[:3][] | .start * ($t.sectorsize // 512)]' <<'JSON'
+{{table}}
+JSON
+''', equals = "[1048576,105906176,122683392]", name = "Windows' partitions have not moved" },
+  { run = 'sfdisk --verify /dev/vda' },
+
+  { section = "Windows' EFI system partition is shared, and only the boot loader was added to it" },
+  { run = 'lsblk -no PARTLABEL "$(findmnt -no SOURCE /efi)"', equals = "EFI system partition" },
+  { run = 'cat /efi/EFI/Microsoft/Boot/bootmgfw.efi', equals = "MZ stand-in for the Windows Boot Manager" },
+  { run = 'cat /efi/EFI/BOOT/BOOTX64.EFI', equals = "MZ stand-in for the Windows Boot Manager", name = "the firmware's fallback path still holds Windows' boot manager" },
+  { run = 'test -f /efi/EFI/systemd/systemd-bootx64.efi' },
+  { run = 'cat /efi/loader/loader.conf', contains = "timeout 5" },
+  { run = 'ls /efi/loader/entries 2>/dev/null', exit = "any", equals = "", name = "no entries on the shared partition" },
+  { run = 'findmnt -no FSTYPE /boot', equals = "vfat" },
+  { run = 'ls /boot/loader/entries/', contains = "joe-1" },
+
+  { section = "the boot menu offers Windows too" },
+  { run = 'bootctl list --no-pager 2>/dev/null', exit = "any", matches = 'auto-windows|Windows Boot Manager' },
+
+  { section = "nothing on Windows' own partition changed" },
+  { run = 'mkdir -p /mnt/windows && mount -o ro /dev/vda3 /mnt/windows' },
+  { run = 'cat /mnt/windows/marker.txt', equals = "Windows was here before joe." },
+  { run = 'umount /mnt/windows' },
+
+  { section = "the root is not grown into anyone else's space" },
+  { run = 'readlink /etc/repart.d/50-root.conf', equals = "/dev/null" },
+
+  { use = "dave-works" },
+]

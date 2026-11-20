@@ -4,6 +4,7 @@
 #   neomake test                    every test this machine can run
 #   neomake test unit 'cli-*'       dave's unit and command-line tests (seconds)
 #   neomake test smoke boot-contract deployments    in VMs on the scaffold (minutes, KVM)
+#   neomake test --tag joe          in VMs on images of joe itself (make packages first)
 #   neomake list --tests -v         every test, and whether this machine can run it
 #
 # The Makefile's test targets run these. A run's logs, report and each

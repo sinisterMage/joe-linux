@@ -6,7 +6,7 @@
 #   stage  alpha1, beta1, rc1 ...; nothing for a final release
 #
 # Y and Z are written here, so this recipe changes (and its .release is
-# bumped) whenever the kernel's or dave's version does. tests/vm/live.py
+# bumped) whenever the kernel's or dave's version does. tests/vm/live.tomlx
 # checks them against the running kernel and dave.
 
 # Prints the release's name; build machine scripts call it as well.

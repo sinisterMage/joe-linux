@@ -21,7 +21,7 @@ keyboard, time zone and the account are asked by GNOME's initial setup on
 the installed system's first boot.
 
 `joe-installer --autotest DISK [--beside]` goes through the same pages
-unattended and exits 0 when the installation succeeded; tests/vm/install.py
+unattended and exits 0 when the installation succeeded; tests/vm/install.tomlx
 uses it.
 
 Built by packages/joe-installer, whose build copies this directory into the

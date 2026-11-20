@@ -404,7 +404,7 @@ Scratch (systemd, development branches), with the same package versions. Recipes
 | `system/` | dave's systemd units |
 | `image/` | Image and live medium specifications, and the scaffold's scripts |
 | `installer/` | The graphical installer |
-| `tests/` | Command-line tests and VM scenarios (neomake's `*.tomlx`, and the remaining Python scenarios) |
+| `tests/` | Command-line tests and VM scenarios, as neomake tests (`*.tomlx`) |
 | `.github/workflows/` | The unit tests for pushes and pull requests, and the container image |
 
 ## Not done yet

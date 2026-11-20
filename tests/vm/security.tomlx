@@ -1,0 +1,269 @@
+# The joe security module, end to end, on an image built from joe's own
+# packages:
+#
+#   Rule 1  a privileged process runs only sealed code
+#   Rule 2  a privileged process cannot make memory executable
+#   Rule 3  a privileged process is held to its declared operations
+#
+# and, throughout, that unprivileged processes are not affected. What a
+# process tries is done by tests/vm/probe.c, packaged eight times with
+# different declarations.
+#
+#   security          the rules, in log mode and enforcing, and a boot with joe=enforce
+#   security-share    a write through virtiofs counts as a persistent write (needs virtiofsd)
+
+# Run in the machine after every boot.
+$security_helpers = '''
+# probe COMMAND...: what the kernel said to what a probe tried, `allowed`
+# or `denied`, as the probe's last line has it. Anything else is printed
+# whole, for the step's check to show.
+probe() {
+    local out last
+    out=$("$@" 2>&1)
+    last=${out##*$'\n'}
+    case $last in
+        allowed) echo allowed ;;
+        denied*) echo denied ;;
+        *) printf '%s\n' "$out" ;;
+    esac
+}
+as_nobody() { su -s /bin/sh nobody -c "$1"; }
+'''
+
+[tasks.security-probe]
+description = "build/probe: a static program that tries what the security module rules on"
+requires = { commands = ["zig"] }
+command = '''
+mkdir -p build
+zig cc -target x86_64-linux-musl -static -O2 -o build/probe tests/vm/probe.c
+'''
+inputs = ["tests/vm/probe.c"]
+outputs = ["build/probe"]
+
+# The probe, as eight packages that each declare (--allow) something else.
+[tasks.security-repo]
+description = "build/vm-repo-security: the probe, packaged with eight sets of declarations"
+deps = ["dave", "security-probe"]
+cache = false
+command = '''
+. tests/lib/repo.sh
+r=build/vm-repo-security
+repo_init $r
+probe_package() {
+    local name=$1 s
+    shift
+    s=$(repo_stage $r "$name" 1-r1)
+    install -D -m 755 build/probe "$s/usr/bin/$name"
+    repo_pack $r "$name" 1-r1 "$@"
+}
+probe_package probe-all --allow all
+probe_package probe-none --allow none
+probe_package probe-declared --allow net --allow cap:sys_admin --allow mount \
+    --allow write:/var/lib/probe --allow exec:/usr/bin/true
+probe_package probe-undeclared
+probe_package probe-limited --allow exec:/usr/bin/probe-undeclared
+probe_package probe-ipc --allow root-ipc
+probe_package probe-cap --allow cap:sys_admin
+probe_package probe-device --allow write:/dev/vda
+repo_index $r
+'''
+
+# The machine fetches nothing from the test repository; its address is
+# only configured.
+[tasks.joe-security-image]
+description = "build/images/joe-security.img: joe's console image with the probes"
+deps = ["dave", "security-repo"]
+env = { PATH = "${path}" }
+requires = { files = ["build/repo/repo.zon", "build/keys/joe.pub"], commands = ["mcopy", "unshare"] }
+cache = false
+command = '''
+mkdir -p build/images
+with=()
+for p in all none declared undeclared limited ipc cap device; do with+=(--with probe-$p); done
+dave/zig-out/bin/dave image build image/console.zon --test \
+    --repo "joe,$PWD/build/repo,http://10.0.2.2:8643,$PWD/build/keys/joe.pub" \
+    --repo "test,$PWD/build/vm-repo-security,http://10.0.2.2:8645,$PWD/build/vm-repo-security-key.pub" \
+    "${with[@]}" --out build/images/joe-security.img
+'''
+timeout = "30m"
+
+[machines.joe-security]
+description = "joe's console image with the security probes"
+use = "scaffold"
+disk = "build/images/joe-security.img"
+
+[tests.security]
+description = "the security module's three rules, in log mode, enforcing, and from boot"
+tags = ["vm", "joe", "security"]
+deps = ["joe-security-image"]
+machine = "joe-security"
+timeout = "30m"
+on_boot = ${security_helpers}
+on_failure = [{ run = "dmesg | grep 'joe: ' | tail -n 30" }]
+steps = [
+  { section = "the module is active and starts in log mode" },
+  { run = 'cat /sys/kernel/security/lsm', matches = '(^|,)joe(,|$)', name = "the joe module is loaded" },
+  { run = 'cat /sys/kernel/security/joe/enforce', equals = "0" },
+
+  { section = "the first boot sealed every packaged file" },
+  { run = 'test -e /usr/lib/dave/sealed' },
+  { run = 'dave seal', timeout = "10m", capture = { sealed = 'Sealed 0 file\(s\); (\d+) were already sealed' } },
+  { run = 'test {{sealed}} -gt 3000', name = "more than 3000 files are sealed ({{sealed}})" },
+  { run = '! echo x >> /usr/bin/true', name = "a sealed file cannot be modified" },
+
+  { section = "log mode reports but does not prevent" },
+  { run = 'cp /usr/bin/true /root/unsealed && /root/unsealed' },
+  { run = "dmesg | grep 'joe: would-deny' | grep unsealed | tail -n 3", contains = "op=exec-unsealed arg=/root/unsealed" },
+  # An unsealed file is reported once, not on every use: on a system
+  # nothing is sealed on yet, every use would flood the kernel log.
+  { run = '/root/unsealed && /root/unsealed' },
+  { run = "dmesg | grep -c 'op=exec-unsealed arg=/root/unsealed '", exit = "any", equals = "1", name = "/root/unsealed was reported once" },
+
+  { section = "undeclared code is reported distinctly in log mode" },
+  { run = 'probe probe-limited exec /usr/bin/probe-undeclared', equals = "allowed" },
+  { run = "dmesg | grep 'joe: would-deny' | grep undeclared | tail -n 3", contains = "op=undeclared arg=/usr/bin/probe-undeclared" },
+
+  { section = "switching to enforcing is one-way" },
+  { run = 'echo 1 > /sys/kernel/security/joe/enforce' },
+  { run = 'cat /sys/kernel/security/joe/enforce', equals = "1" },
+  { run = 'echo 0 > /sys/kernel/security/joe/enforce', exit = "any" },
+  { run = 'cat /sys/kernel/security/joe/enforce', equals = "1", name = "still enforcing" },
+
+  { section = "rule 1: root cannot run unsealed code; ordinary users can" },
+  { run = '/root/unsealed; echo status=$?', contains = "status=126", name = "an unsealed program does not run as root" },
+  # A copy that carries the original's seal attribute is still not sealed:
+  # the attribute alone means nothing without fs-verity over the contents.
+  { run = 'cp --preserve=xattr /usr/bin/true /root/copied' },
+  { run = '/root/copied; echo status=$?', contains = "status=126", name = "a copied seal is not accepted" },
+  { run = '''printf '#!/bin/sh\necho script ran\n' > /root/script.sh && chmod +x /root/script.sh''' },
+  { run = '/root/script.sh', exit = "any", lacks = "script ran", name = "an unsealed script does not run as root" },
+  { run = 'cp /root/unsealed /root/script.sh /tmp/ && chmod 755 /tmp/unsealed /tmp/script.sh' },
+  { run = 'as_nobody /tmp/unsealed; echo status=$?', contains = "status=0" },
+  { run = 'as_nobody /tmp/script.sh', exit = "any", contains = "script ran" },
+  { run = "dmesg | grep 'joe: denied' | tail -n 4", contains = "op=exec-unsealed" },
+
+  { section = "undeclared is not none, and only an all caller supplies authority" },
+  { run = 'probe probe-limited exec /usr/bin/probe-undeclared', equals = "denied" },
+  { run = 'probe probe-all exec /usr/bin/probe-undeclared net', equals = "allowed" },
+  { run = 'probe probe-all exec /usr/bin/probe-none net', equals = "denied" },
+  { run = "dmesg | grep 'joe: denied' | grep undeclared | tail -n 3", contains = "op=undeclared arg=/usr/bin/probe-undeclared" },
+  { run = 'chmod 4755 /usr/bin/probe-undeclared' },
+  { run = 'probe as_nobody "probe-all exec /usr/bin/probe-undeclared"', equals = "denied" },
+  { run = 'chmod 755 /usr/bin/probe-undeclared' },
+
+  { section = "AT_EXECVE_CHECK gives the same answer as a real exec" },
+  { run = 'probe probe-declared exec-check /usr/bin/true', equals = "allowed" },
+  { run = 'probe probe-declared exec-check /usr/bin/false', equals = "denied" },
+  { run = 'probe probe-all exec-check /root/unsealed', equals = "denied" },
+
+  { section = "rule 2: root cannot create executable memory, whatever it declares" },
+  { run = 'probe probe-all jit-anon', equals = "denied" },
+  { run = 'probe probe-all jit-mprotect', equals = "denied" },
+  { run = 'probe as_nobody "probe-all jit-anon"', equals = "allowed" },
+  { run = 'probe as_nobody "probe-all jit-mprotect"', equals = "allowed" },
+
+  { section = "privileged processes cannot escape or inject code through task mechanisms" },
+  { run = 'probe probe-all userns', equals = "allowed" },
+  { run = 'probe probe-none userns', equals = "allowed" },
+  { run = 'probe probe-all cap-only-userns', equals = "denied" },
+  { run = 'probe probe-all userns-jit', equals = "denied" },
+  { run = 'probe as_nobody "probe-none userns"', equals = "allowed" },
+  { run = 'probe as_nobody "probe-none userns-jit"', equals = "allowed" },
+  { run = 'probe probe-all ptrace-root', equals = "allowed" },
+  { run = 'probe probe-none ptrace-root', equals = "denied" },
+  { run = 'probe probe-all ptrace-write', equals = "denied" },
+  { run = 'probe probe-all proc-mem-write', equals = "denied" },
+  { run = 'probe probe-all process-vm-write', equals = "denied" },
+  { run = 'probe as_nobody "probe-all ptrace-write"', equals = "allowed" },
+  { run = 'probe as_nobody "probe-all proc-mem-write"', equals = "allowed" },
+  { run = 'probe as_nobody "probe-all process-vm-write"', equals = "allowed" },
+
+  { section = "root-ipc authorizes root-to-root signals and SysV IPC" },
+  { run = 'probe probe-none ipc-signal', equals = "denied" },
+  { run = 'probe probe-ipc ipc-signal', equals = "allowed" },
+  { run = 'probe probe-none ipc-sysv', equals = "denied" },
+  { run = 'probe probe-ipc ipc-sysv', equals = "allowed" },
+  { run = 'probe probe-none ipc-sysv-ctl', equals = "denied" },
+  { run = 'probe probe-ipc ipc-sysv-ctl', equals = "allowed" },
+  { run = 'probe probe-none ipc-sysv-info', equals = "allowed" },
+  { run = 'probe as_nobody "probe-none ipc-signal"', equals = "allowed" },
+  { run = 'probe as_nobody "probe-none ipc-sysv"', equals = "allowed" },
+  { run = 'probe as_nobody "probe-none ipc-sysv-ctl"', equals = "allowed" },
+
+  { section = "rule 3: a program that declares nothing can do nothing privileged" },
+  { run = 'mkdir -p /var/lib/probe /mnt/probe' },
+  { run = 'probe probe-none net', equals = "denied" },
+  { run = 'probe probe-none cap', equals = "denied" },
+  { run = 'probe probe-none write /var/lib/probe/file', equals = "denied" },
+  { run = 'probe probe-none exec /usr/bin/true', equals = "denied" },
+  { run = 'probe probe-none mount /mnt/probe', equals = "denied" },
+  # Temporary file systems hold no lasting state and are not restricted.
+  { run = 'probe probe-none write /run/probe-file', equals = "allowed" },
+
+  { section = "rule 3: a program is held to exactly what it declares" },
+  { run = 'probe probe-declared net', equals = "allowed" },
+  { run = 'probe probe-declared cap', equals = "allowed" },
+  { run = 'probe probe-declared mount /mnt/probe', equals = "allowed" },
+  { run = 'probe probe-cap mount-create', equals = "denied" },
+  { run = 'probe probe-declared mount-create', equals = "allowed" },
+  { run = 'probe probe-all mount-delegate /usr/bin/probe-cap', equals = "denied" },
+  { run = 'probe probe-all mount-delegate /usr/bin/probe-declared', equals = "allowed" },
+  { run = 'probe probe-cap mount-new /mnt/probe', equals = "denied" },
+  { run = 'probe probe-declared mount-new /mnt/probe', equals = "allowed" },
+  { run = 'mount -t tmpfs probe /mnt/probe' },
+  { run = 'probe probe-cap remount /mnt/probe', equals = "denied" },
+  { run = 'probe probe-declared remount /mnt/probe', equals = "allowed" },
+  { run = 'probe probe-cap mount-setattr /mnt/probe', equals = "denied" },
+  { run = 'probe probe-declared mount-setattr /mnt/probe', equals = "allowed" },
+  { run = 'probe probe-cap umount-only /mnt/probe', equals = "denied" },
+  { run = 'probe probe-declared umount-only /mnt/probe', equals = "allowed" },
+  { run = 'probe probe-declared write /var/lib/probe/file', equals = "allowed" },
+  { run = 'probe probe-declared write /var/lib/elsewhere', equals = "denied" },
+  { run = 'probe probe-declared write /etc/probe-file', equals = "denied" },
+  { run = 'probe probe-declared exec /usr/bin/true', equals = "allowed" },
+  { run = 'probe probe-declared exec /usr/bin/false', equals = "denied" },
+  { run = 'probe probe-all write /etc/probe-file', equals = "allowed" },
+  { run = 'probe probe-all exec /usr/bin/false', equals = "allowed" },
+  { run = 'probe probe-none block-write /dev/vda', equals = "denied" },
+  { run = 'probe probe-device block-write /dev/vda', equals = "allowed" },
+  # None of this concerns an unprivileged user, whom ordinary permissions confine.
+  { run = 'probe as_nobody "probe-none net"', equals = "allowed" },
+  { run = 'probe as_nobody "probe-none exec /usr/bin/true"', equals = "allowed" },
+
+  { section = "the system keeps working while enforcing" },
+  { run = 'dave status', contains = "Running deployment 1." },
+  { run = 'systemctl is-system-running', exit = "any", matches = '^(running|degraded)$' },
+
+  { section = "a system booted with joe=enforce comes up and stays usable" },
+  { run = "sed -i '/^options /s/$/ joe=enforce/' /efi/loader/entries/joe-1.conf" },
+  { reboot = {}, timeout = "5m" },
+  { run = 'cat /sys/kernel/security/joe/enforce', equals = "1" },
+  { run = 'cat /proc/cmdline', contains = "joe=enforce" },
+  { run = 'dave status', contains = "Running deployment 1." },
+  { run = '/root/unsealed; echo status=$?', contains = "status=126", name = "an unsealed program does not run as root" },
+  { run = 'systemctl --failed --no-legend --plain', exit = "any", equals = "", name = "no failed units" },
+  { run = "dmesg | grep -c 'joe: denied'", exit = "any", name = "denials since boot" },
+  { run = "dmesg | grep 'joe: denied' | grep -vF 'op=exec-unsealed arg=/root/unsealed'", exit = "any", equals = "", name = "nothing was denied but /root/unsealed" },
+]
+
+# On its own machine, since only it needs virtiofsd: without it, this
+# test is skipped and the rest still run.
+[tests.security-share]
+description = "a write through virtiofs is a persistent write, to the security module"
+tags = ["vm", "joe", "security"]
+deps = ["joe-security-image"]
+machine = { use = "joe-security", shares = [{ dir = "build/images/security-share", tag = "host" }] }
+autoboot = false
+timeout = "15m"
+on_boot = ${security_helpers}
+steps = [
+  { host = 'rm -rf build/images/security-share && mkdir -p build/images/security-share', name = "an empty directory to share" },
+  { boot = true },
+  { run = 'echo 1 > /sys/kernel/security/joe/enforce' },
+  { run = 'mkdir -p /mnt/probe-share && mount -t virtiofs host /mnt/probe-share' },
+  { run = 'probe probe-none write /mnt/probe-share/probe', equals = "denied" },
+  { host = 'test ! -e build/images/security-share/probe', name = "the denied open made no file on the host" },
+  { run = 'probe probe-all write /mnt/probe-share/probe', equals = "allowed" },
+  { host = 'cat build/images/security-share/probe', equals = "x" },
+  { run = 'umount /mnt/probe-share' },
+]

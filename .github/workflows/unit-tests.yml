@@ -51,13 +51,13 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cargo/bin/neomake
-          key: neomake-322aef740d04ea77fe28b5f52a8a5206cf745660
+          key: neomake-b5802337db92379f0149e0087447adfc8ed4dd05
 
       - name: Install neomake
         if: steps.neomake-cache.outputs.cache-hit != 'true'
         run: |
           cargo install --locked --git https://github.com/theJoeLinuxFoundation/neomake \
-            --rev 322aef740d04ea77fe28b5f52a8a5206cf745660 neomake
+            --rev b5802337db92379f0149e0087447adfc8ed4dd05 neomake
 
       - name: Run unit tests
         run: |
