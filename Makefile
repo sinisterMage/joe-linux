@@ -3,13 +3,16 @@
 # Everything here runs as an ordinary user. Nothing needs root on the host.
 
 DAVE := dave/zig-out/bin/dave
+# The tests, and the images only they use, are run by neomake (neomake.tomlx,
+# tests/*.tomlx); NEOMAKE=/path/to/neomake picks another binary.
+NEOMAKE ?= neomake
 # Tools image builds need that the host may not have are built here.
 export PATH := $(CURDIR)/build/host-tools/bin:$(PATH)
 # Images read joe's repository from build/repo and are configured to fetch from
 # http://10.0.2.2:8643: this machine as a QEMU guest sees it (make serve-repo).
 REPO := --repo joe,$(CURDIR)/build/repo,http://10.0.2.2:8643,$(CURDIR)/build/keys/joe.pub
 
-.PHONY: help dave test test-cli scaffold test-boot-contract test-deployments \
+.PHONY: help dave test scaffold test-boot-contract test-deployments \
         bootstrap packages image run test-joe test-security audit-security \
         desktop-image run-desktop test-desktop \
         release-image test-release vm run-vm serve-repo iso-tools iso run-iso test-live test-install container clean
@@ -58,9 +61,8 @@ $(DAVE): $(wildcard dave/src/*.zig dave/src/solver/*.zig) dave/build.zig
 
 dave: $(DAVE)
 
-test: $(DAVE)
-	cd dave && zig build test --summary all
-	tests/cli.sh
+test:
+	$(NEOMAKE) test unit 'cli-*'
 
 build/host-tools/bin/mcopy:
 	mkdir -p build/src build/host-tools
@@ -93,23 +95,16 @@ build/host-tools/bin/mksquashfs:
 
 iso-tools: build/host-tools/bin/mcopy build/host-tools/bin/xorriso build/host-tools/bin/mksquashfs
 
-build/scaffold/archlinux-bootstrap.tar.zst:
-	mkdir -p build/scaffold
-	curl -fsSL -o $@ https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst
+# The scaffold image (tests/vm/machines.tomlx): rebuilt when dave, the
+# bootstrap tarball or the scaffold's scripts change.
+scaffold: build/host-tools/bin/mcopy
+	$(NEOMAKE) run scaffold-image
 
-build/images/scaffold.img: build/scaffold/archlinux-bootstrap.tar.zst build/host-tools/bin/mcopy $(DAVE)
-	mkdir -p build/images
-	image/mkscaffold.sh
-	$(DAVE) image build image/scaffold.zon --out $@
+test-boot-contract: build/host-tools/bin/mcopy
+	$(NEOMAKE) test smoke boot-contract
 
-scaffold: build/images/scaffold.img
-
-test-boot-contract: build/images/scaffold.img
-	python3 tests/vm/smoke.py build/images/scaffold.img
-	python3 tests/vm/boot_contract.py build/images/scaffold.img
-
-test-deployments: build/images/scaffold.img $(DAVE)
-	python3 tests/vm/deployments.py
+test-deployments: build/host-tools/bin/mcopy
+	$(NEOMAKE) test deployments
 
 build/lfs/wget-list:
 	mkdir -p build/lfs build/src
@@ -135,8 +130,8 @@ image: build/host-tools/bin/mcopy $(DAVE)
 run:
 	image/run.sh
 
-test-joe: build/host-tools/bin/mcopy $(DAVE)
-	python3 tests/vm/deployments.py --joe
+test-joe: build/host-tools/bin/mcopy
+	$(NEOMAKE) test deployments-joe
 
 test-security: build/host-tools/bin/mcopy $(DAVE)
 	python3 tests/vm/security.py
@@ -212,4 +207,4 @@ serve-repo:
 	python3 -m http.server 8643 --bind 127.0.0.1 --directory build/repo
 
 clean:
-	rm -rf dave/.zig-cache dave/zig-out build/cli-test build/work
+	rm -rf dave/.zig-cache dave/zig-out build/cli-test build/work build/neomake

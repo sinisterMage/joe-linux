@@ -20,7 +20,7 @@
 //! stored on the ESP under names derived from their contents, and every
 //! rewrite of an entry carries its initrds along.
 //!
-//! All of this was verified against systemd-boot 262 in tests/vm/boot_contract.py.
+//! All of this was verified against systemd-boot 262 in tests/vm/boot-contract.tomlx.
 
 const std = @import("std");
 const Io = std.Io;

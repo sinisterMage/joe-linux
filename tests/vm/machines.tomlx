@@ -1,0 +1,119 @@
+# The machines the VM tests boot, the images they boot from, and the
+# repositories served to them.
+#
+# Machines see this host as 10.0.2.2 (QEMU's user-mode network), which is
+# why images are configured with http://10.0.2.2:PORT and the services
+# listen on 127.0.0.1:PORT. Root logs in on ttyS0 with the prompt `joe# `:
+# the scaffold's tree does that itself (image/mkscaffold.sh), joe's
+# --test images through joe-test-console.
+
+$console = { prompt = "joe# ", banner = "BdsDxe: starting ", setup = "dmesg -n 1; stty cols 250 rows 50" }
+
+[machines.scaffold]
+description = "this host's kernel and systemd-boot with a stock Arch userspace"
+disk = "build/images/scaffold.img"
+memory = "2G"
+cpus = 4
+console = ${console}
+boot_timeout = "5m"
+
+[machines.scaffold-dave]
+description = "the scaffold with dave and the deployment tests' packages"
+use = "scaffold"
+disk = "build/images/scaffold-dave.img"
+
+[machines.joe-deployments]
+description = "joe's console image with the deployment tests' packages"
+use = "scaffold"
+disk = "build/images/joe-deployments.img"
+
+# The scaffold's userspace: the newest Arch bootstrap tarball, as the
+# Makefile fetched it.
+[tasks.scaffold-bootstrap]
+description = "Arch's bootstrap tarball, for the scaffold's userspace"
+command = '''
+mkdir -p build/scaffold
+[ -e build/scaffold/archlinux-bootstrap.tar.zst ] ||
+    curl -fsSL -o build/scaffold/archlinux-bootstrap.tar.zst \
+        https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst
+'''
+outputs = ["build/scaffold/archlinux-bootstrap.tar.zst"]
+
+[tasks.scaffold-image]
+description = "build/images/scaffold.img"
+deps = ["dave", "scaffold-bootstrap"]
+env = { PATH = "${path}" }
+# make build/host-tools/bin/mcopy builds mtools.
+requires = { commands = ["mcopy", "unshare"] }
+command = '''
+mkdir -p build/images
+image/mkscaffold.sh
+dave/zig-out/bin/dave image build image/scaffold.zon --out build/images/scaffold.img
+'''
+inputs = ["build/scaffold/archlinux-bootstrap.tar.zst", "image/mkscaffold.sh", "image/scaffold.zon", "dave/zig-out/bin/dave"]
+outputs = ["build/images/scaffold.img"]
+timeout = "30m"
+
+# The deployment tests' own repositories (was tests/vm/repo.py): version 1
+# of two packages, which the images are built with; the tests publish
+# newer ones while their machine runs. Each variant of the tests has its
+# own, served on its own port, so the two can run at once.
+[tasks.deployments-repo]
+description = "build/vm-repo-{{matrix.base}}: hello 1.0-r1 and release-marker 1-r1, signed"
+deps = ["dave"]
+cache = false
+matrix = { base = ["scaffold", "joe"] }
+command = '''
+. tests/lib/repo.sh
+r=build/vm-repo-{{matrix.base}}
+repo_init $r
+s=$(repo_stage $r hello 1.0-r1)
+repo_script "$s/usr/bin/hello" 'echo hello v1'
+repo_pack $r hello 1.0-r1
+s=$(repo_stage $r release-marker 1-r1)
+repo_file "$s/usr/lib/release-marker" $'1\n'
+repo_pack $r release-marker 1-r1
+repo_index $r
+'''
+
+[tasks.scaffold-dave-image]
+description = "build/images/scaffold-dave.img: the scaffold with dave, and version 1 of the test packages"
+deps = ["dave", "deployments-repo[base=scaffold]", "scaffold-image"]
+env = { PATH = "${path}" }
+requires = { commands = ["mcopy", "unshare"] }
+cache = false
+command = '''
+image/mkscaffold-dave.sh build/vm-repo-scaffold build/vm-repo-scaffold-key.pub http://10.0.2.2:8642 \
+    build/images/scaffold-dave.img hello release-marker
+'''
+timeout = "30m"
+
+[tasks.joe-deployments-image]
+description = "build/images/joe-deployments.img: joe's console image, and version 1 of the test packages"
+deps = ["dave", "deployments-repo[base=joe]"]
+env = { PATH = "${path}" }
+# make packages fills build/repo; make build/host-tools/bin/mcopy builds mtools.
+requires = { files = ["build/repo/repo.zon", "build/keys/joe.pub"], commands = ["mcopy", "unshare"] }
+cache = false
+command = '''
+mkdir -p build/images
+dave/zig-out/bin/dave image build image/console.zon --test \
+    --repo "joe,$PWD/build/repo,http://10.0.2.2:8643,$PWD/build/keys/joe.pub" \
+    --repo "test,$PWD/build/vm-repo-joe,http://10.0.2.2:8644,$PWD/build/vm-repo-joe-key.pub" \
+    --with hello --with release-marker --out build/images/joe-deployments.img
+'''
+timeout = "30m"
+
+[services.joe-repo]
+description = "build/repo, which joe's images are configured to fetch from"
+serve = { dir = "build/repo", listen = [{ addr = "127.0.0.1:8643" }] }
+
+[services.test-repo-scaffold]
+description = "build/vm-repo-scaffold, the scaffold deployment tests' own repository"
+deps = ["deployments-repo[base=scaffold]"]
+serve = { dir = "build/vm-repo-scaffold", listen = [{ addr = "127.0.0.1:8642" }] }
+
+[services.test-repo-joe]
+description = "build/vm-repo-joe, the joe deployment tests' own repository"
+deps = ["deployments-repo[base=joe]"]
+serve = { dir = "build/vm-repo-joe", listen = [{ addr = "127.0.0.1:8644" }] }

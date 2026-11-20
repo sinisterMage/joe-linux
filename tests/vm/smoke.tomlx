@@ -1,0 +1,18 @@
+[tests.smoke]
+description = "the contract every other scenario relies on: a root shell without an initramfs, the expected writable btrfs root subvolume, and the shared subvolumes and the ESP mounted"
+tags = ["vm", "scaffold"]
+deps = ["scaffold-image"]
+machine = "scaffold"
+timeout = "10m"
+steps = [
+  { run = 'cat /proc/cmdline', matches = 'rootflags=subvol=joe/deploy/1([ ,]|$)', lacks = "initrd=", name = "booted deployment 1 without an initramfs" },
+  { run = 'findmnt -rno FSTYPE,OPTIONS /', matches = ['^btrfs ', '^btrfs (\S*,)?rw(,|\s|$)'], contains = "subvol=/joe/deploy/1", name = "the root is a writable btrfs subvolume" },
+  { run = 'findmnt -rno FSTYPE,OPTIONS /var', contains = "subvol=/var" },
+  { run = 'findmnt -rno FSTYPE,OPTIONS /home', contains = "subvol=/home" },
+  { run = 'findmnt -rno FSTYPE,OPTIONS /efi', contains = "vfat" },
+  # The mutable-root promise: an ordinary write to / just works.
+  { run = 'echo hello > /usr/local/smoke && cat /usr/local/smoke && rm /usr/local/smoke', equals = "hello", name = "an ordinary write to / just works" },
+  { run = 'systemctl is-system-running --wait', exit = "any", timeout = "3m", name = "system state" },
+  { run = 'systemctl --failed --no-legend --plain', exit = "any", name = "failed units" },
+  { run = "bootctl status 2>/dev/null | sed -n '1,25p'", exit = "any", name = "bootctl status" },
+]

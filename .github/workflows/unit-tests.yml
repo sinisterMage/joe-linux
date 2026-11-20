@@ -17,7 +17,7 @@ jobs:
   unit-tests:
     name: dave unit tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     defaults:
       run:
         shell: bash
@@ -44,10 +44,26 @@ jobs:
           echo "$RUNNER_TEMP/zig" >> "$GITHUB_PATH"
           test "$("$RUNNER_TEMP/zig/zig" version)" = "$ZIG_VERSION"
 
+      # neomake runs the tests (neomake.tomlx): theJoeLinuxFoundation/neomake
+      # at a pinned commit, built once and cached.
+      - name: Cache neomake
+        id: neomake-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cargo/bin/neomake
+          key: neomake-322aef740d04ea77fe28b5f52a8a5206cf745660
+
+      - name: Install neomake
+        if: steps.neomake-cache.outputs.cache-hit != 'true'
+        run: |
+          cargo install --locked --git https://github.com/theJoeLinuxFoundation/neomake \
+            --rev 322aef740d04ea77fe28b5f52a8a5206cf745660 neomake
+
       - name: Run unit tests
-        working-directory: dave
         run: |
           # Archive tests need zstd, which the hosted Ubuntu image provides.
           command -v zstd
           # Filesystem-dependent tests retain their existing skip behaviour.
-          zig build test --summary all
+          # On GitHub Actions neomake groups the output, annotates failures
+          # and writes the job summary.
+          neomake test unit --junit build/junit.xml

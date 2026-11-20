@@ -222,15 +222,23 @@ The details are in the source, which is commented for readers:
 
 ## Building and testing
 
-GitHub Actions runs dave's existing unit tests on pull requests and pushes to
-`main`, using Zig 0.17.1 on Ubuntu. To run the same checks locally:
-`cd dave && zig build test --summary all` (requires `zstd`). Tests that need
-btrfs or fs-verity skip when those features are unavailable. This workflow
-does not run the command-line or VM suites below.
+The tests are run by [neomake](https://github.com/theJoeLinuxFoundation/neomake)
+(`cargo install --git https://github.com/theJoeLinuxFoundation/neomake neomake`),
+from `neomake.tomlx` and `tests/`; the Makefile's test targets call it.
+`neomake list --tests -v` shows every test and whether this machine can run
+it: a test whose tool, KVM or prerequisite is missing is skipped with the
+reason. Each run's logs, report and test files are kept in
+`build/neomake/runs/`, and a failure names the step and the line it is
+written on.
 
-Requirements on the build machine: Zig 0.17.1, a C toolchain, QEMU with KVM,
-OVMF firmware, btrfs-progs 6.12 or newer, bubblewrap, zstd, Python 3, OpenSSL,
-and a build directory on btrfs. Nothing needs root.
+GitHub Actions runs dave's unit tests on pull requests and pushes to `main`,
+using Zig 0.17.1 on Ubuntu: `neomake test unit` (requires `zstd`). Tests that
+need btrfs or fs-verity skip when those features are unavailable. This
+workflow does not run the command-line or VM suites below.
+
+Requirements on the build machine: Zig 0.17.1, neomake, a C toolchain, QEMU
+with KVM, OVMF firmware, btrfs-progs 6.12 or newer, bubblewrap, zstd,
+Python 3, OpenSSL, and a build directory on btrfs. Nothing needs root.
 
 ```
 make test                  unit tests and command-line tests, in seconds
@@ -396,7 +404,7 @@ Scratch (systemd, development branches), with the same package versions. Recipes
 | `system/` | dave's systemd units |
 | `image/` | Image and live medium specifications, and the scaffold's scripts |
 | `installer/` | The graphical installer |
-| `tests/` | Command-line tests and VM scenarios |
+| `tests/` | Command-line tests and VM scenarios (neomake's `*.tomlx`, and the remaining Python scenarios) |
 | `.github/workflows/` | The unit tests for pushes and pull requests, and the container image |
 
 ## Not done yet

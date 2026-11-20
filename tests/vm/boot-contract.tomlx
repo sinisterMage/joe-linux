@@ -1,0 +1,149 @@
+# Every boot loader behaviour the deployment design depends on, checked
+# with hand-written boot entries and shell prototypes (tests/vm/boot-contract/).
+# dave is not involved: this is the contract dave's implementation is then
+# written against.
+#
+#   1. Among entries sharing a sort-key, the highest `version` boots.
+#   2. Raising an older deployment's `version` is a persistent rollback.
+#   3. A counted entry (`+3`) is blessed only after a health check that is
+#      ordered before boot-complete.target has passed.
+#   4. A deployment whose health check fails is retried, then abandoned in
+#      favour of the previously chosen one, with nobody at the keyboard.
+#   5. So is a deployment whose root cannot be mounted at all.
+#   6. A service's stop job can snapshot the root and write a boot entry
+#      during shutdown, capturing changes made right up to the reboot.
+#   7. A power cut before that stop job leaves the old deployment booting.
+#   8. An entry may name an initrd holding only processor microcode (no
+#      /init): the kernel still mounts the root itself, as joe needs.
+
+[tests.boot-contract]
+description = "what the deployment design assumes about systemd-boot"
+tags = ["vm", "scaffold"]
+deps = ["scaffold-image"]
+machine = "scaffold"
+requires = { commands = ["cpio"] }
+timeout = "40m"
+on_boot = '''
+current_subvol() { sed -n 's/.*rootflags=subvol=\([^, ]*\).*/\1/p' /proc/cmdline; }
+entries() { ls /efi/loader/entries/; }
+# entry_text DEPLOYMENT VERSION: an entry like the image's own, for another deployment.
+entry_text() {
+    local kernel options
+    kernel=$(sed -n 's/^linux //p' /efi/loader/entries/joe-1.conf)
+    options=$(sed -n 's/^options //p' /efi/loader/entries/joe-1.conf | sed "s|subvol=joe/deploy/[0-9]*|subvol=joe/deploy/$1|")
+    printf 'title joe Linux (deployment %s)\nsort-key joe\nversion %s\nlinux %s\noptions %s\n' "$1" "$2" "$kernel" "$options"
+}
+# write_entry DEPLOYMENT VERSION [TRIES]: the text is made before the old
+# entry goes, since joe-1.conf is what it is made from.
+write_entry() {
+    local text
+    text=$(entry_text "$1" "$2")
+    rm -f /efi/loader/entries/joe-$1.conf /efi/loader/entries/joe-$1+*.conf
+    printf '%s\n' "$text" > "/efi/loader/entries/joe-$1${3:++$3}.conf"
+}
+mount_top() {
+    mkdir -p /run/top
+    mountpoint -q /run/top || mount -o subvolid=5 "$(findmnt -rno SOURCE / | sed 's/\[.*//')" /run/top
+}
+snapshot() { mount_top && btrfs subvolume snapshot / /run/top/joe/deploy/$1; }
+'''
+on_failure = [
+  { run = 'entries; cat /proc/cmdline' },
+  { run = 'journalctl -b --no-pager | tail -n 40' },
+]
+steps = [
+  { run = 'entry_text 1 1', matches = '^linux \S+', name = "the image's entry, to make the others from" },
+  { run = 'current_subvol', equals = "joe/deploy/1" },
+
+  { section = "1. highest version boots" },
+  { run = 'snapshot 2' },
+  { run = 'write_entry 2 2' },
+  { reboot = {} },
+  { run = 'current_subvol', equals = "joe/deploy/2" },
+
+  { section = "2. raising an older deployment's version is a persistent rollback" },
+  { run = 'write_entry 1 3' },
+  { reboot = {} },
+  { run = 'current_subvol', equals = "joe/deploy/1" },
+  { reboot = {} },
+  { run = 'current_subvol', equals = "joe/deploy/1" },
+  # The prototypes go into deployment 1, so later snapshots inherit them.
+  { write = "/usr/local/bin/joe-boot-check", from = "tests/vm/boot-contract/joe-boot-check", mode = "755" },
+  { write = "/etc/systemd/system/joe-boot-check.service", from = "tests/vm/boot-contract/joe-boot-check.service" },
+  { run = 'mkdir -p /etc/systemd/system/boot-complete.target.requires && ln -sf ../joe-boot-check.service /etc/systemd/system/boot-complete.target.requires/' },
+  { write = "/usr/local/bin/joe-finalize", from = "tests/vm/boot-contract/joe-finalize", mode = "755" },
+  { write = "/etc/systemd/system/joe-finalize.service", from = "tests/vm/boot-contract/joe-finalize.service" },
+  { run = 'mkdir -p /etc/systemd/system/multi-user.target.wants && ln -sf ../joe-finalize.service /etc/systemd/system/multi-user.target.wants/' },
+
+  { section = "3. a counted entry is blessed only after the health check passes" },
+  { run = 'snapshot 3' },
+  { run = 'write_entry 3 4 3' },
+  { reboot = { wait = false } },
+  { expect = 'JOE-HEALTH subvol=(\S+) result=(\w+)\r?\n', groups = ["joe/deploy/3", "ok"], timeout = "4m" },
+  { wait_prompt = true },
+  { run = 'current_subvol', equals = "joe/deploy/3" },
+  { run = 'systemctl is-active systemd-bless-boot.service', exit = "any", equals = "active", wait = "30s" },
+  { run = 'systemctl show -p ActiveEnterTimestampMonotonic joe-boot-check.service systemd-bless-boot.service' },
+  { run = 'entries', contains = "joe-3.conf", name = "the entry was blessed" },
+  { run = 'systemctl show -p After systemd-bless-boot.service', contains = "boot-complete.target" },
+  # No check runs on an ordinary (uncounted) boot.
+  { reboot = {} },
+  { run = 'current_subvol', equals = "joe/deploy/3" },
+  { run = '[ "$(systemctl is-active boot-complete.target)" != active ]', name = "no check ran on an ordinary boot" },
+
+  { section = "4. a failing health check falls back unattended" },
+  { run = 'snapshot 4' },
+  { run = 'touch /run/top/joe/deploy/4/etc/joe-fail-health' },
+  { run = 'write_entry 4 5 3' },
+  { reboot = { wait = false } },
+  { expect = 'JOE-HEALTH subvol=(\S+) result=(\w+)\r?\n', groups = ["joe/deploy/4", "fail"], times = 3, timeout = "12m", name = "three attempts fail their health check" },
+  { wait_boot = true, timeout = "5m" },
+  { run = 'current_subvol', equals = "joe/deploy/3" },
+  { run = 'entries', contains = "joe-4+0-3.conf", name = "deployment 4 is marked bad" },
+
+  { section = "5. an unmountable root falls back unattended" },
+  { run = 'write_entry 5 6 3' },
+  { reboot = { wait = false } },
+  { expect = 'Kernel panic - not syncing: VFS: Unable to mount root fs', times = 3, timeout = "12m", name = "three attempts panic" },
+  { wait_boot = true, timeout = "5m" },
+  { run = 'current_subvol', equals = "joe/deploy/3" },
+  { run = 'entries', contains = "joe-5+0-3.conf", name = "deployment 5 is marked bad" },
+
+  { section = "6. a stop job snapshots and writes the entry during shutdown" },
+  { run = 'entry_text 6 7 > /var/lib/joe-staged.entry && echo 6 > /var/lib/joe-staged && echo edited-after-staging > /etc/joe-late-edit' },
+  { run = 'entries', lacks = "joe-6", name = "there is no entry before the stop job" },
+  { reboot = { wait = false } },
+  { expect = 'JOE-FINALIZE deployment=6\r?\n', timeout = "4m" },
+  { expect = 'JOE-HEALTH subvol=(\S+) result=(\w+)\r?\n', groups = ["joe/deploy/6", "ok"], timeout = "4m" },
+  { wait_prompt = true },
+  { run = 'current_subvol', equals = "joe/deploy/6" },
+  { run = 'cat /etc/joe-late-edit', equals = "edited-after-staging" },
+
+  { section = "7. a power cut before the stop job changes nothing" },
+  { run = 'entry_text 7 8 > /var/lib/joe-staged.entry && echo 7 > /var/lib/joe-staged && sync' },
+  { power_cut = {} },
+  { run = 'current_subvol', equals = "joe/deploy/6" },
+  { run = 'cat /var/lib/joe-staged', equals = "7", name = "the staged marker survives" },
+  { run = 'entries', lacks = "joe-7", name = "no entry appeared without the stop job" },
+
+  { section = "8. a microcode-only initrd leaves mounting the root to the kernel" },
+  # Not real microcode: the kernel's early loader looks for these names,
+  # ignores what it cannot use, and finds no /init to run.
+  { name = "a newc archive holding only (pretend) microcode", host = '''
+d=$(mktemp -d)
+trap 'rm -rf "$d"' EXIT
+mkdir -p "$d/kernel/x86/microcode"
+head -c 64 /dev/zero > "$d/kernel/x86/microcode/GenuineIntel.bin"
+head -c 64 /dev/zero > "$d/kernel/x86/microcode/AuthenticAMD.bin"
+(cd "$d" && printf '%s\n' kernel/x86/microcode/GenuineIntel.bin kernel/x86/microcode/AuthenticAMD.bin |
+    cpio -o -H newc -R 0:0 --quiet) > "{{test.dir}}/microcode.img"
+''' },
+  { run = 'mkdir -p /efi/joe/initrd' },
+  { write = "/efi/joe/initrd/test.img", from = "{{test.dir}}/microcode.img" },
+  { run = 'rm -f /var/lib/joe-staged' },
+  { run = 'snapshot 8' },
+  { run = '''entry_text 8 9 | sed '/^options /i initrd /joe/initrd/test.img' > /efi/loader/entries/joe-8.conf''' },
+  { reboot = {} },
+  { run = 'current_subvol', equals = "joe/deploy/8" },
+  { run = 'systemctl show -P InitRDTimestampMonotonic', equals = "0", name = "no initramfs stage ran" },
+]

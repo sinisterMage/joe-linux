@@ -1,0 +1,14 @@
+[Unit]
+Description=joe finalize staged upgrade (prototype)
+DefaultDependencies=no
+RequiresMountsFor=/efi /var
+After=local-fs.target systemd-journal-flush.service
+Before=basic.target final.target
+Conflicts=final.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/true
+ExecStop=/usr/local/bin/joe-finalize
+TimeoutStopSec=5min

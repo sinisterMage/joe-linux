@@ -1,0 +1,13 @@
+#!/bin/sh
+[ -e /var/lib/joe-staged ] || exit 0
+n=$(cat /var/lib/joe-staged)
+set -e
+mkdir -p /run/top
+mountpoint -q /run/top || mount -o subvolid=5 "$(findmnt -rno SOURCE / | sed 's/\[.*//')" /run/top
+btrfs subvolume snapshot / /run/top/joe/deploy/$n >/dev/null
+cp /var/lib/joe-staged.entry /efi/loader/entries/.joe-$n.tmp
+sync /efi/loader/entries/.joe-$n.tmp
+mv /efi/loader/entries/.joe-$n.tmp "/efi/loader/entries/joe-$n+3.conf"
+rm -f /var/lib/joe-staged /var/lib/joe-staged.entry
+sync
+echo "JOE-FINALIZE deployment=$n" > /dev/ttyS0

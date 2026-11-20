@@ -1,0 +1,7 @@
+#!/bin/sh
+sub=$(sed -n 's/.*rootflags=subvol=\([^ ,]*\).*/\1/p' /proc/cmdline)
+if [ -e /etc/joe-fail-health ]; then
+    echo "JOE-HEALTH subvol=$sub result=fail" > /dev/ttyS0
+    exit 1
+fi
+echo "JOE-HEALTH subvol=$sub result=ok" > /dev/ttyS0

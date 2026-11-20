@@ -1,0 +1,42 @@
+# joe Linux's tests, and the tasks they need, for neomake
+# (https://github.com/theJoeLinuxFoundation/neomake).
+#
+#   neomake test                    every test this machine can run
+#   neomake test unit 'cli-*'       dave's unit and command-line tests (seconds)
+#   neomake test smoke boot-contract deployments    in VMs on the scaffold (minutes, KVM)
+#   neomake list --tests -v         every test, and whether this machine can run it
+#
+# The Makefile's test targets run these. A run's logs, report and each
+# test's files are kept in build/neomake/runs/ (latest is the newest).
+
+$top = exec("pwd")
+# DAVE=/path/to/dave runs the command-line tests against another binary.
+$dave = env("DAVE", join(top, "dave/zig-out/bin/dave"))
+# Tools image builds need that the host may not have (see the Makefile).
+$path = join(top, "build/host-tools/bin") + ":" + env("PATH")
+
+include = ["tests/*.tomlx", "tests/vm/*.tomlx"]
+
+[settings]
+# All generated state lives under build/.
+state_dir = "build/neomake"
+keep_runs = 10
+# Each VM test's machine takes 2 to 6G.
+max_machines = 2
+shell = ["bash", "-euo", "pipefail", "-c"]
+
+[tasks.dave]
+description = "dave, built static and ReleaseSafe"
+cwd = "dave"
+command = "zig build -Doptimize=ReleaseSafe"
+requires = { commands = ["zig"] }
+inputs = ["dave/build.zig", "dave/build.zig.zon", "dave/src/**/*.zig"]
+outputs = ["dave/zig-out/bin/dave"]
+
+[tests.unit]
+description = "dave's unit tests (some skip themselves when build/ is not btrfs)"
+tags = ["fast", "ci"]
+cwd = "dave"
+command = "zig build test --summary all"
+requires = { commands = ["zig", "zstd"] }
+timeout = "15m"

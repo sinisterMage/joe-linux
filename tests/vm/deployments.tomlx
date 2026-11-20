@@ -1,0 +1,269 @@
+# dave's deployments in a real VM: upgrade, late edits, boot loader update,
+# rollback, live install, nested subvolumes, power loss, unattended
+# recovery from a broken upgrade, and what users without root see.
+#
+#   deployments        on the scaffold (host kernel, borrowed userspace), in minutes
+#   deployments-joe    on an image built entirely from joe's own packages (make packages first)
+#
+# Both run the same scenarios, deployment-scenarios, with their own
+# repository of test packages, which the scenarios publish newer versions
+# into as they go.
+
+# Run in the machine after every boot: what the scenarios ask about it.
+$deployment_helpers = '''
+current_subvol() { sed -n 's/.*rootflags=subvol=\([^, ]*\).*/\1/p' /proc/cmdline; }
+entries() { ls /efi/loader/entries/; }
+deployments() { ls /run/dave/top/joe/deploy/ | grep -E '^[0-9]+$' | sort -n | tr '\n' ' '; }
+scratch_left() { ls -A /run/dave/top/joe/deploy/ | grep -c scratch; }
+# The subvolumes nested in a deployment, as btrfs lists them.
+nested_in() { btrfs subvolume list -o /run/dave/top/joe/deploy/$1; }
+digest() { sha256sum < "$1" | cut -d' ' -f1; }
+# A command as a user without any privileges. joe's util-linux has neither
+# setpriv nor runuser, and su from root asks for no password, but Arch's
+# nobody has expired: the account is the test's own. It is a system
+# account, made in deployment 1 before any other exists, so every
+# deployment has it and rollback has no person to warn about.
+as_user() {
+    id dave-user >/dev/null 2>&1 || useradd --system --no-create-home --home-dir / --shell /bin/sh dave-user
+    su dave-user -c "cd / && $1"
+}
+# expect_running N: deployment N is running, and a user sees the state root sees.
+expect_running() {
+    local got status seen
+    got=$(current_subvol)
+    [ "$got" = "joe/deploy/$1" ] || { echo "expected deployment $1, running $got"; return 1; }
+    status=$(dave status)
+    case $status in *"Running deployment $1."*) ;; *) echo "$status"; return 1 ;; esac
+    # Root's dave has just published what it showed; a user sees the same.
+    seen=$(as_user "dave status")
+    [ "$seen" = "$status" ] || { printf 'a user sees:\n%s\nroot sees:\n%s\n' "$seen" "$status"; return 1; }
+}
+wait_blessed() {
+    for _ in $(seq 60); do
+        entries | grep -qx "joe-$1.conf" && return 0
+        sleep 1
+    done
+    echo "deployment $1 was never marked good: $(entries)"
+    return 1
+}
+# dave-status.service publishes the state at boot.
+wait_published() {
+    for _ in $(seq 60); do
+        [ "$(systemctl is-active dave-status.service)" = active ] && return 0
+        sleep 1
+    done
+    echo "dave-status.service never ran:"
+    systemctl status dave-status.service --no-pager
+    return 1
+}
+'''
+
+# Reboot into a prepared upgrade, and check that it was applied during
+# shutdown, passed its boot check and was marked good. State is read back
+# with commands rather than matched on the console, where kernel messages
+# can land in the middle of a line.
+[templates.reboot-into-upgrade]
+params = ["n"]
+steps = [
+  { reboot = {}, timeout = "5m" },
+  { run = 'current_subvol', equals = "joe/deploy/{{n}}" },
+  { run = 'wait_blessed {{n}}', timeout = "2m" },
+  # Published at boot, after the boot was marked good, so a user sees what
+  # root does before root has run dave at all.
+  { run = 'wait_published', timeout = "2m" },
+  { run = 'published=$(as_user "dave status") && expect_running {{n}} && [ "$published" = "$(dave status)" ]', name = "a user saw what root sees before root ran dave" },
+  { run = 'systemctl is-active dave-boot-check.service', equals = "active" },
+  { run = 'dave status', lacks = "An upgrade is ready" },
+]
+
+[templates.deployment-scenarios]
+params = ["repo"]
+steps = [
+  { section = "baseline: the image boots with dave managing deployment 1" },
+  { run = 'expect_running 1' },
+  { run = 'hello', equals = "hello v1" },
+  { run = 'dave list', contains = "hello 1.0-r1" },
+
+  { section = "upgrade: prepared without touching the running system" },
+  { name = "publish hello 2.0-r1, and release-marker 2-r1 with a trigger", host = '''
+s=$(repo_stage {{repo}} hello 2.0-r1)
+repo_script "$s/usr/bin/hello" 'echo hello v2'
+repo_pack {{repo}} hello 2.0-r1
+s=$(repo_stage {{repo}} release-marker 2-r1)
+repo_file "$s/usr/lib/release-marker" $'2\n'
+# A directory systemd-tmpfiles makes a subvolume of where it can, as it
+# does systemd's own /var/lib/machines, and a trigger that runs it when
+# the upgrade is applied (the scaffold has no joe systemd to do that).
+repo_file "$s/usr/lib/tmpfiles.d/dave-test.conf" $'v /var/lib/dave-test 0755 - - -\n'
+repo_file "$s/usr/lib/dave/triggers/90-dave-test.zon" $'.{ .paths = .{"usr/lib/tmpfiles.d/"}, .exec = .{ "/usr/bin/systemd-tmpfiles", "--create", "/usr/lib/tmpfiles.d/dave-test.conf" } }\n'
+repo_pack {{repo}} release-marker 2-r1
+repo_index {{repo}}
+''' },
+  { run = 'dave upgrade', timeout = "5m", matches = '^\s+hello\s+1\.0-r1 -> 2\.0-r1', contains = "The running system has not been changed." },
+  { run = 'hello', equals = "hello v1" },
+  { run = 'deployments', equals = "1" },
+  # The rehearsal ran the trigger in a scratch snapshot, which is gone.
+  { run = 'scratch_left', exit = "any", equals = "0", name = "the rehearsal's scratch snapshot is gone" },
+  { run = 'entries', equals = "joe-1.conf" },
+  { run = 'dave status', contains = "An upgrade is ready" },
+
+  { section = "upgrade: applied at shutdown, including changes made after it was prepared" },
+  { run = 'echo made-after-upgrade > /etc/late-edit' },
+  # Make the boot loader on the ESP an older release than the one the
+  # system ships, as it would be after an upgrade of systemd: the version
+  # it states about itself is rewritten in place. It is replaced before it
+  # ever runs.
+  { name = "the boot loader on the ESP is made an older release", run = '''
+ok=1
+for copy in /efi/EFI/systemd/systemd-bootx64.efi /efi/EFI/BOOT/BOOTX64.EFI; do
+    LC_ALL=C sed -i 's/\(#### LoaderInfo: systemd-boot \)[0-9][0-9][0-9]/\1100/' $copy
+    [ "$(digest $copy)" != "$(digest /usr/lib/systemd/boot/efi/systemd-bootx64.efi)" ] || ok=0
+done
+[ $ok = 1 ]
+''' },
+  { run = 'sync' },
+  { use = "reboot-into-upgrade", with = { n = 2 } },
+  { run = 'expect_running 2' },
+  { run = 'hello', equals = "hello v2" },
+  { run = 'cat /usr/lib/release-marker', equals = "2" },
+  { run = 'cat /etc/late-edit', equals = "made-after-upgrade" },
+  { run = 'dave upgrade', timeout = "5m", contains = "Everything is up to date." },
+
+  { section = "upgrade: the trigger's subvolume is in the shared /var, not hidden in the deployment" },
+  { run = 'nested_in 2', equals = "" },
+  { run = 'test -d /var/lib/dave-test' },
+
+  { section = "upgrade: the newer boot loader reached the ESP, and has just booted this system" },
+  { run = '''
+ok=1
+for copy in /efi/EFI/systemd/systemd-bootx64.efi /efi/EFI/BOOT/BOOTX64.EFI; do
+    [ "$(digest $copy)" = "$(digest /usr/lib/systemd/boot/efi/systemd-bootx64.efi)" ] || { echo "$copy was not updated"; ok=0; }
+done
+[ $ok = 1 ]
+''', name = "both copies on the ESP are the system's boot loader" },
+
+  { section = "rollback: returns to the previous system and stays there" },
+  # Someone given an account since the upgrade does not exist in the
+  # system being returned to: /etc belongs to the deployment.
+  { run = 'useradd -u 1234 late' },
+  { run = 'dave rollback', contains = ["Deployment 1 will start on the next boot", "deployment 1 was made before these accounts were created: late."] },
+  { reboot = {} },
+  { run = 'expect_running 1' },
+  { run = 'hello', equals = "hello v1" },
+  { run = 'id late >/dev/null 2>&1; echo $?', equals = "1", name = "the account is not in deployment 1" },
+  { reboot = {} },
+  { run = 'expect_running 1' },
+
+  { section = "install: takes effect immediately and leaves a way back" },
+  { host = '''s=$(repo_stage {{repo}} moo 1.0-r1) && repo_script "$s/usr/bin/moo" 'echo moo' && repo_pack {{repo}} moo 1.0-r1 && repo_index {{repo}}''', name = "publish moo 1.0-r1" },
+  { run = 'dave install moo', timeout = "5m", contains = "Saved the current system as deployment 3." },
+  { run = 'moo', equals = "moo" },
+  { run = 'expect_running 1' },
+  { run = 'dave rollback', contains = "Deployment 3 will start on the next boot" },
+  { reboot = {} },
+  { run = 'expect_running 3' },
+  { run = 'command -v moo', exit = "any", equals = "" },
+  { run = 'hello', equals = "hello v1" },
+
+  { section = "nested subvolumes: hidden ones are cleared, others refused by name" },
+  # Where dave 0.2.1's upgrades left subvolumes: in the deployment's own
+  # /var, under the shared one, out of reach of the running system.
+  { run = 'mkdir -p /run/dave/top/joe/deploy/3/var/lib && btrfs subvolume create /run/dave/top/joe/deploy/3/var/lib/left-behind' },
+  { run = 'mkdir -p /opt && btrfs subvolume create /opt/nested' },
+  { run = 'dave upgrade 2>&1', timeout = "5m", exit = "any", contains = "nested btrfs subvolumes (/opt/nested)" },
+  { run = 'test -e /run/dave/top/joe/deploy/3/var/lib/left-behind; echo $?', equals = "1", name = "the hidden one was cleared" },
+  { run = 'btrfs subvolume delete /opt/nested' },
+  { run = 'dave upgrade', timeout = "5m", contains = "will be applied when the system shuts down" },
+  { run = 'nested_in 3', equals = "" },
+
+  { section = "users without root: status, deployments, search and upgrade --check, but not the top level" },
+  { run = '[ "$(as_user "dave deployments")" = "$(dave deployments)" ]', name = "a user sees the deployments root sees" },
+  { run = 'as_user "dave search hello"', matches = '^hello\s+2\.0-r1\b' },
+  { run = 'as_user "dave upgrade --check"', matches = '^\s+hello\s+1\.0-r1 -> 2\.0-r1', contains = "An upgrade is already prepared" },
+  # Refused before anything is touched, saying how to do it.
+  { run = 'as_user "dave install moo 2>&1"', exit = "any", contains = "installing packages needs root; run it with sudo: sudo dave install moo" },
+  { run = '''as_user 'ls /run/dave/top >/dev/null 2>&1; echo $?' ''', matches = '^[1-9]', name = "a user cannot list the top level" },
+  { run = 'stat -c %a /run/dave/top', equals = "700" },
+  { run = 'findmnt -no OPTIONS /run/dave/top', contains = "nosuid" },
+
+  { section = "an upgrade killed while it is being prepared leaves the system as it was" },
+  # A rehearsal's leftover from dave 0.2.1, holding a subvolume of its own.
+  { run = 'btrfs subvolume create /run/dave/top/joe/deploy/.scratch-old && btrfs subvolume create /run/dave/top/joe/deploy/.scratch-old/inner' },
+  { run = 'deployments', capture = "deployments_before" },
+  { run = 'entries', capture = "entries_before" },
+  { run = 'dave upgrade >/dev/null 2>&1 & pid=$!; sleep 0.05; kill -9 $pid; wait $pid; echo status=$?', exit = "any", name = "kill dave upgrade as it starts (137 means the kill landed mid-run)" },
+  { run = 'expect_running 3' },
+  { run = 'hello', equals = "hello v1" },
+  { run = 'entries', equals = "{{entries_before}}" },
+  # Whatever the kill left behind (a scratch snapshot, a half-written state
+  # file), the lock is free and housekeeping restores a clean slate.
+  { run = 'dave deployments gc' },
+  { run = 'deployments', equals = "{{deployments_before}}" },
+  { run = 'scratch_left', exit = "any", equals = "0" },
+
+  { section = "power loss between preparing an upgrade and shutting down" },
+  { run = 'dave upgrade', timeout = "5m", contains = "will be applied when the system shuts down" },
+  { run = 'sync' },
+  { power_cut = {}, timeout = "5m" },
+  { run = 'expect_running 3' },
+  { run = 'hello', equals = "hello v1" },
+  { run = 'dave status', contains = "An upgrade is ready" },
+  { use = "reboot-into-upgrade", with = { n = 4 } },
+  { run = 'expect_running 4' },
+  { run = 'hello', equals = "hello v2" },
+
+  { section = "a broken upgrade is abandoned with nobody at the keyboard" },
+  { name = "publish release-marker 3-r1, whose boot check always fails", host = '''
+s=$(repo_stage {{repo}} release-marker 3-r1)
+repo_file "$s/usr/lib/release-marker" $'3\n'
+repo_script "$s/etc/dave/boot-check.d/always-fail" 'echo this release is broken; exit 1'
+repo_pack {{repo}} release-marker 3-r1
+repo_index {{repo}}
+''' },
+  { run = 'dave upgrade', timeout = "5m" },
+  # Three attempts at deployment 5, then the boot loader gives up on it:
+  # four boots in all before a system stays up. Each begins with the
+  # firmware's banner, which nothing can interleave with.
+  { reboot = { wait = false } },
+  { expect = 'BdsDxe: starting ', times = 3, timeout = "15m", name = "three attempts at the broken deployment" },
+  { wait_boot = true, timeout = "5m" },
+  { run = 'expect_running 4' },
+  { run = 'cat /usr/lib/release-marker', equals = "2" },
+  # The entry name records that all three attempts were used and failed.
+  { run = 'entries', contains = "joe-5+0-3.conf" },
+  { run = 'journalctl -b -1 -u dave-boot-check.service --no-pager -o cat 2>/dev/null | tail -n 5', exit = "any", contains = "boot check failed" },
+  { run = 'dave status', contains = "failed" },
+
+  { section = "garbage collection removes the failed and the oldest deployments" },
+  { run = 'dave deployments gc' },
+  { run = 'deployments', matches = '(^| )4( |$)', lacks = "5", name = "4 is kept, 5 is gone" },
+  { run = 'entries', lacks = "joe-5" },
+  { run = 'dave deployments' },
+]
+
+[tests.deployments]
+description = "upgrade, rollback, power loss and recovery, on the scaffold"
+tags = ["vm", "scaffold"]
+deps = ["scaffold-dave-image"]
+services = ["test-repo-scaffold"]
+machine = "scaffold-dave"
+timeout = "45m"
+prelude = ". tests/lib/repo.sh"
+on_boot = ${deployment_helpers}
+on_failure = [{ run = 'dave status; dave deployments; entries' }]
+steps = [{ use = "deployment-scenarios", with = { repo = "build/vm-repo-scaffold" } }]
+
+[tests.deployments-joe]
+description = "the deployment scenarios on an image built from joe's own packages"
+tags = ["vm", "joe"]
+deps = ["joe-deployments-image"]
+services = ["joe-repo", "test-repo-joe"]
+machine = "joe-deployments"
+timeout = "45m"
+prelude = ". tests/lib/repo.sh"
+on_boot = ${deployment_helpers}
+on_failure = [{ run = 'dave status; dave deployments; entries' }]
+steps = [
+  { run = 'cat /etc/os-release; uname -r' },
+  { use = "deployment-scenarios", with = { repo = "build/vm-repo-joe" } },
+]

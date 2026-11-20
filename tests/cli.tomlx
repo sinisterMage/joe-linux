@@ -1,0 +1,580 @@
+# End-to-end tests of the dave command line against a local signed
+# repository, installing into scratch directories under build/cli-test.
+# They need no privileges and no VM, and take seconds.
+#
+# Each test is one part of the story and depends on the one before, as
+# they share build/cli-test: the repository and root that one test leaves
+# are what the next one starts from. DAVE=/path/to/dave tests another
+# binary (then cli-versions, which checks the tree's own, is skipped).
+
+$cli_env = { dave = "${dave}", top = "${top}", PATH = "${path}" }
+
+# Put in front of every step's script.
+$cli_prelude = '''
+work=$PWD
+D=("$dave" --root "$work/root")
+repo_arg="test,$work/repo,http://example.invalid/x86_64,$work/signing.pub"
+declare -A about=([hello]="says hello" [libgreet]="greetings for hello" [tree]="lists directories")
+# make_pkg <name> <version> <file> <content> [depends...]
+make_pkg() {
+    local name=$1 version=$2 file=$3 content=$4; shift 4
+    local stage=$work/stage/$name-$version
+    mkdir -p "$stage/$(dirname "$file")"
+    printf '%s\n' "$content" > "$stage/$file"
+    local deps=()
+    for d in "$@"; do deps+=(--depends "$d"); done
+    "$dave" pack --name "$name" --version "$version" --license MIT --description "${about[$name]:-}" \
+        --out "$work/repo" "${deps[@]}" "$stage" >/dev/null
+}
+index() { "$dave" repo index "$work/repo" --key "$work/signing.key"; }
+completing() { "$dave" complete "$@" | cut -f1; }
+# net_root DIR URL: an empty root whose only repository is URL
+net_root() {
+    mkdir -p "$1/etc/dave/keys"
+    cp "$work/signing.pub" "$1/etc/dave/keys/"
+    printf '.{ .repos = .{ .{ .name = "test", .url = "%s" } } }\n' "$2" > "$1/etc/dave/repos.zon"
+}
+# The command, with the test authority as the only trusted certificate:
+# dave trusts only the system's store, so it is laid over /etc/ssl.
+trusting_test_ca() {
+    bwrap --dev-bind / / --tmpfs /etc/ssl --ro-bind "$work/ca.pem" /etc/ssl/certs/ca-certificates.crt "$@"
+}
+'''
+
+[tests.cli-help]
+description = "help, versions, and mistyped commands and options"
+tags = ["fast", "cli"]
+deps = ["dave"]
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"$dave"', contains = "Run 'dave help <command>'" },
+  { run = '"$dave" --help', contains = "Finding out" },
+  { run = '"$dave" -h', contains = "Every command takes" },
+  { run = '"$dave"', lacks = "  finalize", name = "hidden commands are not listed" },
+  { run = '"$dave" help install', contains = "Usage: dave install [options] <package>..." },
+  { run = '"$dave" install --help', contains = "--dry-run" },
+  { run = '"$dave" remove -h', contains = "Usage: dave remove" },
+  { run = '"$dave" help finalize', contains = "dave-finalize.service", name = "hidden commands have help" },
+  { run = '"$dave" version', matches = '^dave [0-9]+\.[0-9]+\.[0-9]+$', capture = "version" },
+  { run = '"$dave" --version; "$dave" -V; "$dave" install --version', equals = "{{version}}\n{{version}}\n{{version}}", name = "--version, -V and dave version agree" },
+  { run = '"$dave" isntall hello', exit = "nonzero", stream = "combined", contains = "did you mean 'install'?" },
+  { run = '"$dave" help isntall', exit = "nonzero", stream = "combined", contains = "did you mean 'install'?" },
+  { run = '"$dave" install --dryrun hello', exit = "nonzero", stream = "combined", contains = "did you mean --dry-run?" },
+  { run = '"$dave" list --disk x', exit = "nonzero", stream = "combined", contains = "list does not take --disk (it is for install-system)" },
+  { run = '"$dave" list --root', exit = "nonzero", stream = "combined", contains = "--root needs a value (DIR)" },
+]
+
+[tests.cli-versions]
+description = "what dave says its version is, its package and the release agree (tests/vm/live.py checks the same in a VM)"
+tags = ["fast", "cli"]
+deps = ["dave"]
+skip = if env("DAVE", "") != "" { "DAVE names another binary than the tree's" } else { false }
+env = ${cli_env}
+steps = [
+  { run = '"$dave" version', capture = { version = '^dave (\S+)$' } },
+  { run = '''sed -n 's/^ *\.version = "\(.*\)",/\1/p' packages/dave/package.zon''', equals = "{{version}}", name = "packages/dave has the binary's version" },
+  { run = '''sed -n 's/.*local kernel=[^ ]* dave=\([^ ]*\).*/\1/p' packages/joe-release/build.sh''', equals = "{{version}}", name = "joe-release names the binary's version" },
+]
+
+[tests.cli-manual]
+description = "the manual page names every command and option"
+tags = ["fast", "cli"]
+deps = ["dave"]
+env = ${cli_env}
+steps = [
+  { name = "dave.8 describes every command and its options", run = '''
+man=dave/share/dave.8
+for cmd in $("$dave" complete 1 dave "" | cut -f1); do
+    grep -qE "^\.B[IR]? \"?$cmd( |\"|$)" "$man" || { echo "dave.8 does not describe $cmd"; exit 1; }
+    for option in $("$dave" help "$cmd" | grep -oE -- '--[a-z][a-z-]*' | sort -u); do
+        grep -qF -- "${option//-/\\-}" "$man" || { echo "dave.8 does not describe $option (of $cmd)"; exit 1; }
+    done
+done
+''' },
+]
+
+[tasks.cli-workdir]
+description = "an empty build/cli-test"
+cache = false
+command = "rm -rf build/cli-test && mkdir -p build/cli-test/repo build/cli-test/root/etc/dave/keys"
+
+[tests.cli-setup]
+description = "a signing key, a root that trusts it, and four packages in a signed repository"
+tags = ["fast", "cli"]
+deps = ["dave", "cli-workdir"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"$dave" key generate "$work/signing" >/dev/null && cp "$work/signing.pub" root/etc/dave/keys/' },
+  { run = '''printf '.{ .repos = .{ .{ .name = "test", .url = "%s" } } }\n' "$work/repo" > root/etc/dave/repos.zon''' },
+  { run = '''
+make_pkg libgreet 1.0-r1 usr/lib/libgreet.txt "greet v1"
+make_pkg hello 1.0-r1 usr/bin/hello "hello v1" "libgreet >=1.0"
+make_pkg tree 2.2-r1 usr/bin/tree "tree"
+make_pkg broken 1.0-r1 usr/bin/broken "x" "libgreet >=9"
+''', name = "four packages" },
+  { run = 'index', contains = "Indexed 4 package(s)." },
+]
+
+[tests.cli-install]
+description = "install pulls in dependencies"
+tags = ["fast", "cli"]
+deps = ["cli-setup"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"${D[@]}" install hello', matches = ['^  hello +1\.0-r1$', '^  libgreet +1\.0-r1 +\(dependency\)$'], contains = "2 to install." },
+  { run = 'cat root/usr/bin/hello', equals = "hello v1" },
+  { run = 'cat root/usr/lib/libgreet.txt', equals = "greet v1", name = "the dependency is installed" },
+  { run = '"${D[@]}" list', contains = ["libgreet 1.0-r1  (dependency)", "hello 1.0-r1"] },
+  { run = 'cat root/etc/dave/world', equals = "hello", name = "the world records what was asked for" },
+  { run = '"${D[@]}" install hello', contains = "Already installed." },
+]
+
+[tests.cli-queries]
+description = "questions about what is installed"
+tags = ["fast", "cli"]
+deps = ["cli-install"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"${D[@]}" list --requested', contains = "hello 1.0-r1", lacks = "libgreet" },
+  { run = '"${D[@]}" info libgreet', matches = ['^Installed +1\.0-r1, because hello needs it$', '^Available +1\.0-r1, from test$', '^Required by +hello$', '^Licence +MIT$'] },
+  { run = '"${D[@]}" info tree', matches = ['^Installed +no$', '^Installed size +5 B$'] },
+  { run = '"${D[@]}" info helo', exit = "nonzero", stream = "combined", contains = "did you mean hello?" },
+  { run = '"${D[@]}" search hello | head -n1', matches = '^hello +1\.0-r1 +\[installed\] +says hello$', name = "search puts the name match first" },
+  { run = '"${D[@]}" search hello', contains = "libgreet", name = "search looks at descriptions" },
+  { run = '"${D[@]}" search hello greet', matches = '\Alibgreet ', name = "search for two words finds what has both" },
+  { run = '"${D[@]}" search hello greet | wc -l', equals = "1", name = "and only that" },
+  { run = '"${D[@]}" search nothing-like-this', exit = "nonzero", stream = "combined", contains = "no package matches nothing-like-this" },
+  { run = '"${D[@]}" files hello', contains = ["/usr/bin/hello", "/usr/bin/"] },
+  { run = '"${D[@]}" owns /usr/bin/hello', contains = "/usr/bin/hello is owned by hello 1.0-r1." },
+  { run = '''ln -s usr/bin root/bin; trap 'rm -f root/bin' EXIT; "${D[@]}" owns /bin/hello''', contains = "/bin/hello (/usr/bin/hello) is owned by hello 1.0-r1.", name = "owns, through a link" },
+  { run = '"${D[@]}" owns /usr', contains = "/usr is a directory shared by 2 packages: hello and libgreet." },
+  { run = '"${D[@]}" owns /etc/nothing', exit = "nonzero", stream = "combined", contains = "no installed package owns /etc/nothing" },
+  { run = '"${D[@]}" why libgreet', contains = "libgreet is here because you asked for hello, which needs it." },
+  { run = '"${D[@]}" why hello', contains = "hello is here because you asked for it." },
+]
+
+[tests.cli-mistakes]
+description = "mistakes are caught before anything changes"
+tags = ["fast", "cli"]
+deps = ["cli-queries"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"${D[@]}" install helo', exit = "nonzero", stream = "combined", contains = "no package named helo exists; did you mean hello?" },
+  { run = '"${D[@]}" remove helo', exit = "nonzero", stream = "combined", contains = "helo is not installed; did you mean hello?" },
+  { run = '"${D[@]}" install --dry-run tree', matches = '^  tree +2\.2-r1$' },
+  { run = 'test ! -e root/usr/bin/tree', name = "a dry run installs nothing" },
+  { run = 'cat root/etc/dave/world', equals = "hello", name = "a dry run leaves the world as it was" },
+  { run = 'mkdir -p fresh/etc/dave && cp -r root/etc/dave/keys root/etc/dave/repos.zon fresh/etc/dave/ && "$dave" --root fresh --dry-run install tree', matches = '^  tree +2\.2-r1$', name = "a dry run of a root that has fetched nothing yet" },
+  { run = 'test ! -e fresh/usr/bin/tree && test ! -e fresh/etc/dave/world', name = "changes it not at all" },
+]
+
+[tests.cli-root-needed]
+description = "changing / needs root, and the refusal says how"
+tags = ["fast", "cli"]
+deps = ["cli-setup"]
+skip = if exec("id -u") == "0" { "run as root" } else { false }
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"$dave" install hello', exit = "nonzero", stream = "combined", contains = "installing packages needs root; run it with sudo: sudo dave install hello" },
+  { run = '"$dave" rollback', exit = "nonzero", stream = "combined", contains = "sudo dave rollback" },
+]
+
+[tests.cli-impossible]
+description = "an impossible request is explained and changes nothing"
+tags = ["fast", "cli"]
+deps = ["cli-mistakes"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"${D[@]}" install broken', exit = "nonzero", stream = "combined", contains = ["broken 1.0-r1 depends on libgreet >=9", "you asked for broken"] },
+  { run = 'test ! -e root/usr/bin/broken', name = "broken was not installed" },
+  { run = 'cat root/etc/dave/world', equals = "hello", name = "the world is as it was" },
+  { run = '"${D[@]}" install nosuchpackage', exit = "nonzero", stream = "combined", contains = "no package named nosuchpackage exists" },
+]
+
+[tests.cli-upgrade]
+description = "upgrade moves to the newest versions"
+tags = ["fast", "cli"]
+deps = ["cli-impossible"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '''
+make_pkg libgreet 1.1-r1 usr/lib/libgreet.txt "greet v1.1"
+make_pkg hello 2.0-r1 usr/bin/hello "hello v2" "libgreet >=1.1"
+index >/dev/null
+''', name = "newer hello and libgreet" },
+  { run = '"${D[@]}" install tree', matches = '^  tree +2\.2-r1$' },
+  { run = 'cat root/usr/bin/hello', equals = "hello v1", name = "an install upgrades nothing unrelated" },
+  { run = '"${D[@]}" upgrade --check', matches = '^  hello +1\.0-r1 -> 2\.0-r1$' },
+  { run = 'cat root/usr/bin/hello', equals = "hello v1", name = "upgrade --check changes nothing" },
+  { run = '"${D[@]}" upgrade', matches = '^  hello +1\.0-r1 -> 2\.0-r1$' },
+  { run = 'cat root/usr/bin/hello', equals = "hello v2" },
+  { run = 'cat root/usr/lib/libgreet.txt', equals = "greet v1.1" },
+  { run = '"${D[@]}" upgrade', contains = "Everything is up to date." },
+]
+
+[tests.cli-remove]
+description = "remove takes orphaned dependencies along"
+tags = ["fast", "cli"]
+deps = ["cli-upgrade"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"${D[@]}" remove libgreet', exit = "nonzero", stream = "combined", contains = "libgreet was not installed by request; it is here because hello needs it" },
+  { run = '"${D[@]}" remove hello', matches = '^  libgreet +1\.1-r1 +\(no longer needed\)$' },
+  { run = 'test ! -e root/usr/bin/hello && test ! -e root/usr/lib/libgreet.txt', name = "no files are left behind" },
+  { run = 'test -e root/usr/bin/tree', name = "what is unrelated stays" },
+]
+
+[tests.cli-completion]
+description = "shell completion"
+tags = ["fast", "cli"]
+deps = ["cli-remove"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = 'completing 1 dave inf', equals = "info" },
+  { run = 'completing 4 dave --root "$work/root" install ""', contains = "hello" },
+  { run = 'completing 4 dave --root "$work/root" remove ""', equals = "tree" },
+  { run = 'completing 2 dave install --dr', contains = "--dry-run" },
+  { run = 'completing 2 dave owns /u', equals = ":files" },
+  { run = 'completing 3 dave deployments pin ""', equals = "", name = "no deployment ids to complete" },
+  { run = 'bash -n "$top/dave/share/completion.bash"' },
+  { run = 'if command -v zsh >/dev/null; then zsh -n "$top/dave/share/completion.zsh"; fi' },
+  { run = 'if command -v fish >/dev/null; then fish --no-execute "$top/dave/share/completion.fish"; fi' },
+  { name = "bash completes 'install he'", equals = "hello", run = '''
+PATH=$(dirname "$dave"):$PATH bash -c 'source "$1"; COMP_WORDS=(dave --root "$2" install he); COMP_CWORD=4; _dave
+    printf "%s\n" "${COMPREPLY[@]}"' _ "$top/dave/share/completion.bash" "$work/root"
+''' },
+]
+
+[tests.cli-tty]
+description = "questions and colour on a terminal"
+tags = ["fast", "cli"]
+deps = ["cli-completion"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = 'mkdir -p tty/etc/dave && cp -r root/etc/dave/keys root/etc/dave/repos.zon tty/etc/dave/' },
+  { run = 'TERM=dumb "$dave" --root tty install hello', tty = { respond = [{ on = '\[Y/n\]', send = "n\n" }] }, exit = "nonzero", contains = ["Continue? [Y/n]", "Nothing was changed."], name = "told no, it does nothing" },
+  { run = 'test ! -e tty/usr/bin/hello && test ! -e tty/etc/dave/world', name = "a declined install changed nothing" },
+  { run = 'TERM=dumb "$dave" --root tty install tree', tty = { respond = [{ on = '\[Y/n\]', send = "n\n" }], forbid = '\[Y/n\]' }, name = "installing exactly what was named asks nothing" },
+  { run = 'test -e tty/usr/bin/tree' },
+  { run = 'TERM=xterm "$dave" --root tty install -y hello', tty = { respond = [{ on = '\[Y/n\]', send = "n\n" }], forbid = '\[Y/n\]' }, contains = "\u001b[32m", name = "--yes asks nothing, and a terminal gets colour" },
+  { run = 'test -e tty/usr/bin/hello' },
+  { run = 'NO_COLOR=1 TERM=xterm "$dave" --root tty info hello', tty = true, lacks = "\u001b[", name = "no colour with NO_COLOR" },
+  { run = 'TERM=dumb "$dave" --root tty remove hello', tty = { respond = [{ on = '\[Y/n\]', send = "y\n" }] }, contains = "Continue? [Y/n]", lacks = "\u001b[", name = "asked, as libgreet goes too, and no escapes for TERM=dumb" },
+  { run = 'test ! -e tty/usr/bin/hello && test ! -e tty/usr/lib/libgreet.txt', name = "the removal answered yes happened" },
+  { run = 'CLICOLOR_FORCE=1 "$dave" --root tty info tree', contains = "\u001b[1m", name = "CLICOLOR_FORCE colours a pipe" },
+]
+
+[tests.cli-certs]
+description = "a throwaway certificate authority, and certificates for 127.0.0.1 and for another name"
+tags = ["fast", "cli"]
+deps = ["cli-tty"]
+cwd = "build/cli-test"
+env = ${cli_env}
+steps = [
+  { run = 'for t in openssl bwrap; do command -v $t >/dev/null || { echo "the network tests need $t"; exit 1; }; done', name = "the network tests have openssl and bwrap" },
+  { run = '''
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days 2 \
+    -subj "/CN=dave test authority" -addext basicConstraints=critical,CA:TRUE \
+    -addext keyUsage=critical,keyCertSign -keyout ca.key -out ca.pem 2>/dev/null
+for site in here:IP:127.0.0.1 elsewhere:DNS:elsewhere.example; do
+    name=${site%%:*}
+    openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -subj "/CN=$name" \
+        -keyout "$name.key" -out "$name.csr" 2>/dev/null
+    openssl x509 -req -in "$name.csr" -CA ca.pem -CAkey ca.key -CAcreateserial -days 2 \
+        -extfile <(printf 'subjectAltName=%s\nextendedKeyUsage=serverAuth\n' "${site#*:}") \
+        -out "$name.pem" 2>/dev/null
+done
+''', name = "certificates" },
+]
+
+# The repository over HTTP, and over HTTPS twice: with a certificate for
+# 127.0.0.1, and with one for another name. Free ports.
+[services.cli-net]
+description = "build/cli-test/repo over HTTP and HTTPS, for the network tests"
+deps = ["cli-certs"]
+serve = { dir = "build/cli-test/repo", listen = [
+  { addr = "127.0.0.1:0" },
+  { name = "here", addr = "127.0.0.1:0", tls = { cert = "build/cli-test/here.pem", key = "build/cli-test/here.key" } },
+  { name = "elsewhere", addr = "127.0.0.1:0", tls = { cert = "build/cli-test/elsewhere.pem", key = "build/cli-test/elsewhere.key" } },
+] }
+
+[tests.cli-network]
+description = "repositories over http and https"
+tags = ["fast", "cli"]
+deps = ["cli-certs"]
+services = ["cli-net"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = 'net_root net-http "http://127.0.0.1:{{services.cli-net.port}}" && "$dave" --root net-http install hello', matches = '^  hello +2\.0-r1$', name = "over http" },
+  { run = 'cat net-http/usr/bin/hello', equals = "hello v2" },
+  { run = 'net_root net-https "https://127.0.0.1:{{services.cli-net.here.port}}/" && trusting_test_ca "$dave" --root net-https install hello', matches = '^  hello +2\.0-r1$', name = "over https" },
+  { run = 'cat net-https/usr/bin/hello', equals = "hello v2" },
+  { run = 'net_root net-untrusted "https://127.0.0.1:{{services.cli-net.here.port}}" && "$dave" --root net-untrusted install hello', exit = "nonzero", stream = "combined", contains = "cannot connect securely to https://127.0.0.1:{{services.cli-net.here.port}}", name = "a certificate outside the system's store is refused" },
+  { run = 'test ! -e net-untrusted/usr/bin/hello' },
+  { run = 'net_root net-wrong-name "https://127.0.0.1:{{services.cli-net.elsewhere.port}}" && trusting_test_ca "$dave" --root net-wrong-name install hello', exit = "nonzero", stream = "combined", contains = "cannot connect securely", name = "a certificate for another name is refused" },
+  { run = 'test ! -e net-wrong-name/usr/bin/hello' },
+  { run = 'net_root net-refused "http://127.0.0.1:1" && "$dave" --root net-refused install hello', exit = "nonzero", stream = "combined", contains = "the connection was refused" },
+  { run = 'net_root net-missing "http://127.0.0.1:{{services.cli-net.port}}/nowhere" && "$dave" --root net-missing install hello', exit = "nonzero", stream = "combined", contains = "nowhere/repo.zon answered 404 Not Found" },
+]
+
+[tests.cli-tampered-index]
+description = "a tampered index is refused"
+tags = ["fast", "cli"]
+deps = ["cli-network"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '''sed -i 's/tree/trex/' "$work/repo/repo.zon"''' },
+  { run = '"${D[@]}" install hello', exit = "nonzero", stream = "combined", contains = "not signed by a trusted key" },
+  { run = 'test ! -e root/usr/bin/hello', name = "nothing was installed from it" },
+]
+
+[tests.cli-tampered-package]
+description = "a tampered package is refused"
+tags = ["fast", "cli"]
+deps = ["cli-tampered-index"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = 'index >/dev/null && rm -rf root/var/cache/dave/pkgs && echo garbage > "$work/repo/hello-2.0-r1-x86_64.dave"' },
+  { run = '"${D[@]}" install hello', exit = "nonzero", stream = "combined", contains = "does not match the signed index" },
+  { run = 'test ! -e root/usr/bin/hello', name = "it was not installed" },
+]
+
+[tests.cli-audit]
+description = "an unsigned repository fails the seal audit"
+tags = ["fast", "cli"]
+deps = ["cli-tampered-package"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '"$dave" repo audit "$work/repo"', exit = "nonzero", stream = "combined", contains = "not sealed" },
+]
+
+[tests.cli-undeclared]
+description = "undeclared is reserved even without a signing key"
+tags = ["fast", "cli"]
+deps = ["cli-audit"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '''
+mkdir -p "$work/stage/invalid/usr/bin"
+printf 'invalid\n' > "$work/stage/invalid/usr/bin/invalid"
+"$dave" pack --name invalid --version 1.0-r1 --allow undeclared --out "$work/repo" "$work/stage/invalid"
+''', exit = "nonzero", stream = "combined", contains = "InvalidOperation", name = "an explicit undeclared operation is refused" },
+]
+
+[tests.cli-seal]
+description = "a failed seal pass invalidates an old completion marker"
+tags = ["fast", "cli"]
+deps = ["cli-undeclared"]
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { run = '''printf '' > root/usr/lib/dave/sealed''' },
+  { run = '"${D[@]}" seal', exit = "nonzero", stream = "combined", contains = "missing, malformed, or unreadable seals" },
+  { run = 'test ! -e root/usr/lib/dave/sealed', name = "the failed pass wrote no completion marker" },
+]
+
+[tests.cli-image]
+description = "a disk image from a specification"
+tags = ["fast", "cli"]
+deps = ["cli-seal"]
+# make build/host-tools/bin/mcopy builds mtools.
+requires = { commands = ["mkfs.btrfs", "mkfs.vfat", "mcopy", "mtype", "mdir", "sfdisk", "unshare", "btrfs"] }
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { name = "the tampered package of an earlier test made whole again, and an image's packages", run = '''
+rm -f "$work/repo/hello-2.0-r1-x86_64.dave"
+make_pkg hello 2.0-r1 usr/bin/hello "hello v2" "libgreet >=1.1"
+make_pkg kernel 1.0-r1 usr/lib/modules/1.0-test/vmlinuz "a kernel"
+make_pkg loader 1.0-r1 usr/lib/systemd/boot/efi/systemd-bootx64.efi "MZ #### LoaderInfo: systemd-boot 262.1 ####"
+make_pkg varstate 1.0-r1 var/lib/varstate/state "shared state"
+index >/dev/null
+''' },
+  { run = '''printf '.{ .name = "typo", .packages = .{"hello"}, .rootsize = "1G" }\n' > typo.zon && "$dave" image build typo.zon --repo "$repo_arg" --out typo.img''', exit = "nonzero", stream = "combined", contains = "rootsize", name = "a misspelt spec field is refused" },
+  { contains = "image ready: disk.img", run = '''
+cat > image.zon <<'EOF'
+.{
+    .name = "cli",
+    .packages = .{ "kernel", "loader", "hello", "varstate" },
+    .root_size = "256M",
+    .esp_size = "64M",
+    .cmdline = "console=ttyS0,115200",
+}
+EOF
+"$dave" image build image.zon --repo "$repo_arg" --out disk.img
+''' },
+  { run = 'test ! -e disk.img.work', name = "the image build left no work directory" },
+  { run = 'stat -c %s disk.img', equals = "337641472", name = "1 MiB, the ESP, the root and the backup GPT" },
+  { run = 'sfdisk --dump disk.img', contains = ["type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B", "type=4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709"], capture = { root_uuid = 'type=4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709, uuid=([0-9A-Fa-f-]+)' } },
+  # The ESP is the partition at 1 MiB.
+  { run = 'mtype -i disk.img@@1M ::/loader/entries/joe-1.conf', contains = "rootflags=subvol=joe/deploy/1 rw rootwait panic=10 loglevel=4 console=ttyS0,115200", capture = { kernel = '^linux (.+)$' } },
+  { run = 'mtype -i disk.img@@1M ::/loader/entries/joe-1.conf | grep -qi "root=PARTUUID={{root_uuid}} "', name = "the boot entry names the root partition" },
+  { run = 'mtype -i disk.img@@1M "::{{kernel}}"', equals = "a kernel", name = "the entry's kernel is the root's kernel" },
+  { run = 'mdir -i disk.img@@1M ::/EFI/BOOT', contains = "BOOTX64" },
+  { run = 'mdir -i disk.img@@1M ::/EFI/systemd', contains = "SYSTEM~1" },
+  { run = 'mtype -i disk.img@@1M ::/loader/loader.conf', contains = "editor no" },
+  { contains = ["name: 1", "name: home", "name: var"], name = "the root holds deployment 1 and the shared subvolumes", run = '''
+dd if=disk.img of=root.img bs=1M skip=65 count=256 status=none
+trap 'rm -f root.img' EXIT
+btrfs inspect-internal dump-tree -t fs_tree root.img 2>/dev/null || true
+btrfs inspect-internal dump-tree -t root root.img 2>/dev/null || true
+''' },
+]
+
+[tests.cli-live]
+description = "a live medium from a specification"
+tags = ["fast", "cli"]
+deps = ["cli-image"]
+# make iso-tools builds xorriso and squashfs-tools.
+requires = { commands = ["xorriso", "mksquashfs", "unsquashfs", "mkfs.vfat", "mcopy", "mtype", "sfdisk", "zstd", "cpio", "unshare"] }
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { name = "packages, and the overlays of the initramfs and the live root", run = '''
+make_pkg osrel 1.0-r1 usr/lib/os-release 'PRETTY_NAME="joe Linux test"'
+make_pkg extra 1.0-r1 usr/bin/extra "extra"
+index >/dev/null
+mkdir -p initrd-overlay/etc
+echo 'NAME="test initrd"' > initrd-overlay/etc/initrd-release
+ln -sfn usr/bin/hello initrd-overlay/init
+# The installer copies what it installs out of the live root, so the
+# payload must be installed there; the live session's changes to its
+# files (here, the overlay's) are kept on the medium as packaged.
+mkdir -p live-overlay/usr/bin
+echo "changed by the live session" > live-overlay/usr/bin/tree
+cat > live.zon <<'EOF'
+.{
+    .name = "cli-live",
+    .format = .iso,
+    .packages = .{ "kernel", "loader", "osrel", "hello", "tree" },
+    .overlay = "live-overlay",
+    .cmdline = "quiet",
+    .iso = .{
+        .label = "JOE_TEST",
+        .initrd = .{ .packages = .{"hello"}, .overlay = "initrd-overlay", .remove = .{"usr/lib/libgreet.txt"} },
+        .payload = .{ "hello", "tree" },
+    },
+}
+EOF
+''' },
+  { run = '"$dave" image build live.zon --repo "$repo_arg" --out live.iso', contains = ["image ready: live.iso", "the live root changes usr/bin/tree (tree)", "installs 3 packages from its root"] },
+  # The ISO 9660 file system: the root image, what the installer installs,
+  # and the original of the file the live root changed; no package files.
+  { run = "printf 'tree\\n' | sha256sum | cut -d' ' -f1", capture = "original" },
+  { run = 'xorriso -indev live.iso -find / -type f 2>/dev/null', contains = ["'/joe/root.squashfs'", "'/joe/install.zon'", "'/joe/originals/{{original}}'"], lacks = [".dave", "/joe/repos"], name = "the medium's files, and no package files" },
+  { run = 'xorriso -indev live.iso -osirrox on -extract /joe/install.zon install.zon -extract /joe/root.squashfs root.squashfs -extract "/joe/originals/{{original}}" original 2>/dev/null' },
+  { run = 'cat install.zon', contains = '"hello", "tree",' },
+  { run = 'cat original', equals = "tree", name = "the medium keeps usr/bin/tree as packaged" },
+  # The root image: xz-compressed SquashFS holding the spec's tree.
+  { run = 'unsquashfs -s root.squashfs', contains = "Compression xz" },
+  { run = 'unsquashfs -l root.squashfs', contains = "squashfs-root/usr/bin/hello" },
+  # A payload the live root does not hold is refused.
+  { run = '''sed 's/payload = .{ "hello", "tree" }/payload = .{ "hello", "tree", "extra" }/' live.zon > lacking.zon && "$dave" image build lacking.zon --repo "$repo_arg" --out lacking.iso''', exit = "nonzero", stream = "combined", contains = "the live root does not have extra" },
+  { run = 'test ! -e lacking.iso', name = "a refused medium was not written" },
+  # It boots from a CD (El Torito, EFI) and as a disk (GPT partition 2).
+  { run = 'xorriso -indev live.iso -report_el_torito plain 2>&1', contains = "UEFI" },
+  { run = 'sfdisk --dump live.iso', contains = "type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B", capture = { start = '^live\.iso2 : start= *([0-9]+),' }, name = "an appended ESP" },
+  { run = 'mtype -i "live.iso@@$(({{start}} * 512))" ::/loader/entries/joe-live.conf', contains = ["title joe Linux test", "options joe=log loglevel=4 systemd.gpt_auto=0 rd.systemd.gpt_auto=0 quiet"], lacks = "root=", capture = { initrd = '^initrd (.+)$' }, name = "the live entry names no root" },
+  { run = 'mtype -i "live.iso@@$(({{start}} * 512))" ::/loader/entries/joe-live-safe.conf', contains = "nomodeset", name = "safe graphics" },
+  { name = "the initramfs has what it needs and not what the spec removes", run = '''
+mcopy -i "live.iso@@$(({{start}} * 512))" "::{{initrd}}" initrd.img
+trap 'rm -f root.squashfs initrd.img' EXIT
+contents=$(zstd -dc initrd.img | cpio -t 2>/dev/null)
+for path in init dev/console etc/initrd-release usr/bin/hello; do
+    grep -qx "$path" <<<"$contents" || { echo "the initramfs lacks $path"; exit 1; }
+done
+! grep -q "libgreet.txt\|usr/lib/dave/db" <<<"$contents" || { echo "the initramfs kept what the spec removes"; exit 1; }
+''' },
+]
+
+[tests.cli-container]
+description = "a container image from a specification"
+tags = ["fast", "cli"]
+deps = ["cli-live"]
+requires = { commands = ["unshare", "python3"] }
+cwd = "build/cli-test"
+env = ${cli_env}
+prelude = ${cli_prelude}
+steps = [
+  { contains = "image ready: container.tar", run = '''
+cat > container.zon <<'EOF'
+.{
+    .name = "cli-container",
+    .format = .oci,
+    .packages = .{ "osrel", "hello" },
+    .oci = .{
+        .cmd = .{"/usr/bin/hello"},
+        .labels = .{.{ .name = "org.opencontainers.image.source", .value = "https://example.invalid/joe" }},
+    },
+}
+EOF
+"$dave" image build container.zon --repo "$repo_arg" --out container.tar
+''' },
+  { run = '''printf '.{ .name = "x", .packages = .{"hello"}, .oci = .{} }\n' > misplaced.zon && "$dave" image build misplaced.zon --repo "$repo_arg" --out misplaced.img''', exit = "nonzero", stream = "combined", contains = ".oci is for .format = .oci", name = ".oci on a disk image is refused" },
+  # An OCI image layout: every blob named by its digest, the configuration
+  # naming the uncompressed layer, the layer holding the tree.
+  { name = "the container image is an OCI layout of the tree", run = '''
+rm -rf oci && mkdir oci && tar -xf container.tar -C oci
+trap 'rm -rf oci container.tar' EXIT
+python3 -I - oci <<'EOF'
+import gzip, hashlib, io, json, os, sys, tarfile
+top = sys.argv[1]
+def blob(ref, media):
+    assert ref["mediaType"] == media, ref
+    data = open(os.path.join(top, "blobs/sha256", ref["digest"].removeprefix("sha256:")), "rb").read()
+    assert len(data) == ref["size"] and "sha256:" + hashlib.sha256(data).hexdigest() == ref["digest"], ref
+    return data
+assert json.load(open(os.path.join(top, "oci-layout")))["imageLayoutVersion"] == "1.0.0"
+index = json.load(open(os.path.join(top, "index.json")))
+manifest = json.loads(blob(index["manifests"][0], "application/vnd.oci.image.manifest.v1+json"))
+config = json.loads(blob(manifest["config"], "application/vnd.oci.image.config.v1+json"))
+layer = gzip.decompress(blob(manifest["layers"][0], "application/vnd.oci.image.layer.v1.tar+gzip"))
+assert config["rootfs"]["diff_ids"] == ["sha256:" + hashlib.sha256(layer).hexdigest()], config["rootfs"]
+assert config["config"]["Cmd"] == ["/usr/bin/hello"] and config["os"] == "linux" and config["architecture"] == "amd64"
+assert config["config"]["Labels"]["org.opencontainers.image.source"] == "https://example.invalid/joe"
+docker = json.load(open(os.path.join(top, "manifest.json")))
+assert docker[0]["RepoTags"] == ["cli-container:latest"], docker
+with tarfile.open(fileobj=io.BytesIO(layer)) as t:
+    members = {m.name.removeprefix("./"): m for m in t.getmembers()}
+    hello = members["usr/bin/hello"]
+    assert hello.uid == 0 and hello.gid == 0 and t.extractfile(hello).read() == b"hello v2\n", hello
+    repos = t.extractfile(members["etc/dave/repos.zon"]).read().decode()
+    assert "http://example.invalid/x86_64" in repos, repos
+    assert not any(n.startswith("var/cache/dave/") for n in members), "the package files were kept"
+EOF
+''' },
+]
