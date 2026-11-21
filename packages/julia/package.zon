@@ -1,0 +1,19 @@
+.{
+    .name = "julia",
+    .version = "1.13.4",
+    .release = 1,
+    .description = "The Julia language's run time, for pour on the installation medium",
+    // Julia's own code is MIT; the libraries it bundles (LLVM, OpenBLAS,
+    // GMP, MPFR, libgit2, curl and others) keep their own licences, listed in
+    // its LICENSE.md and share/julia/stdlib.
+    .license = "MIT AND Apache-2.0 WITH LLVM-exception AND BSD-3-Clause AND LGPL-3.0-or-later AND GPL-2.0-or-later",
+    .sources = .{
+        // Upstream's release build, not built here: see build.sh. The
+        // checksum is the one in upstream's julia-1.13.4.sha256.
+        .{ .url = "https://julialang-s3.julialang.org/bin/linux/x64/1.13/julia-1.13.4-linux-x86_64.tar.gz", .sha256 = "cf1658f13b91facccd57d41464d7125a0e48a1d24f49062d71532d04d4ec4130" },
+    },
+    // Only the installation medium has it (pour, joe-installer); nothing
+    // builds against it.
+    .build_only = true,
+    .depends = .{"glibc"},
+}

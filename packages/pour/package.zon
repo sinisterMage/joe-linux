@@ -1,0 +1,14 @@
+.{
+    .name = "pour",
+    .version = "0.1.0",
+    .release = 1,
+    .description = "Carries accounts and homes from an existing Linux system into joe, for the installer",
+    .license = "BSD-3-Clause",
+    .sources = .{
+        // Upstream's commit 02fb3a9 (no release has been tagged yet).
+        .{ .url = "https://github.com/theJoeLinuxFoundation/pour/archive/02fb3a9af80862d9d4b439f8a3c226271090833b.tar.gz", .sha256 = "6a2cf87c727b3dbbbb4e2e4e7e5fa2ef0163ada349e1e9cf5e3e171dc01c39ea", .file = "pour-02fb3a9.tar.gz" },
+    },
+    // Only the installation medium has it, for the installer.
+    .build_only = true,
+    .depends = .{ "julia", "shadow" },
+}

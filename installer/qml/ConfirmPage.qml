@@ -9,6 +9,9 @@ PageFrame {
     property bool beside: false
     property alias understood: understood.checked
     property alias enforce: enforce.checked
+    // Where another system is mounted, whose accounts are brought over; ""
+    // for none. Chosen from Backend.systems.
+    property string importRoot: ""
     signal back()
     signal proceed()
 
@@ -78,6 +81,44 @@ PageFrame {
         font.pixelSize: Theme.smallSize
         wrapMode: Text.Wrap
         color: Theme.muted
+    }
+
+    // Accounts from another Linux system (pour): offered for the systems
+    // that are mounted, which are on other disks, since a disk in use cannot
+    // be installed onto.
+    Text {
+        text: qsTr("Accounts")
+        topPadding: 10
+        font.family: Theme.family
+        font.pixelSize: Theme.smallSize
+        font.weight: Font.Medium
+        color: Theme.muted
+    }
+    ComboBox {
+        id: importChoice
+        Layout.fillWidth: true
+        visible: Backend.systems.length > 0
+        model: [qsTr("Create an account when joe Linux first starts")].concat(
+            Backend.systems.map(s => qsTr("Bring the accounts and homes from %1 (%2)").arg(s.name).arg(s.device)))
+        font.family: Theme.family
+        font.pixelSize: Theme.bodySize
+        currentIndex: Math.max(0, Backend.systems.findIndex(s => s.root === page.importRoot) + 1)
+        onActivated: index => page.importRoot = index === 0 ? "" : Backend.systems[index - 1].root
+    }
+    Text {
+        Layout.fillWidth: true
+        text: Backend.systems.length > 0
+            ? qsTr("Brought-over accounts keep their passwords, and those who could administer that system can administer this one. The first-run setup is then skipped.")
+            : qsTr("To bring accounts and homes from another Linux system on another disk, open that disk in Files, then look again.")
+        font.family: Theme.family
+        font.pixelSize: Theme.smallSize
+        wrapMode: Text.Wrap
+        color: Theme.muted
+    }
+    ActionButton {
+        visible: Backend.systems.length === 0
+        text: qsTr("Look Again")
+        onClicked: Backend.findSystems()
     }
 
     actions: [

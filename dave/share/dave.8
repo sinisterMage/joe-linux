@@ -199,6 +199,14 @@ Boot the installed system with the security module enforcing
 so that privileged programs are held to their declarations. Without it the
 module only logs what it would refuse.
 .TP
+.BI \-\-import " dir"
+Bring the accounts and homes of the Linux system whose root is mounted at
+.I dir
+into the new one, with
+.BR pour ,
+and make those who administered it administrators. It must be on another
+disk.
+.TP
 .B \-\-json
 Report progress as JSON events, one per line, for a program watching.
 .TP

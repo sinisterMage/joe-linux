@@ -1,14 +1,17 @@
-// The installer's connection to dave. Listing disks runs
+// The installer's connection to dave and pour. Listing disks runs
 // `dave install-system --list --json` as the live user; installing runs
 // `dave install-system --disk ... --json` as root through pkexec, inside
 // systemd-inhibit so that the machine neither sleeps nor powers off while the
 // disk is being written. dave reports what it is doing one JSON object per
 // line; this turns those lines into properties and signals for the pages.
+// Other Linux systems whose accounts could be brought over are those
+// `pour scan --json` finds mounted (dave install-system --import ROOT).
 #pragma once
 
 #include <QObject>
 #include <QProcess>
 #include <QString>
+#include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
 #include "diskmodel.h"
@@ -27,6 +30,9 @@ class Backend : public QObject {
     Q_PROPERTY(QString autotestDisk READ autotestDisk CONSTANT)
     Q_PROPERTY(bool autotestBeside READ autotestBeside CONSTANT)
     Q_PROPERTY(bool autotestEnforce READ autotestEnforce CONSTANT)
+    Q_PROPERTY(QString autotestImport READ autotestImport CONSTANT)
+    // [{root, name, device}]: systems mounted from disks, not the medium's.
+    Q_PROPERTY(QVariantList systems READ systems NOTIFY systemsChanged)
     Q_PROPERTY(QString screenshotDir READ screenshotDir CONSTANT)
 
 public:
@@ -48,13 +54,19 @@ public:
     void setAutotestBeside(bool beside) { m_autotestBeside = beside; }
     bool autotestEnforce() const { return m_autotestEnforce; }
     void setAutotestEnforce(bool enforce) { m_autotestEnforce = enforce; }
+    QString autotestImport() const { return m_autotestImport; }
+    void setAutotestImport(const QString &root) { m_autotestImport = root; }
+    QVariantList systems() const { return m_systems; }
     QString screenshotDir() const { return m_screenshotDir; }
     void setScreenshotDir(const QString &dir) { m_screenshotDir = dir; }
 
     Q_INVOKABLE void refreshDisks();
+    Q_INVOKABLE void findSystems();
     // beside: into the disk's free space, keeping what is there.
     // enforce: the installed system boots with the security module enforcing.
-    Q_INVOKABLE void install(const QString &diskPath, bool beside, bool enforce);
+    // importRoot: where another system is mounted, to bring its accounts
+    // over; empty for none.
+    Q_INVOKABLE void install(const QString &diskPath, bool beside, bool enforce, const QString &importRoot);
     Q_INVOKABLE void restart();
 
 signals:
@@ -62,6 +74,7 @@ signals:
     void progressChanged();
     void logChanged();
     void disksListed();
+    void systemsChanged();
 
 private:
     void setState(State state, const QString &error = {});
@@ -78,6 +91,8 @@ private:
     QString m_autotestDisk;
     bool m_autotestBeside = false;
     bool m_autotestEnforce = false;
+    QString m_autotestImport;
+    QVariantList m_systems;
     QString m_screenshotDir;
     QProcess *m_install = nullptr;
     QByteArray m_pending;

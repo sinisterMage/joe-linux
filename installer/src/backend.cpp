@@ -13,6 +13,13 @@ static QString dave()
     return override.isEmpty() ? QStringLiteral("/usr/bin/dave") : override;
 }
 
+// JOE_INSTALLER_POUR likewise replaces pour.
+static QString pour()
+{
+    const QString override = qEnvironmentVariable("JOE_INSTALLER_POUR");
+    return override.isEmpty() ? QStringLiteral("/usr/bin/pour") : override;
+}
+
 Backend::Backend(QObject *parent)
     : QObject(parent)
 {
@@ -69,7 +76,39 @@ void Backend::refreshDisks()
     process->start(dave(), {QStringLiteral("install-system"), QStringLiteral("--list"), QStringLiteral("--json")});
 }
 
-void Backend::install(const QString &diskPath, bool beside, bool enforce)
+// The Linux systems mounted on this computer, as pour finds them: one
+// {"event":"system",...} line each. The live system and the medium's own
+// root image are not other systems. Nothing found is not an error: the list
+// is simply empty, and the page says how to have one listed.
+void Backend::findSystems()
+{
+    if (!QFile::exists(pour()))
+        return;
+    auto *process = new QProcess(this);
+    connect(process, &QProcess::finished, this, [this, process] {
+        process->deleteLater();
+        QVariantList found;
+        const QList<QByteArray> lines = process->readAllStandardOutput().split('\n');
+        for (const QByteArray &line : lines) {
+            const QJsonObject event = QJsonDocument::fromJson(line).object();
+            if (event.value(QLatin1String("event")).toString() != QLatin1String("system"))
+                continue;
+            const QString root = event.value(QLatin1String("root")).toString();
+            if (root.isEmpty() || root == QLatin1String("/") || root.startsWith(QLatin1String("/run/live")))
+                continue;
+            found.append(QVariantMap{
+                {QStringLiteral("root"), root},
+                {QStringLiteral("name"), event.value(QLatin1String("name")).toString()},
+                {QStringLiteral("device"), event.value(QLatin1String("device")).toString()},
+            });
+        }
+        m_systems = found;
+        emit systemsChanged();
+    });
+    process->start(pour(), {QStringLiteral("scan"), QStringLiteral("--json")});
+}
+
+void Backend::install(const QString &diskPath, bool beside, bool enforce, const QString &importRoot)
 {
     if (m_state == State::Installing || m_install)
         return;
@@ -109,6 +148,8 @@ void Backend::install(const QString &diskPath, bool beside, bool enforce)
         args << QStringLiteral("--beside");
     if (enforce)
         args << QStringLiteral("--enforce");
+    if (!importRoot.isEmpty())
+        args << QStringLiteral("--import") << importRoot;
     m_install->start(QStringLiteral("systemd-inhibit"), args);
 }
 

@@ -9,20 +9,30 @@ opened automatically by the joe-live package.
   they lie (`partitions`: `start`, `size`, `kind`), and whether joe fits in
   its free space beside what is there (`beside`: `possible`, `reason`,
   `start`, `size`, `systems`).
-- `dave install-system --disk PATH [--beside] [--enforce] --json` (as root,
-  through pkexec, inside systemd-inhibit) erases the disk, or with `--beside`
-  adds joe's partitions to its free space, and installs what the medium's
+- `pour scan --json` (as the live user) finds the Linux systems mounted on
+  the computer, whose accounts could be brought over: `{"event":"system",
+  "device":...,"root":...,"name":...}` lines. The live system and the
+  medium's root image are left out.
+- `dave install-system --disk PATH [--beside] [--enforce] [--import ROOT]
+  --json` (as root, through pkexec, inside systemd-inhibit) erases the disk,
+  or with `--beside` adds joe's partitions to its free space, and installs
+  what the medium's
   joe/install.zon names, one JSON object per line on standard output:
   `{"event":"step"|"progress"|"done"|"error","message":...,"fraction":...}`.
 
 The installer asks only which disk to use, and on a disk joe can share,
 whether to go beside what is there (the default) or erase it. The
 confirmation page also offers "Enforce the security module", off unless
-ticked: with it the installed system boots with `joe=enforce` (`--enforce`). Language,
+ticked: with it the installed system boots with `joe=enforce` (`--enforce`).
+When another Linux system is mounted (opened in Files), it offers to bring
+its accounts and homes over instead of creating one at first start
+(`--import`, which runs pour: packages/pour). Such a system is always on
+another disk, since a disk with a file system in use cannot be installed
+onto. Language,
 keyboard, time zone and the account are asked by GNOME's initial setup on
 the installed system's first boot.
 
-`joe-installer --autotest DISK [--beside] [--enforce]` goes through the same pages
+`joe-installer --autotest DISK [--beside] [--enforce] [--import ROOT]` goes through the same pages
 unattended and exits 0 when the installation succeeded; tests/vm/install.tomlx
 uses it.
 

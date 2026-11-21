@@ -12,6 +12,7 @@ software that joe Linux builds but does not contain.
 | `packages/linux/joe-lsm/joe.c`, `Kconfig`, `Makefile` | GPL-2.0-only | The joe security module is compiled into the Linux kernel. Each file states its licence in an SPDX line. |
 | `packages/bash/joe-sealed-scripts.patch` | GPL-3.0-or-later | A change to GNU Bash, Copyright © Free Software Foundation, Inc. |
 | `packages/python/joe-sealed-code.patch` | PSF-2.0 | A change to CPython, Copyright © Python Software Foundation. |
+| `packages/pour/joe-installer.patch` | BSD-3-Clause | A change to pour, Copyright © 2026 Maja Wittbrodt; every contribution to pour is BSD-3-Clause. |
 
 The patches contain lines of the programs they change and are distributed
 under those programs' licences. The licence texts are in

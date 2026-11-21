@@ -15,10 +15,13 @@
 #   partition, whose boot menu then offers both, and with nothing of
 #   Windows' changed;
 # - with "Enforce the security module" ticked, the installed system boots
-#   enforcing, its first boot is refused nothing, and dave still works.
+#   enforcing, its first boot is refused nothing, and dave still works;
+# - from a system mounted from another disk, its accounts come over with
+#   their passwords, groups and homes (pour), and need no first-run setup.
 #
 #   install             onto an empty disk
 #   install-enforcing   onto an empty disk, enforcing the security module from the first boot
+#   install-import      onto an empty disk, bringing the accounts of a system on another disk
 #   install-beside      beside Windows
 #
 # The medium is tests/vm/live.tomlx's, which checks that it has the
@@ -89,7 +92,8 @@ dd if="$work/windows.img" of="$disk" bs=1M seek=117 conv=notrunc,sparse status=n
 '''
 
 # Through the installer, as a person would install, with a picture of
-# each page. `how` is "" for the whole disk, " --beside" or " --enforce".
+# each page. `how` is "" for the whole disk, or " --beside", " --enforce"
+# or " --import ROOT".
 [templates.installs]
 params = ["how"]
 steps = [
@@ -193,6 +197,76 @@ JSON
   { run = 'systemctl --failed --no-legend --plain', exit = "any", equals = "", name = "no failed units" },
 
   { use = "dave-works" },
+]
+
+# Another Linux system, on a disk of its own (ext4 across the whole disk,
+# made without privileges): two accounts, one an administrator with a
+# password and one locked, a group they share, and homes with a symbolic
+# link and a set-uid file in them.
+[tasks.old-linux-disk]
+description = "build/images/old-linux.img: another Linux system's root, with accounts and homes"
+requires = { commands = ["mkfs.ext4", "openssl"] }
+cache = false
+command = '''
+disk=build/images/old-linux.img
+root=build/images/old-linux.root
+mkdir -p build/images
+rm -rf "$disk" "$root"
+mkdir -p "$root/etc" "$root/home/maja/Documents" "$root/home/toji"
+cat > "$root/etc/os-release" <<'EOF'
+NAME="Fedora Linux"
+PRETTY_NAME="Fedora Linux 44 (Workstation Edition)"
+ID=fedora
+EOF
+hash=$(openssl passwd -6 -salt joetest pour)
+printf 'root:x:0:0:root:/root:/bin/bash\nmaja:x:1000:1000:Maja:/home/maja:/bin/bash\ntoji:x:1001:1001:Toji:/home/toji:/bin/bash\n' > "$root/etc/passwd"
+printf 'root:!::0:::::\nmaja:%s:20000:0:99999:7:::\ntoji:!:20000:0:99999:7:::\n' "$hash" > "$root/etc/shadow"
+printf 'root:x:0:\nwheel:x:10:maja\nmaja:x:1000:\ntoji:x:1001:\nprojects:x:1500:maja,toji\n' > "$root/etc/group"
+printf 'notes from the old system\n' > "$root/home/maja/Documents/notes.txt"
+printf 'alias ll="ls -l"\n' > "$root/home/maja/.bashrc"
+ln -s Documents/notes.txt "$root/home/maja/notes"
+printf '#!/bin/sh\n' > "$root/home/maja/tool"
+chmod 4755 "$root/home/maja/tool"
+printf 'hi\n' > "$root/home/toji/hello.txt"
+truncate -s 256M "$disk"
+mkfs.ext4 -q -L oldlinux -d "$root" "$disk"
+'''
+
+# Bringing the accounts of another system over (pour, --import): they
+# arrive with their passwords, groups and homes, the administrator of the
+# old system administers the new one, nothing comes over set-uid, and the
+# first-run setup is not needed.
+[tests.install-import]
+description = "an installation that brings the accounts and homes of another Linux system over"
+tags = ["vm", "joe", "install"]
+deps = ["joe-live-test-iso", "old-linux-disk"]
+services = ["joe-repo"]
+machine = { use = "joe-live", disks = [{ size = "40G" }, { file = "build/images/old-linux.img" }] }
+timeout = "1h"
+on_boot = ${install_helpers}
+on_failure = ${install_failure}
+steps = [
+  { section = "the other system is mounted, and pour finds it" },
+  { run = 'mkdir -p /mnt/old && mount -o ro /dev/vdb /mnt/old' },
+  { run = "su liveuser -c 'pour scan --json'", exit = "any", contains = '"root":"/mnt/old"', name = "pour finds the system at /mnt/old" },
+
+  { use = "installs", with = { how = " --import /mnt/old" } },
+
+  { section = "the accounts came over, with their passwords, groups and homes" },
+  { run = 'id maja', contains = ["uid=1000(maja)", "(wheel)", "(projects)"], name = "maja, an administrator there, is one here" },
+  { run = 'id toji', contains = ["uid=1001(toji)", "(projects)"], lacks = "wheel" },
+  { run = "grep '^maja:' /etc/shadow | cut -d: -f2 | cut -c1-11", equals = "$6$joetest$", name = "maja's password came along" },
+  { run = "grep '^toji:' /etc/shadow | cut -d: -f2 | cut -c1", equals = "!", name = "toji's account is still locked" },
+  { run = 'cat /home/maja/Documents/notes.txt', equals = "notes from the old system" },
+  { run = 'readlink /home/maja/notes', equals = "Documents/notes.txt" },
+  { run = 'stat -c "%U %a" /home/maja/tool', equals = "maja 755", name = "the set-uid file came without its set-uid bit" },
+  { run = 'stat -c %U /home/toji/hello.txt', equals = "toji" },
+
+  { section = "with accounts there, the display manager asks who is signing in" },
+  { run = 'systemctl is-active gdm.service', wait = "5m", interval = "3s" },
+  { run = 'sleep 30', name = "let it draw" },
+  { run = 'pgrep -f gnome-initial-setup', exit = "any", equals = "", name = "no first-run setup" },
+  { screenshot = "login.png" },
 ]
 
 # The installer's "Enforce the security module": the installed system's

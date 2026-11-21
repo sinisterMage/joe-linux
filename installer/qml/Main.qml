@@ -22,6 +22,8 @@ ApplicationWindow {
     property bool beside: false
     // Whether the installed system boots with the security module enforcing.
     property bool enforce: false
+    // Where another system is mounted whose accounts are brought over; "" for none.
+    property string importRoot: ""
 
     function showDisks() {
         Backend.refreshDisks()
@@ -30,10 +32,11 @@ ApplicationWindow {
     function confirm(row, beside) {
         window.disk = Backend.disks.get(row)
         window.beside = beside
+        Backend.findSystems()
         stack.push(confirmPage)
     }
     function install() {
-        Backend.install(window.disk.path, window.beside, window.enforce)
+        Backend.install(window.disk.path, window.beside, window.enforce, window.importRoot)
         stack.replace(null, progressPage)
     }
 
@@ -45,7 +48,7 @@ ApplicationWindow {
 
     Component { id: welcomePage; WelcomePage { onProceed: window.showDisks(); onLeave: Qt.quit() } }
     Component { id: diskPage; DiskPage { onBack: stack.pop(); onProceed: window.confirm(chosen, beside) } }
-    Component { id: confirmPage; ConfirmPage { disk: window.disk; beside: window.beside; onBack: stack.pop(); onProceed: { window.enforce = enforce; window.install() } } }
+    Component { id: confirmPage; ConfirmPage { disk: window.disk; beside: window.beside; onBack: stack.pop(); onProceed: { window.enforce = enforce; window.importRoot = importRoot; window.install() } } }
     Component { id: progressPage; ProgressPage { disk: window.disk; beside: window.beside } }
     Component { id: donePage; DonePage { onLeave: Qt.quit() } }
     Component { id: failedPage; FailedPage { onLeave: Qt.quit(); onAgain: { stack.replace(null, welcomePage); window.showDisks() } } }
@@ -113,6 +116,7 @@ ApplicationWindow {
                 if (!window.beside)
                     page.understood = true
                 page.enforce = Backend.autotestEnforce
+                page.importRoot = Backend.autotestImport
                 autotest.stage = 4
                 break
             case 4:

@@ -6,6 +6,6 @@
     .license = "MIT",
     // Only the live medium has it (joe-live); nothing builds against it.
     .build_only = true,
-    .depends = .{ "glibc", "gcc", "qt6", "dave", "polkit", "systemd", "adwaita-fonts" },
+    .depends = .{ "glibc", "gcc", "qt6", "dave", "polkit", "systemd", "adwaita-fonts", "pour" },
     .build_depends = .{ "cmake", "ninja", "qt6" },
 }

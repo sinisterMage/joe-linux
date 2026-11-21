@@ -1639,8 +1639,8 @@ const App = struct {
     // -- installing onto a disk ------------------------------------------------
 
     fn cmdInstallSystem(app: *App, args: []const []const u8) !void {
-        if (args.len != 0 or (app.opts.list == (app.opts.disk != null)) or ((app.opts.beside or app.opts.enforce) and app.opts.list))
-            return app.fail("usage: dave install-system --list [--json] | --disk DISK [--beside] [--enforce] [--json]", .{});
+        if (args.len != 0 or (app.opts.list == (app.opts.disk != null)) or ((app.opts.beside or app.opts.enforce or app.opts.import_root != null) and app.opts.list))
+            return app.fail("usage: dave install-system --list [--json] | --disk DISK [--beside] [--enforce] [--import DIR] [--json]", .{});
         if (app.opts.json) {
             // Events alone on standard output; everything said for people
             // (and what the programs dave runs say) on standard error.
@@ -1723,6 +1723,23 @@ const App = struct {
                 return app.fail("joe Linux cannot be installed beside what is on {s}: {s}", .{ disk_arg, disk.beside.reason });
         } else if (!disk.usable) return app.fail("{s} cannot be used: {s}", .{ disk_arg, disk.reason });
 
+        // The system whose accounts are brought over (--import) is a disk's
+        // file system mounted on its own: never the live system itself, and,
+        // since a disk with a file system in use cannot be installed onto,
+        // never the disk about to be written.
+        const import_root: ?[]const u8 = if (app.opts.import_root) |dir| root: {
+            const real = Io.Dir.cwd().realPathFileAlloc(app.io, dir, app.arena) catch
+                return app.fail("there is nothing at {s} to bring accounts from", .{dir});
+            const mounted_from = install_system.mountSource(app.readAbsolute("/proc/self/mountinfo") orelse "", real) orelse "";
+            if (!std.mem.startsWith(u8, mounted_from, "/dev/"))
+                return app.fail("{s} is not a disk's file system: mount the other system's root there first", .{dir});
+            if (app.readAbsolute(try std.fs.path.join(app.arena, &.{ real, "etc/passwd" })) == null)
+                return app.fail("{s} holds no Linux system (it has no etc/passwd)", .{dir});
+            if (app.readAbsolute(install_system.pour_path) == null)
+                return app.fail("bringing accounts over needs pour, which this medium does not have", .{});
+            break :root real;
+        } else null;
+
         var lock_file = try app.lock();
         defer lock_file.close(app.io);
         const live_config = repo.loadConfig(app.arena, app.io, try app.openDir("/")) catch
@@ -1796,6 +1813,11 @@ const App = struct {
         app.step(0.88, "Sealing the installed files", .{});
         try app.cmdSeal();
 
+        if (import_root) |old| {
+            app.step(0.9, "Bringing accounts over from {s}", .{old});
+            try app.importAccounts(old, target_path);
+        }
+
         app.step(0.94, "Making the disk bootable", .{});
         try target.writeFile(app.io, .{ .sub_path = "etc/fstab", .data = fstab });
         const kernel = deploy.findKernelIn(app.arena, app.io, target) catch return app.fail("the installed system has no kernel", .{});
@@ -1855,6 +1877,35 @@ const App = struct {
     fn besideWhat(arena: Allocator, b: install_system.Beside) ![]const u8 {
         if (b.systems.len == 0) return "another system";
         return listNames(arena, b.systems, 3);
+    }
+
+    /// Brings the accounts and homes of the system at `old` into the one
+    /// being installed at `target`, with pour, and makes those who could
+    /// administer the old system (pour's `admin`: sudo, wheel or admin there)
+    /// administrators here: members of wheel, which doas.conf permits. What
+    /// cannot be brought over is said, in the details; the installation goes
+    /// on without it.
+    fn importAccounts(app: *App, old: []const u8, target: []const u8) !void {
+        var diag: command.Diagnostic = .{};
+        const argv = [_][]const u8{ install_system.pour_path, "run", old, "--users", "--target", target, "--json" };
+        const output = command.run(app.arena, app.io, &argv, .{ .capture = true, .any_exit = true }, &diag) catch {
+            app.warn(try std.fmt.allocPrint(app.arena, "no accounts were brought over: {s}", .{diag.message}));
+            return;
+        };
+        const brought = try install_system.parsePour(app.arena, output);
+        for (brought.notes) |note| try app.say("pour: {s}", .{note});
+        for (brought.admins) |name| {
+            const usermod = [_][]const u8{ "usermod", "--prefix", target, "-aG", "wheel", name };
+            _ = command.run(app.arena, app.io, &usermod, .{}, &diag) catch
+                app.warn(try std.fmt.allocPrint(app.arena, "{s} was brought over but is not an administrator: {s}", .{ name, diag.message }));
+        }
+        if (brought.err) |message| {
+            app.step(0.93, "Accounts could not be brought over: {s}", .{message});
+        } else if (brought.failed > 0) {
+            app.step(0.93, "{d} of {d} accounts could not be brought over; the details say why", .{ brought.failed, brought.failed + brought.brought });
+        } else {
+            app.step(0.93, "Brought over {d} accounts", .{brought.brought});
+        }
     }
 
     const InstallProgress = struct {

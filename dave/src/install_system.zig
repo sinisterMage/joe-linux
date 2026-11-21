@@ -405,6 +405,61 @@ fn mountedAt(obj: std.json.ObjectMap) ?[]const u8 {
     return null;
 }
 
+/// pour, on the medium: it carries accounts and homes from another Linux
+/// system into the one being installed (install-system --import).
+pub const pour_path = "/usr/bin/pour";
+
+/// What `pour run --json` said: one event per line (account, result, log,
+/// then done or error).
+pub const PourReport = struct {
+    /// Accounts brought over, and accounts that were not.
+    brought: usize = 0,
+    failed: usize = 0,
+    /// Brought over, and administrators of the old system.
+    admins: []const []const u8 = &.{},
+    /// pour's own lines, for the details.
+    notes: []const []const u8 = &.{},
+    /// Why nothing was brought over, when pour ended in an error.
+    err: ?[]const u8 = null,
+};
+
+pub fn parsePour(arena: Allocator, output: []const u8) !PourReport {
+    var report: PourReport = .{};
+    var admin_of: std.StringHashMapUnmanaged(bool) = .empty;
+    var admins: std.ArrayList([]const u8) = .empty;
+    var notes: std.ArrayList([]const u8) = .empty;
+    var finished = false;
+    var lines = std.mem.tokenizeScalar(u8, output, '\n');
+    while (lines.next()) |line| {
+        const value = std.json.parseFromSliceLeaky(std.json.Value, arena, line, .{}) catch continue;
+        if (value != .object) continue;
+        const obj = value.object;
+        const kind = field(obj, "event");
+        if (std.mem.eql(u8, kind, "account")) {
+            try admin_of.put(arena, field(obj, "name"), flag(obj, "admin"));
+        } else if (std.mem.eql(u8, kind, "result")) {
+            const name = field(obj, "account");
+            if (flag(obj, "ok")) {
+                report.brought += 1;
+                if (admin_of.get(name) orelse false) try admins.append(arena, name);
+            } else {
+                report.failed += 1;
+            }
+        } else if (std.mem.eql(u8, kind, "log")) {
+            try notes.append(arena, field(obj, "message"));
+        } else if (std.mem.eql(u8, kind, "error")) {
+            report.err = field(obj, "message");
+            finished = true;
+        } else if (std.mem.eql(u8, kind, "done")) {
+            finished = true;
+        }
+    }
+    if (!finished and report.err == null) report.err = "pour stopped without saying why";
+    report.admins = admins.items;
+    report.notes = notes.items;
+    return report;
+}
+
 /// The device a mount point is mounted from, from /proc/self/mountinfo.
 pub fn mountSource(mountinfo: []const u8, mount_point: []const u8) ?[]const u8 {
     var found: ?[]const u8 = null;
@@ -663,6 +718,33 @@ const windows_lsblk =
     \\   "children":[{"name":"sda1","path":"/dev/sda1","size":104857600000,"type":"part","fstype":"ntfs","label":"Data","mountpoints":[null],"pttype":"dos","parttype":"0x7","partuuid":"1234abcd-01","start":2048}]}
     \\]}
 ;
+
+test "pour's report: who was brought over, who administers, and why not" {
+    var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+    const ran =
+        \\{"event":"account","name":"maja","uid":1000,"admin":true,"skip":null}
+        \\{"event":"account","name":"toji","uid":1001,"admin":false,"skip":null}
+        \\{"event":"account","name":"kai","uid":1002,"admin":true,"skip":"uid 1002 is taken"}
+        \\{"event":"log","level":"fail","message":"kai: uid 1002 is taken in the target"}
+        \\{"event":"result","account":"maja","ok":true,"problems":0,"message":""}
+        \\{"event":"result","account":"toji","ok":true,"problems":0,"message":""}
+        \\{"event":"result","account":"kai","ok":false,"problems":1,"message":"skipped"}
+        \\{"event":"done"}
+    ;
+    const r = try parsePour(arena, ran);
+    try testing.expectEqual(@as(usize, 2), r.brought);
+    try testing.expectEqual(@as(usize, 1), r.failed);
+    try testing.expectEqual(@as(usize, 1), r.admins.len);
+    try testing.expectEqualStrings("maja", r.admins[0]);
+    try testing.expectEqualStrings("kai: uid 1002 is taken in the target", r.notes[0]);
+    try testing.expect(r.err == null);
+
+    const refused = try parsePour(arena, "{\"event\":\"error\",\"message\":\"this is Horizon: not migrating\",\"code\":3}\n");
+    try testing.expectEqualStrings("this is Horizon: not migrating", refused.err.?);
+    try testing.expectEqualStrings("pour stopped without saying why", (try parsePour(arena, "not json\n")).err.?);
+}
 
 test "free space beside Windows is found, and its reasons when there is none" {
     var arena_state: std.heap.ArenaAllocator = .init(testing.allocator);

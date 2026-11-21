@@ -27,6 +27,9 @@ int main(int argc, char *argv[])
     QCommandLineOption enforce(QStringLiteral("enforce"),
         QStringLiteral("With --autotest, make the installed system enforce the security module."));
     parser.addOption(enforce);
+    QCommandLineOption importOption(QStringLiteral("import"),
+        QStringLiteral("With --autotest, bring over the accounts of the system mounted at ROOT."), QStringLiteral("ROOT"));
+    parser.addOption(importOption);
     QCommandLineOption screenshots(QStringLiteral("screenshots"),
         QStringLiteral("With --autotest, save a picture of each page in DIR."), QStringLiteral("DIR"));
     parser.addOption(screenshots);
@@ -44,6 +47,8 @@ int main(int argc, char *argv[])
         backend->setAutotestBeside(true);
     if (backend && parser.isSet(enforce))
         backend->setAutotestEnforce(true);
+    if (backend && parser.isSet(importOption))
+        backend->setAutotestImport(parser.value(importOption));
     if (backend && parser.isSet(screenshots))
         backend->setScreenshotDir(parser.value(screenshots));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app,

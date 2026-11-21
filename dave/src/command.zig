@@ -17,6 +17,9 @@ pub const Options = struct {
     input: ?[]const u8 = null,
     /// Keep the program's standard output (it is discarded otherwise).
     capture: bool = false,
+    /// Return what it wrote even when it exits unsuccessfully, for a program
+    /// that reports its own failures in its output.
+    any_exit: bool = false,
 };
 
 /// Runs `argv` and waits for it. With `capture`, returns what the program
@@ -45,7 +48,7 @@ pub fn run(arena: Allocator, io: Io, argv: []const []const u8, options: Options,
             return fail(arena, diag, "cannot read the output of {s}: {t}", .{ argv[0], err });
     }
     const term = child.wait(io) catch |err| return fail(arena, diag, "{s} did not finish: {t}", .{ argv[0], err });
-    if (!term.success()) {
+    if (!term.success() and !options.any_exit) {
         return fail(arena, diag, "{s} failed ({f})", .{ try std.mem.join(arena, " ", argv), term });
     }
     return output;
@@ -64,6 +67,7 @@ test "programs are run, their output kept, and their failures described" {
     const arena = arena_state.allocator();
     var diag: Diagnostic = .{};
     try testing.expectEqualStrings("hello\n", try run(arena, testing.io, &.{ "cat", "-" }, .{ .input = "hello\n", .capture = true }, &diag));
+    try testing.expectEqualStrings("said\n", try run(arena, testing.io, &.{ "sh", "-c", "echo said; exit 1" }, .{ .capture = true, .any_exit = true }, &diag));
     _ = try run(arena, testing.io, &.{"true"}, .{}, &diag);
     try testing.expectError(error.CommandFailed, run(arena, testing.io, &.{"false"}, .{}, &diag));
     try testing.expect(std.mem.indexOf(u8, diag.message, "false failed (exited with code 1)") != null);
