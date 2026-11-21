@@ -69,7 +69,7 @@ void Backend::refreshDisks()
     process->start(dave(), {QStringLiteral("install-system"), QStringLiteral("--list"), QStringLiteral("--json")});
 }
 
-void Backend::install(const QString &diskPath, bool beside)
+void Backend::install(const QString &diskPath, bool beside, bool enforce)
 {
     if (m_state == State::Installing || m_install)
         return;
@@ -107,6 +107,8 @@ void Backend::install(const QString &diskPath, bool beside)
     };
     if (beside)
         args << QStringLiteral("--beside");
+    if (enforce)
+        args << QStringLiteral("--enforce");
     m_install->start(QStringLiteral("systemd-inhibit"), args);
 }
 

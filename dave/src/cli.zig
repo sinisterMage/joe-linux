@@ -357,7 +357,7 @@ pub const commands = [_]CommandInfo{
     .{
         .command = .@"install-system",
         .group = .images,
-        .synopsis = "--list [--json] | --disk DISK [--beside] [--json]",
+        .synopsis = "--list [--json] | --disk DISK [--beside] [--enforce] [--json]",
         .brief = "--list | --disk DISK",
         .summary = "Install joe Linux onto a disk",
         .about =
@@ -370,6 +370,9 @@ pub const commands = [_]CommandInfo{
         \\largest free space (22 GB or more) and shares its EFI system partition,
         \\so the boot menu offers the other system too. Make the space first, in
         \\the other system: Windows' Disk Management can shrink its volume.
+        \\
+        \\With --enforce, the installed system boots with the security module
+        \\enforcing (joe=enforce) instead of only logging what it would refuse.
         ,
     },
     .{
@@ -441,6 +444,7 @@ pub const options = [_]OptionSpec{
     .{ .long = "list", .help = "List the disks joe Linux could be installed on", .commands = &.{.@"install-system"}, .field = "list" },
     .{ .long = "disk", .value = "DISK", .help = "Erase DISK and install onto it", .commands = &.{.@"install-system"}, .field = "disk", .complete = .files },
     .{ .long = "beside", .help = "Install into the disk's free space, beside the system already there", .commands = &.{.@"install-system"}, .field = "beside" },
+    .{ .long = "enforce", .help = "Boot the installed system with the security module enforcing", .commands = &.{.@"install-system"}, .field = "enforce" },
     .{ .long = "json", .help = "Report as JSON events, for a program watching", .commands = &.{.@"install-system"}, .field = "json" },
     .{ .long = "with", .value = "PACKAGE", .help = "Install PACKAGE as well", .commands = &.{ .image, .@"install-system" }, .field = "with" },
     .{ .long = "test", .help = "Add joe-test-console: root logged in on the serial console (automated tests only)", .commands = &.{.image}, .field = "test_image" },
@@ -482,6 +486,7 @@ pub const Options = struct {
     json: bool = false,
     list: bool = false,
     beside: bool = false,
+    enforce: bool = false,
     disk: ?[]const u8 = null,
     repos: std.ArrayList([]const u8) = .empty,
     with: std.ArrayList([]const u8) = .empty,
@@ -778,6 +783,7 @@ test "every command line in the repository still parses" {
         &.{ "install-system", "--list", "--json" },
         &.{ "install-system", "--disk", "/dev/vda", "--json" },
         &.{ "install-system", "--disk", "/dev/vda", "--beside", "--json" },
+        &.{ "install-system", "--disk", "/dev/vda", "--enforce", "--json" },
         &.{ "--root", "/tmp/check", "--cache", "/tmp/check-cache", "--dry-run", "install", "joe-desktop" },
         // the systemd units
         &.{"finalize"},

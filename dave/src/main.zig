@@ -1639,8 +1639,8 @@ const App = struct {
     // -- installing onto a disk ------------------------------------------------
 
     fn cmdInstallSystem(app: *App, args: []const []const u8) !void {
-        if (args.len != 0 or (app.opts.list == (app.opts.disk != null)) or (app.opts.beside and app.opts.list))
-            return app.fail("usage: dave install-system --list [--json] | --disk DISK [--beside] [--json]", .{});
+        if (args.len != 0 or (app.opts.list == (app.opts.disk != null)) or ((app.opts.beside or app.opts.enforce) and app.opts.list))
+            return app.fail("usage: dave install-system --list [--json] | --disk DISK [--beside] [--enforce] [--json]", .{});
         if (app.opts.json) {
             // Events alone on standard output; everything said for people
             // (and what the programs dave runs say) on standard error.
@@ -1799,8 +1799,11 @@ const App = struct {
         app.step(0.94, "Making the disk bootable", .{});
         try target.writeFile(app.io, .{ .sub_path = "etc/fstab", .data = fstab });
         const kernel = deploy.findKernelIn(app.arena, app.io, target) catch return app.fail("the installed system has no kernel", .{});
+        // The console arguments come from the medium's command line; the
+        // security module enforces only when the person installing chose it.
         const consoles = try provision.consoleArgs(app.arena, app.readAbsolute("/proc/cmdline") orelse "");
-        const options = try provision.cmdlineFor(app.arena, root_uuid, consoles);
+        const extra = if (app.opts.enforce) try std.fmt.allocPrint(app.arena, "{s} joe=enforce", .{consoles}) else consoles;
+        const options = try provision.cmdlineFor(app.arena, root_uuid, extra);
         // Closed before the target is unmounted, as the ESP is mounted in it.
         {
             var esp = try app.openDir(target_path ++ "/" ++ provision.esp_mount);

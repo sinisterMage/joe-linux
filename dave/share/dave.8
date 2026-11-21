@@ -130,6 +130,8 @@ the disks joe Linux could be installed on; with
 erase one and install onto it, or with
 .B \-\-beside
 install into its free space beside the system already there.
+.B \-\-enforce
+makes the installed system boot with the security module enforcing.
 .SS Help
 .TP
 .BR help " [" \fIcommand\fR ]
@@ -190,6 +192,12 @@ and install onto it.
 Keep what is on the disk: take its largest free space (22 GB or more) and
 share its EFI system partition, so that the boot menu offers the other
 system too. Nothing is resized; make the space first, in the other system.
+.TP
+.B \-\-enforce
+Boot the installed system with the security module enforcing
+.RB ( joe=enforce ),
+so that privileged programs are held to their declarations. Without it the
+module only logs what it would refuse.
 .TP
 .B \-\-json
 Report progress as JSON events, one per line, for a program watching.

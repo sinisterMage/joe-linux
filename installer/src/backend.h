@@ -26,6 +26,7 @@ class Backend : public QObject {
     Q_PROPERTY(QString systemName READ systemName CONSTANT)
     Q_PROPERTY(QString autotestDisk READ autotestDisk CONSTANT)
     Q_PROPERTY(bool autotestBeside READ autotestBeside CONSTANT)
+    Q_PROPERTY(bool autotestEnforce READ autotestEnforce CONSTANT)
     Q_PROPERTY(QString screenshotDir READ screenshotDir CONSTANT)
 
 public:
@@ -45,12 +46,15 @@ public:
     void setAutotestDisk(const QString &disk) { m_autotestDisk = disk; }
     bool autotestBeside() const { return m_autotestBeside; }
     void setAutotestBeside(bool beside) { m_autotestBeside = beside; }
+    bool autotestEnforce() const { return m_autotestEnforce; }
+    void setAutotestEnforce(bool enforce) { m_autotestEnforce = enforce; }
     QString screenshotDir() const { return m_screenshotDir; }
     void setScreenshotDir(const QString &dir) { m_screenshotDir = dir; }
 
     Q_INVOKABLE void refreshDisks();
     // beside: into the disk's free space, keeping what is there.
-    Q_INVOKABLE void install(const QString &diskPath, bool beside);
+    // enforce: the installed system boots with the security module enforcing.
+    Q_INVOKABLE void install(const QString &diskPath, bool beside, bool enforce);
     Q_INVOKABLE void restart();
 
 signals:
@@ -73,6 +77,7 @@ private:
     QString m_error;
     QString m_autotestDisk;
     bool m_autotestBeside = false;
+    bool m_autotestEnforce = false;
     QString m_screenshotDir;
     QProcess *m_install = nullptr;
     QByteArray m_pending;

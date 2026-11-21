@@ -8,6 +8,7 @@ PageFrame {
     // Into the free space, keeping what is on the disk.
     property bool beside: false
     property alias understood: understood.checked
+    property alias enforce: enforce.checked
     signal back()
     signal proceed()
 
@@ -52,38 +53,31 @@ PageFrame {
         region: page.beside ? { start: page.disk.besideStart, size: page.disk.besideFraction } : null
     }
 
-    CheckBox {
+    CheckOption {
         id: understood
         visible: !page.beside
         Layout.topMargin: 14
-        Layout.fillWidth: true
         text: qsTr("I understand that everything on %1 will be erased").arg(page.disk.name)
+        tint: Theme.destructive
+        onTint: Theme.onDestructive
+    }
+
+    // The security module only logs unless the installed system is booted
+    // with joe=enforce; this is where a person opts in (dave install-system
+    // --enforce).
+    CheckOption {
+        id: enforce
+        Layout.topMargin: page.beside ? 14 : 4
+        text: qsTr("Enforce the security module")
+    }
+    Text {
+        Layout.fillWidth: true
+        leftPadding: 34
+        text: qsTr("Programs that run with administrator rights are held to what their packages declare, and anything else they try is refused. Without this, joe Linux only records what it would have refused. This release is a beta: some programs may not work while enforcing.")
         font.family: Theme.family
-        font.pixelSize: Theme.bodySize
-        indicator: Rectangle {
-            x: understood.leftPadding
-            y: (understood.height - height) / 2
-            width: 22; height: 22; radius: 6
-            color: understood.checked ? Theme.destructive : "transparent"
-            border.width: understood.checked ? 0 : 2
-            border.color: understood.visualFocus ? Theme.accent : Theme.muted
-            Text {
-                anchors.centerIn: parent
-                visible: understood.checked
-                text: "✓"
-                font.pixelSize: 15
-                font.weight: Font.Black
-                color: Theme.onDestructive
-            }
-        }
-        contentItem: Text {
-            leftPadding: understood.indicator.width + 12
-            text: understood.text
-            font: understood.font
-            wrapMode: Text.Wrap
-            color: Theme.ink
-            verticalAlignment: Text.AlignVCenter
-        }
+        font.pixelSize: Theme.smallSize
+        wrapMode: Text.Wrap
+        color: Theme.muted
     }
 
     actions: [

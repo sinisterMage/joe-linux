@@ -20,6 +20,8 @@ ApplicationWindow {
     // whether joe goes beside what is on it.
     property var disk: ({})
     property bool beside: false
+    // Whether the installed system boots with the security module enforcing.
+    property bool enforce: false
 
     function showDisks() {
         Backend.refreshDisks()
@@ -31,7 +33,7 @@ ApplicationWindow {
         stack.push(confirmPage)
     }
     function install() {
-        Backend.install(window.disk.path, window.beside)
+        Backend.install(window.disk.path, window.beside, window.enforce)
         stack.replace(null, progressPage)
     }
 
@@ -43,7 +45,7 @@ ApplicationWindow {
 
     Component { id: welcomePage; WelcomePage { onProceed: window.showDisks(); onLeave: Qt.quit() } }
     Component { id: diskPage; DiskPage { onBack: stack.pop(); onProceed: window.confirm(chosen, beside) } }
-    Component { id: confirmPage; ConfirmPage { disk: window.disk; beside: window.beside; onBack: stack.pop(); onProceed: window.install() } }
+    Component { id: confirmPage; ConfirmPage { disk: window.disk; beside: window.beside; onBack: stack.pop(); onProceed: { window.enforce = enforce; window.install() } } }
     Component { id: progressPage; ProgressPage { disk: window.disk; beside: window.beside } }
     Component { id: donePage; DonePage { onLeave: Qt.quit() } }
     Component { id: failedPage; FailedPage { onLeave: Qt.quit(); onAgain: { stack.replace(null, welcomePage); window.showDisks() } } }
@@ -110,10 +112,12 @@ ApplicationWindow {
                 autotest.report("page confirm")
                 if (!window.beside)
                     page.understood = true
+                page.enforce = Backend.autotestEnforce
                 autotest.stage = 4
                 break
             case 4:
-                window.install()
+                // As the page's button does: what it shows is what is installed.
+                page.proceed()
                 autotest.report("page progress")
                 autotest.stage = 5
                 break

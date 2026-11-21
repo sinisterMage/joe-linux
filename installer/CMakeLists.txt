@@ -35,6 +35,7 @@ qt_add_qml_module(joe-installer
         qml/WelcomePage.qml
         qml/DiskPage.qml
         qml/ConfirmPage.qml
+        qml/CheckOption.qml
         qml/ProgressPage.qml
         qml/DonePage.qml
         qml/FailedPage.qml

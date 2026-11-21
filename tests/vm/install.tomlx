@@ -13,10 +13,13 @@
 # - on a disk Windows already uses, with room made for joe, joe goes
 #   beside it: in the free space alone, sharing Windows' EFI system
 #   partition, whose boot menu then offers both, and with nothing of
-#   Windows' changed.
+#   Windows' changed;
+# - with "Enforce the security module" ticked, the installed system boots
+#   enforcing, its first boot is refused nothing, and dave still works.
 #
-#   install           onto an empty disk
-#   install-beside    beside Windows
+#   install             onto an empty disk
+#   install-enforcing   onto an empty disk, enforcing the security module from the first boot
+#   install-beside      beside Windows
 #
 # The medium is tests/vm/live.tomlx's, which checks that it has the
 # installer.
@@ -86,7 +89,7 @@ dd if="$work/windows.img" of="$disk" bs=1M seek=117 conv=notrunc,sparse status=n
 '''
 
 # Through the installer, as a person would install, with a picture of
-# each page. `how` is "" for the whole disk or " --beside".
+# each page. `how` is "" for the whole disk, " --beside" or " --enforce".
 [templates.installs]
 params = ["how"]
 steps = [
@@ -190,6 +193,38 @@ JSON
   { run = 'systemctl --failed --no-legend --plain', exit = "any", equals = "", name = "no failed units" },
 
   { use = "dave-works" },
+]
+
+# The installer's "Enforce the security module": the installed system's
+# first boot is already enforcing, so everything it starts before anyone
+# logs in must be sealed and declared (rule 3).
+[tests.install-enforcing]
+description = "an installation that chose to enforce the security module, and its first boot"
+tags = ["vm", "joe", "install"]
+deps = ["joe-live-test-iso"]
+services = ["joe-repo"]
+machine = "joe-live"
+timeout = "1h"
+on_boot = ${install_helpers}
+on_failure = ${install_failure}
+steps = [
+  { use = "installs", with = { how = " --enforce" } },
+
+  { section = "the installed system enforces from its first boot" },
+  { run = 'cat /proc/cmdline', contains = ["rootflags=subvol=joe/deploy/1", "joe=enforce"], lacks = "joe=log" },
+  { run = 'cat /sys/kernel/security/joe/enforce', equals = "1", name = "the security module enforces" },
+  { run = 'systemctl show -p ConditionResult dave-seal.service', contains = "no", name = "the first boot had nothing to seal" },
+
+  { section = "the first-run setup comes up, and nothing was refused" },
+  { run = 'pgrep -f gnome-initial-setup', wait = "5m", interval = "3s", name = "gnome-initial-setup is running" },
+  { run = 'sleep 20', name = "let it draw" },
+  { screenshot = "first-boot-enforcing.png" },
+  { run = 'systemctl --failed --no-legend --plain', exit = "any", equals = "", name = "no failed units" },
+  { run = '''dmesg | grep 'joe: denied' | sed 's/.*joe: //; s/ pid=[0-9]*//' | sort | uniq -c | sort -rn''', exit = "any", equals = "", name = "the security module denied nothing" },
+
+  { section = "upgrades and rollbacks work while enforcing" },
+  { use = "dave-works" },
+  { run = 'cat /proc/cmdline', contains = "joe=enforce", name = "a rollback keeps enforcing" },
 ]
 
 [tests.install-beside]
