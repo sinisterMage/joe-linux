@@ -36,7 +36,7 @@ pub const errors = @import("errors.zig");
 pub const query = @import("query.zig");
 pub const plan = @import("plan.zig");
 
-const dave_version = "0.3.0";
+const dave_version = "0.4.0";
 const top_mount = "/run/dave/top";
 const lock_path = "/run/dave/lock";
 /// What `dave status` shows, written by root for everyone (deploy.Published).

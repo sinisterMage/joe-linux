@@ -11,7 +11,7 @@
 
 # Prints the release's name; build machine scripts call it as well.
 release_name() {
-    local kernel=7.3.1 dave=0.3.0
+    local kernel=7.3.1 dave=0.4.0
     local revision=${PKG_VERSION%%[a-z]*}
     local stage=${PKG_VERSION#"$revision"}
     printf 'J%s-%s-%s%s\n' "$revision" "$kernel" "$dave" "${stage:+-$stage}"

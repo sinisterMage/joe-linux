@@ -3,7 +3,7 @@ name: Container image
 # joe Linux as a container image (image/container.zon), built by dave from the
 # published repository and pushed to the GitHub Container Registry as
 # ghcr.io/<owner>/joe, tagged latest and with the release's name
-# (J1-7.3.1-0.3.0-alpha5, from joe-release's os-release).
+# (J1-7.3.1-0.4.0-beta1, from joe-release's os-release).
 #
 # Run it after publishing a release: gh workflow run container.yml
 #

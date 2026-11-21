@@ -345,16 +345,16 @@ installs into it directly, without a snapshot to return to.
 A release is named **J*X*-*Y*-*Z***, with a stage such as `-alpha1` before it
 is final:
 
-| Part | Is | In J1-7.3.1-0.3.0-alpha5 |
+| Part | Is | In J1-7.3.1-0.4.0-beta1 |
 |------|----|--------------------------|
 | J | joe, the distribution | J |
 | *X* | the system revision | 1 |
 | *Y* | the kernel's version | 7.3.1 |
-| *Z* | dave's version | 0.3.0 |
+| *Z* | dave's version | 0.4.0 |
 
 `packages/joe-release` writes the name into `os-release` and the build machine
 names the installation medium after it. Its package version is the revision
-and stage alone (`1alpha5`), which dave orders before the final `1`.
+and stage alone (`1beta1`), which dave orders before the final `1`.
 
 ## Living in it
 
