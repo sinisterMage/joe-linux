@@ -207,15 +207,26 @@ unless it is ticked (`dave install-system --enforce`). One consequence worth
 knowing: a root shell does not read `/etc/profile` or
 `~/.bashrc`, because files you can edit are not sealed.
 
-Today the distribution declares `all` for the programs where privilege
-starts: systemd's PID 1 and the executor that starts every service, root's
-bash, doas, dave, the programs the kernel itself starts (modprobe,
-systemd-coredump, request-key), and every set-uid program. The first service
-with a narrower declaration is wpa_supplicant, which NetworkManager starts for
-Wi-Fi: `net`, `cap:net_admin` and `cap:net_raw` only. `true` and `false`
-declare `none`. Everything else is `undeclared`, so it acts with the
-authority of the shell or service that runs it. Narrower declarations for
-each service are the next step.
+The programs where privilege starts declare `all`: systemd's PID 1 and the
+executor that starts every service, root's bash, the programs that start
+another user's shell (doas, su, pkexec, ksu), root's sftp-server, dave,
+mount, and the programs the kernel itself starts (modprobe,
+systemd-coredump, request-key). Every other service and set-uid program the
+desktop runs with privilege declares its own operations, taken from the
+capabilities its upstream unit bounds it to and from what it was seen to do
+in log mode: the systemd daemons (journald, logind, udevd and the helpers
+its rules run, userdbd, nsresourced, networkd, resolved, timesyncd,
+hostnamed, localed, timedated), D-Bus, NetworkManager and wpa_supplicant,
+ModemManager, accounts-daemon and shadow's account tools, udisks and the
+file system tools it runs, upower, gdm and its session worker, bluetoothd,
+geoclue, avahi, cups, sshd, agetty and login, and the set-uid tools
+(passwd and its kin, newuidmap, ping, fusermount3, unix_chkpwd, the polkit
+agent's helper). NetworkManager, for one, may use the network, load
+modules and write `/etc` and its state, and nothing else. `true` and
+`false` declare `none`. Everything else is `undeclared`, so it acts with the
+authority of the shell or service that runs it. The desktop, a fresh
+installation and its first boot are tested enforcing, and fail on anything
+denied (`make test-desktop`, `make test-install`).
 
 The details are in the source, which is commented for readers:
 [packages/linux/joe-lsm/joe.c](packages/linux/joe-lsm/joe.c), [dave/src/seal.zig](dave/src/seal.zig),
@@ -320,7 +331,15 @@ dave install-system --list                          the disks, and what each all
 dave install-system --disk /dev/nvme0n1 --beside    install in its free space
 dave install-system --disk /dev/nvme0n1             erase it and install
 dave install-system --disk /dev/nvme0n1 --enforce   and boot it enforcing the security module
+dave install-system --disk /dev/nvme0n1 --import /mnt/old   and bring over the accounts of the
+                                                    system mounted there
 ```
+
+With `--import` (in the installer: another Linux system opened in Files),
+[pour](https://github.com/theJoeLinuxFoundation/pour) carries that system's
+accounts into the new one with their passwords, groups and homes, and those
+who administered it administer the new one; the first-run setup is then not
+needed. The other system must be on another disk.
 
 Images and media are described by specifications in `image/*.zon` and built by
 `dave image build`; each Makefile target above names one. The build machine
@@ -412,12 +431,19 @@ Scratch (systemd, development branches), with the same package versions. Recipes
 
 ## Not done yet
 
-- **Declarations for each service.** The mechanism of rule 3 is tested, and
-  the base system's entry points and set-uid programs declare `all`, but
-  services still receive `all` from systemd instead of holding studied
-  declarations of their own; wpa_supplicant is the first with a narrower
-  one. `dave repo audit build/repo` lists the undeclared programs and any
-  invalid or missing seals.
+- **Declarations beyond the desktop.** The privileged services and set-uid
+  programs of the desktop hold declarations of their own, but the services
+  of the rest of the repository (web servers, databases and the like) and
+  the one-shot services of boot (systemd-tmpfiles, sysusers, repart) are
+  still undeclared and receive `all` from systemd. Of the declared ones,
+  printing, Bluetooth, modems and ssh logins are declared from their
+  upstream units but not exercised by the tests. `dave repo audit
+  build/repo` lists the undeclared programs and any invalid or missing
+  seals.
+- **D-Bus services without a unit.** dbus-daemon-launch-helper is not
+  set-uid (files are root's, and a recipe may not give it to messagebus), so
+  a system bus service that systemd does not start, cups-pk-helper among
+  them, cannot be started over D-Bus.
 - **The rest of the trust chain.** Kernel modules are checked by the module
   but not by the kernel's own signature enforcement; there is no kernel
   lockdown and no Secure Boot, so root can still replace the kernel or its
@@ -450,7 +476,8 @@ Scratch (systemd, development branches), with the same package versions. Recipes
   OpenJDK are each first compiled by a prebuilt compiler: their upstream's,
   or for OpenJDK the book's.
   The TypeScript compiler (needed to build one application) is its upstream's
-  already-compiled release, and bun is upstream's binary, repackaged.
+  already-compiled release, and bun and Julia (which only the installation
+  medium has, to run pour) are upstream's binaries, repackaged.
 - **Building dave inside joe.** joe packages Zig 0.17.1 now, but the dave
   package is still the static binary cross-built on the build machine.
 - Virtual packages (`provides`), and changing the kernel on a running system
