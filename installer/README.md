@@ -9,18 +9,20 @@ opened automatically by the joe-live package.
   they lie (`partitions`: `start`, `size`, `kind`), and whether joe fits in
   its free space beside what is there (`beside`: `possible`, `reason`,
   `start`, `size`, `systems`).
-- `dave install-system --disk PATH [--beside] --json` (as root, through
-  pkexec, inside systemd-inhibit) erases the disk, or with `--beside` adds
-  joe's partitions to its free space, and installs what the medium's
+- `dave install-system --disk PATH [--beside] [--enforce] --json` (as root,
+  through pkexec, inside systemd-inhibit) erases the disk, or with `--beside`
+  adds joe's partitions to its free space, and installs what the medium's
   joe/install.zon names, one JSON object per line on standard output:
   `{"event":"step"|"progress"|"done"|"error","message":...,"fraction":...}`.
 
 The installer asks only which disk to use, and on a disk joe can share,
-whether to go beside what is there (the default) or erase it. Language,
+whether to go beside what is there (the default) or erase it. The
+confirmation page also offers "Enforce the security module", off unless
+ticked: with it the installed system boots with `joe=enforce` (`--enforce`). Language,
 keyboard, time zone and the account are asked by GNOME's initial setup on
 the installed system's first boot.
 
-`joe-installer --autotest DISK [--beside]` goes through the same pages
+`joe-installer --autotest DISK [--beside] [--enforce]` goes through the same pages
 unattended and exits 0 when the installation succeeded; tests/vm/install.tomlx
 uses it.
 

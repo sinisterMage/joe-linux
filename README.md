@@ -201,8 +201,10 @@ are not affected.
    process whose only global privilege is its capability set cannot create one,
    because replacing that set would discard its confinement.
 
-The module logs by default and enforces when booted with `joe=enforce`. One
-consequence worth knowing: a root shell does not read `/etc/profile` or
+The module logs by default and enforces when booted with `joe=enforce`. The
+installer offers that as a choice, "Enforce the security module", which is off
+unless it is ticked (`dave install-system --enforce`). One consequence worth
+knowing: a root shell does not read `/etc/profile` or
 `~/.bashrc`, because files you can edit are not sealed.
 
 Today the distribution declares `all` for the programs where privilege
@@ -317,6 +319,7 @@ The installer (`installer/`) is a Qt Quick front end; all of its work is done by
 dave install-system --list                          the disks, and what each allows
 dave install-system --disk /dev/nvme0n1 --beside    install in its free space
 dave install-system --disk /dev/nvme0n1             erase it and install
+dave install-system --disk /dev/nvme0n1 --enforce   and boot it enforcing the security module
 ```
 
 Images and media are described by specifications in `image/*.zon` and built by
