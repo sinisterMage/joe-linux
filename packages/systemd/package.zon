@@ -1,7 +1,7 @@
 .{
     .name = "systemd",
     .version = "262.1",
-    .release = 7,
+    .release = 9,
     .description = "System and service manager, with udev and the systemd-boot boot loader",
     .license = "LGPL-2.1-or-later",
     .sources = .{
@@ -9,11 +9,42 @@
     },
     .depends = .{ "glibc", "libcap", "libxcrypt", "acl", "kmod", "zstd", "xz", "zlib", "bash", "linux-pam" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gperf", "python", "jinja2", "pyelftools", "joe-release" },
-    // PID 1, and systemd-executor, which starts every service, hold all
-    // authority, which services that declare nothing inherit (until each one
-    // has its own list: rule 3). The kernel starts systemd-coredump itself,
-    // and passes no authority on.
     .operations = .{
+        // Where privilege starts: PID 1, the executor that starts every service
+        // (an undeclared service inherits its all), and the core dump handler the
+        // kernel starts.
         .{ .programs = .{ "usr/lib/systemd/systemd", "usr/lib/systemd/systemd-executor", "usr/lib/systemd/systemd-coredump" }, .allow = .{"all"} },
+        // The daemons below hold what their upstream units bound them to
+        // (CapabilityBoundingSet=, AmbientCapabilities=), the persistent state they
+        // keep, and the helpers they run. The journal: reading every process's
+        // credentials and writing /var/log/journal.
+        .{ .programs = .{"usr/lib/systemd/systemd-journald"}, .allow = .{ "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:setgid", "cap:setuid", "cap:sys_ptrace", "cap:sys_admin", "cap:audit_control", "cap:mac_override", "cap:syslog", "cap:audit_read", "write:/var/log/journal" } },
+        // Sessions and seats: lingering users, and the udev rules that attach
+        // devices to seats.
+        .{ .programs = .{"usr/lib/systemd/systemd-logind"}, .allow = .{ "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:linux_immutable", "cap:sys_admin", "cap:sys_tty_config", "cap:audit_control", "cap:mac_admin", "root-ipc", "write:/var/lib/systemd/linger", "write:/etc/udev/rules.d" } },
+        // udevd is udevadm by another name. Devices need nearly every capability
+        // (upstream bounds it by all but sys_time and wake_alarm), kernel modules,
+        // interface ioctls through an inet socket and its own workers' signals, and
+        // the internal mounts some modules make as they load (kvm's guest_memfd); it
+        // writes the hwdb, and runs the helpers its rules name.
+        .{ .programs = .{"usr/bin/udevadm"}, .allow = .{ "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:fsetid", "cap:kill", "cap:setgid", "cap:setuid", "cap:setpcap", "cap:linux_immutable", "cap:net_bind_service", "cap:net_broadcast", "cap:net_admin", "cap:net_raw", "cap:ipc_lock", "cap:ipc_owner", "cap:sys_module", "cap:sys_rawio", "cap:sys_chroot", "cap:sys_ptrace", "cap:sys_pacct", "cap:sys_admin", "cap:sys_boot", "cap:sys_nice", "cap:sys_resource", "cap:sys_tty_config", "cap:mknod", "cap:lease", "cap:audit_write", "cap:audit_control", "cap:setfcap", "cap:mac_override", "cap:mac_admin", "cap:syslog", "cap:block_suspend", "cap:audit_read", "cap:perfmon", "cap:bpf", "cap:checkpoint_restore", "module", "mount", "net", "root-ipc", "write:/etc/udev", "exec:/usr/bin/udevadm", "exec:/usr/bin/bash", "exec:/usr/bin/kmod", "exec:/usr/lib/systemd/systemd-sysctl", "exec:/usr/sbin/sysctl", "exec:/usr/sbin/dmsetup", "exec:/usr/sbin/devlink", "exec:/usr/lib/udev/libinput-device-group", "exec:/usr/lib/udev/libinput-fuzz-extract", "exec:/usr/lib/udev/libinput-fuzz-to-zero", "exec:/usr/lib/udev/ata_id", "exec:/usr/lib/udev/cdrom_id", "exec:/usr/lib/udev/scsi_id", "exec:/usr/lib/udev/v4l_id", "exec:/usr/lib/udev/fido_id", "exec:/usr/lib/udev/mtd_probe", "exec:/usr/lib/udev/dmi_memory_id", "exec:/usr/lib/udev/iocost" } },
+        // The probes udev rules run on disks, optical drives, cameras and keys:
+        // device ioctls.
+        .{ .programs = .{ "usr/lib/udev/ata_id", "usr/lib/udev/cdrom_id", "usr/lib/udev/scsi_id", "usr/lib/udev/v4l_id", "usr/lib/udev/fido_id", "usr/lib/udev/mtd_probe", "usr/lib/udev/dmi_memory_id", "usr/lib/udev/iocost" }, .allow = .{ "cap:sys_admin", "cap:sys_rawio" } },
+        // Kernel parameters, from /etc/sysctl.d and from udev for new interfaces.
+        .{ .programs = .{"usr/lib/systemd/systemd-sysctl"}, .allow = .{ "cap:sys_admin", "cap:net_admin", "cap:sys_resource" } },
+        // User and group lookups (userdb), and the workers it starts.
+        .{ .programs = .{ "usr/lib/systemd/systemd-userdbd", "usr/lib/systemd/systemd-userwork" }, .allow = .{ "cap:dac_read_search", "cap:sys_resource", "root-ipc", "exec:/usr/lib/systemd/systemd-userwork" } },
+        // User namespaces for unprivileged users, through a BPF program.
+        .{ .programs = .{ "usr/lib/systemd/systemd-nsresourced", "usr/lib/systemd/systemd-nsresourcework" }, .allow = .{ "cap:chown", "cap:dac_read_search", "cap:fowner", "cap:setgid", "cap:setuid", "cap:net_admin", "cap:sys_admin", "cap:sys_resource", "cap:setfcap", "cap:perfmon", "cap:bpf", "bpf", "root-ipc", "exec:/usr/lib/systemd/systemd-nsresourcework" } },
+        // The network daemons, each as its own user with only these capabilities.
+        .{ .programs = .{"usr/lib/systemd/systemd-networkd"}, .allow = .{ "net", "cap:net_admin", "cap:net_bind_service", "cap:net_broadcast", "cap:net_raw" } },
+        .{ .programs = .{"usr/lib/systemd/systemd-resolved"}, .allow = .{ "net", "cap:setpcap", "cap:net_bind_service", "cap:net_raw" } },
+        .{ .programs = .{"usr/lib/systemd/systemd-timesyncd"}, .allow = .{ "net", "cap:sys_time", "write:/var/lib/systemd/timesync" } },
+        // The settings daemons GNOME's settings talk to: host name, locale and
+        // keyboard, and the clock, each writing its files in /etc.
+        .{ .programs = .{"usr/lib/systemd/systemd-hostnamed"}, .allow = .{ "cap:sys_admin", "write:/etc" } },
+        .{ .programs = .{"usr/lib/systemd/systemd-localed"}, .allow = .{"write:/etc"} },
+        .{ .programs = .{"usr/lib/systemd/systemd-timedated"}, .allow = .{ "cap:sys_time", "write:/etc" } },
     },
 }

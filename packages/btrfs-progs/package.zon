@@ -1,7 +1,7 @@
 .{
     .name = "btrfs-progs",
     .version = "7.3",
-    .release = 1,
+    .release = 2,
     .description = "Administration and debugging tools for the btrfs file system",
     .license = "GPL-2.0-only AND LGPL-2.1-or-later",
     .sources = .{
@@ -9,4 +9,8 @@
     },
     .depends = .{ "glibc", "util-linux", "zlib", "zstd", "systemd" },
     .build_depends = .{"pkgconf"},
+    .operations = .{
+        // Making and managing btrfs file systems, on any device or image file.
+        .{ .programs = .{ "usr/bin/mkfs.btrfs", "usr/bin/btrfs", "usr/bin/btrfstune" }, .allow = .{ "cap:sys_admin", "cap:sys_rawio", "cap:dac_override", "write:*" } },
+    },
 }

@@ -1,7 +1,7 @@
 .{
     .name = "bluez",
     .version = "5.88",
-    .release = 1,
+    .release = 2,
     .description = "Bluetooth protocol stack: bluetoothd, obexd, bluetoothctl and libbluetooth",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{
@@ -10,4 +10,8 @@
     // systemd: libudev, and libsystemd for obexd. readline: bluetoothctl.
     .depends = .{ "glibc", "glib", "dbus", "libical", "readline", "systemd" },
     .build_depends = .{ "pkgconf", "docutils" },
+    .operations = .{
+        // Bluetooth: its socket family and adapters, and the pairings it keeps.
+        .{ .programs = .{"usr/libexec/bluetooth/bluetoothd"}, .allow = .{ "net", "cap:net_admin", "cap:net_bind_service", "cap:net_raw", "write:/var/lib/bluetooth" } },
+    },
 }

@@ -1,7 +1,7 @@
 .{
     .name = "networkmanager",
     .version = "1.58.1",
-    .release = 4,
+    .release = 5,
     .description = "Network connection manager with the nmcli command line client",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{
@@ -15,4 +15,17 @@
         // configurations); there is no switch for it.
         "jansson" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "perl", "python", "vala" },
+    .operations = .{
+        // The network: its upstream unit's capabilities, kernel modules and BPF
+        // for drivers and filters, the connections and resolv.conf in /etc, its
+        // state, and the helpers it starts (wpa_supplicant is started by systemd).
+        .{ .programs = .{"usr/sbin/NetworkManager"}, .allow = .{ "net", "bpf", "module", "root-ipc", "cap:dac_override", "cap:kill", "cap:setgid", "cap:setuid", "cap:net_bind_service", "cap:net_admin", "cap:net_raw", "cap:sys_module", "cap:sys_chroot", "cap:audit_write", "cap:bpf", "write:/etc", "write:/var/lib/NetworkManager", "exec:/usr/libexec/nm-daemon-helper", "exec:/usr/libexec/nm-dhcp-helper", "exec:/usr/bin/kmod" } },
+        // Runs the scripts in /etc/NetworkManager/dispatcher.d, which are bash.
+        .{ .programs = .{"usr/libexec/nm-dispatcher"}, .allow = .{ "root-ipc", "exec:/usr/bin/bash" } },
+        // Opens files for NetworkManager that it may not open itself.
+        .{ .programs = .{"usr/libexec/nm-priv-helper"}, .allow = .{ "cap:dac_override", "cap:dac_read_search" } },
+        // Looks up host names for NetworkManager.
+        .{ .programs = .{"usr/libexec/nm-daemon-helper"}, .allow = .{"net"} },
+        .{ .programs = .{"usr/libexec/nm-dhcp-helper"}, .allow = .{"none"} },
+    },
 }

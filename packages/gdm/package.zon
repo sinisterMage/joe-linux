@@ -1,7 +1,7 @@
 .{
     .name = "gdm",
     .version = "51.1.1",
-    .release = 2,
+    .release = 5,
     .description = "GNOME Display Manager: the graphical login screen and session launcher",
     .license = "GPL-2.0-or-later",
     .sources = .{
@@ -28,4 +28,14 @@
         "gnome-shell",
     },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+    .operations = .{
+        // The display manager: the greeter's and users' sessions, the virtual
+        // terminals, its state and the login records, the account files' lock
+        // (taken while it finds a free uid for a greeter's dynamic user), and a
+        // session worker for each login.
+        .{ .programs = .{"usr/sbin/gdm"}, .allow = .{ "root-ipc", "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:fsetid", "cap:kill", "cap:setgid", "cap:setuid", "cap:sys_admin", "cap:sys_tty_config", "cap:sys_resource", "cap:audit_write", "cap:net_admin", "write:/var/lib/gdm", "write:/var/log", "write:/etc/.pwd.lock", "exec:/usr/libexec/gdm-session-worker", "exec:/usr/bin/bash" } },
+        // A login: PAM (passwords, limits, the login uid, keyrings), the login
+        // records, then the session, started once privilege is given up.
+        .{ .programs = .{"usr/libexec/gdm-session-worker"}, .allow = .{ "root-ipc", "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:fsetid", "cap:kill", "cap:setgid", "cap:setuid", "cap:sys_admin", "cap:sys_tty_config", "cap:sys_resource", "cap:audit_write", "cap:audit_control", "cap:ipc_lock", "write:/var/lib/gdm", "write:/var/log", "exec:/usr/sbin/unix_chkpwd", "exec:/usr/bin/bash" } },
+    },
 }

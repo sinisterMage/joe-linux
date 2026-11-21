@@ -1,7 +1,7 @@
 .{
     .name = "accountsservice",
     .version = "26.27.3",
-    .release = 1,
+    .release = 2,
     .description = "D-Bus service for querying and changing user account information",
     .license = "GPL-3.0-or-later",
     .sources = .{
@@ -9,4 +9,10 @@
     },
     .depends = .{ "glibc", "glib", "polkit", "json-c", "libxcrypt", "systemd", "dbus", "shadow" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "vala", "gettext" },
+    .operations = .{
+        // Accounts for GNOME's settings and initial setup: it reads homes for
+        // pictures, keeps its state, sets the automatic login in gdm's
+        // configuration, and edits accounts through shadow's tools.
+        .{ .programs = .{"usr/libexec/accounts-daemon"}, .allow = .{ "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:fsetid", "cap:kill", "cap:setgid", "cap:setuid", "write:/var/lib/AccountsService", "write:/etc/gdm", "exec:/usr/sbin/useradd", "exec:/usr/sbin/usermod", "exec:/usr/sbin/userdel", "exec:/usr/sbin/chpasswd", "exec:/usr/bin/chage", "exec:/usr/bin/passwd", "exec:/usr/bin/bash" } },
+    },
 }

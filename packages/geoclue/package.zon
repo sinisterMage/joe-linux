@@ -1,7 +1,7 @@
 .{
     .name = "geoclue",
     .version = "2.8.2",
-    .release = 1,
+    .release = 3,
     .description = "D-Bus service that provides location information",
     .license = "LGPL-2.1-or-later AND GPL-2.0-or-later",
     .sources = .{
@@ -9,4 +9,8 @@
     },
     .depends = .{ "glibc", "glib", "json-glib", "libsoup", "libnotify", "systemd", "dbus" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext", "vala" },
+    .operations = .{
+        // Location, from Wi-Fi networks looked up over the network.
+        .{ .programs = .{"usr/libexec/geoclue"}, .allow = .{ "net", "cap:dac_read_search", "write:/var/lib/geoclue" } },
+    },
 }

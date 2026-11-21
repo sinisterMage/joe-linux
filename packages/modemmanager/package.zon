@@ -1,7 +1,7 @@
 .{
     .name = "modemmanager",
     .version = "1.24.2",
-    .release = 1,
+    .release = 2,
     .description = "Mobile broadband modem management service, with mmcli and libmm-glib",
     .license = "GPL-2.0-or-later AND LGPL-2.1-or-later",
     .sources = .{
@@ -10,4 +10,8 @@
     .depends = .{ "glibc", "glib", "libgudev", "libmbim", "libqmi", "libqrtr-glib", "polkit", "systemd", "dbus" },
     // xsltproc turns the D-Bus interface descriptions into a header.
     .build_depends = .{ "meson", "ninja", "pkgconf", "python", "gettext", "libxslt", "vala" },
+    .operations = .{
+        // Modems: network interfaces, and Qualcomm's own socket family.
+        .{ .programs = .{"usr/sbin/ModemManager"}, .allow = .{ "net", "cap:sys_admin", "cap:net_admin" } },
+    },
 }

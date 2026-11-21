@@ -1,7 +1,7 @@
 .{
     .name = "lvm2",
     .version = "2.03.44",
-    .release = 1,
+    .release = 2,
     .description = "Device-mapper library, dmsetup and udev rules from LVM2 (the LVM tools are not built)",
     .license = "GPL-2.0-only AND LGPL-2.1-only",
     .sources = .{
@@ -9,4 +9,8 @@
     },
     .depends = .{ "glibc", "systemd", "util-linux" },
     .build_depends = .{"pkgconf"},
+    .operations = .{
+        // Device-mapper tables, from udev rules and the administrator.
+        .{ .programs = .{"usr/sbin/dmsetup"}, .allow = .{ "cap:sys_admin", "cap:mknod", "write:/dev" } },
+    },
 }

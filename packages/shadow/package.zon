@@ -1,17 +1,30 @@
 .{
     .name = "shadow",
     .version = "4.20.3",
-    .release = 4,
+    .release = 6,
     .description = "Programs for managing users, groups and passwords",
     .license = "BSD-3-Clause",
     .sources = .{
         .{ .url = "https://github.com/shadow-maint/shadow/releases/download/4.20.3/shadow-4.20.3.tar.xz", .sha256 = "623be9429f64fa2165bfc5957c6a642ec309c5cf23c0d53855c99f7591922297" },
     },
     .depends = .{ "glibc", "libxcrypt", "acl", "linux-pam" },
-    // Set-uid root. Run by an ordinary user, a program holds only what its
-    // seal declares (packages/linux/joe-lsm), so these declare all;
-    // narrower lists are rule 3's work.
     .operations = .{
-        .{ .programs = .{ "usr/bin/su", "usr/bin/passwd", "usr/bin/chage", "usr/bin/chfn", "usr/bin/chsh", "usr/bin/gpasswd", "usr/bin/newgrp", "usr/bin/newuidmap", "usr/bin/newgidmap" }, .allow = .{"all"} },
+        // Programs that become another user and start their shell, as doas and
+        // pkexec do: they hold everything.
+        .{ .programs = .{"usr/bin/su"}, .allow = .{"all"} },
+        // Set-uid tools that change one's own account: the account databases in
+        // /etc, and the audit log.
+        .{ .programs = .{ "usr/bin/passwd", "usr/bin/chage", "usr/bin/chfn", "usr/bin/chsh", "usr/bin/gpasswd" }, .allow = .{ "cap:chown", "cap:dac_override", "cap:fowner", "cap:fsetid", "cap:audit_write", "write:/etc" } },
+        // newgrp changes group and starts a shell.
+        .{ .programs = .{"usr/bin/newgrp"}, .allow = .{ "cap:setgid", "cap:setuid", "cap:dac_override", "cap:audit_write", "exec:/usr/bin/bash" } },
+        // Mapping ids into a user namespace another process made.
+        .{ .programs = .{ "usr/bin/newuidmap", "usr/bin/newgidmap" }, .allow = .{ "cap:setuid", "cap:setgid", "cap:sys_admin", "cap:dac_override" } },
+        // Account management, by an administrator or for accounts-daemon: the
+        // databases in /etc, homes made from /etc/skel, mail spools, the logs of
+        // logins, and the processes of an account being removed.
+        .{ .programs = .{ "usr/sbin/useradd", "usr/sbin/usermod", "usr/sbin/userdel", "usr/sbin/groupadd", "usr/sbin/groupmod", "usr/sbin/groupdel", "usr/sbin/chpasswd", "usr/sbin/chgpasswd", "usr/sbin/newusers" }, .allow = .{ "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:fsetid", "cap:kill", "cap:setuid", "cap:sys_ptrace", "cap:audit_write", "write:/etc", "write:/home", "write:/var/spool/mail", "write:/var/mail", "write:/var/log", "exec:/usr/sbin/unix_chkpwd" } },
+        // Console logins (agetty runs it): PAM, the login records, and the
+        // user's shell, started once privilege is given up.
+        .{ .programs = .{"usr/bin/login"}, .allow = .{ "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:fsetid", "cap:setgid", "cap:setuid", "cap:audit_write", "cap:audit_control", "cap:sys_resource", "cap:sys_tty_config", "cap:kill", "write:/var/log", "exec:/usr/bin/bash", "exec:/usr/sbin/unix_chkpwd" } },
     },
 }

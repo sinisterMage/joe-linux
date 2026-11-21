@@ -1,7 +1,7 @@
 .{
     .name = "e2fsprogs",
     .version = "1.47.4",
-    .release = 2,
+    .release = 3,
     .description = "Utilities and libraries for the ext2, ext3 and ext4 file systems, with the com_err and ss libraries",
     .license = "GPL-2.0-only AND LGPL-2.0-only AND BSD-3-Clause AND MIT",
     .sources = .{
@@ -9,4 +9,9 @@
     },
     .depends = .{ "glibc", "util-linux" },
     .build_depends = .{ "pkgconf", "gettext" },
+    .operations = .{
+        // Making, checking and resizing file systems, on any device or image
+        // file; for udisks and the administrator.
+        .{ .programs = .{ "usr/sbin/mke2fs", "usr/sbin/mkfs.ext2", "usr/sbin/mkfs.ext3", "usr/sbin/mkfs.ext4", "usr/sbin/e2fsck", "usr/sbin/resize2fs", "usr/sbin/tune2fs" }, .allow = .{ "cap:sys_admin", "cap:sys_rawio", "cap:dac_override", "write:*" } },
+    },
 }

@@ -1,7 +1,7 @@
 .{
     .name = "cups",
     .version = "2.4.20",
-    .release = 1,
+    .release = 3,
     .description = "Print spooler and the libcups client library",
     .license = "Apache-2.0 WITH LLVM-exception",
     .sources = .{
@@ -28,4 +28,12 @@
         "xdg-utils",
     },
     .build_depends = .{ "pkgconf" },
+    .operations = .{
+        // Printing: port 631, its configuration, spool, cache and logs, and the
+        // programs it runs to find printers, drivers and to print, through
+        // cups-exec, which gives up privileges for each filter and backend.
+        .{ .programs = .{"usr/sbin/cupsd"}, .allow = .{ "net", "root-ipc", "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:fsetid", "cap:kill", "cap:setgid", "cap:setuid", "cap:net_bind_service", "cap:net_admin", "cap:sys_resource", "cap:audit_write", "write:/etc/cups", "write:/var/spool/cups", "write:/var/cache/cups", "write:/var/log/cups", "exec:/usr/lib/cups/daemon/cups-exec", "exec:/usr/lib/cups/daemon/cups-deviced", "exec:/usr/lib/cups/daemon/cups-driverd" } },
+        .{ .programs = .{"usr/lib/cups/daemon/cups-exec"}, .allow = .{ "cap:setuid", "cap:setgid", "cap:dac_override", "exec:*" } },
+        .{ .programs = .{ "usr/lib/cups/daemon/cups-deviced", "usr/lib/cups/daemon/cups-driverd" }, .allow = .{ "cap:setuid", "cap:setgid", "exec:*" } },
+    },
 }

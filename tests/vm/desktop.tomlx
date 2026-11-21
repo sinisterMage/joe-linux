@@ -6,7 +6,8 @@
 # a person to look at.
 #
 #   desktop              the desktop as it first boots, the security module logging
-#   desktop-enforcing    the same desktop, booted with the security module enforcing
+#   desktop-enforcing    the same desktop, booted with the security module enforcing,
+#                        with nothing denied
 
 # Run in the machine after every boot.
 $desktop_helpers = '''
@@ -185,6 +186,8 @@ steps = [
   # not start.
   { use = "every-application", soft = true },
 
+  { use = "administration" },
+
   { section = "Firefox renders a page served by the host" },
   { run = 'in_session "firefox --headless --screenshot /tmp/page.png http://10.0.2.2:{{services.desktop-site.port}}/ >/tmp/firefox-headless.log 2>&1"', exit = "any", timeout = "3m", name = "Firefox pictures the page, headless" },
   { run = 'file -b /tmp/page.png; stat -c %s /tmp/page.png', matches = ['^PNG image data', '^\d{5,}$'], name = "a picture of more than 10 kB" },
@@ -238,6 +241,41 @@ done
   { run = 'in_session "gio mime audio/mpeg" | head -n 1', contains = "org.gnome.Decibels.desktop" },
 ]
 
+# What an administrator does through the system's own daemons, each of
+# which declares only what it needs (rule 3): naming the machine, the time
+# zone and the keyboard, adding and removing an account, a network
+# connection, formatting and mounting a disk, and ping, which is set-uid.
+[templates.administration]
+steps = [
+  { section = "administration, through daemons that hold only what they declare" },
+  { run = 'hostnamectl set-hostname joe-renamed && cat /etc/hostname; hostnamectl set-hostname joe', contains = "joe-renamed", name = "hostnamed renames the machine" },
+  { run = 'timedatectl set-timezone Europe/Berlin && readlink /etc/localtime; timedatectl set-timezone UTC', contains = "Europe/Berlin", name = "timedated sets the time zone" },
+  { run = 'localectl set-x11-keymap de && cat /etc/X11/xorg.conf.d/00-keyboard.conf; localectl set-x11-keymap us', contains = '"de"', name = "localed sets the keyboard" },
+  { run = '''
+gdbus call --system --dest org.freedesktop.Accounts --object-path /org/freedesktop/Accounts \
+    --method org.freedesktop.Accounts.CreateUser visitor Visitor 0 >/dev/null
+id -u visitor && test -d /home/visitor && echo "home made"
+gdbus call --system --dest org.freedesktop.Accounts --object-path /org/freedesktop/Accounts \
+    --method org.freedesktop.Accounts.DeleteUser "$(id -u visitor)" true >/dev/null
+id visitor 2>/dev/null || echo "removed"
+''', contains = ["home made", "removed"], timeout = "2m", name = "accounts-daemon adds an account with a home, and removes it" },
+  { run = 'echo joe:joe | chpasswd && echo changed', equals = "changed", name = "chpasswd sets a password" },
+  { run = '''
+nmcli con add type dummy ifname dummy0 con-name admin-test ip4 10.9.9.1/24 >/dev/null && nmcli con up admin-test >/dev/null
+ip -4 -o addr show dummy0
+nmcli con delete admin-test >/dev/null
+''', contains = "10.9.9.1", timeout = "2m", name = "NetworkManager makes, starts and removes a connection" },
+  { run = '''
+truncate -s 64M /tmp/disk.img
+dev=$(udisksctl loop-setup --no-user-interaction -f /tmp/disk.img | grep -o '/dev/loop[0-9]*')
+gdbus call --system --dest org.freedesktop.UDisks2 --object-path "/org/freedesktop/UDisks2/block_devices/${dev#/dev/}" \
+    --method org.freedesktop.UDisks2.Block.Format vfat '{}' >/dev/null
+udisksctl mount --no-user-interaction -b "$dev" >/dev/null && findmnt -no FSTYPE "$dev"
+udisksctl unmount --no-user-interaction -b "$dev" >/dev/null; udisksctl loop-delete --no-user-interaction -b "$dev"
+''', contains = "vfat", timeout = "3m", name = "udisks formats a disk and mounts it" },
+  { run = "su joe -c 'ping -c 1 -W 2 127.0.0.1'", contains = "1 packets received", name = "ping works for an ordinary user" },
+]
+
 [tests.desktop-enforcing]
 description = "the same desktop, booted with the security module enforcing"
 tags = ["vm", "joe", "desktop"]
@@ -256,5 +294,6 @@ steps = [
   { run = 'cat /sys/kernel/security/joe/enforce', equals = "1", name = "the security module enforces" },
   { use = "working-desktop" },
   { use = "every-application", soft = true },
-  { run = '''n=$(dmesg | grep -c 'joe: denied'); echo "$n denials since boot"; dmesg | grep 'joe: denied' | head -n 25 | sed 's/.*joe: /  /' ''', exit = "any", name = "what the security module denied" },
+  { use = "administration" },
+  { run = '''journalctl -k -b --no-pager -o cat | grep 'joe: denied' | sed 's/^joe: //; s/ pid=[0-9]*//' | sort | uniq -c | sort -rn | head -n 40''', exit = "any", equals = "", name = "the security module denied nothing" },
 ]

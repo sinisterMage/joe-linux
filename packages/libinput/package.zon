@@ -1,7 +1,7 @@
 .{
     .name = "libinput",
     .version = "1.32.0",
-    .release = 1,
+    .release = 2,
     .description = "Input device handling library for Wayland compositors and the X server",
     .license = "MIT",
     .sources = .{
@@ -10,4 +10,8 @@
     // systemd: libudev.
     .depends = .{ "glibc", "libevdev", "libwacom", "lua", "mtdev", "systemd" },
     .build_depends = .{ "meson", "ninja", "pkgconf" },
+    .operations = .{
+        // Helpers udev rules run for input devices: they read their properties.
+        .{ .programs = .{ "usr/lib/udev/libinput-device-group", "usr/lib/udev/libinput-fuzz-extract", "usr/lib/udev/libinput-fuzz-to-zero" }, .allow = .{"none"} },
+    },
 }

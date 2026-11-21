@@ -1,7 +1,7 @@
 .{
     .name = "avahi",
     .version = "0.9rc5",
-    .release = 2,
+    .release = 3,
     .description = "mDNS/DNS-SD service discovery: avahi-daemon, its client libraries and tools",
     .license = "LGPL-2.1-or-later",
     .sources = .{
@@ -10,4 +10,8 @@
     },
     .depends = .{ "glibc", "glib", "dbus", "expat", "libdaemon", "libevent", "gdbm", "systemd", "python", "dbus-python" },
     .build_depends = .{ "autoconf", "automake", "libtool", "gettext", "pkgconf" },
+    .operations = .{
+        // mDNS: it starts as root to chroot itself and give up its privileges.
+        .{ .programs = .{"usr/sbin/avahi-daemon"}, .allow = .{ "net", "root-ipc", "cap:sys_chroot", "cap:setuid", "cap:setgid", "cap:chown", "cap:dac_override", "cap:kill" } },
+    },
 }

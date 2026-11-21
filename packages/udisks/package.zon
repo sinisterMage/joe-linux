@@ -1,7 +1,7 @@
 .{
     .name = "udisks",
     .version = "2.11.2",
-    .release = 1,
+    .release = 3,
     .description = "D-Bus service and tools for querying and manipulating storage devices",
     .license = "GPL-2.0-or-later AND LGPL-2.0-or-later",
     .sources = .{
@@ -9,4 +9,9 @@
     },
     .depends = .{ "glibc", "glib", "polkit", "libgudev", "libblockdev", "util-linux", "acl", "systemd", "dbus" },
     .build_depends = .{ "pkgconf", "gettext" },
+    .operations = .{
+        // Disks for GNOME: mounting, formatting and unlocking, with the tools
+        // libblockdev runs; it also keeps /etc/fstab and /etc/crypttab entries.
+        .{ .programs = .{"usr/libexec/udisks2/udisksd"}, .allow = .{ "mount", "root-ipc", "cap:sys_admin", "cap:sys_rawio", "cap:dac_override", "cap:dac_read_search", "cap:chown", "cap:fowner", "cap:fsetid", "cap:mknod", "cap:setuid", "cap:setgid", "cap:kill", "cap:sys_resource", "cap:ipc_lock", "cap:net_admin", "write:/dev", "write:/etc", "write:/var/lib/udisks2", "write:/media", "exec:/usr/bin/mount", "exec:/usr/bin/umount", "exec:/usr/sbin/wipefs", "exec:/usr/sbin/mke2fs", "exec:/usr/sbin/mkfs.ext2", "exec:/usr/sbin/mkfs.ext3", "exec:/usr/sbin/mkfs.ext4", "exec:/usr/sbin/e2fsck", "exec:/usr/sbin/resize2fs", "exec:/usr/sbin/tune2fs", "exec:/usr/sbin/mkfs.fat", "exec:/usr/sbin/fatlabel", "exec:/usr/sbin/fsck.fat", "exec:/usr/bin/mkfs.btrfs", "exec:/usr/bin/btrfs", "exec:/usr/bin/btrfstune" } },
+    },
 }

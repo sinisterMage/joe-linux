@@ -1,7 +1,7 @@
 .{
     .name = "util-linux",
     .version = "2.42.4",
-    .release = 2,
+    .release = 4,
     .description = "Miscellaneous system utilities and the blkid, fdisk, mount, smartcols and uuid libraries",
     .license = "GPL-2.0-or-later AND GPL-2.0-only AND GPL-3.0-or-later AND LGPL-2.1-or-later AND BSD-2-Clause AND BSD-3-Clause AND BSD-4-Clause-UC AND ISC AND LicenseRef-Public-Domain",
     .sources = .{
@@ -9,10 +9,14 @@
     },
     .depends = .{ "glibc", "ncurses", "readline", "zlib", "libxcrypt", "file", "systemd" },
     .build_depends = .{"pkgconf"},
-    // Set-uid root. Run by an ordinary user, a program holds only what its
-    // seal declares (packages/linux/joe-lsm), so these declare all;
-    // narrower lists are rule 3's work.
     .operations = .{
+        // Mounting runs file systems' own helpers (mount.<type>): it holds
+        // everything.
         .{ .programs = .{ "usr/bin/mount", "usr/bin/umount" }, .allow = .{"all"} },
+        // agetty opens the terminal, records the login and runs login.
+        .{ .programs = .{"usr/sbin/agetty"}, .allow = .{ "cap:chown", "cap:fowner", "cap:fsetid", "cap:dac_override", "cap:sys_admin", "cap:sys_tty_config", "cap:checkpoint_restore", "write:/var/log", "exec:/usr/bin/login" } },
+        // Wiping signatures, for udisks and the administrator: any device or
+        // image file.
+        .{ .programs = .{"usr/sbin/wipefs"}, .allow = .{ "cap:sys_admin", "cap:sys_rawio", "write:*" } },
     },
 }

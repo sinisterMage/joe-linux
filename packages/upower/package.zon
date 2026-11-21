@@ -1,7 +1,7 @@
 .{
     .name = "upower",
     .version = "1.91.5",
-    .release = 2,
+    .release = 3,
     .description = "Power management abstraction: batteries, line power and lid state over D-Bus",
     .license = "GPL-2.0-or-later",
     .sources = .{
@@ -9,4 +9,9 @@
     },
     .depends = .{ "glibc", "glib", "libgudev", "polkit", "systemd", "dbus", "libimobiledevice", "usbmuxd" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
+    .operations = .{
+        // Power and batteries: upstream gives it no capabilities at all; it keeps
+        // its history.
+        .{ .programs = .{"usr/libexec/upowerd"}, .allow = .{"write:/var/lib/upower"} },
+    },
 }

@@ -1,7 +1,7 @@
 .{
     .name = "dbus",
     .version = "1.16.2",
-    .release = 1,
+    .release = 2,
     .description = "Message bus system",
     .license = "AFL-2.1 OR GPL-2.0-or-later",
     .sources = .{
@@ -9,4 +9,11 @@
     },
     .depends = .{ "glibc", "expat", "systemd" },
     .build_depends = .{ "meson", "ninja", "pkgconf" },
+    .operations = .{
+        // The system bus runs as messagebus, privileged only by the audit
+        // capability systemd gives it. Services are started by systemd; the
+        // launch helper is for those without a unit.
+        .{ .programs = .{"usr/bin/dbus-daemon"}, .allow = .{ "cap:audit_write", "exec:/usr/libexec/dbus-daemon-launch-helper" } },
+        .{ .programs = .{"usr/libexec/dbus-daemon-launch-helper"}, .allow = .{"none"} },
+    },
 }

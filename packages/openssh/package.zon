@@ -1,7 +1,7 @@
 .{
     .name = "openssh",
     .version = "10.6p2",
-    .release = 2,
+    .release = 4,
     .description = "Secure shell client and server, with scp and sftp",
     .license = "BSD-2-Clause AND BSD-3-Clause AND ISC AND MIT AND SSH-OpenSSH",
     .sources = .{
@@ -9,10 +9,16 @@
     },
     .depends = .{ "glibc", "openssl", "zlib", "libxcrypt", "linux-pam" },
     .build_depends = .{"pkgconf"},
-    // Set-uid root. Run by an ordinary user, a program holds only what its
-    // seal declares (packages/linux/joe-lsm), so these declare all;
-    // narrower lists are rule 3's work.
     .operations = .{
-        .{ .programs = .{ "usr/libexec/ssh-keysign" }, .allow = .{"all"} },
+        // The listener: port 22, and a session process for each connection.
+        .{ .programs = .{"usr/sbin/sshd"}, .allow = .{ "net", "cap:net_bind_service", "cap:sys_resource", "cap:setuid", "cap:setgid", "root-ipc", "exec:/usr/sbin/sshd", "exec:/usr/libexec/sshd-session" } },
+        // A connection: authentication in a chroot, then the login records and the
+        // user's shell (bash for root); forwarded ports, for root, are opened here.
+        .{ .programs = .{"usr/libexec/sshd-session"}, .allow = .{ "net", "root-ipc", "cap:chown", "cap:dac_override", "cap:dac_read_search", "cap:fowner", "cap:fsetid", "cap:kill", "cap:setgid", "cap:setuid", "cap:sys_chroot", "cap:sys_resource", "cap:sys_tty_config", "cap:audit_write", "cap:audit_control", "write:/var/log", "exec:/usr/libexec/sshd-auth", "exec:/usr/bin/bash", "exec:/usr/libexec/sftp-server", "exec:/usr/bin/passwd" } },
+        .{ .programs = .{"usr/libexec/sshd-auth"}, .allow = .{ "cap:sys_chroot", "cap:setgid", "cap:setuid" } },
+        // Root's file transfers reach what root's shell does.
+        .{ .programs = .{"usr/libexec/sftp-server"}, .allow = .{"all"} },
+        // Host-based authentication, which reads the host's keys as their owner.
+        .{ .programs = .{"usr/libexec/ssh-keysign"}, .allow = .{"none"} },
     },
 }

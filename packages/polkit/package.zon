@@ -1,7 +1,7 @@
 .{
     .name = "polkit",
     .version = "128",
-    .release = 2,
+    .release = 3,
     .description = "Authorization manager that lets unprivileged programs talk to privileged ones",
     .license = "LGPL-2.0-or-later",
     .sources = .{
@@ -9,10 +9,10 @@
     },
     .depends = .{ "glibc", "glib", "expat", "duktape", "linux-pam", "systemd", "dbus" },
     .build_depends = .{ "meson", "ninja", "pkgconf", "gettext" },
-    // Set-uid root. Run by an ordinary user, a program holds only what its
-    // seal declares (packages/linux/joe-lsm), so these declare all;
-    // narrower lists are rule 3's work.
     .operations = .{
-        .{ .programs = .{ "usr/bin/pkexec", "usr/lib/polkit-1/polkit-agent-helper-1" }, .allow = .{"all"} },
+        // pkexec runs any program as root, as doas does.
+        .{ .programs = .{"usr/bin/pkexec"}, .allow = .{"all"} },
+        // The agent's helper checks a password through PAM.
+        .{ .programs = .{"usr/lib/polkit-1/polkit-agent-helper-1"}, .allow = .{ "cap:dac_override", "cap:dac_read_search", "cap:audit_write", "exec:/usr/sbin/unix_chkpwd" } },
     },
 }
