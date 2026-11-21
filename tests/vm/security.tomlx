@@ -199,6 +199,9 @@ steps = [
   { run = 'probe probe-none mount /mnt/probe', equals = "denied" },
   # Temporary file systems hold no lasting state and are not restricted.
   { run = 'probe probe-none write /run/probe-file', equals = "allowed" },
+  # Nor are the kernel's own file systems behind descriptors such as pidfds,
+  # which every systemd daemon opens read-write.
+  { run = 'probe probe-none pidfd', equals = "allowed" },
 
   { section = "rule 3: a program is held to exactly what it declares" },
   { run = 'probe probe-declared net', equals = "allowed" },

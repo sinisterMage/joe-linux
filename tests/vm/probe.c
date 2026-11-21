@@ -7,6 +7,7 @@
  *   probe net                 create an internet socket
  *   probe cap                 use CAP_SYS_ADMIN (set the host name to itself)
  *   probe write PATH          create or append to a file
+ *   probe pidfd               open a pidfd for this process (pidfs, read-write)
  *   probe exec PATH [TEST]    run another program, optionally with one probe test
  *   probe exec-check PATH     ask the kernel whether exec of PATH is allowed
  *   probe mount DIR           mount a tmpfs on DIR and unmount it
@@ -152,6 +153,13 @@ int main(int argc, char **argv)
 		if (gethostname(name, sizeof(name)))
 			return verdict(1);
 		return verdict(sethostname(name, strlen(name)));
+	}
+	if (!strcmp(test, "pidfd")) {
+#ifndef SYS_pidfd_open
+#define SYS_pidfd_open 434
+#endif
+		int fd = syscall(SYS_pidfd_open, getpid(), 0);
+		return verdict(fd < 0);
 	}
 	if (!strcmp(test, "write") && arg) {
 		int fd = open(arg, O_WRONLY | O_CREAT | O_APPEND, 0644);

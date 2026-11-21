@@ -876,6 +876,11 @@ static bool joe_may_write(const struct joe_ops *ops, const char *path)
  * Write declarations concern persistent storage. Only filesystems known to
  * contain no state that outlives the boot are exempt; network, stacked and
  * unknown filesystems are persistent, fail closed.
+ *
+ * The second line are the kernel's internal mounts behind file descriptors
+ * that are not files: pidfds (pidfs, opened read-write by pidfd_open and
+ * used by every systemd daemon and udev), namespace files, AIO rings,
+ * DMA buffers and secret or guest memory.
  */
 static bool joe_persistent(const struct super_block *sb)
 {
@@ -885,6 +890,7 @@ static bool joe_persistent(const struct super_block *sb)
 		"tracefs", "configfs", "sockfs", "pipefs", "anon_inodefs",
 		"mqueue", "hugetlbfs", "fusectl", "rpc_pipefs", "autofs",
 		"binfmt_misc", "bpf",
+		"pidfs", "nsfs", "aio", "dmabuf", "secretmem", "guest_memfd",
 	};
 	unsigned int i;
 
